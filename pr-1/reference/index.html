@@ -801,7 +801,7 @@ vial area [cm</strong>2], product area [cm<strong>2], and product resistance [cm
 <span class="normal">240</span>
 <span class="normal">241</span>
 <span class="normal">242</span>
-<span class="normal">243</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">Eq_Constraints</span><span class="p">(</span><span class="n">Pch</span><span class="p">,</span><span class="n">dmdt</span><span class="p">,</span><span class="n">Tbot</span><span class="p">,</span><span class="n">Tsh</span><span class="p">,</span><span class="n">Psub</span><span class="p">,</span><span class="n">Tsub</span><span class="p">,</span><span class="n">Kv</span><span class="p">,</span><span class="n">Lpr0</span><span class="p">,</span><span class="n">Lck</span><span class="p">,</span><span class="n">Av</span><span class="p">,</span><span class="n">Ap</span><span class="p">,</span><span class="n">Rp</span><span class="p">):</span>
+<span class="normal">243</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">Eq_Constraints</span><span class="p">(</span><span class="n">Pch</span><span class="p">,</span><span class="n">dmdt</span><span class="p">,</span><span class="n">Tbot</span><span class="p">,</span><span class="n">Tsh</span><span class="p">,</span><span class="n">Psub</span><span class="p">,</span><span class="n">Tsub</span><span class="p">,</span><span class="n">Kv</span><span class="p">,</span><span class="n">Lpr0</span><span class="p">,</span><span class="n">Lck</span><span class="p">,</span><span class="n">Av</span><span class="p">,</span><span class="n">Ap</span><span class="p">,</span><span class="n">Rp</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Defines the equality constraints for lyophilization. Inputs are chamber pressure [Torr],</span>
 <span class="sd">    sublimation rate [kg/hr], vial bottom temperature [degC], shelf temperature [degC],</span>
@@ -858,7 +858,7 @@ and number of vials</p>
 <span class="normal">219</span>
 <span class="normal">220</span>
 <span class="normal">221</span>
-<span class="normal">222</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">Ineq_Constraints</span><span class="p">(</span><span class="n">Pch</span><span class="p">,</span><span class="n">dm_dt</span><span class="p">,</span><span class="n">Tcrit</span><span class="p">,</span><span class="n">Tbot</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">nVial</span><span class="p">):</span>
+<span class="normal">222</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">Ineq_Constraints</span><span class="p">(</span><span class="n">Pch</span><span class="p">,</span><span class="n">dm_dt</span><span class="p">,</span><span class="n">Tcrit</span><span class="p">,</span><span class="n">Tbot</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">nVial</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Defines the inequality constraints for lyophilization optimization within</span>
 <span class="sd">    safe operation region inside the desgin space. Inputs are chamber pressure [Torr],</span>
@@ -1009,7 +1009,7 @@ and number of vials</p>
 <span class="normal">80</span>
 <span class="normal">81</span>
 <span class="normal">82</span>
-<span class="normal">83</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">Kv_FUN</span><span class="p">(</span><span class="n">KC</span><span class="p">,</span><span class="n">KP</span><span class="p">,</span><span class="n">KD</span><span class="p">,</span><span class="n">Pch</span><span class="p">):</span>
+<span class="normal">83</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">Kv_FUN</span><span class="p">(</span><span class="n">KC</span><span class="p">,</span><span class="n">KP</span><span class="p">,</span><span class="n">KD</span><span class="p">,</span><span class="n">Pch</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates the vial heat transfer coefficient.</span>
 
 <span class="sd">    Args:</span>
@@ -1144,7 +1144,7 @@ and number of vials</p>
 <span class="normal">48</span>
 <span class="normal">49</span>
 <span class="normal">50</span>
-<span class="normal">51</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">Lpr0_FUN</span><span class="p">(</span><span class="n">Vfill</span><span class="p">,</span><span class="n">Ap</span><span class="p">,</span><span class="n">cSolid</span><span class="p">):</span>
+<span class="normal">51</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">Lpr0_FUN</span><span class="p">(</span><span class="n">Vfill</span><span class="p">,</span><span class="n">Ap</span><span class="p">,</span><span class="n">cSolid</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates the intial fill height of the frozen product [cm]. </span>
 
 <span class="sd">    Args:</span>
@@ -1295,7 +1295,7 @@ and number of vials</p>
 <span class="normal">64</span>
 <span class="normal">65</span>
 <span class="normal">66</span>
-<span class="normal">67</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">Rp_FUN</span><span class="p">(</span><span class="n">l</span><span class="p">,</span><span class="n">R0</span><span class="p">,</span><span class="n">A1</span><span class="p">,</span><span class="n">A2</span><span class="p">):</span>
+<span class="normal">67</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">Rp_FUN</span><span class="p">(</span><span class="n">l</span><span class="p">,</span><span class="n">R0</span><span class="p">,</span><span class="n">A1</span><span class="p">,</span><span class="n">A2</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates product resistance [cm**2*hr*Torr/g].</span>
 
 <span class="sd">    Args:</span>
@@ -1344,7 +1344,7 @@ chamber pressure [Torr], and vial bottom temperature [degC]</p>
 <span class="normal">150</span>
 <span class="normal">151</span>
 <span class="normal">152</span>
-<span class="normal">153</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">Rp_finder</span><span class="p">(</span><span class="n">T_sub</span><span class="p">,</span><span class="n">Lpr0</span><span class="p">,</span><span class="n">Lck</span><span class="p">,</span><span class="n">Pch</span><span class="p">,</span><span class="n">Tbot</span><span class="p">):</span>
+<span class="normal">153</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">Rp_finder</span><span class="p">(</span><span class="n">T_sub</span><span class="p">,</span><span class="n">Lpr0</span><span class="p">,</span><span class="n">Lck</span><span class="p">,</span><span class="n">Pch</span><span class="p">,</span><span class="n">Tbot</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculates product resistance [cm**2*hr*Torr/g]. Inputs are sublimation</span>
 <span class="sd">    temperature [degC], initial product length [cm], cake length [cm],</span>
@@ -1393,7 +1393,7 @@ length [cm], chamber pressure [Torr], and product resistance in
 <span class="normal">136</span>
 <span class="normal">137</span>
 <span class="normal">138</span>
-<span class="normal">139</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">T_bot_FUN</span><span class="p">(</span><span class="n">T_sub</span><span class="p">,</span><span class="n">Lpr0</span><span class="p">,</span><span class="n">Lck</span><span class="p">,</span><span class="n">Pch</span><span class="p">,</span><span class="n">Rp</span><span class="p">):</span>
+<span class="normal">139</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">T_bot_FUN</span><span class="p">(</span><span class="n">T_sub</span><span class="p">,</span><span class="n">Lpr0</span><span class="p">,</span><span class="n">Lck</span><span class="p">,</span><span class="n">Pch</span><span class="p">,</span><span class="n">Rp</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculates the temperature at the bottom of the vial [degC]. Inputs are</span>
 <span class="sd">    sublimation front temperature [degC], initial product length [cm], cake</span>
@@ -1448,7 +1448,7 @@ temperature [degC], and shelf temperature [degC]</p>
 <span class="normal">169</span>
 <span class="normal">170</span>
 <span class="normal">171</span>
-<span class="normal">172</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">T_sub_Rp_finder</span><span class="p">(</span><span class="n">T_sub</span><span class="p">,</span> <span class="o">*</span><span class="n">data</span><span class="p">):</span>
+<span class="normal">172</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">T_sub_Rp_finder</span><span class="p">(</span><span class="n">T_sub</span><span class="p">,</span> <span class="o">*</span><span class="n">data</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Tsub is found from solving for T_unknown.</span>
 <span class="sd">    Determines the function to calculate the sublimation temperature</span>
@@ -1503,7 +1503,7 @@ and product resistance [cm<em><em>2</em>Torr</em>hr/g]</p>
 <span class="normal">187</span>
 <span class="normal">188</span>
 <span class="normal">189</span>
-<span class="normal">190</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">T_sub_fromTpr</span><span class="p">(</span><span class="n">T_unknown</span><span class="p">,</span> <span class="o">*</span><span class="n">data</span><span class="p">):</span>
+<span class="normal">190</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">T_sub_fromTpr</span><span class="p">(</span><span class="n">T_unknown</span><span class="p">,</span> <span class="o">*</span><span class="n">data</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Tsub is found from solving for T_unknown.  # Determines the function to calculate the sublimation temperature</span>
 <span class="sd">    represented as T_unknown. Other inputs are vial bottom temperature [degC], </span>
@@ -1637,7 +1637,7 @@ resistance [cm</strong>2<em>Torr</em>Hr/g], and shelf temperature [degC]</p>
 <span class="normal">106</span>
 <span class="normal">107</span>
 <span class="normal">108</span>
-<span class="normal">109</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">T_sub_solver_FUN</span><span class="p">(</span><span class="n">T_sub_guess</span><span class="p">,</span> <span class="o">*</span><span class="n">data</span><span class="p">):</span>
+<span class="normal">109</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">T_sub_solver_FUN</span><span class="p">(</span><span class="n">T_sub_guess</span><span class="p">,</span> <span class="o">*</span><span class="n">data</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Tsub is found from solving for T_unknown.</span>
 <span class="sd">    Determines the function to calculate the sublimation temperature</span>
 <span class="sd">    represented as T_unknown. Other inputs are chamber pressure [Torr], vial</span>
@@ -1698,7 +1698,7 @@ equipment capability [kg/hr], initial product length [cm], cake length
 <span class="normal">204</span>
 <span class="normal">205</span>
 <span class="normal">206</span>
-<span class="normal">207</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">Tbot_max_eq_cap</span><span class="p">(</span><span class="n">Pch</span><span class="p">,</span><span class="n">dm_dt</span><span class="p">,</span><span class="n">Lpr0</span><span class="p">,</span><span class="n">Lck</span><span class="p">,</span><span class="n">Rp</span><span class="p">,</span><span class="n">Ap</span><span class="p">):</span>
+<span class="normal">207</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">Tbot_max_eq_cap</span><span class="p">(</span><span class="n">Pch</span><span class="p">,</span><span class="n">dm_dt</span><span class="p">,</span><span class="n">Lpr0</span><span class="p">,</span><span class="n">Lck</span><span class="p">,</span><span class="n">Rp</span><span class="p">,</span><span class="n">Ap</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculates the maximum product temperature (occus at vial bottom)</span>
 <span class="sd">    [degC]. Inputs are chamber pressure [Torr], sublimation rate based on</span>
@@ -1743,7 +1743,7 @@ temperature [degC]</p>
 <span class="normal">32</span>
 <span class="normal">33</span>
 <span class="normal">34</span>
-<span class="normal">35</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">Vapor_pressure</span><span class="p">(</span><span class="n">T_sub</span><span class="p">):</span>
+<span class="normal">35</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">Vapor_pressure</span><span class="p">(</span><span class="n">T_sub</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculates the vapor pressure [Torr]. Input is sublimation front</span>
 <span class="sd">    temperature [degC]</span>
@@ -1885,7 +1885,7 @@ temperature [degC]</p>
 <span class="normal">296</span>
 <span class="normal">297</span>
 <span class="normal">298</span>
-<span class="normal">299</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">calc_step</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">Lck</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+<span class="normal">299</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">calc_step</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">Lck</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate the full set of system states at a given time step from ODE solution states.</span>
 
 <span class="sd">    Args:</span>
@@ -1940,7 +1940,7 @@ temperature [degC]</p>
 <span class="normal">264</span>
 <span class="normal">265</span>
 <span class="normal">266</span>
-<span class="normal">267</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">crystallization_time_FUN</span><span class="p">(</span><span class="n">V</span><span class="p">,</span><span class="n">h</span><span class="p">,</span><span class="n">Av</span><span class="p">,</span><span class="n">Tf</span><span class="p">,</span><span class="n">Tn</span><span class="p">,</span><span class="n">Tsh</span><span class="p">):</span>
+<span class="normal">267</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">crystallization_time_FUN</span><span class="p">(</span><span class="n">V</span><span class="p">,</span><span class="n">h</span><span class="p">,</span><span class="n">Av</span><span class="p">,</span><span class="n">Tf</span><span class="p">,</span><span class="n">Tn</span><span class="p">,</span><span class="n">Tsh</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculates the crystallization time [hr]. Inputs are fill volume [mL], heat transfer coefficient [W/m^2/K], vial area [cm**2], freezing temperature [degC], nucleation temperature [degC], shelf temperature [degC]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -2056,7 +2056,7 @@ temperature [degC]</p>
 <span class="normal">314</span>
 <span class="normal">315</span>
 <span class="normal">316</span>
-<span class="normal">317</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">fill_output</span><span class="p">(</span><span class="n">sol</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+<span class="normal">317</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">fill_output</span><span class="p">(</span><span class="n">sol</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Fill the output array with the results from the ODE solver.</span>
 
 <span class="sd">    Args:</span>
@@ -2102,7 +2102,7 @@ temperature [degC]</p>
 <span class="normal">251</span>
 <span class="normal">252</span>
 <span class="normal">253</span>
-<span class="normal">254</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">lumped_cap_Tpr</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">Tpr0</span><span class="p">,</span><span class="n">rho</span><span class="p">,</span><span class="n">Cp</span><span class="p">,</span><span class="n">V</span><span class="p">,</span><span class="n">h</span><span class="p">,</span><span class="n">Av</span><span class="p">,</span><span class="n">Tsh</span><span class="p">,</span><span class="n">Tsh0</span><span class="p">,</span> <span class="n">Tsh_ramp</span><span class="p">):</span>
+<span class="normal">254</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">lumped_cap_Tpr</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">Tpr0</span><span class="p">,</span><span class="n">rho</span><span class="p">,</span><span class="n">Cp</span><span class="p">,</span><span class="n">V</span><span class="p">,</span><span class="n">h</span><span class="p">,</span><span class="n">Av</span><span class="p">,</span><span class="n">Tsh</span><span class="p">,</span><span class="n">Tsh0</span><span class="p">,</span> <span class="n">Tsh_ramp</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculates the product temperature [degC]. Inputs are time [hr], initial product temperature [degC], product density [g/mL], constant pressure specific heat of the product [J/kg/K], product volume [mL], heat transfer coefficient [W/m^2/K], vial area [cm**2], current shelf temperature [degC], initial shelf temperature [degC], shelf temperature ramping rate [degC/min]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -2145,7 +2145,7 @@ front temperature [degC], and chamber pressure [Torr]</p>
 <span class="normal">120</span>
 <span class="normal">121</span>
 <span class="normal">122</span>
-<span class="normal">123</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">sub_rate</span><span class="p">(</span><span class="n">Ap</span><span class="p">,</span><span class="n">Rp</span><span class="p">,</span><span class="n">T_sub</span><span class="p">,</span><span class="n">Pch</span><span class="p">):</span>
+<span class="normal">123</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">sub_rate</span><span class="p">(</span><span class="n">Ap</span><span class="p">,</span><span class="n">Rp</span><span class="p">,</span><span class="n">T_sub</span><span class="p">,</span><span class="n">Pch</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculates the sublimation rate from each vial [kg/hr]. Inputs are</span>
 <span class="sd">    product area [cm**2], product resistance [cm**2*Torr*Hr/g], sublimation</span>
