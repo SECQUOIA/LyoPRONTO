@@ -1,0 +1,985 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.22">
+    
+    
+      
+        <title>LyoPRONTO Code Structure - LyoPRONTO Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.84d31ad4.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#lyopronto-code-structure" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="LyoPRONTO Documentation" class="md-header__button md-logo" aria-label="LyoPRONTO Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            LyoPRONTO Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              LyoPRONTO Code Structure
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="LyoPRONTO Documentation" class="md-nav__button md-logo" aria-label="LyoPRONTO Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    LyoPRONTO Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    LyoPRONTO: Getting Started
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tutorials
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-guides/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    How-to Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../explanation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Explanations
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Full listing of all docstrings by module
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#directory-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      Directory Structure
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#module-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Module Dependencies
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      Core Modules
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Modules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#constantpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      constant.py
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#functionspy" class="md-nav__link">
+    <span class="md-ellipsis">
+      functions.py
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="functions.py">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#thermophysical-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      Thermophysical Properties
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#heat-and-mass-transfer" class="md-nav__link">
+    <span class="md-ellipsis">
+      Heat and Mass Transfer
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parameter-estimation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Parameter Estimation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#utility-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Utility Functions
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calc_knownrppy" class="md-nav__link">
+    <span class="md-ellipsis">
+      calc_knownRp.py
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calc_unknownrppy" class="md-nav__link">
+    <span class="md-ellipsis">
+      calc_unknownRp.py
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#opt_pch_tshpy-opt_pchpy-opt_tshpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      opt_Pch_Tsh.py, opt_Pch.py, opt_Tsh.py
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#design_spacepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      design_space.py
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#freezingpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      freezing.py
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data Flow
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Data Flow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#typical-simulation-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      Typical Simulation Workflow
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimization-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optimization Workflow
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-interfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      Key Interfaces
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Key Interfaces">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#standard-input-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      Standard Input Format
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#standard-output-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      Standard Output Format
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      Testing Structure
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Testing Structure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#test-organization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Test Organization
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#future-structure-pyomo" class="md-nav__link">
+    <span class="md-ellipsis">
+      Future Structure (Pyomo)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performance Considerations
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Performance Considerations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bottlenecks-current" class="md-nav__link">
+    <span class="md-ellipsis">
+      Bottlenecks (Current)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimization-targets-pyomo" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optimization Targets (Pyomo)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#extension-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      Extension Points
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Extension Points">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adding-new-functionality" class="md-nav__link">
+    <span class="md-ellipsis">
+      Adding New Functionality
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      References
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="lyopronto-code-structure">LyoPRONTO Code Structure</h1>
+<h2 id="overview">Overview</h2>
+<p>This document provides a high-level overview of the LyoPRONTO codebase structure, key modules, and their relationships.</p>
+<h2 id="directory-structure">Directory Structure</h2>
+<pre><code>LyoPRONTO/
+├── lyopronto/              # Main package
+│   ├── __init__.py         # Package initialization
+│   ├── constant.py         # Physical constants and unit conversions
+│   ├── functions.py        # Core physics equations
+│   ├── freezing.py         # Freezing phase calculations
+│   ├── calc_knownRp.py     # Primary drying with known Rp
+│   ├── calc_unknownRp.py   # Primary drying with unknown Rp
+│   ├── design_space.py     # Design space generation
+│   ├── opt_Pch.py          # Optimize chamber pressure
+│   ├── opt_Tsh.py          # Optimize shelf temperature
+│   └── opt_Pch_Tsh.py      # Optimize both Pch and Tsh
+├── tests/                  # Test suite
+│   ├── __init__.py
+│   ├── conftest.py         # Shared fixtures
+│   ├── test_functions.py   # Unit tests for physics
+│   ├── test_calculators.py # Integration tests for simulators
+│   └── test_regression.py  # Regression tests
+├── docs/                   # Documentation
+├── examples/               # Example scripts
+│   ├── ex_knownRp_PD.py   # Example with known Rp
+│   └── ex_unknownRp_PD.py # Example with unknown Rp
+└── .github/                # GitHub configuration
+    ├── workflows/          # CI/CD pipelines
+    └── copilot-instructions.md  # AI assistant instructions
+</code></pre>
+<h2 id="module-dependencies">Module Dependencies</h2>
+<pre><code>constant.py (no dependencies)
+    ↓
+functions.py (uses constant)
+    ↓
+    ├── freezing.py (uses functions, constant)
+    ├── calc_knownRp.py (uses functions, constant)
+    ├── calc_unknownRp.py (uses functions, constant)
+    ├── opt_Pch.py (uses functions, constant)
+    ├── opt_Tsh.py (uses functions, constant)
+    ├── opt_Pch_Tsh.py (uses functions, constant)
+    └── design_space.py (uses functions, opt_*)
+</code></pre>
+<h2 id="core-modules">Core Modules</h2>
+<h3 id="constantpy"><code>constant.py</code></h3>
+<p><strong>Purpose</strong>: Define all physical constants and unit conversions.</p>
+<p><strong>Key Contents</strong>:
+- Unit conversions (kg_To_g, cm_To_m, hr_To_s, Torr_to_mTorr)
+- Physical properties (rho_ice, rho_solute, rho_solution)
+- Thermodynamic constants (dHs, dHf, k_ice, Cp_ice)</p>
+<p><strong>Usage</strong>:</p>
+<pre><code class="language-python">from lyopronto import constant
+mass_kg = mass_g / constant.kg_To_g
+</code></pre>
+<h3 id="functionspy"><code>functions.py</code></h3>
+<p><strong>Purpose</strong>: Core physics equations for heat and mass transfer.</p>
+<p><strong>Key Functions</strong>:</p>
+<h4 id="thermophysical-properties">Thermophysical Properties</h4>
+<ul>
+<li><code>Vapor_pressure(T_sub)</code> → Vapor pressure (Torr)</li>
+<li><code>Lpr0_FUN(Vfill, Ap, cSolid)</code> → Initial fill height (cm)</li>
+<li><code>Rp_FUN(l, R0, A1, A2)</code> → Product resistance (cm²-hr-Torr/g)</li>
+<li><code>Kv_FUN(KC, KP, KD, Pch)</code> → Heat transfer coefficient (cal/s/K/cm²)</li>
+</ul>
+<h4 id="heat-and-mass-transfer">Heat and Mass Transfer</h4>
+<ul>
+<li><code>sub_rate(Ap, Rp, T_sub, Pch)</code> → Sublimation rate (kg/hr)</li>
+<li><code>T_bot_FUN(T_sub, Lpr0, Lck, Pch, Rp)</code> → Bottom temperature (°C)</li>
+<li><code>T_sub_solver_FUN(T_sub_guess, *data)</code> → Energy balance residual</li>
+</ul>
+<h4 id="parameter-estimation">Parameter Estimation</h4>
+<ul>
+<li><code>Rp_finder(T_sub, Lpr0, Lck, Pch, Tbot)</code> → Estimate Rp from measurements</li>
+</ul>
+<h4 id="utility-functions">Utility Functions</h4>
+<ul>
+<li><code>calc_step(t, Lck, config)</code> → Calculate all states at time t</li>
+<li><code>fill_output(sol, config)</code> → Format ODE solution into output array</li>
+</ul>
+<p><strong>Physics Flow</strong>:</p>
+<pre><code>Inputs: Tsh, Pch, Lck, Lpr0, Rp
+    ↓
+Solve energy balance → Tsub
+    ↓
+Calculate sublimation → dmdt
+    ↓
+Calculate temperatures → Tbot
+    ↓
+Output: [time, Tsub, Tbot, Tsh, Pch, flux, frac_dried]
+</code></pre>
+<h3 id="calc_knownrppy"><code>calc_knownRp.py</code></h3>
+<p><strong>Purpose</strong>: Simulate primary drying when product resistance is known.</p>
+<p><strong>Main Function</strong>: <code>dry(vial, product, ht, Pchamber, Tshelf, dt)</code></p>
+<p><strong>Algorithm</strong>:
+1. Initialize with initial product length (Lpr0)
+2. Set up ODE: dLck/dt = f(sublimation rate, densities)
+3. Integrate using scipy.integrate.solve_ivp
+4. Terminate when Lck = Lpr0 (fully dried)
+5. Format output using functions.fill_output()</p>
+<p><strong>Output</strong>: numpy array (n_points × 7)
+- Column 0: time (hours)
+- Column 1: Tsub (°C)
+- Column 2: Tbot (°C)
+- Column 3: Tsh (°C)
+- Column 4: Pch (mTorr)
+- Column 5: flux (kg/hr/m²)
+- Column 6: frac_dried (0-1)</p>
+<h3 id="calc_unknownrppy"><code>calc_unknownRp.py</code></h3>
+<p><strong>Purpose</strong>: Simulate primary drying and estimate Rp from measurements.</p>
+<p><strong>Main Difference from calc_knownRp</strong>: 
+- Uses measured Tbot to back-calculate Rp at each time point
+- Fits Rp parameters (R0, A1, A2) to the estimated values</p>
+<h3 id="opt_pch_tshpy-opt_pchpy-opt_tshpy"><code>opt_Pch_Tsh.py</code>, <code>opt_Pch.py</code>, <code>opt_Tsh.py</code></h3>
+<p><strong>Purpose</strong>: Optimize process parameters (Pch and/or Tsh).</p>
+<p><strong>Scipy-based (Current)</strong>:
+- Uses scipy.optimize.minimize
+- Sequential optimization at each time step
+- Constraint: Tbot &lt; Tpr_crit
+- Objective: Maximize sublimation driving force</p>
+<p><strong>To be replaced with</strong>: Pyomo-based simultaneous optimization</p>
+<h3 id="design_spacepy"><code>design_space.py</code></h3>
+<p><strong>Purpose</strong>: Generate design space by systematic parameter exploration.</p>
+<p><strong>Algorithm</strong>:
+1. Grid search over Pch and Tsh ranges
+2. For each combination, simulate drying
+3. Check if Tbot stays below Tpr_crit
+4. Collect feasible (Pch, Tsh) combinations</p>
+<h3 id="freezingpy"><code>freezing.py</code></h3>
+<p><strong>Purpose</strong>: Calculate freezing phase dynamics.</p>
+<p><strong>Key Functions</strong>:
+- Nucleation time calculation
+- Crystallization time calculation
+- Temperature profile during freezing</p>
+<h2 id="data-flow">Data Flow</h2>
+<h3 id="typical-simulation-workflow">Typical Simulation Workflow</h3>
+<pre><code>User Input
+    ↓
+Vial geometry (Av, Ap, Vfill)
+Product properties (cSolid, R0, A1, A2)
+Heat transfer (KC, KP, KD)
+Process conditions (Pch, Tsh profile)
+    ↓
+calc_knownRp.dry()
+    ↓
+    ├→ functions.Lpr0_FUN() → Lpr0
+    ├→ Set up ODE system
+    │   └→ functions.calc_step() at each time
+    │       ├→ functions.Kv_FUN()
+    │       ├→ functions.Rp_FUN()
+    │       ├→ fsolve(functions.T_sub_solver_FUN()) → Tsub
+    │       ├→ functions.sub_rate() → dmdt
+    │       └→ functions.T_bot_FUN() → Tbot
+    └→ solve_ivp() integrates dLck/dt
+    ↓
+functions.fill_output()
+    ↓
+Output array (time series of all states)
+</code></pre>
+<h3 id="optimization-workflow">Optimization Workflow</h3>
+<pre><code>User Input + Constraints
+    ↓
+opt_Pch_Tsh.optimize()
+    ↓
+For each time step:
+    ├→ scipy.optimize.minimize
+    │   ├→ Variables: Pch, Tsh (or subset)
+    │   ├→ Objective: max(Psub - Pch)
+    │   └→ Constraints: 
+    │       ├→ Energy balance (equality)
+    │       └→ Tbot &lt; Tpr_crit (inequality)
+    └→ Solve for optimal Pch, Tsh
+    ↓
+Time series of optimal (Pch, Tsh)
+</code></pre>
+<h2 id="key-interfaces">Key Interfaces</h2>
+<h3 id="standard-input-format">Standard Input Format</h3>
+<pre><code class="language-python"># Vial geometry
+vial = {
+    'Av': float,    # Vial area (cm²)
+    'Ap': float,    # Product area (cm²)
+    'Vfill': float  # Fill volume (mL)
+}
+
+# Product properties
+product = {
+    'cSolid': float,  # Solid concentration (fraction)
+    'R0': float,      # Base resistance (cm²-hr-Torr/g)
+    'A1': float,      # Resistance parameter (cm-hr-Torr/g)
+    'A2': float       # Resistance parameter (1/cm)
+}
+
+# Heat transfer parameters
+ht = {
+    'KC': float,  # cal/s/K/cm²
+    'KP': float,  # cal/s/K/cm²/Torr
+    'KD': float   # 1/Torr
+}
+
+# Process conditions
+Pchamber = {
+    'setpt': [float],      # Pressure setpoints (Torr)
+    'dt_setpt': [float],   # Hold times (min)
+    'ramp_rate': float     # Ramp rate (Torr/min)
+}
+
+Tshelf = {
+    'init': float,         # Initial temp (°C)
+    'setpt': [float],      # Temp setpoints (°C)
+    'dt_setpt': [float],   # Hold times (min)
+    'ramp_rate': float     # Ramp rate (°C/min)
+}
+</code></pre>
+<h3 id="standard-output-format">Standard Output Format</h3>
+<pre><code class="language-python">output = calc_knownRp.dry(...)  # Returns numpy array
+
+# Access data
+times = output[:, 0]       # hours
+Tsub = output[:, 1]        # °C
+Tbot = output[:, 2]        # °C
+Tsh = output[:, 3]         # °C
+Pch_mTorr = output[:, 4]   # mTorr (NOT Torr!)
+flux = output[:, 5]        # kg/hr/m²
+frac_dried = output[:, 6]  # 0-1 (NOT percentage!)
+</code></pre>
+<h2 id="testing-structure">Testing Structure</h2>
+<h3 id="test-organization">Test Organization</h3>
+<pre><code>tests/
+├── conftest.py              # Shared fixtures and utilities
+│   ├── standard_vial()
+│   ├── standard_product()
+│   ├── standard_setup()
+│   └── assert_physically_reasonable_output()
+│
+├── test_functions.py        # Unit tests (44 tests)
+│   ├── TestVaporPressure
+│   ├── TestLpr0Function
+│   ├── TestRpFunction
+│   ├── TestKvFunction
+│   ├── TestSubRate
+│   └── ...
+│
+├── test_calculators.py      # Integration tests (14 tests)
+│   ├── TestCalcKnownRp
+│   ├── TestEdgeCases
+│   └── TestMassBalance
+│
+└── test_regression.py       # Regression tests (9 tests)
+    ├── TestRegressionStandardCase
+    ├── TestRegressionParametricCases
+    └── TestRegressionConsistency
+</code></pre>
+<h2 id="future-structure-pyomo">Future Structure (Pyomo)</h2>
+<p>Planned additions:</p>
+<pre><code>lyopronto/
+├── pyomo_models/           # NEW
+│   ├── __init__.py
+│   ├── single_step.py      # Single time-step optimization
+│   ├── multi_period.py     # Full trajectory optimization
+│   ├── parameter_est.py    # Parameter estimation
+│   └── utils.py            # Pyomo helper functions
+└── ...
+
+tests/
+├── test_pyomo_single.py    # NEW
+├── test_pyomo_multi.py     # NEW
+└── test_pyomo_comparison.py # NEW (Pyomo vs scipy)
+</code></pre>
+<h2 id="performance-considerations">Performance Considerations</h2>
+<h3 id="bottlenecks-current">Bottlenecks (Current)</h3>
+<ol>
+<li><strong>fsolve calls</strong> in T_sub_solver_FUN (at every time step)</li>
+<li><strong>solve_ivp</strong> with tight tolerances</li>
+<li><strong>Sequential optimization</strong> (one time step at a time)</li>
+</ol>
+<h3 id="optimization-targets-pyomo">Optimization Targets (Pyomo)</h3>
+<ol>
+<li><strong>Simultaneous optimization</strong> → Reduces solve_ivp calls</li>
+<li><strong>Better initialization</strong> → Faster convergence</li>
+<li><strong>Sparse Jacobian</strong> → Scales better with time discretization</li>
+</ol>
+<h2 id="extension-points">Extension Points</h2>
+<h3 id="adding-new-functionality">Adding New Functionality</h3>
+<ol>
+<li><strong>New physics function</strong>:</li>
+<li>Add to <code>functions.py</code></li>
+<li>Write unit tests in <code>test_functions.py</code></li>
+<li>
+<p>Update this documentation</p>
+</li>
+<li>
+<p><strong>New simulator</strong>:</p>
+</li>
+<li>Create new file in <code>lyopronto/</code></li>
+<li>Use <code>calc_knownRp.py</code> as template</li>
+<li>Add integration tests</li>
+<li>
+<p>Update examples</p>
+</li>
+<li>
+<p><strong>New optimization mode</strong>:</p>
+</li>
+<li>Start with existing <code>opt_*.py</code> as template</li>
+<li>Implement Pyomo version in <code>pyomo_models/</code></li>
+<li>Add comparison tests</li>
+<li>Benchmark performance</li>
+</ol>
+<h2 id="references">References</h2>
+<ul>
+<li>Main package: <code>lyopronto/</code></li>
+<li>Tests: <code>tests/</code></li>
+<li>Documentation: See <code>*.md</code> files in root</li>
+<li>Examples: <code>ex_*.py</code> files</li>
+<li>Pyomo roadmap: <code>PYOMO_ROADMAP.md</code></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.f55a23d4.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -12,7 +12,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.21">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.22">
     
     
       
@@ -20,7 +20,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.2a3383ac.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.84d31ad4.min.css">
       
       
 
@@ -338,35 +338,11 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#two-stage-ci-workflow" class="md-nav__link">
+  <a href="#triggers" class="md-nav__link">
     <span class="md-ellipsis">
-      Two-Stage CI Workflow
+      Triggers
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Two-Stage CI Workflow">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#fast-tests-pr-commits" class="md-nav__link">
-    <span class="md-ellipsis">
-      ⚡ Fast Tests (PR commits)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#full-coverage-tests-approval-main" class="md-nav__link">
-    <span class="md-ellipsis">
-      📊 Full Coverage Tests (Approval + Main)
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
         
@@ -593,23 +569,12 @@ pytest tests/ -v --cov=lyopronto --cov-report=xml --cov-report=term-missing
 <li><strong>Python</strong>: 3.13</li>
 <li><strong>Tests</strong>: 128 tests</li>
 <li><strong>Coverage</strong>: 93%</li>
+<li><strong>Duration</strong>: ~5-6 minutes</li>
 </ul>
-<h3 id="two-stage-ci-workflow">Two-Stage CI Workflow</h3>
-<h4 id="fast-tests-pr-commits">⚡ Fast Tests (PR commits)</h4>
+<h3 id="triggers">Triggers</h3>
 <ul>
-<li><strong>Duration</strong>: 3-5 minutes</li>
-<li><strong>Coverage</strong>: No (for speed)</li>
-<li><strong>Triggers</strong>: Every commit in PR</li>
-<li><strong>File</strong>: <code>.github/workflows/pr-tests.yml</code></li>
-</ul>
-<h4 id="full-coverage-tests-approval-main">📊 Full Coverage Tests (Approval + Main)</h4>
-<ul>
-<li><strong>Duration</strong>: 5-7 minutes  </li>
-<li><strong>Coverage</strong>: Yes (full analysis)</li>
-<li><strong>Triggers</strong>: </li>
-<li>PR approval by reviewer</li>
 <li>Push to <code>main</code> or <code>dev-pyomo</code></li>
-<li><strong>File</strong>: <code>.github/workflows/tests.yml</code></li>
+<li>Pull requests to <code>main</code> or <code>dev-pyomo</code></li>
 </ul>
 <h2 id="files-created">📁 Files Created</h2>
 <h3 id="core-files">Core Files</h3>
