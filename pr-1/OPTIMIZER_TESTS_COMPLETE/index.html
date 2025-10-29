@@ -743,12 +743,12 @@
 <li><strong>Behavior</strong>: Both variables adjusted dynamically to maximize sublimation</li>
 </ul>
 <h3 id="output-format-both-modules">Output Format (Both Modules)</h3>
-<pre><code class="language-python">output[:, 0]  # time (hours)
-output[:, 1]  # Tsub - sublimation temperature (°C)
-output[:, 2]  # Tbot - vial bottom temperature (°C)
-output[:, 3]  # Tsh - shelf temperature (°C)
-output[:, 4]  # Pch - chamber pressure (mTorr, NOT Torr!)
-output[:, 5]  # flux - sublimation flux (kg/hr/m²)
+<pre><code class="language-python">output[:, 0]  # time [hr]
+output[:, 1]  # Tsub - sublimation temperature [degC]
+output[:, 2]  # Tbot - vial bottom temperature [degC]
+output[:, 3]  # Tsh - shelf temperature [degC]
+output[:, 4]  # Pch - chamber pressure [mTorr]
+output[:, 5]  # flux - sublimation flux [kg/hr/m**2]
 output[:, 6]  # percent_dried - percent dried (0-100%, NOT fraction!)
 </code></pre>
 <h2 id="test-approach">Test Approach</h2>
