@@ -775,11 +775,11 @@
 
     <div class="doc doc-contents ">
 
-        <p>Defines the equality constraints for lyophilization. Inputs are chamber pressure in Torr,
-sublimation rate in kg/hr, vial bottom temperature in degC, shelf temperature in degC,
-sublimation front pressure in Torr, sublimation front temperature in degC, vial heat
-transfer coefficient in cal/s/cm^2/C, initial product length in cm, cake length in cm,
-vial area in cm^2, product area in cm^2, and product resistance in cm^2-Torr-hr/g</p>
+        <p>Defines the equality constraints for lyophilization. Inputs are chamber pressure [Torr],
+sublimation rate [kg/hr], vial bottom temperature [degC], shelf temperature [degC],
+sublimation front pressure [Torr], sublimation front temperature [degC], vial heat
+transfer coefficient [cal/s/K/cm<strong>2], initial product length [cm], cake length [cm],
+vial area [cm</strong>2], product area [cm<strong>2], and product resistance [cm</strong>2<em>Torr</em>hr/g]</p>
 
 
             <details class="quote">
@@ -803,20 +803,20 @@ vial area in cm^2, product area in cm^2, and product resistance in cm^2-Torr-hr/
 <span class="normal">242</span>
 <span class="normal">243</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">Eq_Constraints</span><span class="p">(</span><span class="n">Pch</span><span class="p">,</span><span class="n">dmdt</span><span class="p">,</span><span class="n">Tbot</span><span class="p">,</span><span class="n">Tsh</span><span class="p">,</span><span class="n">Psub</span><span class="p">,</span><span class="n">Tsub</span><span class="p">,</span><span class="n">Kv</span><span class="p">,</span><span class="n">Lpr0</span><span class="p">,</span><span class="n">Lck</span><span class="p">,</span><span class="n">Av</span><span class="p">,</span><span class="n">Ap</span><span class="p">,</span><span class="n">Rp</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Defines the equality constraints for lyophilization. Inputs are chamber pressure in Torr,</span>
-<span class="sd">    sublimation rate in kg/hr, vial bottom temperature in degC, shelf temperature in degC,</span>
-<span class="sd">    sublimation front pressure in Torr, sublimation front temperature in degC, vial heat</span>
-<span class="sd">    transfer coefficient in cal/s/cm^2/C, initial product length in cm, cake length in cm,</span>
-<span class="sd">    vial area in cm^2, product area in cm^2, and product resistance in cm^2-Torr-hr/g </span>
+<span class="sd">    Defines the equality constraints for lyophilization. Inputs are chamber pressure [Torr],</span>
+<span class="sd">    sublimation rate [kg/hr], vial bottom temperature [degC], shelf temperature [degC],</span>
+<span class="sd">    sublimation front pressure [Torr], sublimation front temperature [degC], vial heat</span>
+<span class="sd">    transfer coefficient [cal/s/K/cm**2], initial product length [cm], cake length [cm],</span>
+<span class="sd">    vial area [cm**2], product area [cm**2], and product resistance [cm**2*Torr*hr/g] </span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">C1</span> <span class="o">=</span> <span class="n">Psub</span> <span class="o">-</span> <span class="mf">2.698e10</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">6144.96</span><span class="o">/</span><span class="p">(</span><span class="mf">273.15</span><span class="o">+</span><span class="n">Tsub</span><span class="p">))</span>   <span class="c1"># Vapor pressure at the sublimation temperature in Torr</span>
+    <span class="n">C1</span> <span class="o">=</span> <span class="n">Psub</span> <span class="o">-</span> <span class="mf">2.698e10</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">6144.96</span><span class="o">/</span><span class="p">(</span><span class="mf">273.15</span><span class="o">+</span><span class="n">Tsub</span><span class="p">))</span>   <span class="c1"># Vapor pressure at the sublimation temperature [Torr]</span>
 
-    <span class="n">C2</span> <span class="o">=</span> <span class="n">dmdt</span> <span class="o">-</span> <span class="n">Ap</span><span class="o">/</span><span class="n">Rp</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">kg_To_g</span><span class="o">*</span><span class="p">(</span><span class="n">Psub</span><span class="o">-</span><span class="n">Pch</span><span class="p">)</span>  <span class="c1"># Sublimation rate in kg/hr</span>
+    <span class="n">C2</span> <span class="o">=</span> <span class="n">dmdt</span> <span class="o">-</span> <span class="n">Ap</span><span class="o">/</span><span class="n">Rp</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">kg_To_g</span><span class="o">*</span><span class="p">(</span><span class="n">Psub</span><span class="o">-</span><span class="n">Pch</span><span class="p">)</span>  <span class="c1"># Sublimation rate [kg/hr]</span>
 
     <span class="n">C3</span> <span class="o">=</span> <span class="p">(</span><span class="n">Tsh</span><span class="o">-</span><span class="n">Tbot</span><span class="p">)</span><span class="o">*</span><span class="n">Av</span><span class="o">*</span><span class="n">Kv</span><span class="o">*</span><span class="p">(</span><span class="n">Lpr0</span><span class="o">-</span><span class="n">Lck</span><span class="p">)</span> <span class="o">-</span> <span class="n">Ap</span><span class="o">*</span><span class="p">(</span><span class="n">Tbot</span><span class="o">-</span><span class="n">Tsub</span><span class="p">)</span><span class="o">*</span><span class="n">constant</span><span class="o">.</span><span class="n">k_ice</span>  <span class="c1"># Vial heat transfer balance</span>
 
-    <span class="n">C4</span> <span class="o">=</span> <span class="n">Tsh</span> <span class="o">-</span> <span class="n">dmdt</span><span class="o">*</span><span class="n">constant</span><span class="o">.</span><span class="n">kg_To_g</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">hr_To_s</span><span class="o">*</span><span class="n">constant</span><span class="o">.</span><span class="n">dHs</span><span class="o">/</span><span class="n">Av</span><span class="o">/</span><span class="n">Kv</span> <span class="o">-</span> <span class="n">Tbot</span>  <span class="c1"># Shelf temperature in C</span>
+    <span class="n">C4</span> <span class="o">=</span> <span class="n">Tsh</span> <span class="o">-</span> <span class="n">dmdt</span><span class="o">*</span><span class="n">constant</span><span class="o">.</span><span class="n">kg_To_g</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">hr_To_s</span><span class="o">*</span><span class="n">constant</span><span class="o">.</span><span class="n">dHs</span><span class="o">/</span><span class="n">Av</span><span class="o">/</span><span class="n">Kv</span> <span class="o">-</span> <span class="n">Tbot</span>  <span class="c1"># Shelf temperature [degC]</span>
 
     <span class="k">return</span> <span class="n">C1</span><span class="p">,</span><span class="n">C2</span><span class="p">,</span><span class="n">C3</span><span class="p">,</span><span class="n">C4</span>
 </code></pre></div></td></tr></table></div>
@@ -837,9 +837,9 @@ vial area in cm^2, product area in cm^2, and product resistance in cm^2-Torr-hr/
     <div class="doc doc-contents ">
 
         <p>Defines the inequality constraints for lyophilization optimization within
-safe operation region inside the desgin space. Inputs are chamber pressure in Torr,
-sublimation rate in kg/hr, critical product temperature in degC, vial bottom
-temperature in degC, equipment capability parameters a in kg/hr and b in kg/hr/Torr,
+safe operation region inside the desgin space. Inputs are chamber pressure [Torr],
+sublimation rate [kg/hr], critical product temperature [degC], vial bottom
+temperature [degC], equipment capability parameters a [kg/hr] and b [kg/hr/Torr],
 and number of vials</p>
 
 
@@ -861,9 +861,9 @@ and number of vials</p>
 <span class="normal">222</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">Ineq_Constraints</span><span class="p">(</span><span class="n">Pch</span><span class="p">,</span><span class="n">dm_dt</span><span class="p">,</span><span class="n">Tcrit</span><span class="p">,</span><span class="n">Tbot</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">nVial</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Defines the inequality constraints for lyophilization optimization within</span>
-<span class="sd">    safe operation region inside the desgin space. Inputs are chamber pressure in Torr,</span>
-<span class="sd">    sublimation rate in kg/hr, critical product temperature in degC, vial bottom</span>
-<span class="sd">    temperature in degC, equipment capability parameters a in kg/hr and b in kg/hr/Torr,</span>
+<span class="sd">    safe operation region inside the desgin space. Inputs are chamber pressure [Torr],</span>
+<span class="sd">    sublimation rate [kg/hr], critical product temperature [degC], vial bottom</span>
+<span class="sd">    temperature [degC], equipment capability parameters a [kg/hr] and b [kg/hr/Torr],</span>
 <span class="sd">    and number of vials</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -912,7 +912,7 @@ and number of vials</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Vial heat transfer parameter in cal/s/K/cm^2.</p>
+                <p>Vial heat transfer parameter [cal/s/K/cm**2].</p>
               </div>
             </td>
             <td>
@@ -928,7 +928,7 @@ and number of vials</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Vial heat transfer parameter in cal/s/K/cm^2/Torr.</p>
+                <p>Vial heat transfer parameter [cal/s/K/cm**2/Torr].</p>
               </div>
             </td>
             <td>
@@ -944,7 +944,7 @@ and number of vials</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Vial heat transfer parameter in 1/Torr.</p>
+                <p>Vial heat transfer parameter [1/Torr].</p>
               </div>
             </td>
             <td>
@@ -960,7 +960,7 @@ and number of vials</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Chamber pressure in Torr.</p>
+                <p>Chamber pressure [Torr].</p>
               </div>
             </td>
             <td>
@@ -986,7 +986,7 @@ and number of vials</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Vial heat transfer coefficient in cal/s/K/cm^2.</p>
+                <p>Vial heat transfer coefficient [cal/s/K/cm**2].</p>
               </div>
             </td>
           </tr>
@@ -1013,16 +1013,16 @@ and number of vials</p>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates the vial heat transfer coefficient.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        KC (float): Vial heat transfer parameter in cal/s/K/cm^2.</span>
-<span class="sd">        KP (float): Vial heat transfer parameter in cal/s/K/cm^2/Torr.</span>
-<span class="sd">        KD (float): Vial heat transfer parameter in 1/Torr.</span>
-<span class="sd">        Pch (float): Chamber pressure in Torr.</span>
+<span class="sd">        KC (float): Vial heat transfer parameter [cal/s/K/cm**2].</span>
+<span class="sd">        KP (float): Vial heat transfer parameter [cal/s/K/cm**2/Torr].</span>
+<span class="sd">        KD (float): Vial heat transfer parameter [1/Torr].</span>
+<span class="sd">        Pch (float): Chamber pressure [Torr].</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (float): Vial heat transfer coefficient in cal/s/K/cm^2.</span>
+<span class="sd">        (float): Vial heat transfer coefficient [cal/s/K/cm**2].</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">return</span> <span class="n">KC</span> <span class="o">+</span> <span class="n">KP</span><span class="o">*</span><span class="n">Pch</span><span class="o">/</span><span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="n">KD</span><span class="o">*</span><span class="n">Pch</span><span class="p">)</span> <span class="c1"># Kv in cal/s/K/cm^2</span>
+    <span class="k">return</span> <span class="n">KC</span> <span class="o">+</span> <span class="n">KP</span><span class="o">*</span><span class="n">Pch</span><span class="o">/</span><span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="n">KD</span><span class="o">*</span><span class="n">Pch</span><span class="p">)</span> <span class="c1"># Kv [cal/s/K/cm**2]</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -1040,7 +1040,7 @@ and number of vials</p>
 
     <div class="doc doc-contents ">
 
-        <p>Calculates the intial fill height of the frozen product in cm. </p>
+        <p>Calculates the intial fill height of the frozen product [cm]. </p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1063,7 +1063,7 @@ and number of vials</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>fill volume in mL</p>
+                <p>fill volume [mL]</p>
               </div>
             </td>
             <td>
@@ -1079,7 +1079,7 @@ and number of vials</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>product area in cm^2</p>
+                <p>product area [cm**2]</p>
               </div>
             </td>
             <td>
@@ -1121,7 +1121,7 @@ and number of vials</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>initial fill height of the frozen product, in cm.</p>
+                <p>initial fill height of the frozen product, [cm].</p>
               </div>
             </td>
           </tr>
@@ -1145,19 +1145,19 @@ and number of vials</p>
 <span class="normal">49</span>
 <span class="normal">50</span>
 <span class="normal">51</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">Lpr0_FUN</span><span class="p">(</span><span class="n">Vfill</span><span class="p">,</span><span class="n">Ap</span><span class="p">,</span><span class="n">cSolid</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates the intial fill height of the frozen product in cm. </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates the intial fill height of the frozen product [cm]. </span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        Vfill (float): fill volume in mL</span>
-<span class="sd">        Ap (float): product area in cm^2</span>
+<span class="sd">        Vfill (float): fill volume [mL]</span>
+<span class="sd">        Ap (float): product area [cm**2]</span>
 <span class="sd">        cSolid (float): fractional concentration of the solute in solution</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (float): initial fill height of the frozen product, in cm.</span>
+<span class="sd">        (float): initial fill height of the frozen product, [cm].</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">dens_fac</span> <span class="o">=</span> <span class="p">(</span><span class="n">constant</span><span class="o">.</span><span class="n">rho_solution</span><span class="o">-</span><span class="n">cSolid</span><span class="o">*</span><span class="p">(</span><span class="n">constant</span><span class="o">.</span><span class="n">rho_solution</span><span class="o">-</span><span class="n">constant</span><span class="o">.</span><span class="n">rho_ice</span><span class="p">)</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">rho_solute</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">Vfill</span><span class="o">/</span><span class="p">(</span><span class="n">Ap</span><span class="o">*</span><span class="n">constant</span><span class="o">.</span><span class="n">rho_ice</span><span class="p">)</span><span class="o">*</span><span class="n">dens_fac</span>  <span class="c1"># Fill height in cm</span>
+    <span class="k">return</span> <span class="n">Vfill</span><span class="o">/</span><span class="p">(</span><span class="n">Ap</span><span class="o">*</span><span class="n">constant</span><span class="o">.</span><span class="n">rho_ice</span><span class="p">)</span><span class="o">*</span><span class="n">dens_fac</span>  <span class="c1"># Fill height [cm]</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -1175,7 +1175,7 @@ and number of vials</p>
 
     <div class="doc doc-contents ">
 
-        <p>Calculates product resistance in cm^2-hr-Torr/g.</p>
+        <p>Calculates product resistance [cm<em><em>2</em>hr</em>Torr/g].</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1198,7 +1198,7 @@ and number of vials</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>cake length in cm</p>
+                <p>cake length [cm]</p>
               </div>
             </td>
             <td>
@@ -1214,7 +1214,7 @@ and number of vials</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>base product resistance in cm^2-hr-Torr/g</p>
+                <p>base product resistance [cm<em><em>2</em>hr</em>Torr/g]</p>
               </div>
             </td>
             <td>
@@ -1230,7 +1230,7 @@ and number of vials</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>product resistance parameter in cm-hr-Torr/g</p>
+                <p>product resistance parameter [cm<em>hr</em>Torr/g]</p>
               </div>
             </td>
             <td>
@@ -1246,7 +1246,7 @@ and number of vials</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>product resistance parameter in 1/cm</p>
+                <p>product resistance parameter in [1/cm]</p>
               </div>
             </td>
             <td>
@@ -1272,7 +1272,7 @@ and number of vials</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>product resistance in cm^2-hr-Torr/g</p>
+                <p>product resistance [cm<em><em>2</em>hr</em>Torr/g]</p>
               </div>
             </td>
           </tr>
@@ -1296,19 +1296,19 @@ and number of vials</p>
 <span class="normal">65</span>
 <span class="normal">66</span>
 <span class="normal">67</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">Rp_FUN</span><span class="p">(</span><span class="n">l</span><span class="p">,</span><span class="n">R0</span><span class="p">,</span><span class="n">A1</span><span class="p">,</span><span class="n">A2</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates product resistance in cm^2-hr-Torr/g.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates product resistance [cm**2*hr*Torr/g].</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        l (float): cake length in cm</span>
-<span class="sd">        R0 (float): base product resistance in cm^2-hr-Torr/g</span>
-<span class="sd">        A1 (float): product resistance parameter in cm-hr-Torr/g</span>
-<span class="sd">        A2 (float): product resistance parameter in 1/cm</span>
+<span class="sd">        l (float): cake length [cm]</span>
+<span class="sd">        R0 (float): base product resistance [cm**2*hr*Torr/g]</span>
+<span class="sd">        A1 (float): product resistance parameter [cm*hr*Torr/g]</span>
+<span class="sd">        A2 (float): product resistance parameter in [1/cm]</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (float): product resistance in cm^2-hr-Torr/g</span>
+<span class="sd">        (float): product resistance [cm**2*hr*Torr/g]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">return</span> <span class="n">R0</span> <span class="o">+</span> <span class="n">A1</span><span class="o">*</span><span class="n">l</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">A2</span><span class="o">*</span><span class="n">l</span><span class="p">)</span> <span class="c1"># Product resistance in cm^2-hr-Torr/g</span>
+    <span class="k">return</span> <span class="n">R0</span> <span class="o">+</span> <span class="n">A1</span><span class="o">*</span><span class="n">l</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">A2</span><span class="o">*</span><span class="n">l</span><span class="p">)</span> <span class="c1"># Product resistance [cm**2*hr*Torr/g]</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -1326,9 +1326,9 @@ and number of vials</p>
 
     <div class="doc doc-contents ">
 
-        <p>Calculates product resistance in cm^2-hr-Torr/g. Inputs are sublimation
-temperature in degC, initial product length in cm, cake length in cm,
-chamber pressure in Torr, and vial bottom temperature in degC</p>
+        <p>Calculates product resistance [cm<em><em>2</em>hr</em>Torr/g]. Inputs are sublimation
+temperature [degC], initial product length [cm], cake length [cm],
+chamber pressure [Torr], and vial bottom temperature [degC]</p>
 
 
             <details class="quote">
@@ -1346,14 +1346,14 @@ chamber pressure in Torr, and vial bottom temperature in degC</p>
 <span class="normal">152</span>
 <span class="normal">153</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">Rp_finder</span><span class="p">(</span><span class="n">T_sub</span><span class="p">,</span><span class="n">Lpr0</span><span class="p">,</span><span class="n">Lck</span><span class="p">,</span><span class="n">Pch</span><span class="p">,</span><span class="n">Tbot</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Calculates product resistance in cm^2-hr-Torr/g. Inputs are sublimation</span>
-<span class="sd">    temperature in degC, initial product length in cm, cake length in cm,</span>
-<span class="sd">    chamber pressure in Torr, and vial bottom temperature in degC</span>
+<span class="sd">    Calculates product resistance [cm**2*hr*Torr/g]. Inputs are sublimation</span>
+<span class="sd">    temperature [degC], initial product length [cm], cake length [cm],</span>
+<span class="sd">    chamber pressure [Torr], and vial bottom temperature [degC]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">P_sub</span> <span class="o">=</span> <span class="n">Vapor_pressure</span><span class="p">(</span><span class="n">T_sub</span><span class="p">)</span>   <span class="c1"># Vapor pressure at the sublimation temperature in Torr</span>
+    <span class="n">P_sub</span> <span class="o">=</span> <span class="n">Vapor_pressure</span><span class="p">(</span><span class="n">T_sub</span><span class="p">)</span>   <span class="c1"># Vapor pressure at the sublimation temperature [Torr]</span>
 
-    <span class="n">Rp</span> <span class="o">=</span> <span class="p">(</span><span class="n">Lpr0</span><span class="o">-</span><span class="n">Lck</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">P_sub</span><span class="o">-</span><span class="n">Pch</span><span class="p">)</span><span class="o">*</span><span class="n">constant</span><span class="o">.</span><span class="n">dHs</span><span class="o">/</span><span class="p">(</span><span class="n">Tbot</span><span class="o">-</span><span class="n">T_sub</span><span class="p">)</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">hr_To_s</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">k_ice</span>	<span class="c1"># Product resistance in cm^2-Torr-hr/g</span>
+    <span class="n">Rp</span> <span class="o">=</span> <span class="p">(</span><span class="n">Lpr0</span><span class="o">-</span><span class="n">Lck</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">P_sub</span><span class="o">-</span><span class="n">Pch</span><span class="p">)</span><span class="o">*</span><span class="n">constant</span><span class="o">.</span><span class="n">dHs</span><span class="o">/</span><span class="p">(</span><span class="n">Tbot</span><span class="o">-</span><span class="n">T_sub</span><span class="p">)</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">hr_To_s</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">k_ice</span>	<span class="c1"># Product resistance [cm]^2-Torr-hr/g</span>
 
     <span class="k">return</span> <span class="n">Rp</span>
 </code></pre></div></td></tr></table></div>
@@ -1373,10 +1373,10 @@ chamber pressure in Torr, and vial bottom temperature in degC</p>
 
     <div class="doc doc-contents ">
 
-        <p>Calculates the temperature at the bottom of the vial in degC. Inputs are
-sublimation front temperature in degC, initial product length in cm, cake
-length in cm, chamber pressure in Torr, and product resistance in
-cm^2-Torr-hr/g</p>
+        <p>Calculates the temperature at the bottom of the vial [degC]. Inputs are
+sublimation front temperature [degC], initial product length [cm], cake
+length [cm], chamber pressure [Torr], and product resistance in
+[cm<em><em>2</em>Torr</em>hr/g]</p>
 
 
             <details class="quote">
@@ -1395,15 +1395,15 @@ cm^2-Torr-hr/g</p>
 <span class="normal">138</span>
 <span class="normal">139</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">T_bot_FUN</span><span class="p">(</span><span class="n">T_sub</span><span class="p">,</span><span class="n">Lpr0</span><span class="p">,</span><span class="n">Lck</span><span class="p">,</span><span class="n">Pch</span><span class="p">,</span><span class="n">Rp</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Calculates the temperature at the bottom of the vial in degC. Inputs are</span>
-<span class="sd">    sublimation front temperature in degC, initial product length in cm, cake</span>
-<span class="sd">    length in cm, chamber pressure in Torr, and product resistance in</span>
-<span class="sd">    cm^2-Torr-hr/g</span>
+<span class="sd">    Calculates the temperature at the bottom of the vial [degC]. Inputs are</span>
+<span class="sd">    sublimation front temperature [degC], initial product length [cm], cake</span>
+<span class="sd">    length [cm], chamber pressure [Torr], and product resistance in</span>
+<span class="sd">    [cm**2*Torr*hr/g]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">P_sub</span> <span class="o">=</span> <span class="n">Vapor_pressure</span><span class="p">(</span><span class="n">T_sub</span><span class="p">)</span>   <span class="c1"># Vapor pressure at the sublimation temperature in Torr</span>
+    <span class="n">P_sub</span> <span class="o">=</span> <span class="n">Vapor_pressure</span><span class="p">(</span><span class="n">T_sub</span><span class="p">)</span>   <span class="c1"># Vapor pressure at the sublimation temperature [Torr]</span>
 
-    <span class="n">Tbot</span> <span class="o">=</span> <span class="n">T_sub</span> <span class="o">+</span> <span class="p">(</span><span class="n">Lpr0</span><span class="o">-</span><span class="n">Lck</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">P_sub</span><span class="o">-</span><span class="n">Pch</span><span class="p">)</span><span class="o">*</span><span class="n">constant</span><span class="o">.</span><span class="n">dHs</span><span class="o">/</span><span class="n">Rp</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">hr_To_s</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">k_ice</span> <span class="c1"># Vial bottom temperature in degC</span>
+    <span class="n">Tbot</span> <span class="o">=</span> <span class="n">T_sub</span> <span class="o">+</span> <span class="p">(</span><span class="n">Lpr0</span><span class="o">-</span><span class="n">Lck</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">P_sub</span><span class="o">-</span><span class="n">Pch</span><span class="p">)</span><span class="o">*</span><span class="n">constant</span><span class="o">.</span><span class="n">dHs</span><span class="o">/</span><span class="n">Rp</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">hr_To_s</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">k_ice</span> <span class="c1"># Vial bottom temperature [degC]</span>
 
     <span class="k">return</span> <span class="n">Tbot</span>
 </code></pre></div></td></tr></table></div>
@@ -1425,10 +1425,10 @@ cm^2-Torr-hr/g</p>
 
         <p>Tsub is found from solving for T_unknown.
 Determines the function to calculate the sublimation temperature
-represented as T_unknown. Other inputs are chamber pressure in Torr, vial
-area in cm^2, product area in cm^2, vial heat transfer coefficient in
-cal/s/K/cm^2, initial product length in cm, cake length in cm, vial bottom 
-temperature in degC, and shelf temperature in degC</p>
+represented as T_unknown. Other inputs are chamber pressure [Torr], vial
+area [cm<strong>2], product area [cm</strong>2], vial heat transfer coefficient in
+[cal/s/K/cm**2], initial product length [cm], cake length [cm], vial bottom 
+temperature [degC], and shelf temperature [degC]</p>
 
 
             <details class="quote">
@@ -1452,10 +1452,10 @@ temperature in degC, and shelf temperature in degC</p>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Tsub is found from solving for T_unknown.</span>
 <span class="sd">    Determines the function to calculate the sublimation temperature</span>
-<span class="sd">    represented as T_unknown. Other inputs are chamber pressure in Torr, vial</span>
-<span class="sd">    area in cm^2, product area in cm^2, vial heat transfer coefficient in</span>
-<span class="sd">    cal/s/K/cm^2, initial product length in cm, cake length in cm, vial bottom </span>
-<span class="sd">    temperature in degC, and shelf temperature in degC</span>
+<span class="sd">    represented as T_unknown. Other inputs are chamber pressure [Torr], vial</span>
+<span class="sd">    area [cm**2], product area [cm**2], vial heat transfer coefficient in</span>
+<span class="sd">    [cal/s/K/cm**2], initial product length [cm], cake length [cm], vial bottom </span>
+<span class="sd">    temperature [degC], and shelf temperature [degC]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">Av</span><span class="p">,</span> <span class="n">Ap</span><span class="p">,</span> <span class="n">Kv</span><span class="p">,</span> <span class="n">Lpr0</span><span class="p">,</span> <span class="n">Lck</span><span class="p">,</span> <span class="n">Tbot</span><span class="p">,</span> <span class="n">Tsh</span> <span class="o">=</span> <span class="n">data</span>
@@ -1482,9 +1482,9 @@ temperature in degC, and shelf temperature in degC</p>
     <div class="doc doc-contents ">
 
         <p>Tsub is found from solving for T_unknown.  # Determines the function to calculate the sublimation temperature
-represented as T_unknown. Other inputs are vial bottom temperature in degC, 
-initial product length in cm, cake length in cm, chamber pressure in Torr,
-and product resistance in cm^2-Torr-hr/g</p>
+represented as T_unknown. Other inputs are vial bottom temperature [degC], 
+initial product length [cm], cake length [cm], chamber pressure [Torr],
+and product resistance [cm<em><em>2</em>Torr</em>hr/g]</p>
 
 
             <details class="quote">
@@ -1506,14 +1506,14 @@ and product resistance in cm^2-Torr-hr/g</p>
 <span class="normal">190</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">T_sub_fromTpr</span><span class="p">(</span><span class="n">T_unknown</span><span class="p">,</span> <span class="o">*</span><span class="n">data</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Tsub is found from solving for T_unknown.  # Determines the function to calculate the sublimation temperature</span>
-<span class="sd">    represented as T_unknown. Other inputs are vial bottom temperature in degC, </span>
-<span class="sd">    initial product length in cm, cake length in cm, chamber pressure in Torr,</span>
-<span class="sd">    and product resistance in cm^2-Torr-hr/g</span>
+<span class="sd">    represented as T_unknown. Other inputs are vial bottom temperature [degC], </span>
+<span class="sd">    initial product length [cm], cake length [cm], chamber pressure [Torr],</span>
+<span class="sd">    and product resistance [cm**2*Torr*hr/g]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">Tbot</span><span class="p">,</span> <span class="n">Lpr0</span><span class="p">,</span> <span class="n">Lck</span><span class="p">,</span> <span class="n">Pch</span><span class="p">,</span> <span class="n">Rp</span> <span class="o">=</span> <span class="n">data</span>
 
-    <span class="n">P_sub</span> <span class="o">=</span> <span class="n">Vapor_pressure</span><span class="p">(</span><span class="n">T_unknown</span><span class="p">)</span>   <span class="c1"># Vapor pressure at the sublimation temperature in Torr</span>
+    <span class="n">P_sub</span> <span class="o">=</span> <span class="n">Vapor_pressure</span><span class="p">(</span><span class="n">T_unknown</span><span class="p">)</span>   <span class="c1"># Vapor pressure at the sublimation temperature [Torr]</span>
 
     <span class="n">F</span> <span class="o">=</span> <span class="n">T_unknown</span> <span class="o">-</span> <span class="n">Tbot</span> <span class="o">+</span> <span class="p">(</span><span class="n">P_sub</span><span class="o">-</span><span class="n">Pch</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">Lpr0</span><span class="o">-</span><span class="n">Lck</span><span class="p">)</span><span class="o">*</span><span class="n">constant</span><span class="o">.</span><span class="n">dHs</span><span class="o">/</span><span class="n">Rp</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">hr_To_s</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">k_ice</span>  <span class="c1"># Heat and mass transfer energy balance function - Should be zero</span>
 
@@ -1537,10 +1537,10 @@ and product resistance in cm^2-Torr-hr/g</p>
 
         <p>Tsub is found from solving for T_unknown.
 Determines the function to calculate the sublimation temperature
-represented as T_unknown. Other inputs are chamber pressure in Torr, vial
-area in cm^2, product area in cm^2, vial heat transfer coefficient in
-cal/s/K/cm^2, initial product length in cm, cake length in cm, product
-resistance in cm^2-Torr-hr/g, and shelf temperature in degC</p>
+represented as T_unknown. Other inputs are chamber pressure [Torr], vial
+area [cm<strong>2], product area [cm</strong>2], vial heat transfer coefficient in
+[cal/s/K/cm<strong>2], initial product length [cm], cake length [cm], product
+resistance [cm</strong>2<em>Torr</em>Hr/g], and shelf temperature [degC]</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1563,7 +1563,7 @@ resistance in cm^2-Torr-hr/g, and shelf temperature in degC</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Initial guess for the sublimation temperature in degC.</p>
+                <p>Initial guess for the sublimation temperature [degC].</p>
               </div>
             </td>
             <td>
@@ -1640,13 +1640,13 @@ resistance in cm^2-Torr-hr/g, and shelf temperature in degC</p>
 <span class="normal">109</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">T_sub_solver_FUN</span><span class="p">(</span><span class="n">T_sub_guess</span><span class="p">,</span> <span class="o">*</span><span class="n">data</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Tsub is found from solving for T_unknown.</span>
 <span class="sd">    Determines the function to calculate the sublimation temperature</span>
-<span class="sd">    represented as T_unknown. Other inputs are chamber pressure in Torr, vial</span>
-<span class="sd">    area in cm^2, product area in cm^2, vial heat transfer coefficient in</span>
-<span class="sd">    cal/s/K/cm^2, initial product length in cm, cake length in cm, product</span>
-<span class="sd">    resistance in cm^2-Torr-hr/g, and shelf temperature in degC</span>
+<span class="sd">    represented as T_unknown. Other inputs are chamber pressure [Torr], vial</span>
+<span class="sd">    area [cm**2], product area [cm**2], vial heat transfer coefficient in</span>
+<span class="sd">    [cal/s/K/cm**2], initial product length [cm], cake length [cm], product</span>
+<span class="sd">    resistance [cm**2*Torr*Hr/g], and shelf temperature [degC]</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        T_sub_guess (float): Initial guess for the sublimation temperature in degC.</span>
+<span class="sd">        T_sub_guess (float): Initial guess for the sublimation temperature [degC].</span>
 <span class="sd">        data (tuple): Pch, Av, Ap, Kv, Lpr0, Lck, Rp, Tsh</span>
 
 <span class="sd">    Returns:</span>
@@ -1655,7 +1655,7 @@ resistance in cm^2-Torr-hr/g, and shelf temperature in degC</p>
 
     <span class="n">Pch</span><span class="p">,</span> <span class="n">Av</span><span class="p">,</span> <span class="n">Ap</span><span class="p">,</span> <span class="n">Kv</span><span class="p">,</span> <span class="n">Lpr0</span><span class="p">,</span> <span class="n">Lck</span><span class="p">,</span> <span class="n">Rp</span><span class="p">,</span> <span class="n">Tsh</span> <span class="o">=</span> <span class="n">data</span>
 
-    <span class="n">P_sub</span> <span class="o">=</span> <span class="n">Vapor_pressure</span><span class="p">(</span><span class="n">T_sub_guess</span><span class="p">)</span>   <span class="c1"># Vapor pressure at the sublimation temperature in Torr</span>
+    <span class="n">P_sub</span> <span class="o">=</span> <span class="n">Vapor_pressure</span><span class="p">(</span><span class="n">T_sub_guess</span><span class="p">)</span>   <span class="c1"># Vapor pressure at the sublimation temperature [Torr]</span>
     <span class="n">Qsub</span> <span class="o">=</span> <span class="n">constant</span><span class="o">.</span><span class="n">dHs</span><span class="o">*</span><span class="p">(</span><span class="n">P_sub</span><span class="o">-</span><span class="n">Pch</span><span class="p">)</span><span class="o">*</span><span class="n">Ap</span><span class="o">/</span><span class="n">Rp</span> <span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">hr_To_s</span> <span class="c1"># Sublimation heat</span>
     <span class="n">T_b</span> <span class="o">=</span> <span class="n">T_sub_guess</span> <span class="o">+</span> <span class="n">Qsub</span><span class="o">/</span><span class="n">Ap</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">k_ice</span><span class="o">*</span><span class="p">(</span><span class="n">Lpr0</span><span class="o">-</span><span class="n">Lck</span><span class="p">)</span> <span class="c1"># Corresponding bottom temperature</span>
     <span class="n">Qsh</span> <span class="o">=</span> <span class="n">Kv</span><span class="o">*</span><span class="n">Av</span><span class="o">*</span><span class="p">(</span><span class="n">Tsh</span> <span class="o">-</span> <span class="n">T_b</span><span class="p">)</span> <span class="c1"># Heat transfer from shelf</span>
@@ -1677,10 +1677,10 @@ resistance in cm^2-Torr-hr/g, and shelf temperature in degC</p>
 
     <div class="doc doc-contents ">
 
-        <p>Calculates the maximum product temperature (occus at vial bottom) in
-degC. Inputs are chamber pressure in Torr, sublimation rate based on
-equipment capability in kg/hr, initial product length in cm, cake length
-in cm, product resistance in cm^2-Torr-hr/g, and product area in cm^2</p>
+        <p>Calculates the maximum product temperature (occus at vial bottom)
+[degC]. Inputs are chamber pressure [Torr], sublimation rate based on
+equipment capability [kg/hr], initial product length [cm], cake length
+[cm], product resistance [cm<strong>2<em>Torr</em>hr/g], and product area [cm</strong>2]</p>
 
 
             <details class="quote">
@@ -1700,16 +1700,16 @@ in cm, product resistance in cm^2-Torr-hr/g, and product area in cm^2</p>
 <span class="normal">206</span>
 <span class="normal">207</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">Tbot_max_eq_cap</span><span class="p">(</span><span class="n">Pch</span><span class="p">,</span><span class="n">dm_dt</span><span class="p">,</span><span class="n">Lpr0</span><span class="p">,</span><span class="n">Lck</span><span class="p">,</span><span class="n">Rp</span><span class="p">,</span><span class="n">Ap</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Calculates the maximum product temperature (occus at vial bottom) in</span>
-<span class="sd">    degC. Inputs are chamber pressure in Torr, sublimation rate based on</span>
-<span class="sd">    equipment capability in kg/hr, initial product length in cm, cake length</span>
-<span class="sd">    in cm, product resistance in cm^2-Torr-hr/g, and product area in cm^2</span>
+<span class="sd">    Calculates the maximum product temperature (occus at vial bottom)</span>
+<span class="sd">    [degC]. Inputs are chamber pressure [Torr], sublimation rate based on</span>
+<span class="sd">    equipment capability [kg/hr], initial product length [cm], cake length</span>
+<span class="sd">    [cm], product resistance [cm**2*Torr*hr/g], and product area [cm**2]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">P_sub</span> <span class="o">=</span> <span class="n">dm_dt</span><span class="o">/</span><span class="n">Ap</span><span class="o">*</span><span class="n">Rp</span> <span class="o">+</span> <span class="n">Pch</span>     <span class="c1"># Sublimation front pressure in Torr</span>
-    <span class="n">T_sub</span> <span class="o">=</span> <span class="o">-</span><span class="mf">6144.96</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">P_sub</span><span class="o">/</span><span class="mf">2.698e10</span><span class="p">)</span> <span class="o">-</span> <span class="mf">273.15</span>    <span class="c1"># Sublimation front temperature in degC</span>
-    <span class="n">Tbot</span> <span class="o">=</span> <span class="n">T_sub</span> <span class="o">+</span> <span class="p">(</span><span class="n">Lpr0</span><span class="o">-</span><span class="n">Lck</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">P_sub</span><span class="o">-</span><span class="n">Pch</span><span class="p">)</span><span class="o">*</span><span class="n">constant</span><span class="o">.</span><span class="n">dHs</span><span class="o">/</span><span class="n">Rp</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">hr_To_s</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">k_ice</span>	<span class="c1">#Vial bottom temperature in degC</span>
-    <span class="n">Tbot_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">Tbot</span><span class="p">)</span>   <span class="c1"># Maximum vial bottom temperature in degC</span>
+    <span class="n">P_sub</span> <span class="o">=</span> <span class="n">dm_dt</span><span class="o">/</span><span class="n">Ap</span><span class="o">*</span><span class="n">Rp</span> <span class="o">+</span> <span class="n">Pch</span>     <span class="c1"># Sublimation front pressure [Torr]</span>
+    <span class="n">T_sub</span> <span class="o">=</span> <span class="o">-</span><span class="mf">6144.96</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">P_sub</span><span class="o">/</span><span class="mf">2.698e10</span><span class="p">)</span> <span class="o">-</span> <span class="mf">273.15</span>    <span class="c1"># Sublimation front temperature [degC]</span>
+    <span class="n">Tbot</span> <span class="o">=</span> <span class="n">T_sub</span> <span class="o">+</span> <span class="p">(</span><span class="n">Lpr0</span><span class="o">-</span><span class="n">Lck</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">P_sub</span><span class="o">-</span><span class="n">Pch</span><span class="p">)</span><span class="o">*</span><span class="n">constant</span><span class="o">.</span><span class="n">dHs</span><span class="o">/</span><span class="n">Rp</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">hr_To_s</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">k_ice</span>	<span class="c1">#Vial bottom temperature [degC]</span>
+    <span class="n">Tbot_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">Tbot</span><span class="p">)</span>   <span class="c1"># Maximum vial bottom temperature [degC]</span>
 
     <span class="k">return</span> <span class="n">Tbot_max</span>
 </code></pre></div></td></tr></table></div>
@@ -1729,8 +1729,8 @@ in cm, product resistance in cm^2-Torr-hr/g, and product area in cm^2</p>
 
     <div class="doc doc-contents ">
 
-        <p>Calculates the vapor pressure in Torr. Input is sublimation front
-temperature in degC</p>
+        <p>Calculates the vapor pressure [Torr]. Input is sublimation front
+temperature [degC]</p>
 
 
             <details class="quote">
@@ -1745,11 +1745,11 @@ temperature in degC</p>
 <span class="normal">34</span>
 <span class="normal">35</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">Vapor_pressure</span><span class="p">(</span><span class="n">T_sub</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Calculates the vapor pressure in Torr. Input is sublimation front</span>
-<span class="sd">    temperature in degC</span>
+<span class="sd">    Calculates the vapor pressure [Torr]. Input is sublimation front</span>
+<span class="sd">    temperature [degC]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">p</span> <span class="o">=</span> <span class="mf">2.698e10</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">6144.96</span><span class="o">/</span><span class="p">(</span><span class="mf">273.15</span><span class="o">+</span><span class="n">T_sub</span><span class="p">))</span>   <span class="c1"># Vapor pressure at the sublimation temperature in Torr</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="mf">2.698e10</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">6144.96</span><span class="o">/</span><span class="p">(</span><span class="mf">273.15</span><span class="o">+</span><span class="n">T_sub</span><span class="p">))</span>   <span class="c1"># Vapor pressure at the sublimation temperature [Torr]</span>
 
     <span class="k">return</span> <span class="n">p</span>
 </code></pre></div></td></tr></table></div>
@@ -1808,7 +1808,7 @@ temperature in degC</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The cake thickness in cm.</p>
+                <p>The cake thickness [cm].</p>
               </div>
             </td>
             <td>
@@ -1890,7 +1890,7 @@ temperature in degC</p>
 
 <span class="sd">    Args:</span>
 <span class="sd">        t (float): The current time in hours.</span>
-<span class="sd">        Lck (float): The cake thickness in cm.</span>
+<span class="sd">        Lck (float): The cake thickness [cm].</span>
 <span class="sd">        config (tuple): A tuple containing the configuration parameters.</span>
 
 <span class="sd">    Returns:</span>
@@ -1899,14 +1899,14 @@ temperature in degC</p>
     <span class="n">vial</span><span class="p">,</span> <span class="n">product</span><span class="p">,</span> <span class="n">ht</span><span class="p">,</span> <span class="n">Pch_t</span><span class="p">,</span> <span class="n">Tsh_t</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">Lpr0</span> <span class="o">=</span> <span class="n">config</span>
     <span class="n">Tsh</span> <span class="o">=</span> <span class="n">Tsh_t</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
     <span class="n">Pch</span> <span class="o">=</span> <span class="n">Pch_t</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
-    <span class="n">Kv</span> <span class="o">=</span> <span class="n">Kv_FUN</span><span class="p">(</span><span class="n">ht</span><span class="p">[</span><span class="s1">&#39;KC&#39;</span><span class="p">],</span><span class="n">ht</span><span class="p">[</span><span class="s1">&#39;KP&#39;</span><span class="p">],</span><span class="n">ht</span><span class="p">[</span><span class="s1">&#39;KD&#39;</span><span class="p">],</span><span class="n">Pch</span><span class="p">)</span>  <span class="c1"># Vial heat transfer coefficient in cal/s/K/cm^2</span>
-    <span class="n">Rp</span> <span class="o">=</span> <span class="n">Rp_FUN</span><span class="p">(</span><span class="n">Lck</span><span class="p">,</span><span class="n">product</span><span class="p">[</span><span class="s1">&#39;R0&#39;</span><span class="p">],</span><span class="n">product</span><span class="p">[</span><span class="s1">&#39;A1&#39;</span><span class="p">],</span><span class="n">product</span><span class="p">[</span><span class="s1">&#39;A2&#39;</span><span class="p">])</span>  <span class="c1"># Product resistance in cm^2-hr-Torr/g</span>
-    <span class="n">Tsub</span> <span class="o">=</span> <span class="n">fsolve</span><span class="p">(</span><span class="n">T_sub_solver_FUN</span><span class="p">,</span> <span class="mi">250</span><span class="p">,</span> <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">Pch</span><span class="p">,</span><span class="n">vial</span><span class="p">[</span><span class="s1">&#39;Av&#39;</span><span class="p">],</span><span class="n">vial</span><span class="p">[</span><span class="s1">&#39;Ap&#39;</span><span class="p">],</span><span class="n">Kv</span><span class="p">,</span><span class="n">Lpr0</span><span class="p">,</span><span class="n">Lck</span><span class="p">,</span><span class="n">Rp</span><span class="p">,</span><span class="n">Tsh</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># Sublimation front temperature array in degC</span>
-    <span class="n">dmdt</span> <span class="o">=</span> <span class="n">sub_rate</span><span class="p">(</span><span class="n">vial</span><span class="p">[</span><span class="s1">&#39;Ap&#39;</span><span class="p">],</span><span class="n">Rp</span><span class="p">,</span><span class="n">Tsub</span><span class="p">,</span><span class="n">Pch</span><span class="p">)</span>   <span class="c1"># Total sublimation rate array in kg/hr</span>
+    <span class="n">Kv</span> <span class="o">=</span> <span class="n">Kv_FUN</span><span class="p">(</span><span class="n">ht</span><span class="p">[</span><span class="s1">&#39;KC&#39;</span><span class="p">],</span><span class="n">ht</span><span class="p">[</span><span class="s1">&#39;KP&#39;</span><span class="p">],</span><span class="n">ht</span><span class="p">[</span><span class="s1">&#39;KD&#39;</span><span class="p">],</span><span class="n">Pch</span><span class="p">)</span>  <span class="c1"># Vial heat transfer coefficient [cal/s/K/cm**2]</span>
+    <span class="n">Rp</span> <span class="o">=</span> <span class="n">Rp_FUN</span><span class="p">(</span><span class="n">Lck</span><span class="p">,</span><span class="n">product</span><span class="p">[</span><span class="s1">&#39;R0&#39;</span><span class="p">],</span><span class="n">product</span><span class="p">[</span><span class="s1">&#39;A1&#39;</span><span class="p">],</span><span class="n">product</span><span class="p">[</span><span class="s1">&#39;A2&#39;</span><span class="p">])</span>  <span class="c1"># Product resistance [cm**2*hr*Torr/g]</span>
+    <span class="n">Tsub</span> <span class="o">=</span> <span class="n">fsolve</span><span class="p">(</span><span class="n">T_sub_solver_FUN</span><span class="p">,</span> <span class="mi">250</span><span class="p">,</span> <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">Pch</span><span class="p">,</span><span class="n">vial</span><span class="p">[</span><span class="s1">&#39;Av&#39;</span><span class="p">],</span><span class="n">vial</span><span class="p">[</span><span class="s1">&#39;Ap&#39;</span><span class="p">],</span><span class="n">Kv</span><span class="p">,</span><span class="n">Lpr0</span><span class="p">,</span><span class="n">Lck</span><span class="p">,</span><span class="n">Rp</span><span class="p">,</span><span class="n">Tsh</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># Sublimation front temperature array [degC]</span>
+    <span class="n">dmdt</span> <span class="o">=</span> <span class="n">sub_rate</span><span class="p">(</span><span class="n">vial</span><span class="p">[</span><span class="s1">&#39;Ap&#39;</span><span class="p">],</span><span class="n">Rp</span><span class="p">,</span><span class="n">Tsub</span><span class="p">,</span><span class="n">Pch</span><span class="p">)</span>   <span class="c1"># Total sublimation rate array [kg/hr]</span>
     <span class="k">if</span> <span class="n">dmdt</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">:</span>
         <span class="c1"># print(&quot;Shelf temperature is too low for sublimation.&quot;)</span>
         <span class="n">dmdt</span> <span class="o">=</span> <span class="mf">0.0</span>
-    <span class="n">Tbot</span> <span class="o">=</span> <span class="n">T_bot_FUN</span><span class="p">(</span><span class="n">Tsub</span><span class="p">,</span><span class="n">Lpr0</span><span class="p">,</span><span class="n">Lck</span><span class="p">,</span><span class="n">Pch</span><span class="p">,</span><span class="n">Rp</span><span class="p">)</span>    <span class="c1"># Vial bottom temperature array in degC</span>
+    <span class="n">Tbot</span> <span class="o">=</span> <span class="n">T_bot_FUN</span><span class="p">(</span><span class="n">Tsub</span><span class="p">,</span><span class="n">Lpr0</span><span class="p">,</span><span class="n">Lck</span><span class="p">,</span><span class="n">Pch</span><span class="p">,</span><span class="n">Rp</span><span class="p">)</span>    <span class="c1"># Vial bottom temperature array [degC]</span>
     <span class="n">dry_frac</span> <span class="o">=</span> <span class="n">Lck</span><span class="o">/</span><span class="n">Lpr0</span>
 
     <span class="n">col</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">t</span><span class="p">,</span> <span class="n">Tsub</span><span class="p">,</span> <span class="n">Tbot</span><span class="p">,</span> <span class="n">Tsh</span><span class="p">,</span> <span class="n">Pch</span><span class="o">*</span><span class="n">constant</span><span class="o">.</span><span class="n">Torr_to_mTorr</span><span class="p">,</span> <span class="n">dmdt</span><span class="o">/</span><span class="p">(</span><span class="n">vial</span><span class="p">[</span><span class="s1">&#39;Ap&#39;</span><span class="p">]</span><span class="o">*</span><span class="n">constant</span><span class="o">.</span><span class="n">cm_To_m</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="n">dry_frac</span><span class="p">])</span>
@@ -1928,7 +1928,7 @@ temperature in degC</p>
 
     <div class="doc doc-contents ">
 
-        <p>Calculates the crystallization time in hr. Inputs are fill volume in mL, heat transfer coefficient in W/m^2/K, vial area in cm^2, freezing temperature in degC, nucleation temperature in degC, shelf temperature in degC</p>
+        <p>Calculates the crystallization time [hr]. Inputs are fill volume [mL], heat transfer coefficient [W/m^2/K], vial area [cm**2], freezing temperature [degC], nucleation temperature [degC], shelf temperature [degC]</p>
 
 
             <details class="quote">
@@ -1942,7 +1942,7 @@ temperature in degC</p>
 <span class="normal">266</span>
 <span class="normal">267</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">crystallization_time_FUN</span><span class="p">(</span><span class="n">V</span><span class="p">,</span><span class="n">h</span><span class="p">,</span><span class="n">Av</span><span class="p">,</span><span class="n">Tf</span><span class="p">,</span><span class="n">Tn</span><span class="p">,</span><span class="n">Tsh</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Calculates the crystallization time in hr. Inputs are fill volume in mL, heat transfer coefficient in W/m^2/K, vial area in cm^2, freezing temperature in degC, nucleation temperature in degC, shelf temperature in degC</span>
+<span class="sd">    Calculates the crystallization time [hr]. Inputs are fill volume [mL], heat transfer coefficient [W/m^2/K], vial area [cm**2], freezing temperature [degC], nucleation temperature [degC], shelf temperature [degC]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">F</span> <span class="o">=</span> <span class="n">constant</span><span class="o">.</span><span class="n">rho_solution</span><span class="o">*</span><span class="n">V</span><span class="o">*</span><span class="p">(</span><span class="n">constant</span><span class="o">.</span><span class="n">dHf</span><span class="o">*</span><span class="n">constant</span><span class="o">.</span><span class="n">cal_To_J</span><span class="o">-</span><span class="n">constant</span><span class="o">.</span><span class="n">Cp_solution</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">kg_To_g</span><span class="o">*</span><span class="p">(</span><span class="n">Tf</span><span class="o">-</span><span class="n">Tn</span><span class="p">))</span><span class="o">/</span><span class="n">h</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">hr_To_s</span><span class="o">/</span><span class="n">Av</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">cm_To_m</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="n">Tf</span><span class="o">-</span><span class="n">Tsh</span><span class="p">)</span>
@@ -2090,7 +2090,7 @@ temperature in degC</p>
 
     <div class="doc doc-contents ">
 
-        <p>Calculates the product temperature in C. Inputs are time in hr, initial product temperature in degC, product density in g/mL, constant pressure specific heat of the product in J/kg/K, product volume in mL, heat transfer coefficient in W/m^2/K, vial area in cm^2, current shelf temperature in degC, initial shelf temperature in degC, shelf temperature ramping rate in degC/min</p>
+        <p>Calculates the product temperature [degC]. Inputs are time [hr], initial product temperature [degC], product density [g/mL], constant pressure specific heat of the product [J/kg/K], product volume [mL], heat transfer coefficient [W/m^2/K], vial area [cm**2], current shelf temperature [degC], initial shelf temperature [degC], shelf temperature ramping rate [degC/min]</p>
 
 
             <details class="quote">
@@ -2104,7 +2104,7 @@ temperature in degC</p>
 <span class="normal">253</span>
 <span class="normal">254</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">lumped_cap_Tpr</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">Tpr0</span><span class="p">,</span><span class="n">rho</span><span class="p">,</span><span class="n">Cp</span><span class="p">,</span><span class="n">V</span><span class="p">,</span><span class="n">h</span><span class="p">,</span><span class="n">Av</span><span class="p">,</span><span class="n">Tsh</span><span class="p">,</span><span class="n">Tsh0</span><span class="p">,</span> <span class="n">Tsh_ramp</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Calculates the product temperature in C. Inputs are time in hr, initial product temperature in degC, product density in g/mL, constant pressure specific heat of the product in J/kg/K, product volume in mL, heat transfer coefficient in W/m^2/K, vial area in cm^2, current shelf temperature in degC, initial shelf temperature in degC, shelf temperature ramping rate in degC/min</span>
+<span class="sd">    Calculates the product temperature [degC]. Inputs are time [hr], initial product temperature [degC], product density [g/mL], constant pressure specific heat of the product [J/kg/K], product volume [mL], heat transfer coefficient [W/m^2/K], vial area [cm**2], current shelf temperature [degC], initial shelf temperature [degC], shelf temperature ramping rate [degC/min]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">F</span> <span class="o">=</span> <span class="p">(</span><span class="n">Tpr0</span> <span class="o">+</span> <span class="n">Tsh_ramp</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">min_To_s</span><span class="o">*</span><span class="n">rho</span><span class="o">*</span><span class="n">Cp</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">kg_To_g</span><span class="o">*</span><span class="n">V</span><span class="o">/</span><span class="n">h</span><span class="o">/</span><span class="n">Av</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">cm_To_m</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">Tsh0</span><span class="p">)</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">h</span><span class="o">*</span><span class="n">Av</span><span class="o">*</span><span class="n">constant</span><span class="o">.</span><span class="n">cm_To_m</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">t</span><span class="o">*</span><span class="n">constant</span><span class="o">.</span><span class="n">hr_To_s</span><span class="o">/</span><span class="n">rho</span><span class="o">/</span><span class="n">Cp</span><span class="o">*</span><span class="n">constant</span><span class="o">.</span><span class="n">kg_To_g</span><span class="o">/</span><span class="n">V</span><span class="p">)</span> <span class="o">-</span> <span class="n">Tsh_ramp</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">min_To_s</span><span class="o">*</span><span class="n">rho</span><span class="o">*</span><span class="n">Cp</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">kg_To_g</span><span class="o">*</span><span class="n">V</span><span class="o">/</span><span class="n">h</span><span class="o">/</span><span class="n">Av</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">cm_To_m</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">Tsh</span>
@@ -2127,9 +2127,9 @@ temperature in degC</p>
 
     <div class="doc doc-contents ">
 
-        <p>Calculates the sublimation rate from each vial in kg/hr. Inputs are
-product area in cm^2, product resistance in cm^2-Torr-hr/g, sublimation
-front temperature in degC, and chamber pressure in Torr</p>
+        <p>Calculates the sublimation rate from each vial [kg/hr]. Inputs are
+product area [cm<strong>2], product resistance [cm</strong>2<em>Torr</em>Hr/g], sublimation
+front temperature [degC], and chamber pressure [Torr]</p>
 
 
             <details class="quote">
@@ -2147,14 +2147,14 @@ front temperature in degC, and chamber pressure in Torr</p>
 <span class="normal">122</span>
 <span class="normal">123</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">sub_rate</span><span class="p">(</span><span class="n">Ap</span><span class="p">,</span><span class="n">Rp</span><span class="p">,</span><span class="n">T_sub</span><span class="p">,</span><span class="n">Pch</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Calculates the sublimation rate from each vial in kg/hr. Inputs are</span>
-<span class="sd">    product area in cm^2, product resistance in cm^2-Torr-hr/g, sublimation</span>
-<span class="sd">    front temperature in degC, and chamber pressure in Torr</span>
+<span class="sd">    Calculates the sublimation rate from each vial [kg/hr]. Inputs are</span>
+<span class="sd">    product area [cm**2], product resistance [cm**2*Torr*Hr/g], sublimation</span>
+<span class="sd">    front temperature [degC], and chamber pressure [Torr]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">P_sub</span> <span class="o">=</span> <span class="n">Vapor_pressure</span><span class="p">(</span><span class="n">T_sub</span><span class="p">)</span>   <span class="c1"># Vapor pressure at the sublimation temperature in Torr</span>
+    <span class="n">P_sub</span> <span class="o">=</span> <span class="n">Vapor_pressure</span><span class="p">(</span><span class="n">T_sub</span><span class="p">)</span>   <span class="c1"># Vapor pressure at the sublimation temperature [Torr]</span>
 
-    <span class="n">dm_dt</span> <span class="o">=</span> <span class="n">Ap</span><span class="o">/</span><span class="n">Rp</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">kg_To_g</span><span class="o">*</span><span class="p">(</span><span class="n">P_sub</span><span class="o">-</span><span class="n">Pch</span><span class="p">)</span>  <span class="c1"># Sublimation rate in kg/hr</span>
+    <span class="n">dm_dt</span> <span class="o">=</span> <span class="n">Ap</span><span class="o">/</span><span class="n">Rp</span><span class="o">/</span><span class="n">constant</span><span class="o">.</span><span class="n">kg_To_g</span><span class="o">*</span><span class="p">(</span><span class="n">P_sub</span><span class="o">-</span><span class="n">Pch</span><span class="p">)</span>  <span class="c1"># Sublimation rate [kg/hr]</span>
 
     <span class="k">return</span> <span class="n">dm_dt</span>
 </code></pre></div></td></tr></table></div>
