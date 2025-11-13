@@ -1,0 +1,1203 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>Continuous Integration Setup - LyoPRONTO Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.618322db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#continuous-integration-setup" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="LyoPRONTO Documentation" class="md-header__button md-logo" aria-label="LyoPRONTO Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            LyoPRONTO Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Continuous Integration Setup
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="LyoPRONTO Documentation" class="md-nav__button md-logo" aria-label="LyoPRONTO Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    LyoPRONTO Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LyoPRONTO: Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../how-to-guides/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How-to Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../explanation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Explanations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Full listing of all docstrings by module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ci-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CI Configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CI Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#platform-and-python-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Platform and Python Version
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#workflow-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Workflow File
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-gets-tested" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Gets Tested
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#workflow-triggers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Workflow Triggers
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#local-ci-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local CI Simulation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Local CI Simulation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Start
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#manual-replication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Manual Replication
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dependencies
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Dependencies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#core-dependencies-requirementstxt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Dependencies (requirements.txt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#development-dependencies-requirements-devtxt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Development Dependencies (requirements-dev.txt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#python-version-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Python Version Compatibility
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Python Version Compatibility">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#current-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Setup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-python-313-for-ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Python 3.13 for CI?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#testing-other-python-versions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing Other Python Versions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ci-workflow-details" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CI Workflow Details
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CI Workflow Details">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-by-step-process" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step-by-Step Process
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#typical-run-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Typical Run Time
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#coverage-reports" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Coverage Reports
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Coverage Reports">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#viewing-coverage-locally" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Viewing Coverage Locally
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#current-coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Coverage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#codecov-integration-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Codecov Integration (Optional)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Codecov Integration (Optional)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#without-codecov" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Without Codecov
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ci-fails-but-tests-pass-locally" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CI Fails but Tests Pass Locally
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dependency-installation-fails" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dependency Installation Fails
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tests-timeout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tests Timeout
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Best Practices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#before-pushing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Before Pushing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-new-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding New Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#updating-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Updating Dependencies
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#viewing-ci-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Viewing CI Results
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Viewing CI Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#on-github" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        On GitHub
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#status-badges" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Status Badges
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#future-enhancements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Future Enhancements
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Future Enhancements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#potential-additions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Potential Additions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#current-philosophy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Philosophy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Documentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Questions?
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="continuous-integration-setup">Continuous Integration Setup</h1>
+<h2 id="overview">Overview</h2>
+<p>LyoPRONTO uses GitHub Actions for continuous integration (CI) to ensure code quality and test coverage. The CI runs automatically on every push and pull request to the <code>main</code> and <code>dev-pyomo</code> branches.</p>
+<h2 id="ci-configuration">CI Configuration</h2>
+<h3 id="platform-and-python-version">Platform and Python Version</h3>
+<ul>
+<li><strong>OS</strong>: Ubuntu Latest (Linux only)</li>
+<li><strong>Python</strong>: 3.13 (latest stable)</li>
+<li><strong>Rationale</strong>: Matches the primary development environment</li>
+</ul>
+<h3 id="workflow-file">Workflow File</h3>
+<p><code>.github/workflows/tests.yml</code></p>
+<h3 id="what-gets-tested">What Gets Tested</h3>
+<ol>
+<li><strong>Full test suite</strong>: All 128 tests in <code>tests/</code></li>
+<li><strong>Code coverage</strong>: Measured with pytest-cov</li>
+<li><strong>Coverage report</strong>: Uploaded to Codecov (if configured)</li>
+</ol>
+<h3 id="workflow-triggers">Workflow Triggers</h3>
+<ul>
+<li><strong>Push</strong> to <code>main</code> or <code>dev-pyomo</code> branches</li>
+<li><strong>Pull requests</strong> targeting <code>main</code> or <code>dev-pyomo</code> branches</li>
+</ul>
+<h2 id="local-ci-simulation">Local CI Simulation</h2>
+<p>To replicate the CI environment locally before pushing:</p>
+<h3 id="quick-start">Quick Start</h3>
+<pre><code class="language-bash">./run_local_ci.sh
+</code></pre>
+<p>This script will:
+1. Check your Python version (warns if not 3.13)
+2. Install all dependencies
+3. Run the full test suite with coverage
+4. Generate coverage reports</p>
+<h3 id="manual-replication">Manual Replication</h3>
+<p>If you prefer to run commands manually:</p>
+<pre><code class="language-bash"># 1. Upgrade pip
+python -m pip install --upgrade pip
+
+# 2. Install dependencies
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
+
+# 3. Run tests (exactly as CI does - with parallel execution)
+pytest tests/ -n auto -v --cov=lyopronto --cov-report=xml --cov-report=term-missing
+</code></pre>
+<p><strong>Note</strong>: Tests run in parallel (<code>-n auto</code>) for 2-4x speedup. For debugging, omit <code>-n auto</code>.</p>
+<h2 id="dependencies">Dependencies</h2>
+<h3 id="core-dependencies-requirementstxt">Core Dependencies (<code>requirements.txt</code>)</h3>
+<pre><code>numpy&gt;=1.24.0
+scipy&gt;=1.10.0
+matplotlib&gt;=3.7.0
+pandas&gt;=2.0.0
+</code></pre>
+<h3 id="development-dependencies-requirements-devtxt">Development Dependencies (<code>requirements-dev.txt</code>)</h3>
+<pre><code>pytest&gt;=7.4.0
+pytest-cov&gt;=4.1.0
+pytest-xdist&gt;=3.3.0
+hypothesis&gt;=6.82.0
+black&gt;=23.7.0
+flake8&gt;=6.1.0
+mypy&gt;=1.4.0
+</code></pre>
+<h2 id="python-version-compatibility">Python Version Compatibility</h2>
+<h3 id="current-setup">Current Setup</h3>
+<ul>
+<li><strong>CI</strong>: Python 3.13 only</li>
+<li><strong>Local Development</strong>: Python 3.8+ supported</li>
+</ul>
+<h3 id="why-python-313-for-ci">Why Python 3.13 for CI?</h3>
+<ul>
+<li>Latest stable release</li>
+<li>Best performance and features</li>
+<li>Matches primary development environment</li>
+</ul>
+<h3 id="testing-other-python-versions">Testing Other Python Versions</h3>
+<p>If you need to test on other Python versions locally:</p>
+<pre><code class="language-bash"># Using conda
+conda create -n lyopronto-py38 python=3.8
+conda activate lyopronto-py38
+pip install -r requirements.txt -r requirements-dev.txt
+pytest tests/
+
+# Using pyenv
+pyenv install 3.8.18
+pyenv virtualenv 3.8.18 lyopronto-py38
+pyenv activate lyopronto-py38
+pip install -r requirements.txt -r requirements-dev.txt
+pytest tests/
+</code></pre>
+<h2 id="ci-workflow-details">CI Workflow Details</h2>
+<h3 id="step-by-step-process">Step-by-Step Process</h3>
+<ol>
+<li><strong>Checkout Code</strong>: Uses <code>actions/checkout@v4</code></li>
+<li><strong>Setup Python</strong>: Uses <code>actions/setup-python@v5</code> with Python 3.13</li>
+<li><strong>Cache Dependencies</strong>: Pip cache enabled for faster runs</li>
+<li><strong>Install Dependencies</strong>: </li>
+<li>Core: <code>requirements.txt</code></li>
+<li>Dev: <code>requirements-dev.txt</code></li>
+<li><strong>Run Tests</strong>: <code>pytest tests/ -n auto -v --cov=lyopronto --cov-report=xml --cov-report=term-missing</code> (parallel execution)</li>
+<li><strong>Upload Coverage</strong>: To Codecov (if token configured)</li>
+</ol>
+<h3 id="typical-run-time">Typical Run Time</h3>
+<ul>
+<li><strong>Full test suite</strong> (parallel): ~2-3 minutes on GitHub Actions runners (2-core)</li>
+<li><strong>Local</strong> (parallel, depends on hardware): 2-4 minutes (4-8 cores)</li>
+<li><strong>Sequential</strong> (without <code>-n auto</code>): ~8-9 minutes (not recommended)</li>
+</ul>
+<h2 id="coverage-reports">Coverage Reports</h2>
+<h3 id="viewing-coverage-locally">Viewing Coverage Locally</h3>
+<p>After running tests with coverage:</p>
+<pre><code class="language-bash"># Generate HTML coverage report
+coverage html
+
+# Open in browser (Linux)
+xdg-open htmlcov/index.html
+
+# Open in browser (macOS)
+open htmlcov/index.html
+
+# Open in browser (Windows)
+start htmlcov/index.html
+</code></pre>
+<h3 id="current-coverage">Current Coverage</h3>
+<ul>
+<li><strong>Overall</strong>: 93%</li>
+<li><strong>Target</strong>: Maintain above 90%</li>
+</ul>
+<h2 id="codecov-integration-optional">Codecov Integration (Optional)</h2>
+<h3 id="setup">Setup</h3>
+<ol>
+<li>Go to <a href="https://codecov.io/">codecov.io</a></li>
+<li>Sign in with GitHub</li>
+<li>Enable LyoPRONTO repository</li>
+<li>Copy the upload token</li>
+<li>Add to GitHub repository secrets as <code>CODECOV_TOKEN</code></li>
+</ol>
+<h3 id="without-codecov">Without Codecov</h3>
+<p>The CI will still run successfully without Codecov. Coverage reports are generated but not uploaded.</p>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="ci-fails-but-tests-pass-locally">CI Fails but Tests Pass Locally</h3>
+<p><strong>Common Causes</strong>:
+1. <strong>Python version mismatch</strong>: CI uses 3.13, you might use different version
+2. <strong>Missing dependencies</strong>: Ensure <code>requirements.txt</code> is up to date
+3. <strong>Path issues</strong>: CI runs from repository root
+4. <strong>Environment differences</strong>: Check for environment-specific code</p>
+<p><strong>Solution</strong>:</p>
+<pre><code class="language-bash"># Run local CI simulation
+./run_local_ci.sh
+
+# Or manually with Python 3.13
+conda create -n lyopronto-ci python=3.13
+conda activate lyopronto-ci
+pip install -r requirements.txt -r requirements-dev.txt
+pytest tests/ -v
+</code></pre>
+<h3 id="dependency-installation-fails">Dependency Installation Fails</h3>
+<p><strong>Issue</strong>: Missing system dependencies for numpy/scipy</p>
+<p><strong>Solution</strong> (Ubuntu/Debian):</p>
+<pre><code class="language-bash">sudo apt-get update
+sudo apt-get install -y build-essential gfortran libopenblas-dev liblapack-dev
+</code></pre>
+<h3 id="tests-timeout">Tests Timeout</h3>
+<p><strong>Issue</strong>: Some tests take too long on CI</p>
+<p><strong>Current Limits</strong>: No timeout set
+<strong>Typical Duration</strong>: 5-6 minutes total</p>
+<p>If tests consistently exceed 10 minutes, investigate slow tests:</p>
+<pre><code class="language-bash">pytest tests/ -v --durations=10
+</code></pre>
+<h2 id="best-practices">Best Practices</h2>
+<h3 id="before-pushing">Before Pushing</h3>
+<ol>
+<li>
+<p><strong>Run local CI simulation</strong>:
+   <code>bash
+   ./run_local_ci.sh</code></p>
+</li>
+<li>
+<p><strong>Check coverage</strong>:</p>
+</li>
+<li>Ensure new code has tests</li>
+<li>Maintain &gt;90% overall coverage</li>
+<li>
+<p>Check <code>htmlcov/index.html</code> for uncovered lines</p>
+</li>
+<li>
+<p><strong>Run linters</strong> (optional):
+   <code>bash
+   black lyopronto/ tests/
+   flake8 lyopronto/ tests/
+   mypy lyopronto/</code></p>
+</li>
+</ol>
+<h3 id="adding-new-tests">Adding New Tests</h3>
+<ol>
+<li><strong>Write tests first</strong> (TDD)</li>
+<li><strong>Run locally</strong>: <code>pytest tests/test_new_feature.py -v</code></li>
+<li><strong>Check coverage</strong>: <code>pytest tests/ --cov=lyopronto --cov-report=html</code></li>
+<li><strong>Run CI simulation</strong>: <code>./run_local_ci.sh</code></li>
+<li><strong>Push</strong>: CI will run automatically</li>
+</ol>
+<h3 id="updating-dependencies">Updating Dependencies</h3>
+<p>When adding new dependencies:</p>
+<ol>
+<li>
+<p><strong>Add to <code>requirements.txt</code></strong> (core dependencies)
+   <code>bash
+   echo "new-package&gt;=1.0.0" &gt;&gt; requirements.txt</code></p>
+</li>
+<li>
+<p><strong>Or <code>requirements-dev.txt</code></strong> (dev/test dependencies)
+   <code>bash
+   echo "new-test-tool&gt;=2.0.0" &gt;&gt; requirements-dev.txt</code></p>
+</li>
+<li>
+<p><strong>Test locally</strong>:
+   <code>bash
+   pip install -r requirements.txt -r requirements-dev.txt
+   pytest tests/</code></p>
+</li>
+<li>
+<p><strong>Update CI</strong> (if needed): Modify <code>.github/workflows/tests.yml</code></p>
+</li>
+</ol>
+<h2 id="viewing-ci-results">Viewing CI Results</h2>
+<h3 id="on-github">On GitHub</h3>
+<ol>
+<li>Go to repository on GitHub</li>
+<li>Click <strong>Actions</strong> tab</li>
+<li>View workflow runs</li>
+<li>Click on a run to see details</li>
+<li>Expand steps to see logs</li>
+</ol>
+<h3 id="status-badges">Status Badges</h3>
+<p>Add to <code>README.md</code>:</p>
+<pre><code class="language-markdown">![Tests](https://github.com/SECQUOIA/LyoPRONTO/workflows/Tests/badge.svg?branch=dev-pyomo)
+[![codecov](https://codecov.io/gh/SECQUOIA/LyoPRONTO/branch/dev-pyomo/graph/badge.svg)](https://codecov.io/gh/SECQUOIA/LyoPRONTO)
+</code></pre>
+<h2 id="future-enhancements">Future Enhancements</h2>
+<h3 id="potential-additions">Potential Additions</h3>
+<ol>
+<li>
+<p><strong>Multi-Python Testing</strong>:
+   <code>yaml
+   python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']</code></p>
+</li>
+<li>
+<p><strong>Multi-OS Testing</strong>:
+   <code>yaml
+   os: [ubuntu-latest, windows-latest, macos-latest]</code></p>
+</li>
+<li>
+<p><strong>Code Quality Checks</strong>:</p>
+</li>
+<li>Black (formatting)</li>
+<li>Flake8 (linting)</li>
+<li>
+<p>MyPy (type checking)</p>
+</li>
+<li>
+<p><strong>Performance Benchmarks</strong>:</p>
+</li>
+<li>Track test execution time</li>
+<li>
+<p>Detect performance regressions</p>
+</li>
+<li>
+<p><strong>Documentation Builds</strong>:</p>
+</li>
+<li>Build MkDocs documentation</li>
+<li>Check for broken links</li>
+</ol>
+<h3 id="current-philosophy">Current Philosophy</h3>
+<p><strong>Keep it simple</strong>: 
+- Single OS (Linux)
+- Single Python version (3.13)
+- Focus on test quality over quantity of configurations
+- Easy to replicate locally</p>
+<p><strong>Reason</strong>: Faster CI runs, easier maintenance, matches development environment</p>
+<h2 id="related-documentation">Related Documentation</h2>
+<ul>
+<li><strong>Testing Strategy</strong>: <code>docs/TESTING_STRATEGY.md</code></li>
+<li><strong>Test Directory</strong>: <code>tests/README.md</code></li>
+<li><strong>Contributing</strong>: <code>CONTRIBUTING.md</code></li>
+<li><strong>Development Log</strong>: <code>docs/DEVELOPMENT_LOG.md</code></li>
+</ul>
+<h2 id="questions">Questions?</h2>
+<p>If CI fails unexpectedly:</p>
+<ol>
+<li><strong>Check workflow logs</strong>: GitHub Actions → Failed run → View logs</li>
+<li><strong>Reproduce locally</strong>: <code>./run_local_ci.sh</code></li>
+<li><strong>Compare environments</strong>: Python version, dependencies, OS</li>
+<li><strong>Check recent changes</strong>: <code>git diff main...dev-pyomo</code></li>
+</ol>
+<hr />
+<p><em>CI Configuration last updated: October 2, 2025</em>
+<em>Python Version: 3.13</em>
+<em>Test Count: 128</em>
+<em>Coverage Target: &gt;90%</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+    
+  </body>
+</html>
