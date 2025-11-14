@@ -1,7 +1,7 @@
-"""Tests for Pyomo single-step optimization model.
+"""Tests for Pyomo single time-step model.
 
-This module tests the Pyomo-based single time-step optimization against
-the scipy baseline to ensure correctness and consistency.
+This module tests the single time-step optimization model (from model.single_step)
+against the scipy baseline to ensure correctness and consistency.
 """
 
 # LyoPRONTO, a vial-scale lyophilization process simulator
@@ -37,7 +37,7 @@ pytestmark = pytest.mark.skipif(not PYOMO_AVAILABLE, reason="Pyomo not installed
 
 
 class TestSingleStepModel:
-    """Tests for Pyomo single-step model creation and structure."""
+    """Tests for single time-step model creation and structure."""
     
     def test_model_creation_basic(self, standard_vial, standard_product, standard_ht):
         """Test that model can be created with standard inputs."""
@@ -64,12 +64,12 @@ class TestSingleStepModel:
         assert hasattr(model, 'dmdt')
         assert hasattr(model, 'Kv')
         
-        # Check constraints exist
+        # Check constraints exist (updated Jan 2025 for corrected physics)
         assert hasattr(model, 'vapor_pressure_log')
         assert hasattr(model, 'vapor_pressure_exp')
         assert hasattr(model, 'sublimation_rate')
-        assert hasattr(model, 'heat_balance')
-        assert hasattr(model, 'shelf_temp')
+        assert hasattr(model, 'energy_balance')  # Renamed from heat_balance
+        assert hasattr(model, 'vial_bottom_temp')  # Renamed from shelf_temp
         assert hasattr(model, 'kv_calc')
         assert hasattr(model, 'temp_limit')
         

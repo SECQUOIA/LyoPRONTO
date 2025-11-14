@@ -4,10 +4,15 @@ This module provides a Pyomo-based NLP formulation that replicates one time step
 of the scipy sequential optimization approach. It solves for optimal chamber
 pressure (Pch) and shelf temperature (Tsh) at a given dried cake length (Lck).
 
+Physics Corrections (Jan 2025):
+    - Energy balance: Corrected to match multi-period model (Q_shelf = Q_sublimation)
+    - Vial bottom temp: Added proper constraint for frozen layer temperature gradient
+    - Matches corrected multi-period formulation
+
 The model includes:
     - 7 decision variables: Pch, Tsh, Tsub, Tbot, Psub, dmdt, Kv
-    - 5 equality constraints: vapor pressure, sublimation rate, heat balance, 
-      shelf temperature relation, vial heat transfer
+    - 5 equality constraints: vapor pressure, sublimation rate, energy balance, 
+      vial bottom temperature, vial heat transfer
     - 2 inequality constraints: equipment capability, product temperature limit
     - Objective: maximize sublimation driving force (minimize Pch - Psub)
 """
@@ -83,12 +88,13 @@ def create_single_step_model(
             and objective defined.
     
     Notes:
-        The model uses the following physics equations:
+        The model uses the following physics equations (corrected Jan 2025):
         - Vapor pressure: Psub = 2.698e10 * exp(-6144.96/(Tsub + 273.15))
         - Product resistance: Rp = R0 + A1*Lck/(1 + A2*Lck)
         - Vial heat transfer: Kv = KC + KP*Pch/(1 + KD*Pch)
         - Sublimation rate: dmdt = Ap/Rp * (Psub - Pch) / kg_To_g
-        - Energy balance: Q_shelf = Q_sublimation
+        - Energy balance: Kv*Av*(Tsh - Tbot) = dHs*dmdt*kg_To_g/hr_To_s
+        - Vial bottom temp: Tbot = Tsub + (Lpr0-Lck)*dHs*dmdt*kg_To_g/hr_To_s/(Ap*k_ice)
         
     Examples:
         >>> from lyopronto import functions
@@ -171,17 +177,21 @@ def create_single_step_model(
         expr=model.dmdt == model.Ap / model.Rp / model.kg_To_g * (model.Psub - model.Pch)
     )
     
-    # C3: Heat transfer balance
-    # (Tsh - Tbot) * Av * Kv * (Lpr0 - Lck) = Ap * (Tbot - Tsub) * k_ice
-    model.heat_balance = pyo.Constraint(
-        expr=(model.Tsh - model.Tbot) * model.Av * model.Kv * (model.Lpr0 - model.Lck)
-             == model.Ap * (model.Tbot - model.Tsub) * model.k_ice
+    # C3: Energy balance - heat from shelf equals heat for sublimation
+    # Q_shelf = Kv * Av * (Tsh - Tbot)
+    # Q_sub = dHs * dmdt * kg_To_g / hr_To_s
+    # This matches the corrected multi-period energy_balance constraint
+    model.energy_balance = pyo.Constraint(
+        expr=model.Kv * model.Av * (model.Tsh - model.Tbot)
+             == model.dHs * model.dmdt * model.kg_To_g / model.hr_To_s
     )
     
-    # C4: Shelf temperature relation
-    # Tsh = dmdt * kg_To_g / hr_To_s * dHs / Av / Kv + Tbot
-    model.shelf_temp = pyo.Constraint(
-        expr=model.Tsh == model.dmdt * model.kg_To_g / model.hr_To_s * model.dHs / model.Av / model.Kv + model.Tbot
+    # C4: Vial bottom temperature from conduction through frozen layer
+    # Tbot = Tsub + ΔT_frozen
+    # where ΔT_frozen = (Lpr0 - Lck) * Q_sub / (Ap * k_ice)
+    # This matches the corrected multi-period vial_bottom_temp constraint
+    model.vial_bottom_temp = pyo.Constraint(
+        expr=model.Tbot == model.Tsub + (model.Lpr0 - model.Lck) * model.dHs * model.dmdt * model.kg_To_g / model.hr_To_s / (model.Ap * model.k_ice)
     )
     
     # C5: Vial heat transfer coefficient

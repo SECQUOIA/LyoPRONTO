@@ -22,6 +22,33 @@ The Pyomo implementations **coexist** with scipy-based optimizers - they do not 
 
 ## Modules
 
+### `optimizers.py`
+Main user-facing optimizer functions (equivalent to scipy opt_Tsh, opt_Pch, opt_Pch_Tsh).
+
+**Key functions:**
+- `optimize_Tsh_pyomo()` - Optimize shelf temperature trajectory with fixed pressure
+- `optimize_Pch_pyomo()` - Optimize chamber pressure trajectory with fixed temperature
+- `optimize_Pch_Tsh_pyomo()` - Jointly optimize both pressure and temperature
+
+**Features:**
+- Multi-period optimization with collocation
+- Equipment capability constraints
+- Scipy warmstart support
+- 4-stage convergence framework (staged_solve)
+
+### `model.py`
+Multi-period DAE model creation with orthogonal collocation on finite elements.
+
+**Key functions:**
+- `create_multi_period_model()` - Build dynamic optimization model
+- `warmstart_from_scipy_trajectory()` - Initialize from scipy solution
+
+**Model structure:**
+- Time discretization via finite elements + collocation
+- 7 decision variables per time point
+- Differential-algebraic equations (DAE)
+- Equipment capability constraints
+
 ### `single_step.py`
 Single time-step optimization that replicates one step of the scipy sequential approach.
 
@@ -169,10 +196,10 @@ Run Pyomo-specific tests:
 pytest tests/test_pyomo_models/ -v
 
 # Basic model creation (fast)
-pytest tests/test_pyomo_models/test_single_step.py::TestSingleStepModel -v
+pytest tests/test_pyomo_models/test_model_single_step.py::TestSingleStepModel -v
 
 # Solver tests (slow, requires IPOPT)
-pytest tests/test_pyomo_models/test_single_step.py::TestSingleStepSolver -v -m slow
+pytest tests/test_pyomo_models/test_model_single_step.py::TestSingleStepSolver -v -m slow
 ```
 
 **Note:** Solver tests are marked as `@pytest.mark.slow` and require IPOPT to be installed.

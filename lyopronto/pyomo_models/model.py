@@ -420,9 +420,9 @@ def warmstart_from_scipy_trajectory(
     # Get Pyomo time points (normalized to [0, 1])
     t_pyomo = sorted(model.t)
     
-    # Compute initial product length
+    # Compute initial product length from vial parameters
     Lpr0 = functions.Lpr0_FUN(
-        scipy_trajectory[0, 0],  # Vfill placeholder
+        vial['Vfill'],
         vial['Ap'],
         product['cSolid']
     )
