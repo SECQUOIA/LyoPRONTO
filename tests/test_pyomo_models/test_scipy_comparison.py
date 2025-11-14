@@ -85,7 +85,7 @@ class TestPyomoScipyComparison:
             
             # Solve with Pyomo using warmstart from scipy
             warmstart = utils.initialize_from_scipy(
-                scipy_output, idx, standard_vial, standard_product, Lpr0
+                scipy_output, idx, standard_vial, standard_product, Lpr0, ht=standard_ht
             )
             
             pyomo_solution = single_step.optimize_single_step(
@@ -152,7 +152,7 @@ class TestPyomoScipyComparison:
         
         # Warmstart Pyomo from scipy
         warmstart = utils.initialize_from_scipy(
-            scipy_output, idx, standard_vial, standard_product, Lpr0
+            scipy_output, idx, standard_vial, standard_product, Lpr0, ht=standard_ht
         )
         
         # Solve with Pyomo
@@ -219,7 +219,7 @@ class TestPyomoScipyComparison:
         
         # Pyomo solution
         warmstart = utils.initialize_from_scipy(
-            scipy_output, idx, standard_vial, standard_product, Lpr0
+            scipy_output, idx, standard_vial, standard_product, Lpr0, ht=standard_ht
         )
         
         pyomo_solution = single_step.optimize_single_step(

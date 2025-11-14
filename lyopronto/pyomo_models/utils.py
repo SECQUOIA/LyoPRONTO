@@ -26,7 +26,7 @@ import numpy as np
 from .. import functions, constant
 
 
-def initialize_from_scipy(scipy_output, time_index, vial, product, Lpr0):
+def initialize_from_scipy(scipy_output, time_index, vial, product, Lpr0, ht=None):
     """Create warmstart data dictionary from scipy optimization output.
     
     This function extracts values from a scipy optimization result array
@@ -40,10 +40,12 @@ def initialize_from_scipy(scipy_output, time_index, vial, product, Lpr0):
         vial (dict): Vial geometry with 'Av', 'Ap' keys
         product (dict): Product properties with 'R0', 'A1', 'A2' keys
         Lpr0 (float): Initial product length [cm]
+        ht (dict, optional): Heat transfer parameters with 'KC', 'KP', 'KD' keys.
+            If provided, Kv will be computed accurately.
     
     Returns:
         dict: Warmstart data with keys: 'Pch', 'Tsh', 'Tsub', 'Tbot', 'Psub', 
-            'dmdt', 'Kv'
+            'log_Psub', 'dmdt', 'Kv'
     
     Notes:
         - Pch is converted from mTorr to Torr (divides by 1000)
@@ -70,11 +72,12 @@ def initialize_from_scipy(scipy_output, time_index, vial, product, Lpr0):
     Psub = functions.Vapor_pressure(Tsub)
     dmdt = functions.sub_rate(vial['Ap'], Rp, Tsub, Pch)
     
-    # Note: Kv calculation requires heat transfer parameters
-    # For now, estimate from simplified relationship
-    # In practice, this would be computed from the full heat transfer equation
-    # A reasonable initial guess is sufficient for warmstarting
-    Kv = 5e-4  # Typical value [cal/s/K/cm²]
+    # Calculate Kv from heat transfer parameters if available
+    if ht is not None:
+        Kv = functions.Kv_FUN(ht['KC'], ht['KP'], ht['KD'], Pch)
+    else:
+        # Use typical value as fallback
+        Kv = 5e-4  # Typical value [cal/s/K/cm²]
     
     warmstart_data = {
         'Pch': Pch,
@@ -82,6 +85,7 @@ def initialize_from_scipy(scipy_output, time_index, vial, product, Lpr0):
         'Tsub': Tsub,
         'Tbot': Tbot,
         'Psub': Psub,
+        'log_Psub': np.log(max(Psub, 1e-10)),  # Add log for stability
         'dmdt': max(0.0, dmdt),  # Ensure non-negative
         'Kv': Kv,
     }

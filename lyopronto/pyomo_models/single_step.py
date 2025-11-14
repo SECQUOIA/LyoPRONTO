@@ -43,7 +43,8 @@ def create_single_step_model(
     Pch_bounds=(0.05, 0.5),
     Tsh_bounds=(-50, 50),
     eq_cap=None,
-    nVial=None
+    nVial=None,
+    apply_scaling=True
 ):
     """Create Pyomo model for single time-step lyophilization optimization.
     
@@ -136,6 +137,9 @@ def create_single_step_model(
     # Vapor pressure at sublimation front [Torr]
     model.Psub = pyo.Var(domain=pyo.NonNegativeReals, bounds=(1e-6, 10))
     
+    # Log of vapor pressure (for numerical stability in exponential constraint)
+    model.log_Psub = pyo.Var(domain=pyo.Reals, bounds=(-14, 2.5))  # log(1e-6) to log(10)
+    
     # Sublimation rate [kg/hr] - must be non-negative
     model.dmdt = pyo.Var(domain=pyo.NonNegativeReals, bounds=(0, 10))
     
@@ -150,9 +154,15 @@ def create_single_step_model(
     
     # ==================== Equality Constraints ====================
     # C1: Vapor pressure at sublimation front (Antoine equation)
-    # Psub = 2.698e10 * exp(-6144.96/(Tsub + 273.15))
-    model.vapor_pressure = pyo.Constraint(
-        expr=model.Psub == 2.698e10 * pyo.exp(-6144.96 / (model.Tsub + 273.15))
+    # Using log transformation for numerical stability:
+    # log(Psub) = log(2.698e10) - 6144.96/(Tsub + 273.15)
+    model.vapor_pressure_log = pyo.Constraint(
+        expr=model.log_Psub == pyo.log(2.698e10) - 6144.96 / (model.Tsub + 273.15)
+    )
+    
+    # C1b: Link log_Psub to Psub
+    model.vapor_pressure_exp = pyo.Constraint(
+        expr=model.Psub == pyo.exp(model.log_Psub)
     )
     
     # C2: Sublimation rate from mass transfer
@@ -204,6 +214,21 @@ def create_single_step_model(
         sense=pyo.minimize
     )
     
+    # ==================== Scaling (Optional) ====================
+    if apply_scaling:
+        from . import utils
+        scaling_factors = {
+            'Tsub': 0.01,
+            'Tbot': 0.01,
+            'Tsh': 0.01,
+            'Pch': 10,
+            'Psub': 10,
+            'log_Psub': 1.0,  # log values are already scaled
+            'Kv': 1e4,
+            'dmdt': 1.0,
+        }
+        utils.add_scaling_suffix(model, scaling_factors)
+    
     return model
 
 
@@ -249,7 +274,7 @@ def solve_single_step(model, solver='ipopt', tee=False, warmstart_data=None):
         >>> print(f"Optimal Pch: {solution['Pch']:.4f} Torr")
         >>> print(f"Optimal Tsh: {solution['Tsh']:.2f} °C")
     """
-    # Initialize variables if warmstart data provided
+    # Apply warmstart values if provided
     if warmstart_data is not None:
         if 'Pch' in warmstart_data:
             model.Pch.set_value(warmstart_data['Pch'])
@@ -261,6 +286,8 @@ def solve_single_step(model, solver='ipopt', tee=False, warmstart_data=None):
             model.Tbot.set_value(warmstart_data['Tbot'])
         if 'Psub' in warmstart_data:
             model.Psub.set_value(warmstart_data['Psub'])
+        if 'log_Psub' in warmstart_data:
+            model.log_Psub.set_value(warmstart_data['log_Psub'])
         if 'dmdt' in warmstart_data:
             model.dmdt.set_value(warmstart_data['dmdt'])
         if 'Kv' in warmstart_data:
@@ -303,6 +330,7 @@ def solve_single_step(model, solver='ipopt', tee=False, warmstart_data=None):
         'Tsub': pyo.value(model.Tsub),
         'Tbot': pyo.value(model.Tbot),
         'Psub': pyo.value(model.Psub),
+        'log_Psub': pyo.value(model.log_Psub),
         'dmdt': pyo.value(model.dmdt),
         'Kv': pyo.value(model.Kv),
         'Rp': pyo.value(model.Rp),
@@ -312,7 +340,15 @@ def solve_single_step(model, solver='ipopt', tee=False, warmstart_data=None):
     return solution
 
 
-def optimize_single_step(vial, product, ht, Lpr0, Lck, **kwargs):
+def optimize_single_step(vial, product, ht, Lpr0, Lck,
+                        Pch_bounds=(0.05, 0.5),
+                        Tsh_bounds=(-50, 50),
+                        eq_cap=None,
+                        nVial=None,
+                        warmstart_data=None,
+                        solver='ipopt',
+                        tee=False,
+                        apply_scaling=True):
     """Convenience function to create and solve single-step model in one call.
     
     This function combines create_single_step_model() and solve_single_step()
@@ -324,15 +360,14 @@ def optimize_single_step(vial, product, ht, Lpr0, Lck, **kwargs):
         ht (dict): Heat transfer parameters (see create_single_step_model)
         Lpr0 (float): Initial product length [cm]
         Lck (float): Current dried cake length [cm]
-        **kwargs: Additional arguments passed to create_single_step_model() and
-            solve_single_step(). Common options:
-            - Pch_bounds (tuple): Chamber pressure bounds [Torr]
-            - Tsh_bounds (tuple): Shelf temperature bounds [°C]
-            - eq_cap (dict): Equipment capability parameters
-            - nVial (int): Number of vials
-            - solver (str): Solver name (default: 'ipopt')
-            - tee (bool): Print solver output (default: False)
-            - warmstart_data (dict): Initial variable values
+        Pch_bounds (tuple): Chamber pressure bounds [Torr]
+        Tsh_bounds (tuple): Shelf temperature bounds [°C]
+        eq_cap (dict): Equipment capability parameters
+        nVial (int): Number of vials
+        warmstart_data (dict): Initial variable values
+        solver (str): Solver name (default: 'ipopt')
+        tee (bool): Print solver output (default: False)
+        apply_scaling (bool): Apply variable scaling (default: True)
     
     Returns:
         dict: Solution dictionary (see solve_single_step)
@@ -347,14 +382,20 @@ def optimize_single_step(vial, product, ht, Lpr0, Lck, **kwargs):
         ...     tee=True
         ... )
     """
-    # Separate kwargs for model creation vs solving
-    model_kwargs = {k: v for k, v in kwargs.items() 
-                   if k in ['Pch_bounds', 'Tsh_bounds', 'eq_cap', 'nVial']}
-    solve_kwargs = {k: v for k, v in kwargs.items() 
-                   if k in ['solver', 'tee', 'warmstart_data']}
-    
     # Create and solve
-    model = create_single_step_model(vial, product, ht, Lpr0, Lck, **model_kwargs)
-    solution = solve_single_step(model, **solve_kwargs)
+    model = create_single_step_model(
+        vial, product, ht, Lpr0, Lck,
+        Pch_bounds=Pch_bounds,
+        Tsh_bounds=Tsh_bounds,
+        eq_cap=eq_cap,
+        nVial=nVial,
+        apply_scaling=apply_scaling
+    )
+    solution = solve_single_step(
+        model,
+        solver=solver,
+        tee=tee,
+        warmstart_data=warmstart_data
+    )
     
     return solution

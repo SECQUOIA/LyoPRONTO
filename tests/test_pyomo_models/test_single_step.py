@@ -65,12 +65,16 @@ class TestSingleStepModel:
         assert hasattr(model, 'Kv')
         
         # Check constraints exist
-        assert hasattr(model, 'vapor_pressure')
+        assert hasattr(model, 'vapor_pressure_log')
+        assert hasattr(model, 'vapor_pressure_exp')
         assert hasattr(model, 'sublimation_rate')
         assert hasattr(model, 'heat_balance')
         assert hasattr(model, 'shelf_temp')
         assert hasattr(model, 'kv_calc')
         assert hasattr(model, 'temp_limit')
+        
+        # Check log_Psub variable exists
+        assert hasattr(model, 'log_Psub')
         
         # Check objective exists
         assert hasattr(model, 'obj')
