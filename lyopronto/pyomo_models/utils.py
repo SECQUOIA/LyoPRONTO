@@ -6,7 +6,8 @@ to standard output formats.
 """
 
 # LyoPRONTO, a vial-scale lyophilization process simulator
-# Copyright (C) 2024, Gayathri Shivkumar, Petr S. Kazarin, Alina A. Alexeenko, Isaac S. Wheeler
+# Nonlinear optimization
+# Copyright (C) 2025, David E. Bernal Neira
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
