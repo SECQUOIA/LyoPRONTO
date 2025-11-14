@@ -6,6 +6,7 @@ allowing users to choose the most appropriate method for their application.
 
 Key modules:
     - single_step: Single time-step optimization (replicate scipy sequential approach)
+    - multi_period: Dynamic optimization using DAE with orthogonal collocation
     - utils: Shared utilities for initialization, scaling, and result extraction
 """
 
@@ -27,9 +28,13 @@ Key modules:
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from .single_step import create_single_step_model, solve_single_step, optimize_single_step
+from .multi_period import create_multi_period_model, optimize_multi_period, warmstart_from_scipy_trajectory
 
 __all__ = [
     'create_single_step_model',
     'solve_single_step',
     'optimize_single_step',
+    'create_multi_period_model',
+    'optimize_multi_period',
+    'warmstart_from_scipy_trajectory',
 ]
