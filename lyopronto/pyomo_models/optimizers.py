@@ -24,7 +24,7 @@ Following the coexistence philosophy: these complement (not replace) the scipy o
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import numpy as np
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, Any
 import pyomo.environ as pyo
 import pyomo.dae as dae
 from lyopronto import functions
@@ -45,6 +45,7 @@ def create_optimizer_model(
     Tshelf: Optional[Dict] = None,
     n_elements: int = 8,
     n_collocation: int = 3,
+    treat_n_elements_as_effective: bool = False,
     control_mode: str = 'both',
     apply_scaling: bool = True,
     initial_conditions: Optional[Dict[str, float]] = None,
@@ -93,8 +94,17 @@ def create_optimizer_model(
         Tshelf (dict, optional): Shelf temperature settings  
             - control_mode='Pch': {'init': -35, 'setpt': [20], ...} - fixed trajectory
             - control_mode='Tsh' or 'both': {'min': -45, 'max': 120} - bounds
-        n_elements (int, default=8): Number of finite elements (time intervals)
-        n_collocation (int, default=3): Collocation points (unused if use_finite_differences=True)
+        n_elements (int, default=8): Discretization granularity. If using finite
+            differences, this is the number of finite elements (time intervals).
+            If using collocation and treat_n_elements_as_effective=True, this is
+            the target effective element count and the applied number of finite
+            elements will be ceil(n_elements / n_collocation) to keep the total
+            collocation points roughly comparable to finite differences.
+        n_collocation (int, default=3): Collocation points per finite element
+            (unused when use_finite_differences=True).
+        treat_n_elements_as_effective (bool, default=False): When using
+            collocation, interpret n_elements as an effective density to match
+            finite-difference resolution, i.e., apply nfe = ceil(n_elements / ncp).
         control_mode (str, default='both'): Optimization mode
             - 'Tsh': Optimize shelf temperature only (Pch fixed)
             - 'Pch': Optimize chamber pressure only (Tsh fixed)
@@ -446,12 +456,26 @@ def create_optimizer_model(
     else:
         # Collocation approach (higher order, but harder to initialize)
         discretizer = pyo.TransformationFactory('dae.collocation')
+        # If requested, interpret n_elements as an effective density comparable
+        # to finite-difference nfe by distributing across n_collocation points.
+        nfe_apply = int(np.ceil(max(1, n_elements) / max(1, n_collocation))) if treat_n_elements_as_effective else n_elements
         discretizer.apply_to(
             model,
-            nfe=n_elements,
+            nfe=nfe_apply,
             ncp=n_collocation,
             scheme='LAGRANGE-RADAU'
         )
+    
+    # Record mesh info for downstream metadata/debugging
+    try:
+        model._mesh_info = {
+            'method': 'fd' if use_finite_differences else 'collocation',
+            'nfe_requested': n_elements,
+            'ncp': None if use_finite_differences else n_collocation,
+            'treat_effective': treat_n_elements_as_effective if not use_finite_differences else False,
+        }
+    except Exception:
+        pass
     
     # ======================
     # Objective: Minimize Drying Time
@@ -728,6 +752,11 @@ def staged_solve(
     print("STAGED SOLVE FRAMEWORK")
     print("="*60)
     
+    # Initialize metadata holders on the model for external access
+    model._solver_stages = []
+    model._last_solver_result = None
+    model._staged_solve_success = False
+
     # ========== Stage 1: Feasibility (controls + t_final fixed) ==========
     print("\n[Stage 1/4] Feasibility solve (controls and t_final fixed)...")
     
@@ -752,6 +781,8 @@ def staged_solve(
     
     # Solve feasibility
     result = solver.solve(model, tee=tee)
+    model._last_solver_result = result
+    model._solver_stages.append(("feasibility", result))
     
     if result.solver.termination_condition == pyo.TerminationCondition.optimal:
         print("  ✓ Feasibility solve successful")
@@ -791,6 +822,8 @@ def staged_solve(
     model.final_dryness.activate()  # Reactivate terminal constraint
     
     result = solver.solve(model, tee=tee)
+    model._last_solver_result = result
+    model._solver_stages.append(("time_optimization", result))
     
     if result.solver.termination_condition in [pyo.TerminationCondition.optimal,
                                                  pyo.TerminationCondition.locallyOptimal]:
@@ -816,6 +849,8 @@ def staged_solve(
     # TODO: Implement reduce_collocation_points if needed
     
     result = solver.solve(model, tee=tee)
+    model._last_solver_result = result
+    model._solver_stages.append(("control_release", result))
     
     if result.solver.termination_condition in [pyo.TerminationCondition.optimal,
                                                  pyo.TerminationCondition.locallyOptimal]:
@@ -828,15 +863,19 @@ def staged_solve(
     print("\n[Stage 4/4] Full optimization (all DOFs released)...")
     
     result = solver.solve(model, tee=tee)
+    model._last_solver_result = result
+    model._solver_stages.append(("full_optimization", result))
     
     if result.solver.termination_condition in [pyo.TerminationCondition.optimal,
                                                  pyo.TerminationCondition.locallyOptimal]:
         print(f"  ✓ Full optimization successful, t_final = {pyo.value(model.t_final):.3f} hr")
         print("="*60 + "\n")
+        model._staged_solve_success = True
         return True, "All stages completed successfully"
     else:
         print(f"  ✗ Full optimization: {result.solver.termination_condition}")
         print("="*60 + "\n")
+        model._staged_solve_success = False
         return False, f"Stage 4 failed: {result.solver.termination_condition}"
 
 
@@ -849,13 +888,16 @@ def optimize_Tsh_pyomo(
     dt: float,
     eq_cap: Dict[str, float],
     nVial: int,
-    n_elements: int = 8,
+    n_elements: int = 24,
     n_collocation: int = 3,
+    use_finite_differences: bool = True,
+    treat_n_elements_as_effective: bool = False,
     warmstart_scipy: bool = True,
     solver: str = 'ipopt',
     tee: bool = False,
     simulation_mode: bool = False,
-) -> np.ndarray:
+    return_metadata: bool = False,
+) -> Any:
     """Optimize shelf temperature trajectory for minimum drying time (Pyomo implementation).
     
     This is the Pyomo equivalent of lyopronto.opt_Tsh.dry(), providing a multi-period
@@ -915,8 +957,19 @@ def optimize_Tsh_pyomo(
             - 'a' (float): Intercept [kg/hr]
             - 'b' (float): Slope [kg/hr/Torr]
         nVial (int): Number of vials in batch
-        n_elements (int, default=8): Finite elements (time discretization points)
-        n_collocation (int, default=3): Collocation points (unused if finite differences)
+        n_elements (int, default=24): Discretization granularity. With finite
+            differences, this is the number of finite elements. With
+            collocation and treat_n_elements_as_effective=True, this value is
+            treated as the effective density and the applied nfe becomes
+            ceil(n_elements/n_collocation).
+        n_collocation (int, default=3): Collocation points per finite element
+            (unused for finite differences).
+        use_finite_differences (bool, default=True): If False, use
+            LAGRANGE-RADAU collocation.
+        treat_n_elements_as_effective (bool, default=False): When using
+            collocation, interpret n_elements as effective density so that the
+            total number of discretization points (nfe*ncp) is comparable to
+            finite differences with nfe.
         warmstart_scipy (bool, default=True): Initialize from scipy opt_Tsh solution
         simulation_mode (bool, default=False): If True, fix all vars and just validate
         solver (str, default='ipopt'): Solver name
@@ -938,6 +991,8 @@ def optimize_Tsh_pyomo(
     Notes:
         - **Warmstart strongly recommended**: Set warmstart_scipy=True for robust convergence
         - Model validates scipy solutions at residuals ~1e-7 (machine precision)
+        - Recommended mesh for FD: ≥24 elements (8 is too coarse)
+        - For collocation, enable treat_n_elements_as_effective to keep total points comparable to FD
         - Typical speedup: 5-10% faster than scipy (discretization vs integration)
         - Staged solve improves robustness vs. direct full optimization
         - simulation_mode validates model without optimization (debugging)
@@ -975,9 +1030,10 @@ def optimize_Tsh_pyomo(
         Tshelf=Tshelf,
         n_elements=n_elements,
         n_collocation=n_collocation,
+        treat_n_elements_as_effective=treat_n_elements_as_effective,
         control_mode='Tsh',
         apply_scaling=True,
-        use_finite_differences=True  # Use simpler FD discretization (ODE not stiff)
+        use_finite_differences=use_finite_differences  # FD default; collocation optional
     )
     
     # Fix chamber pressure to setpoint
@@ -1023,18 +1079,22 @@ def optimize_Tsh_pyomo(
             opt.options['mu_strategy'] = 'adaptive'
             opt.options['bound_relax_factor'] = 1e-8
             opt.options['constr_viol_tol'] = 1e-6
-            # Warm start options
-            opt.options['warm_start_init_point'] = 'yes'
-            opt.options['warm_start_bound_push'] = 1e-8
-            opt.options['warm_start_mult_bound_push'] = 1e-8
+            # Warm start options (only when warmstart requested)
+            if warmstart_scipy:
+                opt.options['warm_start_init_point'] = 'yes'
+                opt.options['warm_start_bound_push'] = 1e-8
+                opt.options['warm_start_mult_bound_push'] = 1e-8
     
     # Execute staged solve or direct solve
+    results = None
     if warmstart_scipy and not simulation_mode:
         success, message = staged_solve(model, opt, control_mode='Tsh', tee=tee)
         if not success:
             print(f"Warning: Staged solve incomplete: {message}")
             print("Attempting direct solve as fallback...")
             results = opt.solve(model, tee=tee)
+        else:
+            results = getattr(model, "_last_solver_result", None)
     else:
         # Direct solve (simulation mode or no warmstart)
         results = opt.solve(model, tee=tee)
@@ -1076,7 +1136,22 @@ def optimize_Tsh_pyomo(
         print("=" * 55)
     
     # Extract solution in same format as scipy optimizer
-    return _extract_output_array(model, vial, product)
+    output_arr = _extract_output_array(model, vial, product)
+    if return_metadata:
+        last = results or getattr(model, "_last_solver_result", None)
+        status = str(getattr(last.solver, 'status', None)) if last is not None else None
+        term = str(getattr(last.solver, 'termination_condition', None)) if last is not None else None
+        iters = getattr(getattr(last, 'solver', None), 'iterations', None) if last is not None else None
+        meta = {
+            "objective_time_hr": float(pyo.value(model.t_final)),
+            "status": status,
+            "termination_condition": term,
+            "ipopt_iterations": iters,
+            "n_points": len(list(sorted(model.t))),
+            "staged_solve_success": getattr(model, "_staged_solve_success", None),
+        }
+        return {"output": output_arr, "metadata": meta}
+    return output_arr
 
 
 def _warmstart_from_scipy_output(
@@ -1277,13 +1352,16 @@ def optimize_Pch_pyomo(
     dt: float,
     eq_cap: Dict[str, float],
     nVial: int,
-    n_elements: int = 8,
+    n_elements: int = 24,
     n_collocation: int = 3,
+    use_finite_differences: bool = True,
+    treat_n_elements_as_effective: bool = False,
     warmstart_scipy: bool = True,
     solver: str = 'ipopt',
     tee: bool = False,
     simulation_mode: bool = False,
-) -> np.ndarray:
+    return_metadata: bool = False,
+) -> Any:
     """Optimize chamber pressure trajectory for minimum drying time (Pyomo implementation).
     
     This is the Pyomo equivalent of lyopronto.opt_Pch.dry(), optimizing chamber
@@ -1315,8 +1393,13 @@ def optimize_Pch_pyomo(
         dt (float): Time step for scipy warmstart [hr]
         eq_cap (dict): Equipment capability (a, b)
         nVial (int): Number of vials
-        n_elements (int, default=8): Finite elements
-        n_collocation (int, default=3): Collocation points
+        n_elements (int, default=24): Discretization granularity. With FD, this
+            is the number of finite elements. With collocation and
+            treat_n_elements_as_effective=True, apply nfe=ceil(n_elements/ncp).
+        n_collocation (int, default=3): Collocation points per element.
+        use_finite_differences (bool, default=True): If False, use collocation.
+        treat_n_elements_as_effective (bool, default=False): Interpret
+            n_elements as an effective density for comparability.
         warmstart_scipy (bool, default=True): Use scipy for initial guess
         solver (str, default='ipopt'): Solver name
         tee (bool, default=False): Print solver output
@@ -1348,9 +1431,10 @@ def optimize_Pch_pyomo(
         Tshelf=Tshelf,
         n_elements=n_elements,
         n_collocation=n_collocation,
+        treat_n_elements_as_effective=treat_n_elements_as_effective,
         control_mode='Pch',
         apply_scaling=True,
-        use_finite_differences=True
+        use_finite_differences=use_finite_differences
     )
     
     # Warmstart from scipy
@@ -1390,21 +1474,41 @@ def optimize_Pch_pyomo(
             opt.options['mu_strategy'] = 'adaptive'
             opt.options['bound_relax_factor'] = 1e-8
             opt.options['constr_viol_tol'] = 1e-6
-            opt.options['warm_start_init_point'] = 'yes'
-            opt.options['warm_start_bound_push'] = 1e-8
-            opt.options['warm_start_mult_bound_push'] = 1e-8
+            # Warm start options (only when warmstart requested)
+            if warmstart_scipy:
+                opt.options['warm_start_init_point'] = 'yes'
+                opt.options['warm_start_bound_push'] = 1e-8
+                opt.options['warm_start_mult_bound_push'] = 1e-8
     
     # Solve
+    results = None
     if warmstart_scipy and not simulation_mode:
         success, message = staged_solve(model, opt, control_mode='Pch', tee=tee)
         if not success:
             print(f"Warning: Staged solve incomplete: {message}")
             print("Attempting direct solve as fallback...")
             results = opt.solve(model, tee=tee)
+        else:
+            results = getattr(model, "_last_solver_result", None)
     else:
         results = opt.solve(model, tee=tee)
-    
-    return _extract_output_array(model, vial, product)
+
+    output_arr = _extract_output_array(model, vial, product)
+    if return_metadata:
+        last = results or getattr(model, "_last_solver_result", None)
+        status = str(getattr(last.solver, 'status', None)) if last is not None else None
+        term = str(getattr(last.solver, 'termination_condition', None)) if last is not None else None
+        iters = getattr(getattr(last, 'solver', None), 'iterations', None) if last is not None else None
+        meta = {
+            "objective_time_hr": float(pyo.value(model.t_final)),
+            "status": status,
+            "termination_condition": term,
+            "ipopt_iterations": iters,
+            "n_points": len(list(sorted(model.t))),
+            "staged_solve_success": getattr(model, "_staged_solve_success", None),
+        }
+        return {"output": output_arr, "metadata": meta}
+    return output_arr
 
 
 def optimize_Pch_Tsh_pyomo(
@@ -1416,15 +1520,18 @@ def optimize_Pch_Tsh_pyomo(
     dt: float,
     eq_cap: Dict[str, float],
     nVial: int,
-    n_elements: int = 10,  # Higher default for joint optimization
+    n_elements: int = 32,  # Higher default for joint optimization (FD)
     n_collocation: int = 3,
+    use_finite_differences: bool = True,
+    treat_n_elements_as_effective: bool = False,
     warmstart_scipy: bool = True,
     solver: str = 'ipopt',
     tee: bool = False,
     simulation_mode: bool = False,
     use_trust_region: bool = False,
     trust_radii: Optional[Dict[str, float]] = None,
-) -> np.ndarray:
+    return_metadata: bool = False,
+) -> Any:
     """Joint optimization of pressure and shelf temperature (Pyomo implementation).
     
     This is the Pyomo equivalent of lyopronto.opt_Pch_Tsh.dry(), optimizing both
@@ -1463,8 +1570,12 @@ def optimize_Pch_Tsh_pyomo(
         dt (float): Time step for scipy warmstart [hr]
         eq_cap (dict): Equipment capability (a, b)
         nVial (int): Number of vials
-        n_elements (int, default=10): Finite elements (higher for joint optimization)
-        n_collocation (int, default=3): Collocation points
+        n_elements (int, default=32): Discretization granularity; see notes in
+            optimize_Tsh_pyomo for FD vs collocation equivalence.
+        n_collocation (int, default=3): Collocation points per element.
+        use_finite_differences (bool, default=True): If False, use collocation.
+        treat_n_elements_as_effective (bool, default=False): Interpret
+            n_elements as effective density when using collocation.
         warmstart_scipy (bool, default=True): Use scipy for initial guess
         solver (str, default='ipopt'): Solver name
         tee (bool, default=False): Print solver output
@@ -1508,9 +1619,10 @@ def optimize_Pch_Tsh_pyomo(
         Tshelf=Tshelf,
         n_elements=n_elements,
         n_collocation=n_collocation,
+        treat_n_elements_as_effective=treat_n_elements_as_effective,
         control_mode='both',
         apply_scaling=True,
-        use_finite_differences=True
+        use_finite_differences=use_finite_differences
     )
     
     # Warmstart from scipy
@@ -1572,18 +1684,38 @@ def optimize_Pch_Tsh_pyomo(
             opt.options['mu_strategy'] = 'adaptive'
             opt.options['bound_relax_factor'] = 1e-9  # Tighter
             opt.options['constr_viol_tol'] = 1e-7  # Tighter
-            opt.options['warm_start_init_point'] = 'yes'
-            opt.options['warm_start_bound_push'] = 1e-9
-            opt.options['warm_start_mult_bound_push'] = 1e-9
+            # Warm start options (only when warmstart requested)
+            if warmstart_scipy:
+                opt.options['warm_start_init_point'] = 'yes'
+                opt.options['warm_start_bound_push'] = 1e-9
+                opt.options['warm_start_mult_bound_push'] = 1e-9
     
     # Solve with sequential control release
+    results = None
     if warmstart_scipy and not simulation_mode:
         success, message = staged_solve(model, opt, control_mode='both', tee=tee)
         if not success:
             print(f"Warning: Staged solve incomplete: {message}")
             print("Attempting direct solve as fallback...")
             results = opt.solve(model, tee=tee)
+        else:
+            results = getattr(model, "_last_solver_result", None)
     else:
         results = opt.solve(model, tee=tee)
-    
-    return _extract_output_array(model, vial, product)
+
+    output_arr = _extract_output_array(model, vial, product)
+    if return_metadata:
+        last = results or getattr(model, "_last_solver_result", None)
+        status = str(getattr(last.solver, 'status', None)) if last is not None else None
+        term = str(getattr(last.solver, 'termination_condition', None)) if last is not None else None
+        iters = getattr(getattr(last, 'solver', None), 'iterations', None) if last is not None else None
+        meta = {
+            "objective_time_hr": float(pyo.value(model.t_final)),
+            "status": status,
+            "termination_condition": term,
+            "ipopt_iterations": iters,
+            "n_points": len(list(sorted(model.t))),
+            "staged_solve_success": getattr(model, "_staged_solve_success", None),
+        }
+        return {"output": output_arr, "metadata": meta}
+    return output_arr
