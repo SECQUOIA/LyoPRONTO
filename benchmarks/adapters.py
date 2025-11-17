@@ -37,8 +37,10 @@ def scipy_adapter(task: str, vial: Dict[str,float], product: Dict[str,float], ht
     elif task == "Pch":
         # Pressure optimization lower bound
         Pchamber = {"min": 0.05}
-        # Shelf multi-step schedule (matches test fixture style)
-        Tshelf = {"init": -35.0, "setpt": [-20.0, 120.0], "dt_setpt": [300.0, 1800.0], "ramp_rate": 1.0}
+        # Shelf multi-step schedule with sufficient time for drying completion
+        # NOTE: dt_setpt in MINUTES (opt_Pch expects minutes, converts internally)
+        # High resistance products (A1=20) need ~86 hours, use 100 hours for margin
+        Tshelf = {"init": -35.0, "setpt": [-20.0, 120.0], "dt_setpt": [300.0, 5700.0], "ramp_rate": 1.0}
         runner = opt_Pch.dry
         args = (vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial)
     elif task == "both":
@@ -108,7 +110,10 @@ def pyomo_adapter(
         args = (vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial)
     elif task == "Pch":
         Pchamber = {"min": 0.05}
-        Tshelf = {"init": -35.0, "setpt": [20.0], "dt_setpt": [180.0], "ramp_rate": 1.0}
+        # Shelf multi-step schedule with sufficient time for drying completion
+        # NOTE: dt_setpt in MINUTES (Pyomo internally uses same convention as scipy)
+        # High resistance products (A1=20) need ~86 hours, use 100 hours for margin
+        Tshelf = {"init": -35.0, "setpt": [-20.0, 120.0], "dt_setpt": [300.0, 5700.0], "ramp_rate": 1.0}
         runner = pyomo_opt.optimize_Pch_pyomo
         args = (vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial)
     elif task == "both":
