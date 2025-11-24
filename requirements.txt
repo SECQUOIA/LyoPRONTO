@@ -3,6 +3,7 @@ numpy>=1.24.0
 scipy>=1.10.0
 matplotlib>=3.7.0
 pandas>=2.0.0
+seaborn>=0.12.0
 
 # Optimization (optional - only needed for Pyomo-based optimizers)
 # Install with: pip install pyomo idaes-pse
