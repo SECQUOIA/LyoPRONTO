@@ -45,6 +45,29 @@ python examples/example_design_space.py
 
 See [`examples/README.md`](examples/README.md) for detailed documentation.
 
+## Benchmarking (Pyomo vs Scipy)
+
+Compare Pyomo optimizers (finite differences + orthogonal collocation) against scipy baseline:
+
+```bash
+# Generate 3×3 parameter grid with scipy, FD, and collocation
+python benchmarks/grid_cli.py generate \
+  --task Tsh --scenario baseline \
+  --vary product.A1=16,18,20 \
+  --vary ht.KC=2.75e-4,3.3e-4,4.0e-4 \
+  --methods scipy,fd,colloc \
+  --out benchmarks/results/grid.jsonl
+
+# Analyze results in notebook
+JSONL_PATH=benchmarks/results/grid.jsonl jupyter notebook benchmarks/grid_analysis.ipynb
+
+# Or use Makefile shortcuts
+make bench VARY='product.A1=16,18,20 ht.KC=2.75e-4,3.3e-4,4.0e-4'
+make analyze OUT=benchmarks/results/grid.jsonl
+```
+
+See [`benchmarks/README.md`](benchmarks/README.md) for detailed benchmarking documentation.
+
 ## Legacy Examples
 
 The repository root contains legacy example scripts for backward compatibility:

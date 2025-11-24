@@ -1,0 +1,8 @@
+# Ignore most generated benchmark results
+*.jsonl
+*.png
+*.csv
+
+# But keep baseline examples for documentation
+!baseline_*.jsonl
+!baseline_*.png
