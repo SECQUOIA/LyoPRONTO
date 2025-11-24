@@ -1,0 +1,846 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>Initial Condition Optimization - Change Summary - LyoPRONTO Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#initial-condition-optimization-change-summary" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="LyoPRONTO Documentation" class="md-header__button md-logo" aria-label="LyoPRONTO Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            LyoPRONTO Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Initial Condition Optimization - Change Summary
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="LyoPRONTO Documentation" class="md-nav__button md-logo" aria-label="LyoPRONTO Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    LyoPRONTO Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LyoPRONTO: Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-guides/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How-to Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../explanation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Explanations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Full listing of all docstrings by module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#motivation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Motivation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#changes-made" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changes Made
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Changes Made">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-code-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Code Changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-documentation-updates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Documentation Updates
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New Behavior
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="New Behavior">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#before-with-fixed-initial-conditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Before (with fixed initial conditions)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#after-with-free-initial-conditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        After (with free initial conditions)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#impact-on-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Impact on Optimization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Impact on Optimization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ramp-constraint-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ramp Constraint Behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#expected-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Expected Results
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing &amp; Validation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Testing &amp; Validation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tests-passing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tests Passing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verification-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification Commands
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#backward-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backward Compatibility
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Backward Compatibility">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#breaking-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Breaking Changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#if-you-want-fixed-initial-conditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        If You Want Fixed Initial Conditions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#regenerating-benchmarks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regenerating Benchmarks
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Regenerating Benchmarks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-needs-to-be-re-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Needs to Be Re-run?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comparison-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comparison Analysis
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-files-modified" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Files Modified
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps (Optional)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Questions?
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="initial-condition-optimization-change-summary">Initial Condition Optimization - Change Summary</h1>
+<p><strong>Date</strong>: November 19, 2025<br />
+<strong>Author</strong>: GitHub Copilot (based on user feedback)<br />
+<strong>Status</strong>: ✅ IMPLEMENTED AND TESTED</p>
+<h2 id="motivation">Motivation</h2>
+<p>The user correctly identified that <strong>fixing initial conditions defeats the purpose of optimization</strong>. The original implementation forced:
+- Initial shelf temperature: Tsh[t=0] = -35°C (fixed)
+- Initial chamber pressure: Pch[t=0] = 0.12 Torr (fixed)</p>
+<p>This prevented the optimizer from finding the truly optimal starting point to minimize total drying time.</p>
+<h2 id="changes-made">Changes Made</h2>
+<h3 id="1-code-changes">1. Code Changes</h3>
+<p><strong>File</strong>: <code>lyopronto/pyomo_models/optimizers.py</code></p>
+<p><strong>Removed</strong> (lines 507-510):</p>
+<pre><code class="language-python"># Fix initial conditions to prevent jumps at t=0
+t0 = time_points[0]
+if ramp_rates.get('fix_initial_Tsh') is not None and control_mode in ['Tsh', 'both']:
+    model.Tsh[t0].fix(ramp_rates['fix_initial_Tsh'])
+if ramp_rates.get('fix_initial_Pch') is not None and control_mode in ['Pch', 'both']:
+    model.Pch[t0].fix(ramp_rates['fix_initial_Pch'])
+</code></pre>
+<p><strong>Added</strong> (new comment):</p>
+<pre><code class="language-python"># NOTE: Initial conditions (t=0) are now FREE to be optimized
+# The optimizer will find the best initial Tsh/Pch to minimize drying time
+# while respecting ramp constraints for subsequent time steps
+</code></pre>
+<h3 id="2-documentation-updates">2. Documentation Updates</h3>
+<p><strong>File</strong>: <code>lyopronto/pyomo_models/optimizers.py</code> (docstring)</p>
+<p><strong>Removed</strong> from parameter documentation:
+- <code>'fix_initial_Tsh'</code> parameter description
+- <code>'fix_initial_Pch'</code> parameter description</p>
+<p><strong>Updated</strong> description to clarify:</p>
+<blockquote>
+<p>"These constraints apply to control changes between consecutive time points, allowing the optimizer to freely choose initial conditions (t=0) to minimize total drying time while respecting ramp limits for all subsequent changes."</p>
+</blockquote>
+<p><strong>File</strong>: <code>docs/RAMP_CONSTRAINT_LIMITATIONS.md</code></p>
+<ul>
+<li>Added UPDATE section documenting the change</li>
+<li>Marked "Limitation 1: Fixed Initial Conditions" as RESOLVED</li>
+<li>Provided guidance for users who want to model specific post-freezing states</li>
+</ul>
+<h2 id="new-behavior">New Behavior</h2>
+<h3 id="before-with-fixed-initial-conditions">Before (with fixed initial conditions)</h3>
+<pre><code class="language-python">ramp_rates = {
+    'Tsh_max': 40.0,
+    'Pch_max': 0.05,
+    'fix_initial_Tsh': -35.0,  # ← Forced to start here
+    'fix_initial_Pch': 0.12     # ← Forced to start here
+}
+# Result: Tsh[t=0] = -35.0°C (always)
+</code></pre>
+<h3 id="after-with-free-initial-conditions">After (with free initial conditions)</h3>
+<pre><code class="language-python">ramp_rates = {
+    'Tsh_max': 40.0,  # Still enforced between time points
+    'Pch_max': 0.05   # Still enforced between time points
+}
+# Result: Tsh[t=0] = optimized value (anywhere in bounds)
+# Example: Tsh[t=0] might be +20°C if that minimizes drying time
+</code></pre>
+<h2 id="impact-on-optimization">Impact on Optimization</h2>
+<h3 id="ramp-constraint-behavior">Ramp Constraint Behavior</h3>
+<p><strong>Still enforced</strong> for all control changes:</p>
+<pre><code>For each interval i = 1, 2, ..., n:
+  |Tsh[t_i] - Tsh[t_{i-1}]| / dt ≤ 40°C/hr  ✓
+  |Pch[t_i] - Pch[t_{i-1}]| / dt ≤ 0.05 Torr/hr  ✓
+</code></pre>
+<p><strong>No longer constrained</strong> at initial point:</p>
+<pre><code>Tsh[t=0] ∈ [Tsh_min, Tsh_max]  ← Free to optimize
+Pch[t=0] ∈ [Pch_min, Pch_max]  ← Free to optimize
+</code></pre>
+<h3 id="expected-results">Expected Results</h3>
+<p>The optimizer can now:
+1. <strong>Choose aggressive initial conditions</strong> if beneficial (e.g., high Tsh, high Pch)
+2. <strong>Minimize drying time</strong> without artificial constraint at t=0
+3. <strong>Still respect ramp limits</strong> for all subsequent control changes</p>
+<p>This is exactly what optimization should do - find the best feasible starting point and trajectory.</p>
+<h2 id="testing-validation">Testing &amp; Validation</h2>
+<h3 id="tests-passing">Tests Passing</h3>
+<ul>
+<li>All 42 <code>test_*Pch_Tsh*</code> tests pass ✓</li>
+<li>No regressions in existing functionality ✓</li>
+<li>Code compiles and imports correctly ✓</li>
+</ul>
+<h3 id="verification-commands">Verification Commands</h3>
+<p>Check that <code>fix_initial</code> references are gone:</p>
+<pre><code class="language-bash">grep -n &quot;fix_initial_Tsh\|fix_initial_Pch&quot; lyopronto/pyomo_models/optimizers.py
+# Returns: (no matches) ✓
+</code></pre>
+<p>Run optimizer tests:</p>
+<pre><code class="language-bash">pytest tests/ -v -k &quot;Pch_Tsh&quot; --tb=short
+# Result: 42 tests PASSED ✓
+</code></pre>
+<h2 id="backward-compatibility">Backward Compatibility</h2>
+<h3 id="breaking-changes">Breaking Changes</h3>
+<ul>
+<li><strong>API change</strong>: <code>fix_initial_Tsh</code> and <code>fix_initial_Pch</code> parameters in <code>ramp_rates</code> dict are now <strong>ignored</strong></li>
+<li>Old benchmark scripts that pass these parameters will still run, but values will have no effect</li>
+</ul>
+<h3 id="if-you-want-fixed-initial-conditions">If You Want Fixed Initial Conditions</h3>
+<p>Three options if you need to model a specific post-freezing state:</p>
+<ol>
+<li>
+<p><strong>Tight bounds</strong> (recommended):
+   <code>python
+   # Optimize Tsh with initial condition "soft-pinned" near -35°C
+   optimize_Pch_Tsh_pyomo(
+       ...,
+       Tshelf={'min': -35.1, 'max': -34.9},  # Almost fixed
+       ramp_rates={'Tsh_max': 40.0}
+   )</code></p>
+</li>
+<li>
+<p><strong>Hard constraint</strong> (if you modify the code):
+   <code>python
+   # Add after model creation
+   model.Tsh[0].fix(-35.0)  # Hard fix at t=0</code></p>
+</li>
+<li>
+<p><strong>Objective penalty</strong> (soft constraint):
+   ```python
+   # Prefer initial condition near -35°C but allow deviation
+   T_target = -35.0
+   penalty_weight = 0.01</p>
+</li>
+</ol>
+<p>model.obj = pyo.Objective(
+       expr=model.t_final + penalty_weight * (model.Tsh[0] - T_target)**2
+   )
+   ```</p>
+<h2 id="regenerating-benchmarks">Regenerating Benchmarks</h2>
+<h3 id="what-needs-to-be-re-run">What Needs to Be Re-run?</h3>
+<p>All benchmarks with ramp constraints should be regenerated to see the impact of free initial conditions:</p>
+<pre><code class="language-bash"># Tsh optimization (40°C/hr ramp)
+python benchmarks/grid_cli.py both \
+    --n-elements 1000 \
+    --ramp-Tsh-max 40.0 \
+    --output benchmarks/results/baseline_Tsh_3x3_ramp40_free_init.jsonl
+
+# Combined optimization (40°C/hr Tsh, 0.05 Torr/hr Pch)
+python benchmarks/grid_cli.py both \
+    --n-elements 1000 \
+    --ramp-Tsh-max 40.0 \
+    --ramp-Pch-max 0.05 \
+    --output benchmarks/results/baseline_both_3x3_ramp_free_init.jsonl
+</code></pre>
+<p><strong>Expected differences</strong>:
+- <strong>Initial Tsh/Pch</strong>: Will likely be different from -35°C/0.12 Torr
+- <strong>Drying time</strong>: May be faster (optimizer has more freedom)
+- <strong>Ramp rates</strong>: Still satisfy 40°C/hr and 0.05 Torr/hr limits ✓</p>
+<h3 id="comparison-analysis">Comparison Analysis</h3>
+<p>You can now answer the question: <strong>How much time penalty comes from fixing initial conditions?</strong></p>
+<pre><code class="language-python"># Compare:
+# 1. Unconstrained (no ramp limits, free initial)
+# 2. Ramp constrained, fixed initial (old benchmarks)
+# 3. Ramp constrained, free initial (new benchmarks)
+
+time_penalty_from_ramp = (time_constrained - time_unconstrained) / time_unconstrained
+time_penalty_from_fixed_init = (time_fixed - time_free) / time_free
+</code></pre>
+<h2 id="related-files-modified">Related Files Modified</h2>
+<ol>
+<li>✅ <code>lyopronto/pyomo_models/optimizers.py</code> (lines 507-510 removed, docstring updated)</li>
+<li>✅ <code>docs/RAMP_CONSTRAINT_LIMITATIONS.md</code> (documented change and resolution)</li>
+</ol>
+<h2 id="next-steps-optional">Next Steps (Optional)</h2>
+<ol>
+<li><strong>Re-run benchmarks</strong> with free initial conditions to quantify impact</li>
+<li><strong>Update notebook analysis</strong> to compare:</li>
+<li>Fixed vs. free initial conditions</li>
+<li>Ramp constrained vs. unconstrained</li>
+<li><strong>Document in paper</strong>: </li>
+<li>"Initial conditions optimized (not fixed at post-freezing state)"</li>
+<li>"Ramp constraints enforce realistic control changes throughout process"</li>
+<li><strong>Consider</strong>: Add optional "prefer_initial_Tsh" parameter for soft constraint if needed</li>
+</ol>
+<h2 id="questions">Questions?</h2>
+<p>If you need to restore fixed initial conditions or have questions about the implementation:
+- See <code>docs/RAMP_CONSTRAINT_LIMITATIONS.md</code> for detailed discussion
+- Contact: Check git history for this commit</p>
+<hr />
+<p><strong>Summary</strong>: Initial conditions are now decision variables, not parameters. The optimizer finds the best starting point to minimize drying time while respecting ramp constraints throughout the trajectory. This is the correct behavior for an optimization problem.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+    
+  </body>
+</html>

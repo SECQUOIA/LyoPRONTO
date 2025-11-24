@@ -1,0 +1,887 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>Testing Infrastructure for LyoPRONTO - LyoPRONTO Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#testing-infrastructure-for-lyopronto" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="LyoPRONTO Documentation" class="md-header__button md-logo" aria-label="LyoPRONTO Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            LyoPRONTO Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Testing Infrastructure for LyoPRONTO
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="LyoPRONTO Documentation" class="md-nav__button md-logo" aria-label="LyoPRONTO Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    LyoPRONTO Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LyoPRONTO: Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-guides/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How-to Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../explanation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Explanations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Full listing of all docstrings by module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running Tests
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Running Tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-test-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install Test Dependencies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-all-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run All Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-specific-test-categories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run Specific Test Categories
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-with-coverage-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run with Coverage Report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-tests-in-parallel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run Tests in Parallel
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test Structure
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Test Structure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#testsconftestpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tests/conftest.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#teststest_functionspy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tests/test_functions.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#teststest_calculatorspy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tests/test_calculators.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#teststest_regressionpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tests/test_regression.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-fixtures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test Fixtures
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#writing-new-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Writing New Tests
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Writing New Tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#unit-test-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unit Test Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#integration-test-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integration Test Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parametric-test-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parametric Test Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#continuous-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Continuous Integration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#coverage-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Coverage Goals
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-markers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test Markers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#debugging-failed-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Debugging Failed Tests
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Debugging Failed Tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#run-a-single-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run a Single Test
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#show-print-statements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Show Print Statements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#drop-into-debugger-on-failure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Drop into Debugger on Failure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#show-local-variables-on-failure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Show Local Variables on Failure
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contact" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contact
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="testing-infrastructure-for-lyopronto">Testing Infrastructure for LyoPRONTO</h1>
+<p>This document describes the testing infrastructure for LyoPRONTO, implemented to support the transition to Pyomo-based optimization.</p>
+<h2 id="overview">Overview</h2>
+<p>The test suite provides comprehensive coverage of:
+- <strong>Unit tests</strong>: Individual physics functions
+- <strong>Integration tests</strong>: Complete simulation workflows
+- <strong>Regression tests</strong>: Verification against known results
+- <strong>Property-based tests</strong>: Mathematical properties and invariants</p>
+<h2 id="running-tests">Running Tests</h2>
+<h3 id="install-test-dependencies">Install Test Dependencies</h3>
+<pre><code class="language-bash">pip install -r requirements-dev.txt
+</code></pre>
+<h3 id="run-all-tests">Run All Tests</h3>
+<pre><code class="language-bash">pytest
+</code></pre>
+<h3 id="run-specific-test-categories">Run Specific Test Categories</h3>
+<pre><code class="language-bash"># Unit tests only
+pytest tests/test_functions.py
+
+# Integration tests only
+pytest tests/test_calculators.py
+
+# Regression tests only
+pytest tests/test_regression.py
+</code></pre>
+<h3 id="run-with-coverage-report">Run with Coverage Report</h3>
+<pre><code class="language-bash">pytest --cov=lyopronto --cov-report=html
+</code></pre>
+<p>Then open <code>htmlcov/index.html</code> in your browser.</p>
+<h3 id="run-tests-in-parallel">Run Tests in Parallel</h3>
+<pre><code class="language-bash">pytest -n auto
+</code></pre>
+<h2 id="test-structure">Test Structure</h2>
+<h3 id="testsconftestpy"><code>tests/conftest.py</code></h3>
+<p>Shared fixtures and utilities:
+- Standard configurations for vials, products, and process parameters
+- Physical reasonableness assertions
+- Reusable test data</p>
+<h3 id="teststest_functionspy"><code>tests/test_functions.py</code></h3>
+<p>Unit tests for core physics functions:
+- <code>Vapor_pressure</code>: Vapor pressure calculations
+- <code>Lpr0_FUN</code>: Initial fill height
+- <code>Rp_FUN</code>: Product resistance
+- <code>Kv_FUN</code>: Vial heat transfer coefficient
+- <code>sub_rate</code>: Sublimation rate
+- <code>T_bot_FUN</code>: Vial bottom temperature
+- Energy balance consistency tests</p>
+<h3 id="teststest_calculatorspy"><code>tests/test_calculators.py</code></h3>
+<p>Integration tests for simulation workflows:
+- Complete drying simulations
+- Parameter sensitivity tests
+- Edge cases and error handling
+- Mass balance verification</p>
+<h3 id="teststest_regressionpy"><code>tests/test_regression.py</code></h3>
+<p>Regression tests against validated results:
+- Standard reference cases
+- Parametric studies
+- Output format consistency
+- Numerical stability checks</p>
+<h2 id="test-fixtures">Test Fixtures</h2>
+<p>Common fixtures available in all tests:</p>
+<pre><code class="language-python">def test_example(standard_vial, standard_product, standard_ht):
+    # Use pre-configured test data
+    vial = standard_vial  # {'Av': 3.80, 'Ap': 3.14, 'Vfill': 2.0}
+    product = standard_product  # {'cSolid': 0.05, 'R0': 1.4, ...}
+    ...
+</code></pre>
+<p>Available fixtures:
+- <code>standard_vial</code>, <code>small_vial</code>, <code>large_vial</code>
+- <code>standard_product</code>, <code>dilute_product</code>, <code>concentrated_product</code>
+- <code>standard_ht</code> (heat transfer parameters)
+- <code>standard_pchamber</code> (chamber pressure)
+- <code>standard_tshelf</code> (shelf temperature)
+- <code>standard_setup</code> (complete configuration)</p>
+<h2 id="writing-new-tests">Writing New Tests</h2>
+<h3 id="unit-test-example">Unit Test Example</h3>
+<pre><code class="language-python">def test_my_function():
+    &quot;&quot;&quot;Test description.&quot;&quot;&quot;
+    result = my_function(input_value)
+    assert result &gt; 0
+    assert np.isclose(result, expected_value, rtol=0.01)
+</code></pre>
+<h3 id="integration-test-example">Integration Test Example</h3>
+<pre><code class="language-python">def test_simulation_workflow(standard_setup):
+    &quot;&quot;&quot;Test complete workflow.&quot;&quot;&quot;
+    output = calc_knownRp.dry(
+        standard_setup['vial'],
+        standard_setup['product'],
+        # ...
+    )
+
+    assert_physically_reasonable_output(output)
+    assert output[-1, 6] &gt;= 99.0  # Check completion
+</code></pre>
+<h3 id="parametric-test-example">Parametric Test Example</h3>
+<pre><code class="language-python">@pytest.mark.parametrize(&quot;pressure,expected_time&quot;, [
+    (0.06, 20.0),
+    (0.15, 15.0),
+    (0.30, 12.0),
+])
+def test_pressure_effect(pressure, expected_time):
+    &quot;&quot;&quot;Test effect of pressure on drying time.&quot;&quot;&quot;
+    # Test implementation
+</code></pre>
+<h2 id="continuous-integration">Continuous Integration</h2>
+<p>Tests are automatically run on:
+- Every push to <code>main</code> and <code>dev-pyomo</code> branches
+- Every pull request
+- Multiple OS (Linux, Windows, macOS)
+- Multiple Python versions (3.8, 3.9, 3.10, 3.11)</p>
+<p>See <code>.github/workflows/tests.yml</code> for CI configuration.</p>
+<h2 id="coverage-goals">Coverage Goals</h2>
+<p>Target coverage levels:
+- <strong>Overall</strong>: &gt;80%
+- <strong>Core functions</strong> (<code>functions.py</code>): &gt;95%
+- <strong>Calculators</strong>: &gt;85%</p>
+<p>Check current coverage:</p>
+<pre><code class="language-bash">pytest --cov=lyopronto --cov-report=term-missing
+</code></pre>
+<h2 id="test-markers">Test Markers</h2>
+<p>Organize tests with markers:</p>
+<pre><code class="language-python">@pytest.mark.slow
+def test_long_simulation():
+    &quot;&quot;&quot;This test takes a long time.&quot;&quot;&quot;
+    pass
+
+@pytest.mark.parametric
+def test_parameter_sweep():
+    &quot;&quot;&quot;Parametric study test.&quot;&quot;&quot;
+    pass
+</code></pre>
+<p>Run specific markers:</p>
+<pre><code class="language-bash">pytest -m &quot;not slow&quot;  # Skip slow tests
+pytest -m &quot;unit&quot;      # Run only unit tests
+</code></pre>
+<h2 id="debugging-failed-tests">Debugging Failed Tests</h2>
+<h3 id="run-a-single-test">Run a Single Test</h3>
+<pre><code class="language-bash">pytest tests/test_functions.py::TestVaporPressure::test_vapor_pressure_at_freezing_point -v
+</code></pre>
+<h3 id="show-print-statements">Show Print Statements</h3>
+<pre><code class="language-bash">pytest -s tests/test_functions.py
+</code></pre>
+<h3 id="drop-into-debugger-on-failure">Drop into Debugger on Failure</h3>
+<pre><code class="language-bash">pytest --pdb tests/test_functions.py
+</code></pre>
+<h3 id="show-local-variables-on-failure">Show Local Variables on Failure</h3>
+<pre><code class="language-bash">pytest -l tests/test_functions.py
+</code></pre>
+<h2 id="next-steps">Next Steps</h2>
+<ol>
+<li>
+<p><strong>Update Regression Tests</strong>: Once validated reference results are available, update expected values in <code>test_regression.py</code></p>
+</li>
+<li>
+<p><strong>Add Property-Based Tests</strong>: Use Hypothesis for property-based testing:
+   ```python
+   from hypothesis import given, strategies as st</p>
+</li>
+</ol>
+<p>@given(st.floats(min_value=-50, max_value=0))
+   def test_vapor_pressure_property(temp):
+       """Vapor pressure should always be positive."""
+       assert functions.Vapor_pressure(temp) &gt; 0
+   ```</p>
+<ol>
+<li>
+<p><strong>Performance Benchmarks</strong>: Add tests to track performance:
+   <code>python
+   def test_simulation_performance(benchmark, standard_setup):
+       """Benchmark simulation time."""
+       benchmark(calc_knownRp.dry, **standard_setup)</code></p>
+</li>
+<li>
+<p><strong>Integration with Pyomo</strong>: As Pyomo models are developed, add comparison tests to verify they match the scipy-based results.</p>
+</li>
+</ol>
+<h2 id="contact">Contact</h2>
+<p>For questions about the test infrastructure, contact the development team or open an issue on GitHub.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+    
+  </body>
+</html>

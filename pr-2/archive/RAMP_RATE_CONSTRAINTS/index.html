@@ -1,0 +1,958 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>Ramp-Rate Constraints for Pyomo Optimizers - LyoPRONTO Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#ramp-rate-constraints-for-pyomo-optimizers" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="LyoPRONTO Documentation" class="md-header__button md-logo" aria-label="LyoPRONTO Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            LyoPRONTO Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Ramp-Rate Constraints for Pyomo Optimizers
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="LyoPRONTO Documentation" class="md-nav__button md-logo" aria-label="LyoPRONTO Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    LyoPRONTO Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LyoPRONTO: Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-guides/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How-to Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../explanation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Explanations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Full listing of all docstrings by module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#problem-statement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Problem Statement
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#solution-adaptive-ramp-rate-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Solution: Adaptive Ramp-Rate Constraints
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Solution: Adaptive Ramp-Rate Constraints">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Features
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implementation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#model-level-create_optimizer_model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model-Level (create_optimizer_model)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#high-level-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        High-Level API
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test Results
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Test Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#test-case-tsh-optimization-a118-kc33e-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test Case: Tsh Optimization (A1=18, KC=3.3e-4)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#key-observations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Observations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommended-default-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommended Default Values
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Recommended Default Values">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#conservative-strict-equipment-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conservative (Strict Equipment Limits)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#moderate-typical-industrial" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Moderate (Typical Industrial)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aggressive-fast-equipment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Aggressive (Fast Equipment)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integration-with-benchmarking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integration with Benchmarking
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Integration with Benchmarking">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adapter-update-required" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adapter Update Required
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cli-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI Usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#discretization-independence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Discretization Independence
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#comparison-to-scipy-sequential-approach" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comparison to SciPy Sequential Approach
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Comparison to SciPy Sequential Approach">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-scipy-appears-smoother" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why SciPy Appears Smoother
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyomo-simultaneous-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pyomo Simultaneous Optimization
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#future-enhancements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Future Enhancements
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#files-modified" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Files Modified
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="ramp-rate-constraints-for-pyomo-optimizers">Ramp-Rate Constraints for Pyomo Optimizers</h1>
+<h2 id="overview">Overview</h2>
+<p>This implementation adds physically realistic control smoothness to Pyomo-based lyophilization optimizers through adaptive ramp-rate constraints. These constraints prevent unrealistic instantaneous jumps in shelf temperature and chamber pressure that can occur in unconstrained optimization.</p>
+<h2 id="problem-statement">Problem Statement</h2>
+<p><strong>Issue</strong>: Pyomo optimizers (without ramp constraints) can produce trajectories with sudden temperature/pressure jumps at t=0 because:
+1. Controls are free variables at each time point
+2. No equipment dynamics modeled (infinite actuator response)
+3. Minimizing drying time incentivizes aggressive initial conditions</p>
+<p><strong>Example</strong>: Unconstrained Tsh optimization might jump from ambient 25°C to 60°C instantly at t=0.</p>
+<p><strong>Real Equipment</strong>: Lyophilizers have finite ramp rates:
+- Shelf temperature: ~10-30°C/hr (limited by thermal mass, heater power)
+- Chamber pressure: ~0.05-0.1 Torr/hr (limited by valve/pump response)</p>
+<h2 id="solution-adaptive-ramp-rate-constraints">Solution: Adaptive Ramp-Rate Constraints</h2>
+<h3 id="key-features">Key Features</h3>
+<ol>
+<li>
+<p><strong>Time-Normalized Constraints</strong>: Automatically scale with discretization
+   <code>python
+   # Constraint form: (control[i] - control[i-1]) / (Δt * t_final) ≤ max_rate
+   # Where Δt = normalized time step from discretized mesh
+   # Result: Finer discretization maintains same physical ramp rate</code></p>
+</li>
+<li>
+<p><strong>Initial Condition Fixing</strong>: Prevent jumps at t=0
+   <code>python
+   ramp_rates = {
+       'fix_initial_Tsh': -35.0,  # Start at freezing temp
+       'fix_initial_Pch': 0.15     # Start at loading pressure
+   }</code></p>
+</li>
+<li>
+<p><strong>Mode-Aware</strong>: Only constrain optimized controls</p>
+</li>
+<li><code>control_mode='Tsh'</code>: Ramp constraints on Tsh only</li>
+<li><code>control_mode='Pch'</code>: Ramp constraints on Pch only  </li>
+<li><code>control_mode='both'</code>: Ramp constraints on both</li>
+</ol>
+<h3 id="implementation">Implementation</h3>
+<h4 id="model-level-create_optimizer_model">Model-Level (create_optimizer_model)</h4>
+<pre><code class="language-python">def create_optimizer_model(
+    ...,
+    ramp_rates: Optional[Dict[str, float]] = None,
+) -&gt; pyo.ConcreteModel:
+    &quot;&quot;&quot;
+    Args:
+        ramp_rates (dict, optional): Control ramp-rate limits
+            - 'Tsh_max' (float): Max shelf temp ramp [°C/hr] (default: 20.0)
+            - 'Pch_max' (float): Max pressure change [Torr/hr] (default: 0.1)
+            - 'fix_initial_Tsh' (float): Fix initial shelf temp [°C]
+            - 'fix_initial_Pch' (float): Fix initial pressure [Torr]
+    &quot;&quot;&quot;
+    # ... model creation ...
+
+    # After discretization, add ramp constraints
+    if ramp_rates is not None:
+        time_points = sorted(model.t)
+        Tsh_max_ramp = ramp_rates.get('Tsh_max', 20.0)
+        Pch_max_ramp = ramp_rates.get('Pch_max', 0.1)
+
+        # Fix initial conditions
+        if ramp_rates.get('fix_initial_Tsh') is not None:
+            model.Tsh[time_points[0]].fix(ramp_rates['fix_initial_Tsh'])
+
+        # Add interval constraints
+        model.ramp_constraints = pyo.ConstraintList()
+        for i in range(1, len(time_points)):
+            dt_norm = time_points[i] - time_points[i-1]
+            # Tsh[i] - Tsh[i-1] ≤ Tsh_max_ramp * dt_norm * t_final
+            model.ramp_constraints.add(
+                model.Tsh[time_points[i]] - model.Tsh[time_points[i-1]] 
+                &lt;= Tsh_max_ramp * dt_norm * model.t_final
+            )
+            # Same for cooling direction
+            model.ramp_constraints.add(
+                model.Tsh[time_points[i-1]] - model.Tsh[time_points[i]]
+                &lt;= Tsh_max_ramp * dt_norm * model.t_final
+            )
+</code></pre>
+<h4 id="high-level-api">High-Level API</h4>
+<pre><code class="language-python"># Example: Optimize Tsh with 20°C/hr limit
+result = pyomo_opt.optimize_Tsh_pyomo(
+    vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial,
+    ramp_rates={
+        'Tsh_max': 20.0,          # °C/hr
+        'fix_initial_Tsh': -35.0  # °C
+    }
+)
+
+# Example: Joint optimization with both constraints
+result = pyomo_opt.optimize_Pch_Tsh_pyomo(
+    ...,
+    ramp_rates={
+        'Tsh_max': 15.0,
+        'Pch_max': 0.08,
+        'fix_initial_Tsh': -30.0,
+        'fix_initial_Pch': 0.12
+    }
+)
+</code></pre>
+<h2 id="test-results">Test Results</h2>
+<h3 id="test-case-tsh-optimization-a118-kc33e-4">Test Case: Tsh Optimization (A1=18, KC=3.3e-4)</h3>
+<p><strong>Without Ramp Constraints</strong>:
+- Objective: 12.25 hr
+- Initial jump: 20.76°C (instant from -35°C to -14°C)
+- Behavior: "Bang-bang" control (instant jump to aggressive heating)</p>
+<p><strong>With Ramp Constraints (20°C/hr)</strong>:
+- Objective: 13.61 hr (+11.1% time penalty)
+- Initial jump: 2.72°C (smooth ramp from -35°C)
+- Max ramp rate: 20.00°C/hr ✓ (constraint satisfied)
+- Behavior: Gradual heating respecting equipment limits</p>
+<h3 id="key-observations">Key Observations</h3>
+<ol>
+<li><strong>Constraint Satisfaction</strong>: Maximum measured ramp rate = 20.00°C/hr (exactly at limit)</li>
+<li><strong>Moderate Time Penalty</strong>: 11% increase reasonable for realistic operation</li>
+<li><strong>Smooth Profiles</strong>: No visual discontinuities or spikes</li>
+<li><strong>Initial Condition</strong>: Fixed at -35°C (no jump at t=0)</li>
+</ol>
+<h2 id="recommended-default-values">Recommended Default Values</h2>
+<h3 id="conservative-strict-equipment-limits">Conservative (Strict Equipment Limits)</h3>
+<pre><code class="language-python">ramp_rates = {
+    'Tsh_max': 15.0,   # °C/hr - conservative heating
+    'Pch_max': 0.05,   # Torr/hr - slow depressurization
+    'fix_initial_Tsh': -35.0,  # Typical freezing temp
+    'fix_initial_Pch': 0.15    # Typical loading pressure
+}
+</code></pre>
+<h3 id="moderate-typical-industrial">Moderate (Typical Industrial)</h3>
+<pre><code class="language-python">ramp_rates = {
+    'Tsh_max': 20.0,   # °C/hr - standard rate
+    'Pch_max': 0.08,   # Torr/hr - moderate
+    'fix_initial_Tsh': -35.0,
+    'fix_initial_Pch': 0.12
+}
+</code></pre>
+<h3 id="aggressive-fast-equipment">Aggressive (Fast Equipment)</h3>
+<pre><code class="language-python">ramp_rates = {
+    'Tsh_max': 30.0,   # °C/hr - fast heating
+    'Pch_max': 0.12,   # Torr/hr - fast depressurization
+    'fix_initial_Tsh': -30.0,
+    'fix_initial_Pch': 0.10
+}
+</code></pre>
+<h2 id="integration-with-benchmarking">Integration with Benchmarking</h2>
+<h3 id="adapter-update-required">Adapter Update Required</h3>
+<p>To use ramp constraints in benchmarks, update <code>benchmarks/adapters.py</code>:</p>
+<pre><code class="language-python">def pyomo_adapter(
+    ...,
+    ramp_rates: Optional[Dict[str, float]] = None,
+) -&gt; Dict[str, Any]:
+    &quot;&quot;&quot;...&quot;&quot;&quot;
+
+    # Pass ramp_rates to optimizer
+    result = runner(
+        *args,
+        n_elements=int(n_elements),
+        n_collocation=int(n_collocation),
+        use_finite_differences=use_fd,
+        treat_n_elements_as_effective=treat_eff,
+        warmstart_scipy=warmstart,
+        return_metadata=True,
+        tee=False,
+        ramp_rates=ramp_rates  # &lt;-- ADD THIS
+    )
+</code></pre>
+<h3 id="cli-usage">CLI Usage</h3>
+<p>Once adapter is updated:</p>
+<pre><code class="language-bash"># Generate benchmarks with ramp constraints
+python benchmarks/grid_cli.py generate \
+  --task Tsh --scenario baseline \
+  --vary product.A1=16,18,20 \
+  --vary ht.KC=2.75e-4,3.3e-4,4.0e-4 \
+  --methods scipy,fd,colloc \
+  --n-elements 1000 --n-collocation 3 \
+  --ramp-Tsh-max 20.0 \
+  --ramp-Pch-max 0.08 \
+  --fix-initial-Tsh -35.0 \
+  --out benchmarks/results/baseline_Tsh_3x3_with_ramps.jsonl
+</code></pre>
+<h2 id="discretization-independence">Discretization Independence</h2>
+<p><strong>Critical Feature</strong>: Constraints scale automatically with mesh resolution.</p>
+<pre><code class="language-python"># Coarse mesh (n=10): Δt_norm ~ 0.1
+# Constraint: ΔTsh ≤ 20.0 * 0.1 * t_final = 2.0 * t_final °C per interval
+# If t_final=10hr: ΔTsh ≤ 20°C per interval (1hr) → 20°C/hr ✓
+
+# Fine mesh (n=1000): Δt_norm ~ 0.001
+# Constraint: ΔTsh ≤ 20.0 * 0.001 * t_final = 0.02 * t_final °C per interval
+# If t_final=10hr: ΔTsh ≤ 0.2°C per interval (0.01hr) → 20°C/hr ✓
+</code></pre>
+<p>Both discretizations enforce the same physical rate: <strong>20°C/hr</strong>.</p>
+<h2 id="comparison-to-scipy-sequential-approach">Comparison to SciPy Sequential Approach</h2>
+<h3 id="why-scipy-appears-smoother">Why SciPy Appears Smoother</h3>
+<ol>
+<li><strong>Sequential Integration</strong>: Evolves states step-by-step via ODE solver</li>
+<li><strong>Small Adaptive Steps</strong>: scipy.integrate uses ~0.01hr steps internally</li>
+<li><strong>Initial Guess Propagation</strong>: Each iteration starts from previous solution</li>
+<li><strong>Implicit Smoothing</strong>: No explicit ramp constraints, but small Δt prevents large jumps</li>
+</ol>
+<h3 id="pyomo-simultaneous-optimization">Pyomo Simultaneous Optimization</h3>
+<ol>
+<li><strong>All Time Points Optimized Together</strong>: No sequential propagation</li>
+<li><strong>Unconstrained Jump at t=0</strong>: Unless fixed or constrained</li>
+<li><strong>Explicit Ramp Constraints Needed</strong>: To match physical reality</li>
+<li><strong>Trade-Off</strong>: Small time penalty for realistic trajectories</li>
+</ol>
+<h2 id="future-enhancements">Future Enhancements</h2>
+<ol>
+<li>
+<p><strong>Equipment Thermal Dynamics</strong> (Higher Fidelity):
+   <code>python
+   # Replace direct Tsh control with heater power
+   # Add shelf thermal mass ODE: C_shelf * dTsh/dt = Q_heater - Q_loss
+   # Result: Inherent smoothness from physics, not constraints</code></p>
+</li>
+<li>
+<p><strong>Quadratic Smoothness Penalty</strong> (Alternative to Hard Constraints):
+   <code>python
+   # Add to objective: λ * Σ (Tsh[i] - Tsh[i-1])²
+   # Soft enforcement, allows small violations if beneficial</code></p>
+</li>
+<li>
+<p><strong>Second-Order Smoothness</strong> (Curvature Limits):
+   <code>python
+   # Constrain acceleration: (Tsh[i] - 2*Tsh[i-1] + Tsh[i-2]) / Δt² ≤ α_max
+   # Smoother trajectories, avoids sharp corners</code></p>
+</li>
+<li>
+<p><strong>Time-Varying Ramp Limits</strong>:
+   <code>python
+   # Allow faster ramps later: ramp_max(t) = base_rate * (1 + k*t)
+   # Reflects that shelf warms up (faster thermal response at higher T)</code></p>
+</li>
+</ol>
+<h2 id="files-modified">Files Modified</h2>
+<ol>
+<li><code>lyopronto/pyomo_models/optimizers.py</code>:</li>
+<li><code>create_optimizer_model()</code>: Added <code>ramp_rates</code> parameter and constraint logic</li>
+<li><code>optimize_Tsh_pyomo()</code>: Pass <code>ramp_rates</code> through</li>
+<li><code>optimize_Pch_pyomo()</code>: Pass <code>ramp_rates</code> through</li>
+<li>
+<p><code>optimize_Pch_Tsh_pyomo()</code>: Pass <code>ramp_rates</code> through</p>
+</li>
+<li>
+<p>Test script: <code>test_ramp_constraints.py</code></p>
+</li>
+</ol>
+<h2 id="validation">Validation</h2>
+<p>✅ Constraints properly enforced (max rate = limit)<br />
+✅ Initial conditions fixed (no jump at t=0)<br />
+✅ Discretization-independent (same rate for n=10 or n=1000)<br />
+✅ Moderate time penalty (~10-15% for realistic limits)<br />
+✅ IPOPT convergence maintained (optimal status)</p>
+<h2 id="summary">Summary</h2>
+<p>The ramp-rate constraint implementation provides:
+- <strong>Physical Realism</strong>: Matches actual lyophilizer capabilities
+- <strong>Flexibility</strong>: Optional, configurable limits
+- <strong>Robustness</strong>: Scales automatically with discretization
+- <strong>Minimal Impact</strong>: ~10% time penalty for typical limits
+- <strong>Production-Ready</strong>: Fully integrated with existing optimizers</p>
+<p>This feature closes the gap between Pyomo's unconstrained simultaneous optimization and SciPy's implicitly smooth sequential approach, making Pyomo trajectories deployable on real equipment.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+    
+  </body>
+</html>

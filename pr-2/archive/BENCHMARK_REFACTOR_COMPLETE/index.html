@@ -1,0 +1,880 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>Benchmark Infrastructure Refactor — Complete - LyoPRONTO Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#benchmark-infrastructure-refactor-complete" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="LyoPRONTO Documentation" class="md-header__button md-logo" aria-label="LyoPRONTO Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            LyoPRONTO Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Benchmark Infrastructure Refactor — Complete
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="LyoPRONTO Documentation" class="md-nav__button md-logo" aria-label="LyoPRONTO Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    LyoPRONTO Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LyoPRONTO: Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-guides/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How-to Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../explanation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Explanations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Full listing of all docstrings by module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Changed
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What Changed">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-new-cli-benchmarksgrid_clipy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. New CLI: benchmarks/grid_cli.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-enhanced-adapters-benchmarksadapterspy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Enhanced Adapters: benchmarks/adapters.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-schema-v2-benchmarksschemapy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Schema v2: benchmarks/schema.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-analysis-notebook-benchmarksgrid_analysisipynb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Analysis Notebook: benchmarks/grid_analysis.ipynb
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-minimal-makefile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Minimal Makefile
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-removed-legacy-scripts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Removed Legacy Scripts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-documentation-updates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Documentation Updates
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage Examples
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Usage Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#generate-33-grid-scipy-fd-collocation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generate 3×3 grid (scipy + FD + collocation)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#makefile-shortcut" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Makefile shortcut
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#analyze-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Analyze results
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compare-fd-vs-collocation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compare FD vs Collocation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-design-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Design Principles
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#schema-v2-record-structure-excerpt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schema v2 Record Structure (Excerpt)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migration-guide-for-existing-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration Guide (for existing users)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Migration Guide (for existing users)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#old-workflow-deprecated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Old workflow (deprecated)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#new-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New workflow
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps-future-enhancements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps (Future Enhancements)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#files-modified" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Files Modified
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contact" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contact
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="benchmark-infrastructure-refactor-complete">Benchmark Infrastructure Refactor — Complete</h1>
+<p><strong>Date:</strong> January 2025<br />
+<strong>Branch:</strong> <code>pyomo</code><br />
+<strong>Status:</strong> ✅ Production-ready</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>Replaced bespoke 2×2 and 3×3 grid scripts with a unified CLI supporting N-dimensional parameter sweeps, multi-method comparison (scipy, finite differences, orthogonal collocation), discretization metadata, and read-only analysis notebook.</p>
+<hr />
+<h2 id="what-changed">What Changed</h2>
+<h3 id="1-new-cli-benchmarksgrid_clipy">1. <strong>New CLI: <code>benchmarks/grid_cli.py</code></strong></h3>
+<ul>
+<li><strong>N-parameter Cartesian products</strong>: <code>--vary key=val1,val2,...</code> (repeatable)</li>
+<li><strong>Multi-method</strong>: <code>--methods scipy,fd,colloc</code> (run all in one invocation)</li>
+<li><strong>Discretization controls</strong>: <code>--n-elements</code>, <code>--n-collocation</code>, <code>--raw-colloc</code></li>
+<li><strong>Warmstart flag</strong>: <code>--warmstart</code> (default OFF for robustness testing)</li>
+<li><strong>Reuse-first</strong>: skips generation if JSONL exists unless <code>--force</code></li>
+<li><strong>Schema v2</strong>: automatic hashing, trajectory embedding, version tracking</li>
+</ul>
+<h3 id="2-enhanced-adapters-benchmarksadapterspy">2. <strong>Enhanced Adapters: <code>benchmarks/adapters.py</code></strong></h3>
+<ul>
+<li><strong>Discretization metadata block</strong>:<ul>
+<li><code>method</code>: "fd" or "colloc"</li>
+<li><code>n_elements_requested</code>, <code>n_elements_applied</code></li>
+<li><code>n_collocation</code> (colloc only)</li>
+<li><code>effective_nfe</code>: true for parity reporting</li>
+<li><code>total_mesh_points</code>: computed mesh size</li>
+</ul>
+</li>
+<li><strong>Warmstart default</strong>: <code>False</code> (override with <code>warmstart=True</code>)</li>
+<li><strong>Trajectory storage</strong>: returns ndarray ready for serialization</li>
+</ul>
+<h3 id="3-schema-v2-benchmarksschemapy">3. <strong>Schema v2: <code>benchmarks/schema.py</code></strong></h3>
+<ul>
+<li><strong>Version field</strong>: <code>"version": 2</code></li>
+<li><strong>Hashing utilities</strong>: <code>hash_inputs()</code>, <code>hash_record()</code> (SHA-256 truncated)</li>
+<li><strong>Trajectory-friendly serialization</strong>: numpy arrays → lists automatically</li>
+<li><strong>Environment capture</strong>: Python, Pyomo, Ipopt versions; OS, hostname, timestamp</li>
+</ul>
+<h3 id="4-analysis-notebook-benchmarksgrid_analysisipynb">4. <strong>Analysis Notebook: <code>benchmarks/grid_analysis.ipynb</code></strong></h3>
+<ul>
+<li><strong>Read-only</strong>: expects pre-generated JSONL (no generation cells)</li>
+<li><strong>Multi-file ready</strong>: can load and compare FD vs colloc vs scipy datasets</li>
+<li><strong>Outputs</strong>:<ul>
+<li>CSV pivot tables (objectives, ratios, speedups)</li>
+<li>Heatmaps (objective difference, speedup, parity)</li>
+<li>Scatter plots, histograms, summary interpretation</li>
+</ul>
+</li>
+<li><strong>Environment variables</strong>: <code>JSONL_PATH</code>, <code>METRIC</code> for headless execution</li>
+</ul>
+<h3 id="5-minimal-makefile">5. <strong>Minimal Makefile</strong></h3>
+<ul>
+<li><strong>Deprecated legacy targets</strong>: removed <code>bench-grid</code>, <code>bench-grid-3x3</code>, <code>grid-summary</code>, <code>analyze-3x3</code>, <code>bench-single</code>, <code>bench-batch</code>, <code>bench-aggregate</code></li>
+<li><strong>New targets</strong>:<ul>
+<li><code>make bench</code>: generate via <code>grid_cli.py</code></li>
+<li><code>make analyze</code>: execute notebook headless (optional nbconvert)</li>
+<li><code>make help</code>: show usage and examples</li>
+</ul>
+</li>
+<li><strong>Defaults</strong>: <code>TASK=Tsh</code>, <code>SCENARIO=baseline</code>, <code>METHODS=scipy,fd,colloc</code>, <code>N_ELEMENTS=24</code>, <code>N_COLLOCATION=3</code></li>
+</ul>
+<h3 id="6-removed-legacy-scripts">6. <strong>Removed Legacy Scripts</strong></h3>
+<ul>
+<li><code>benchmarks/run_single.py</code></li>
+<li><code>benchmarks/run_batch.py</code></li>
+<li><code>benchmarks/aggregate.py</code></li>
+<li><code>benchmarks/run_grid.py</code></li>
+<li><code>benchmarks/run_grid_3x3.py</code></li>
+<li><code>benchmarks/summarize_grid.py</code></li>
+</ul>
+<h3 id="7-documentation-updates">7. <strong>Documentation Updates</strong></h3>
+<ul>
+<li><strong><code>benchmarks/README.md</code></strong>: rewritten with new CLI workflow, schema v2 details, migration guide</li>
+<li><strong><code>README.md</code></strong>: added benchmarking quick-start section after examples</li>
+</ul>
+<hr />
+<h2 id="usage-examples">Usage Examples</h2>
+<h3 id="generate-33-grid-scipy-fd-collocation">Generate 3×3 grid (scipy + FD + collocation)</h3>
+<pre><code class="language-bash">python benchmarks/grid_cli.py generate \
+  --task Tsh --scenario baseline \
+  --vary product.A1=16,18,20 \
+  --vary ht.KC=2.75e-4,3.3e-4,4.0e-4 \
+  --methods scipy,fd,colloc \
+  --n-elements 24 --n-collocation 3 \
+  --out benchmarks/results/grid_A1_KC.jsonl
+</code></pre>
+<h3 id="makefile-shortcut">Makefile shortcut</h3>
+<pre><code class="language-bash">make bench VARY='product.A1=16,18,20 ht.KC=2.75e-4,3.3e-4,4.0e-4' METHODS=fd,colloc
+</code></pre>
+<h3 id="analyze-results">Analyze results</h3>
+<pre><code class="language-bash"># Jupyter interactive
+JSONL_PATH=benchmarks/results/grid_A1_KC.jsonl jupyter notebook benchmarks/grid_analysis.ipynb
+
+# Headless via Makefile
+make analyze OUT=benchmarks/results/grid_A1_KC.jsonl METRIC=ratio.pyomo_over_scipy
+</code></pre>
+<h3 id="compare-fd-vs-collocation">Compare FD vs Collocation</h3>
+<pre><code class="language-bash"># Generate FD dataset
+python benchmarks/grid_cli.py generate --task Tsh --scenario baseline \
+  --vary product.A1=16,18,20 --vary ht.KC=2.75e-4,3.3e-4,4.0e-4 \
+  --methods scipy,fd --out benchmarks/results/grid_fd.jsonl
+
+# Generate collocation dataset
+python benchmarks/grid_cli.py generate --task Tsh --scenario baseline \
+  --vary product.A1=16,18,20 --vary ht.KC=2.75e-4,3.3e-4,4.0e-4 \
+  --methods scipy,colloc --out benchmarks/results/grid_colloc.jsonl
+
+# Load both in notebook for side-by-side comparison
+</code></pre>
+<hr />
+<h2 id="key-design-principles">Key Design Principles</h2>
+<ol>
+<li><strong>Coexistence, not replacement</strong>: scipy remains baseline; Pyomo (FD + colloc) added as parallel methods</li>
+<li><strong>Warmstart disabled by default</strong>: robustness testing prioritized over convergence assistance</li>
+<li><strong>Effective-nfe for collocation</strong>: reports collocation <code>n_elements</code> as effective parity with FD mesh</li>
+<li><strong>Reuse-first</strong>: avoid redundant computation; hash-based deduplication planned (schema v2 ready)</li>
+<li><strong>Read-only analysis</strong>: notebook ingests pre-generated JSONL; no mutation of results</li>
+<li><strong>Separation of concerns</strong>: generation (CLI) vs analysis (notebook) decoupled for scalability</li>
+</ol>
+<hr />
+<h2 id="schema-v2-record-structure-excerpt">Schema v2 Record Structure (Excerpt)</h2>
+<pre><code class="language-json">{
+  &quot;version&quot;: 2,
+  &quot;hash&quot;: {
+    &quot;inputs&quot;: &quot;a3f5c2...&quot;,
+    &quot;record&quot;: &quot;7d8e1b...&quot;
+  },
+  &quot;environment&quot;: { &quot;python&quot;: &quot;3.13.1&quot;, &quot;pyomo&quot;: &quot;6.8.0&quot;, ... },
+  &quot;task&quot;: &quot;Tsh&quot;,
+  &quot;scenario&quot;: &quot;baseline&quot;,
+  &quot;grid&quot;: {
+    &quot;param1&quot;: {&quot;path&quot;: &quot;product.A1&quot;, &quot;value&quot;: 18.0},
+    &quot;param2&quot;: {&quot;path&quot;: &quot;ht.KC&quot;, &quot;value&quot;: 3.3e-4}
+  },
+  &quot;scipy&quot;: {
+    &quot;success&quot;: true,
+    &quot;wall_time_s&quot;: 2.45,
+    &quot;objective_time_hr&quot;: 12.34,
+    &quot;solver&quot;: {...},
+    &quot;metrics&quot;: {&quot;mass_balance_error_pct&quot;: 0.12, &quot;dryness_target_met&quot;: true, ...}
+  },
+  &quot;pyomo&quot;: {
+    &quot;success&quot;: true,
+    &quot;wall_time_s&quot;: 0.87,
+    &quot;objective_time_hr&quot;: 12.31,
+    &quot;solver&quot;: {...},
+    &quot;metrics&quot;: {...},
+    &quot;discretization&quot;: {
+      &quot;method&quot;: &quot;colloc&quot;,
+      &quot;n_elements_requested&quot;: 24,
+      &quot;n_elements_applied&quot;: 24,
+      &quot;n_collocation&quot;: 3,
+      &quot;effective_nfe&quot;: true,
+      &quot;total_mesh_points&quot;: 73
+    },
+    &quot;warmstart_used&quot;: false
+  },
+  &quot;failed&quot;: false
+}
+</code></pre>
+<hr />
+<h2 id="testing">Testing</h2>
+<ul>
+<li><strong>CLI help</strong>: <code>python benchmarks/grid_cli.py --help</code> ✅</li>
+<li><strong>Makefile help</strong>: <code>make help</code> ✅</li>
+<li><strong>Small test run</strong>: ready for manual validation (2×2 grid scipy+fd takes ~30s)</li>
+<li><strong>Notebook execution</strong>: compatible with <code>nbconvert --execute</code> for CI</li>
+</ul>
+<hr />
+<h2 id="migration-guide-for-existing-users">Migration Guide (for existing users)</h2>
+<h3 id="old-workflow-deprecated">Old workflow (deprecated)</h3>
+<pre><code class="language-bash">make bench-grid-3x3 P1_VALUES=16,18,20 P2_VALUES=2.75e-4,3.3e-4,4.0e-4
+make grid-summary INFILE=benchmarks/results/grid_3x3.jsonl
+</code></pre>
+<h3 id="new-workflow">New workflow</h3>
+<pre><code class="language-bash">python benchmarks/grid_cli.py generate \
+  --task Tsh --scenario baseline \
+  --vary product.A1=16,18,20 \
+  --vary ht.KC=2.75e-4,3.3e-4,4.0e-4 \
+  --methods scipy,fd,colloc \
+  --out benchmarks/results/grid.jsonl
+
+JSONL_PATH=benchmarks/results/grid.jsonl jupyter notebook benchmarks/grid_analysis.ipynb
+</code></pre>
+<p>Or use Makefile:</p>
+<pre><code class="language-bash">make bench VARY='product.A1=16,18,20 ht.KC=2.75e-4,3.3e-4,4.0e-4'
+make analyze OUT=benchmarks/results/grid.jsonl
+</code></pre>
+<hr />
+<h2 id="next-steps-future-enhancements">Next Steps (Future Enhancements)</h2>
+<ul>
+<li>[ ] <strong>Legacy record migration tool</strong>: convert schema v1 → v2 (add hashes, version)</li>
+<li>[ ] <strong>CLI <code>slice</code> command</strong>: filter JSONL by parameter ranges or methods</li>
+<li>[ ] <strong>CLI <code>merge</code> command</strong>: combine multiple JSONL files with deduplication</li>
+<li>[ ] <strong>CLI <code>pivot2d</code> command</strong>: CSV generation without notebook</li>
+<li>[ ] <strong>Trajectory embedding validation</strong>: confirm numpy→list round-trip correctness</li>
+<li>[ ] <strong>Multi-file comparison notebook cells</strong>: automated FD vs colloc plots</li>
+<li>[ ] <strong>CI benchmark regression</strong>: track objective parity and speedup trends over commits</li>
+</ul>
+<hr />
+<h2 id="files-modified">Files Modified</h2>
+<p><strong>Created:</strong>
+- <code>benchmarks/grid_cli.py</code> (new unified CLI)
+- <code>docs/BENCHMARK_REFACTOR_COMPLETE.md</code> (this document)</p>
+<p><strong>Updated:</strong>
+- <code>benchmarks/adapters.py</code> (discretization metadata, warmstart default)
+- <code>benchmarks/schema.py</code> (v2 schema, hashing, trajectory serialization)
+- <code>benchmarks/grid_analysis.ipynb</code> (read-only loader, removed generation)
+- <code>Makefile</code> (minimal <code>bench</code>/<code>analyze</code> targets)
+- <code>benchmarks/README.md</code> (new workflow documentation)
+- <code>README.md</code> (benchmarking quick-start section)</p>
+<p><strong>Removed:</strong>
+- <code>benchmarks/run_single.py</code>
+- <code>benchmarks/run_batch.py</code>
+- <code>benchmarks/aggregate.py</code>
+- <code>benchmarks/run_grid.py</code>
+- <code>benchmarks/run_grid_3x3.py</code>
+- <code>benchmarks/summarize_grid.py</code></p>
+<hr />
+<h2 id="contact">Contact</h2>
+<p>Questions or issues? See <code>docs/GETTING_STARTED.md</code> for developer setup or open an issue referencing this refactor document.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+    
+  </body>
+</html>
