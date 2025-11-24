@@ -28,6 +28,24 @@ MANIFEST
 # Data files
 *.csv
 
+# Benchmark artifacts (except committed baselines)
+benchmarks/results/*/raw/*.tmp
+benchmarks/results/*/raw/cache/
+benchmarks/results/*/processed/*.tmp
+benchmarks/results/*/figures/*.tmp
+benchmarks/archive/compressed/
+*.log
+timing_*
+
+# Keep structure but ignore most generated outputs
+# (commit manifest.json and key baseline figures)
+benchmarks/results/*/raw/*.jsonl
+!benchmarks/results/baseline/*.jsonl
+benchmarks/results/*/processed/*
+!benchmarks/results/*/processed/manifest.json
+benchmarks/results/*/figures/*.png
+!benchmarks/results/baseline/figures/*.png
+
 docs/build
 ################################################################################
 #                               Jupyter Notebook                               #

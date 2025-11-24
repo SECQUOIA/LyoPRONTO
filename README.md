@@ -45,6 +45,39 @@ python examples/example_design_space.py
 
 See [`examples/README.md`](examples/README.md) for detailed documentation.
 
+## Benchmarking (Pyomo vs Scipy)
+
+Compare Pyomo optimizers (finite differences + orthogonal collocation) against scipy baseline using the professional benchmarking infrastructure:
+
+```bash
+# Step 1: Generate benchmarks (3×3 parameter grid)
+python benchmarks/grid_cli.py generate \
+  --task Tsh --scenario baseline \
+  --vary product.A1=5,10,20 \
+  --vary ht.KC=1e-4,2e-4,4e-4 \
+  --methods scipy,fd,colloc \
+  --n-elements 1000 \
+  --ramp-Tsh-max 40.0 \
+  --out benchmarks/results/v2/Tsh_3x3.jsonl
+
+# Step 2: Generate analysis (heatmaps, tables, trajectories)
+python benchmarks/generate_reports.py benchmarks/results/v2
+
+# Step 3: View results in simplified notebook
+jupyter notebook benchmarks/grid_analysis_SIMPLE.ipynb
+```
+
+**Documentation**:
+- **Quick Reference**: [`benchmarks/QUICK_REFERENCE.md`](benchmarks/QUICK_REFERENCE.md) - Complete 3-step workflow
+- **CLI Guide**: [`benchmarks/GRID_CLI_GUIDE.md`](benchmarks/GRID_CLI_GUIDE.md) - Full `grid_cli.py` reference (400+ lines)
+- **Architecture**: [`benchmarks/BENCHMARKS_README.md`](benchmarks/BENCHMARKS_README.md) - Infrastructure design
+
+**Key Features**:
+- ✅ Modular design (data → analysis → visualization → presentation)
+- ✅ One-command analysis generation
+- ✅ Version control for benchmark results
+- ✅ 95% reduction in notebook complexity (1700 → 150 lines)
+
 ## Legacy Examples
 
 The repository root contains legacy example scripts for backward compatibility:

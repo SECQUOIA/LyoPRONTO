@@ -1,0 +1,70 @@
+{
+  "version": "test",
+  "generated_at": "2025-11-20T15:48:20.862415",
+  "artifacts": {
+    "raw": [
+      {
+        "name": "rerun_Tsh_A1_20_KC_4e-4.jsonl",
+        "size_bytes": 567554,
+        "modified": "2025-11-20T11:45:03.120799",
+        "sha256": "a1fb38b0d7a5c2e6bb140115297142a1e8a7d2b1079a9119c225ad2e99ba5784"
+      },
+      {
+        "name": "Tsh_2x2_test.jsonl",
+        "size_bytes": 2267638,
+        "modified": "2025-11-20T13:16:22.099740",
+        "sha256": "9e950d452c64c70cc1bc343479e48d709158f191e25ac57f3bdc510597402c1e"
+      }
+    ],
+    "processed": [
+      {
+        "name": "summary.json",
+        "size_bytes": 701,
+        "modified": "2025-11-20T15:45:56.793967"
+      },
+      {
+        "name": "comparison_table.csv",
+        "size_bytes": 612,
+        "modified": "2025-11-20T15:45:56.797967"
+      }
+    ],
+    "figures": {
+      "Pch": [],
+      "both": [],
+      "Tsh": [
+        {
+          "name": "nominal_ramp_constraints.png",
+          "size_bytes": 159114
+        },
+        {
+          "name": "speedup_barplot.png",
+          "size_bytes": 67672
+        },
+        {
+          "name": "nominal_trajectory_dried_fraction.png",
+          "size_bytes": 210848
+        },
+        {
+          "name": "speedup_heatmap_fd.png",
+          "size_bytes": 88170
+        },
+        {
+          "name": "speedup_heatmap_colloc.png",
+          "size_bytes": 93664
+        },
+        {
+          "name": "objective_diff_heatmap_fd.png",
+          "size_bytes": 99678
+        },
+        {
+          "name": "objective_diff_heatmap_colloc.png",
+          "size_bytes": 101809
+        },
+        {
+          "name": "nominal_trajectory_shelf_temperature.png",
+          "size_bytes": 195963
+        }
+      ]
+    }
+  }
+}
