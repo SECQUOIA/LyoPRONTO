@@ -50,6 +50,7 @@ def create_optimizer_model(
     apply_scaling: bool = True,
     initial_conditions: Optional[Dict[str, float]] = None,
     use_finite_differences: bool = True,
+    ramp_rates: Optional[Dict[str, float]] = None,
 ) -> pyo.ConcreteModel:
     """Create Pyomo.DAE model for lyophilization primary drying optimization.
     
@@ -114,6 +115,15 @@ def create_optimizer_model(
             - 'Lck' (float): Initial dried cake length [cm] (default: 0.0)
             Note: Tsub and Tbot are algebraic (determined by constraints)
         use_finite_differences (bool, default=True): Use backward Euler FD discretization
+        ramp_rates (dict, optional): Control ramp-rate limits for physical realism
+            - 'Tsh_max' (float): Maximum shelf temperature ramp rate [°C/hr] (default: 20.0)
+            - 'Pch_max' (float): Maximum pressure change rate [Torr/hr] (default: 0.1)
+            If None, no ramp-rate constraints are applied (unconstrained controls).
+            These constraints apply to control changes between consecutive time points,
+            allowing the optimizer to freely choose initial conditions (t=0) to minimize
+            total drying time while respecting ramp limits for all subsequent changes.
+            Constraints scale automatically with discretization: finer meshes maintain
+            the same physical ramp rate (e.g., 20°C/hr) regardless of Δt.
             
     Returns:
         pyo.ConcreteModel: Pyomo model with the following structure:
@@ -448,9 +458,10 @@ def create_optimizer_model(
         # Backward Euler finite differences - simpler and easier to initialize
         # Uses Pyomo's built-in transformation
         discretizer = pyo.TransformationFactory('dae.finite_difference')
+        nfe_apply = n_elements  # For FD, requested = applied
         discretizer.apply_to(
             model,
-            nfe=n_elements,
+            nfe=nfe_apply,
             scheme='BACKWARD'
         )
     else:
@@ -471,11 +482,65 @@ def create_optimizer_model(
         model._mesh_info = {
             'method': 'fd' if use_finite_differences else 'collocation',
             'nfe_requested': n_elements,
+            'nfe_applied': nfe_apply,
             'ncp': None if use_finite_differences else n_collocation,
             'treat_effective': treat_n_elements_as_effective if not use_finite_differences else False,
         }
     except Exception:
         pass
+    
+    # ======================
+    # Ramp-Rate Constraints (Control Smoothness)
+    # ======================
+    
+    # Apply ramp-rate constraints if specified
+    # These ensure physically realistic control changes (equipment limitations)
+    if ramp_rates is not None:
+        # Get sorted time points from discretized mesh
+        time_points = sorted(model.t)
+        
+        # Default ramp rates (can be overridden via ramp_rates dict)
+        # Tsh_max_ramp: Maximum heating/cooling rate [°C/hr]
+        # Pch_max_ramp: Maximum pressure change rate [Torr/hr]
+        Tsh_max_ramp = ramp_rates.get('Tsh_max', 20.0)  # deg C/hr
+        Pch_max_ramp = ramp_rates.get('Pch_max', 0.1)   # Torr/hr
+        
+        # NOTE: Initial conditions (t=0) are now FREE to be optimized
+        # The optimizer will find the best initial Tsh/Pch to minimize drying time
+        # while respecting ramp constraints for subsequent time steps
+        
+        # Add ramp-rate constraints for each interval
+        # Key: scale by t_final since model.t is normalized [0,1]
+        model.ramp_constraints = pyo.ConstraintList()
+        
+        for i in range(1, len(time_points)):
+            t_prev = time_points[i-1]
+            t_curr = time_points[i]
+            
+            # Compute actual time interval Δt [hr]
+            # Since model.t is normalized, actual Δt = (t_curr - t_prev) * t_final
+            dt_normalized = t_curr - t_prev
+            
+            # Add shelf temperature ramp constraint (if optimizing Tsh)
+            if control_mode in ['Tsh', 'both'] and Tsh_max_ramp is not None:
+                # (Tsh[t_curr] - Tsh[t_prev]) / (dt_normalized * t_final) <= Tsh_max_ramp
+                # Rearrange: Tsh[t_curr] - Tsh[t_prev] <= Tsh_max_ramp * dt_normalized * t_final
+                model.ramp_constraints.add(
+                    model.Tsh[t_curr] - model.Tsh[t_prev] <= Tsh_max_ramp * dt_normalized * model.t_final
+                )
+                model.ramp_constraints.add(
+                    model.Tsh[t_prev] - model.Tsh[t_curr] <= Tsh_max_ramp * dt_normalized * model.t_final
+                )
+            
+            # Add chamber pressure ramp constraint (if optimizing Pch)
+            if control_mode in ['Pch', 'both'] and Pch_max_ramp is not None:
+                # Similar structure for pressure
+                model.ramp_constraints.add(
+                    model.Pch[t_curr] - model.Pch[t_prev] <= Pch_max_ramp * dt_normalized * model.t_final
+                )
+                model.ramp_constraints.add(
+                    model.Pch[t_prev] - model.Pch[t_curr] <= Pch_max_ramp * dt_normalized * model.t_final
+                )
     
     # ======================
     # Objective: Minimize Drying Time
@@ -897,6 +962,8 @@ def optimize_Tsh_pyomo(
     tee: bool = False,
     simulation_mode: bool = False,
     return_metadata: bool = False,
+    ramp_rates: Optional[Dict[str, float]] = None,
+    solver_timeout: float = 180,
 ) -> Any:
     """Optimize shelf temperature trajectory for minimum drying time (Pyomo implementation).
     
@@ -1033,7 +1100,8 @@ def optimize_Tsh_pyomo(
         treat_n_elements_as_effective=treat_n_elements_as_effective,
         control_mode='Tsh',
         apply_scaling=True,
-        use_finite_differences=use_finite_differences  # FD default; collocation optional
+        use_finite_differences=use_finite_differences,  # FD default; collocation optional
+        ramp_rates=ramp_rates
     )
     
     # Fix chamber pressure to setpoint
@@ -1073,6 +1141,7 @@ def optimize_Tsh_pyomo(
         # Set robust IPOPT options for DAE optimization
         if hasattr(opt, 'options'):
             opt.options['max_iter'] = 5000
+            opt.options['max_cpu_time'] = solver_timeout  # NOTE: CPU time only, not wall clock
             opt.options['tol'] = 1e-6
             opt.options['acceptable_tol'] = 1e-4
             opt.options['print_level'] = 5 if tee else 0
@@ -1149,6 +1218,9 @@ def optimize_Tsh_pyomo(
             "ipopt_iterations": iters,
             "n_points": len(list(sorted(model.t))),
             "staged_solve_success": getattr(model, "_staged_solve_success", None),
+            "mesh_info": getattr(model, "_mesh_info", {}),
+            "model": model,
+            "results": last,
         }
         return {"output": output_arr, "metadata": meta}
     return output_arr
@@ -1361,6 +1433,8 @@ def optimize_Pch_pyomo(
     tee: bool = False,
     simulation_mode: bool = False,
     return_metadata: bool = False,
+    ramp_rates: Optional[Dict[str, float]] = None,
+    solver_timeout: float = 180,
 ) -> Any:
     """Optimize chamber pressure trajectory for minimum drying time (Pyomo implementation).
     
@@ -1434,7 +1508,8 @@ def optimize_Pch_pyomo(
         treat_n_elements_as_effective=treat_n_elements_as_effective,
         control_mode='Pch',
         apply_scaling=True,
-        use_finite_differences=use_finite_differences
+        use_finite_differences=use_finite_differences,
+        ramp_rates=ramp_rates
     )
     
     # Warmstart from scipy
@@ -1468,6 +1543,7 @@ def optimize_Pch_pyomo(
     if solver == 'ipopt':
         if hasattr(opt, 'options'):
             opt.options['max_iter'] = 5000
+            opt.options['max_cpu_time'] = solver_timeout  # NOTE: CPU time only, not wall clock
             opt.options['tol'] = 1e-6
             opt.options['acceptable_tol'] = 1e-4
             opt.options['print_level'] = 5 if tee else 0
@@ -1506,6 +1582,9 @@ def optimize_Pch_pyomo(
             "ipopt_iterations": iters,
             "n_points": len(list(sorted(model.t))),
             "staged_solve_success": getattr(model, "_staged_solve_success", None),
+            "mesh_info": getattr(model, "_mesh_info", {}),
+            "model": model,
+            "results": last,
         }
         return {"output": output_arr, "metadata": meta}
     return output_arr
@@ -1531,6 +1610,8 @@ def optimize_Pch_Tsh_pyomo(
     use_trust_region: bool = False,
     trust_radii: Optional[Dict[str, float]] = None,
     return_metadata: bool = False,
+    ramp_rates: Optional[Dict[str, float]] = None,
+    solver_timeout: float = 180,
 ) -> Any:
     """Joint optimization of pressure and shelf temperature (Pyomo implementation).
     
@@ -1622,7 +1703,8 @@ def optimize_Pch_Tsh_pyomo(
         treat_n_elements_as_effective=treat_n_elements_as_effective,
         control_mode='both',
         apply_scaling=True,
-        use_finite_differences=use_finite_differences
+        use_finite_differences=use_finite_differences,
+        ramp_rates=ramp_rates
     )
     
     # Warmstart from scipy
@@ -1678,6 +1760,7 @@ def optimize_Pch_Tsh_pyomo(
     if solver == 'ipopt':
         if hasattr(opt, 'options'):
             opt.options['max_iter'] = 8000  # More iterations for joint
+            opt.options['max_cpu_time'] = solver_timeout  # NOTE: CPU time only, not wall clock
             opt.options['tol'] = 1e-6
             opt.options['acceptable_tol'] = 1e-5  # Slightly tighter
             opt.options['print_level'] = 5 if tee else 0
@@ -1716,6 +1799,9 @@ def optimize_Pch_Tsh_pyomo(
             "ipopt_iterations": iters,
             "n_points": len(list(sorted(model.t))),
             "staged_solve_success": getattr(model, "_staged_solve_success", None),
+            "mesh_info": getattr(model, "_mesh_info", {}),
+            "model": model,
+            "results": last,
         }
         return {"output": output_arr, "metadata": meta}
     return output_arr
