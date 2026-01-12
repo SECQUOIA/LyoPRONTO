@@ -80,17 +80,6 @@ Each JSONL record includes:
   - `warmstart_used`: bool
 - `failed`: overall failure flag (any solver failed or dryness unmet)
 
-## Migration from Legacy Scripts
-
-**Deprecated (removed Jan 2025):**
-- `run_single.py`, `run_batch.py`, `aggregate.py`
-- `run_grid.py`, `run_grid_3x3.py`, `summarize_grid.py`
-
-**Replacement:**
-- Use `grid_cli.py generate` for all grid generation
-- Use `grid_analysis.ipynb` for all analysis (no Python CLI needed)
-- Makefile simplified to `make bench` and `make analyze`
-
 ## Notes
 
 - **Warmstart disabled by default** for robustness testing; enable with `--warmstart`.

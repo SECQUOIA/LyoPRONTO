@@ -56,4 +56,145 @@ def compute_residuals(traj: np.ndarray) -> Dict[str, Any]:
         "dryness_target_met": dryness_target,
     }
 
-__all__ = ["compute_residuals"]
+
+def compare_trajectories(
+    scipy_traj: np.ndarray,
+    pyomo_traj: np.ndarray,
+    rtol: float = 0.05,
+    atol_temp: float = 0.5,
+    atol_pch: float = 5.0,
+) -> Dict[str, Any]:
+    """Compare scipy and Pyomo trajectories point-by-point.
+
+    Interpolates Pyomo trajectory onto scipy time grid for fair comparison.
+    Returns metrics quantifying agreement between the two solutions.
+
+    Parameters
+    ----------
+    scipy_traj : np.ndarray
+        Scipy trajectory array (n_scipy, 7): time, Tsub, Tbot, Tsh, Pch_mTorr, flux, frac_dried
+    pyomo_traj : np.ndarray
+        Pyomo trajectory array (n_pyomo, 7): same columns
+    rtol : float
+        Relative tolerance for "close" comparison (default 5%)
+    atol_temp : float
+        Absolute tolerance for temperatures in °C (default 0.5°C)
+    atol_pch : float
+        Absolute tolerance for pressure in mTorr (default 5 mTorr)
+
+    Returns
+    -------
+    Dict[str, Any]
+        Comparison metrics:
+        - matched: bool (trajectories are close within tolerances)
+        - objective_diff_hr: float (difference in final time)
+        - objective_ratio: float (pyomo_time / scipy_time)
+        - max_Tsh_diff: float (max shelf temp difference in °C)
+        - max_Pch_diff: float (max pressure difference in mTorr)
+        - max_Tsub_diff: float (max sublimation temp difference in °C)
+        - rmse_Tsh: float (RMSE of shelf temperature)
+        - rmse_Pch: float (RMSE of chamber pressure)
+        - mean_frac_dried_diff: float (mean difference in drying fraction)
+        - n_scipy_points: int
+        - n_pyomo_points: int
+        - interpolated: bool (True if interpolation was used)
+    """
+    # Handle empty trajectories
+    if scipy_traj.size == 0 or pyomo_traj.size == 0:
+        return {
+            "matched": False,
+            "objective_diff_hr": None,
+            "objective_ratio": None,
+            "max_Tsh_diff": None,
+            "max_Pch_diff": None,
+            "max_Tsub_diff": None,
+            "rmse_Tsh": None,
+            "rmse_Pch": None,
+            "mean_frac_dried_diff": None,
+            "n_scipy_points": len(scipy_traj) if scipy_traj.size > 0 else 0,
+            "n_pyomo_points": len(pyomo_traj) if pyomo_traj.size > 0 else 0,
+            "interpolated": False,
+            "error": "Empty trajectory",
+        }
+
+    # Extract time vectors
+    t_scipy = scipy_traj[:, IDX_TIME]
+    t_pyomo = pyomo_traj[:, IDX_TIME]
+
+    # Objective times
+    obj_scipy = float(t_scipy[-1])
+    obj_pyomo = float(t_pyomo[-1])
+    obj_diff = obj_pyomo - obj_scipy
+    obj_ratio = obj_pyomo / obj_scipy if obj_scipy > 0 else None
+
+    # Interpolate Pyomo onto scipy time grid for point-by-point comparison
+    # Use common time range
+    t_min = max(t_scipy[0], t_pyomo[0])
+    t_max = min(t_scipy[-1], t_pyomo[-1])
+
+    # Filter scipy points within common range
+    mask = (t_scipy >= t_min) & (t_scipy <= t_max)
+    t_common = t_scipy[mask]
+
+    if len(t_common) < 2:
+        return {
+            "matched": False,
+            "objective_diff_hr": obj_diff,
+            "objective_ratio": obj_ratio,
+            "max_Tsh_diff": None,
+            "max_Pch_diff": None,
+            "max_Tsub_diff": None,
+            "rmse_Tsh": None,
+            "rmse_Pch": None,
+            "mean_frac_dried_diff": None,
+            "n_scipy_points": len(scipy_traj),
+            "n_pyomo_points": len(pyomo_traj),
+            "interpolated": False,
+            "error": "Insufficient overlap",
+        }
+
+    # Interpolate Pyomo values onto common time grid
+    pyomo_interp = np.zeros((len(t_common), 7))
+    pyomo_interp[:, IDX_TIME] = t_common
+    for col in [IDX_TSUB, IDX_TBOT, IDX_TSH, IDX_PCH, IDX_FLUX, IDX_FRAC]:
+        pyomo_interp[:, col] = np.interp(t_common, t_pyomo, pyomo_traj[:, col])
+
+    # Get scipy values at common times
+    scipy_common = scipy_traj[mask]
+
+    # Compute differences
+    Tsh_diff = pyomo_interp[:, IDX_TSH] - scipy_common[:, IDX_TSH]
+    Pch_diff = pyomo_interp[:, IDX_PCH] - scipy_common[:, IDX_PCH]
+    Tsub_diff = pyomo_interp[:, IDX_TSUB] - scipy_common[:, IDX_TSUB]
+    dried_diff = pyomo_interp[:, IDX_FRAC] - scipy_common[:, IDX_FRAC]
+
+    max_Tsh_diff = float(np.max(np.abs(Tsh_diff)))
+    max_Pch_diff = float(np.max(np.abs(Pch_diff)))
+    max_Tsub_diff = float(np.max(np.abs(Tsub_diff)))
+    rmse_Tsh = float(np.sqrt(np.mean(Tsh_diff**2)))
+    rmse_Pch = float(np.sqrt(np.mean(Pch_diff**2)))
+    mean_dried_diff = float(np.mean(np.abs(dried_diff)))
+
+    # Check if trajectories match within tolerances
+    temp_ok = (max_Tsh_diff <= atol_temp) and (max_Tsub_diff <= atol_temp)
+    pch_ok = max_Pch_diff <= atol_pch
+    obj_ok = abs(obj_diff) <= rtol * abs(obj_scipy) if obj_scipy > 0 else False
+    matched = temp_ok and pch_ok and obj_ok
+
+    return {
+        "matched": matched,
+        "objective_diff_hr": obj_diff,
+        "objective_ratio": obj_ratio,
+        "max_Tsh_diff": max_Tsh_diff,
+        "max_Pch_diff": max_Pch_diff,
+        "max_Tsub_diff": max_Tsub_diff,
+        "rmse_Tsh": rmse_Tsh,
+        "rmse_Pch": rmse_Pch,
+        "mean_frac_dried_diff": mean_dried_diff,
+        "n_scipy_points": len(scipy_traj),
+        "n_pyomo_points": len(pyomo_traj),
+        "interpolated": True,
+    }
+
+
+__all__ = ["compute_residuals", "compare_trajectories"]

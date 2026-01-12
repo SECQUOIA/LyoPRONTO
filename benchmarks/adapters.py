@@ -199,3 +199,4 @@ def pyomo_adapter(
         "warmstart_used": warmstart,
         "discretization": discretization,
     }
+    }
