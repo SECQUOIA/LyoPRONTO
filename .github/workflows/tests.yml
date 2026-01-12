@@ -39,7 +39,12 @@ jobs:
         echo "⏱️ This may take 30-40 minutes on CI (includes optimization tests)"
         pytest tests/ -n auto -v --cov=lyopronto --cov-report=xml --cov-report=term-missing
     
+    # Codecov integration (optional)
+    # To enable: Add CODECOV_TOKEN secret in GitHub repo settings
+    # Get token from: https://codecov.io/gh/LyoHUB/LyoPRONTO
     - name: Upload coverage to Codecov
+      if: ${{ secrets.CODECOV_TOKEN != '' }}
+      continue-on-error: true
       uses: codecov/codecov-action@v4
       with:
         file: ./coverage.xml

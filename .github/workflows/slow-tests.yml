@@ -57,7 +57,10 @@ jobs:
           pytest tests/ -n auto -v -m "slow" --cov=lyopronto --cov-report=xml --cov-report=term-missing
         fi
     
+    # Codecov integration (optional)
+    # To enable: Add CODECOV_TOKEN secret in GitHub repo settings
     - name: Upload coverage
+      continue-on-error: true
       uses: codecov/codecov-action@v4
       with:
         file: ./coverage.xml

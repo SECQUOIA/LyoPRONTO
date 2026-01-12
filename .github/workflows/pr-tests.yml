@@ -61,8 +61,11 @@ jobs:
           pytest tests/ -n auto -v -m "not slow"
         fi
     
+    # Codecov integration (optional)
+    # To enable: Add CODECOV_TOKEN secret in GitHub repo settings
     - name: Upload coverage (if run)
       if: steps.mode.outputs.coverage == 'true'
+      continue-on-error: true
       uses: codecov/codecov-action@v4
       with:
         file: ./coverage.xml
