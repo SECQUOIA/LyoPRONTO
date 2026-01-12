@@ -30,7 +30,10 @@ def dry(vial,product,ht,Pchamber,Tshelf,dt):
     # Initial fill height
     Lpr0 = functions.Lpr0_FUN(vial['Vfill'],vial['Ap'],product['cSolid'])    # [cm]
 
-    Pch_t = lambda t: Pchamber['setpt'][0] # TODO: allow ramps
+    # Known limitation: Chamber pressure ramps not yet supported in scipy baseline.
+    # Shelf temperature ramps ARE supported via 'ramp_rate' parameter.
+    # Pyomo models support both Pch and Tsh trajectory optimization.
+    Pch_t = lambda t: Pchamber['setpt'][0]
     Tsh_t = lambda t: min(Tshelf['setpt'][0], t*60*Tshelf['ramp_rate'] + Tshelf['init'])
 
     config = (vial, product, ht, Pch_t, Tsh_t, dt, Lpr0)
