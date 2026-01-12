@@ -60,8 +60,8 @@ cat lyopronto/calc_knownRp.py | head -50
    - CI/CD configuration (GitHub Actions)
 
 2. **Documentation**
-   - `README_TESTING.md`: How to use the test suite
-   - `TESTING_SUMMARY.md`: Analysis of test results
+   - `tests/README.md`: Test suite documentation
+   - `ARCHITECTURE.md`: System architecture
    - `PYOMO_ROADMAP.md`: Plan for Pyomo transition
    - `README.md`: (existing) General project documentation
 
@@ -299,10 +299,10 @@ assert Rp > 0, "Product resistance must be positive"
 ## Resources
 
 ### Documentation
-- `README_TESTING.md` - Testing guide
-- `TESTING_SUMMARY.md` - Current test status
-- `PYOMO_ROADMAP.md` - Pyomo transition plan
-- `docs/` - MkDocs documentation (if available)
+- `tests/README.md` - Testing guide
+- `ARCHITECTURE.md` - System design
+- `PYOMO_ROADMAP.md` - Pyomo roadmap and status
+- `docs/` - MkDocs documentation
 
 ### Papers/References
 - Original LyoPRONTO paper (check `README.md` for citation)

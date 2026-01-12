@@ -70,6 +70,6 @@ LyoPRONTO uses a three-tier testing approach to balance rapid feedback and compr
 
 ## Additional Resources
 
-- See `docs/SLOW_TEST_STRATEGY.md` for details on the slow test policy and CI/CD approach.
+- See `docs/GETTING_STARTED.md` for developer onboarding and setup instructions.
 - See `lyopronto/constant.py` and `lyopronto/functions.py` for physics and unit conventions.
 - For questions, check the main project README or ask in the project discussions.

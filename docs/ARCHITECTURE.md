@@ -575,9 +575,9 @@ Enhance Pyomo models:
 ## References
 
 For more details:
-- **Testing**: See `README_TESTING.md`
+- **Testing**: See `tests/README.md`
 - **Pyomo Transition**: See `PYOMO_ROADMAP.md`
-- **Code Examples**: See `.github/copilot-examples.md`
+- **Code Examples**: See `examples/README.md`
 - **Physics Details**: See `PHYSICS_REFERENCE.md`
 - **Getting Started**: See `GETTING_STARTED.md`
 
