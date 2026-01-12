@@ -40,6 +40,10 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
+optimization = [
+    "pyomo>=6.7.0",
+    "idaes-pse>=2.9.0",
+]
 dev = [
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
@@ -48,6 +52,9 @@ dev = [
     "black>=23.7.0",
     "flake8>=6.1.0",
     "mypy>=1.4.0",
+]
+all = [
+    "lyopronto[optimization,dev]",
 ]
 
 [project.urls]
