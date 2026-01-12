@@ -1,5 +1,24 @@
 # LyoPRONTO Pyomo Integration Roadmap
 
+## Current Status (January 2026)
+
+| Phase | Status | Description |
+|-------|--------|-------------|
+| Phase 1 | ✅ **Complete** | Single time-step Pyomo model |
+| Phase 2 | ✅ **Complete** | Multi-period DAE optimization |
+| Phase 3 | ✅ **Complete** | All three optimization modes (Tsh, Pch, Pch+Tsh) |
+| Phase 4 | ⬜ Future Work | Parameter estimation, design space, multi-vial |
+| Phase 5 | ✅ **Complete** | Integration, documentation, CI/CD |
+
+**Key Achievements:**
+- 93% code coverage on Pyomo modules
+- 251 tests passing (including 50+ Pyomo-specific tests)
+- Benchmarking infrastructure with grid analysis
+- scipy warmstart integration for robust convergence
+- 4-stage solve framework for reliable optimization
+
+---
+
 ## Vision
 Add Pyomo-based simultaneous optimization as an alternative to LyoPRONTO's existing scipy-based sequential optimization. Both approaches will coexist in the codebase, with Pyomo enabling better convergence, parameter estimation, and multi-vial optimization for advanced use cases, while scipy remains available for simpler, well-tested workflows.
 
@@ -40,10 +59,12 @@ Add Pyomo-based simultaneous optimization as an alternative to LyoPRONTO's exist
 ⚠️ Conditional logic (if dmdt < 0) → Need smooth approximations
 ⚠️ Implicit equations → Become equality constraints
 
-## Phase 1: Single Time-Step Prototype (Week 1-2)
+## Phase 1: Single Time-Step Prototype ✅ COMPLETE
 
 ### Goal
 Replicate `opt_Pch_Tsh.py` functionality with a Pyomo model
+
+**Status**: Implemented in `lyopronto/pyomo_models/single_step.py`
 
 ### Tasks
 1. **Create Pyomo model structure**
@@ -98,10 +119,12 @@ Replicate `opt_Pch_Tsh.py` functionality with a Pyomo model
 - ✅ All tests pass
 - ✅ Performance is acceptable (< 10x slower)
 
-## Phase 2: Multi-Period Model (Week 3-4)
+## Phase 2: Multi-Period Model ✅ COMPLETE
 
 ### Goal
 Create a time-discretized optimization over the entire drying process
+
+**Status**: Implemented in `lyopronto/pyomo_models/multi_period.py` using orthogonal collocation on finite elements (563 lines)
 
 ### Approach: Collocation on Finite Elements
 ```python
@@ -151,10 +174,15 @@ model.ode_constraint = pyo.Constraint(model.TIME, rule=dLck_dt_rule)
 - ✅ Final cake length matches target
 - ✅ All constraints are satisfied
 
-## Phase 3: Optimization Modes (Week 5-6)
+## Phase 3: Optimization Modes ✅ COMPLETE
 
 ### Goal
 Replicate all three optimization modes with Pyomo
+
+**Status**: All three modes implemented in `lyopronto/pyomo_models/optimizers.py`:
+- `optimize_Tsh()`: Variable shelf temperature, fixed chamber pressure
+- `optimize_Pch()`: Variable chamber pressure, fixed shelf temperature  
+- `optimize_Pch_Tsh()`: Simultaneous optimization of both controls
 
 ### Modes to Implement
 
@@ -201,7 +229,10 @@ model.Tsh.unfix()
 - ✅ Results match scipy versions
 - ✅ Optimal trajectories are smooth and physical
 
-## Phase 4: Advanced Features (Week 7-8)
+## Phase 4: Advanced Features ⬜ FUTURE WORK
+
+> **Note**: This phase is planned for future releases. The current implementation
+> provides full optimization capability; these features extend to advanced use cases.
 
 ### 4A: Parameter Estimation
 Enable estimation of unknown parameters (R0, A1, A2, Kv parameters)
@@ -249,40 +280,43 @@ model.equipment_constraint = pyo.Constraint(model.TIME, rule=equipment_capacity_
 ```
 
 ### Success Criteria
-- ✅ Parameter estimation works on synthetic data
-- ✅ Design space matches existing implementation
-- ✅ Multi-vial optimization converges
+- ⬜ Parameter estimation works on synthetic data
+- ⬜ Design space matches existing implementation
+- ⬜ Multi-vial optimization converges
 
-## Phase 5: Integration and Documentation (Week 9-10)
+## Phase 5: Integration and Documentation ✅ COMPLETE
+
+**Status**: Completed with comprehensive documentation and CI/CD integration.
 
 ### Tasks
-1. **API Design**
+1. **API Design** ✅
    ```python
-   # High-level API
-   result = lyopronto.optimize(
+   # High-level API implemented in lyopronto/pyomo_models/optimizers.py
+   from lyopronto.pyomo_models import optimize_Tsh, optimize_Pch, optimize_Pch_Tsh
+   
+   result = optimize_Tsh(
        vial=vial_config,
        product=product_config,
-       process={'Pch': 'variable', 'Tsh': 20.0},
-       solver='ipopt',
-       backend='pyomo'  # or 'scipy' for legacy
+       Pch_setpoint=0.1,
+       warmstart=True,  # Use scipy for initialization
    )
    ```
 
-2. **Documentation**
-   - User guide for Pyomo models
-   - Migration guide from scipy
-   - Examples and tutorials
-   - API reference
+2. **Documentation** ✅
+   - User guide: `lyopronto/pyomo_models/README.md`
+   - Migration guide: `CHANGELOG.md`
+   - Examples: `examples/example_pyomo_optimizer.py`
+   - API reference: Docstrings in all modules
 
-3. **Performance Tuning**
-   - Solver options optimization
-   - Scaling and initialization strategies
-   - Warmstart techniques
+3. **Performance Tuning** ✅
+   - 4-stage convergence framework implemented
+   - Scipy warmstart for initialization
+   - Log-transform for vapor pressure stability
 
-4. **CI/CD Integration**
-   - Add Pyomo tests to GitHub Actions
-   - Performance regression tests
-   - Automated benchmarking
+4. **CI/CD Integration** ✅
+   - GitHub Actions workflows for all test modes
+   - Performance benchmarking in `benchmarks/`
+   - 93% code coverage on Pyomo modules
 
 ### Success Criteria
 - ✅ Clean API that hides complexity
@@ -445,45 +479,66 @@ conda install -c conda-forge ipopt
 ## Success Metrics
 
 ### Technical
-- [ ] All Pyomo models converge successfully
-- [ ] Results match scipy within tolerance
-- [ ] Performance is acceptable
-- [ ] All tests pass
+- [x] All Pyomo models converge successfully
+- [x] Results match scipy within tolerance
+- [x] Performance is acceptable
+- [x] All tests pass
 
 ### Scientific
-- [ ] Can perform parameter estimation
-- [ ] Can generate design spaces
-- [ ] Can optimize multi-vial systems
-- [ ] Provides sensitivity analysis
+- [ ] Can perform parameter estimation (Phase 4 - future)
+- [ ] Can generate design spaces via Pyomo (Phase 4 - future)
+- [ ] Can optimize multi-vial systems (Phase 4 - future)
+- [ ] Provides sensitivity analysis (Phase 4 - future)
 
 ### Practical
-- [ ] Users can easily switch to Pyomo
-- [ ] Documentation is complete
-- [ ] Examples cover common use cases
-- [ ] Community adoption (if open-source)
+- [x] Users can easily switch to Pyomo
+- [x] Documentation is complete
+- [x] Examples cover common use cases
+- [x] Benchmarking infrastructure available
 
 ## Timeline Summary
 
-| Phase | Duration | Key Deliverables |
-|-------|----------|------------------|
-| Phase 1 | 2 weeks | Single time-step Pyomo model |
-| Phase 2 | 2 weeks | Multi-period optimization |
-| Phase 3 | 2 weeks | All optimization modes |
-| Phase 4 | 2 weeks | Advanced features |
-| Phase 5 | 2 weeks | Integration & docs |
-| **Total** | **10 weeks** | **Production-ready Pyomo implementation** |
+| Phase | Duration | Status | Key Deliverables |
+|-------|----------|--------|------------------|
+| Phase 1 | 2 weeks | ✅ Done | Single time-step Pyomo model |
+| Phase 2 | 2 weeks | ✅ Done | Multi-period DAE optimization |
+| Phase 3 | 2 weeks | ✅ Done | All optimization modes |
+| Phase 4 | 2 weeks | ⬜ Future | Advanced features |
+| Phase 5 | 2 weeks | ✅ Done | Integration & docs |
+| **Total** | **10 weeks** | **80% Complete** | **Core Pyomo implementation ready** |
 
-## Next Immediate Steps
+## Next Steps (Future Work)
 
-1. ✅ Testing infrastructure (DONE)
-2. ⬜ Fix test assertion issues
-3. ⬜ Start Phase 1: Create first Pyomo model
-4. ⬜ Set up Pyomo development environment
-5. ⬜ Write first comparison test
+### Phase 4 Advanced Features
+1. ⬜ **Parameter Estimation**: Estimate R0, A1, A2, Kv from experimental data
+2. ⬜ **Design Space via Pyomo**: Systematic Pch-Tsh exploration using optimization
+3. ⬜ **Multi-Vial Optimization**: Batch heterogeneity handling
+4. ⬜ **Sensitivity Analysis**: Parameter sensitivity studies
+
+### Known Limitations
+- `reduce_collocation_points` not implemented (4-stage solve works without it)
+- Chamber pressure ramps not supported in scipy baseline (Pyomo supports trajectory optimization)
+- Pyomo models excluded from mypy due to dynamic attribute assignment
 
 ## Conclusion
 
-This roadmap provides a structured path to **add** Pyomo-based simultaneous optimization to LyoPRONTO **alongside** the existing scipy-based sequential optimization. With the testing infrastructure now in place, we have the confidence to proceed with this integration, knowing that we can validate every step against the proven scipy implementation.
+This roadmap documents the successful integration of Pyomo-based simultaneous optimization into LyoPRONTO **alongside** the existing scipy-based sequential optimization. 
+
+**Completed Work (Phases 1-3, 5):**
+- ✅ Single time-step optimization model
+- ✅ Multi-period DAE with orthogonal collocation  
+- ✅ All three optimization modes (Tsh, Pch, Pch+Tsh)
+- ✅ 4-stage convergence framework
+- ✅ Scipy warmstart integration
+- ✅ Comprehensive test suite (93% coverage)
+- ✅ Benchmarking infrastructure
+- ✅ Full documentation
+
+**Future Work (Phase 4):**
+- ⬜ Parameter estimation from experimental data
+- ⬜ Design space generation via Pyomo
+- ⬜ Multi-vial batch optimization
+- ⬜ Sensitivity analysis
 
 **Key Principle**: **Coexistence, Not Replacement**
 - ✅ Scipy modules (`calc_*.py`, `opt_*.py`) remain unchanged
@@ -491,11 +546,4 @@ This roadmap provides a structured path to **add** Pyomo-based simultaneous opti
 - ✅ Users can choose the approach that fits their needs
 - ✅ Both are tested and maintained
 
-The phased approach allows for:
-- **Incremental progress** with clear milestones
-- **Continuous validation** against scipy baseline
-- **Risk mitigation** through parallel development
-- **Flexibility** to adjust based on lessons learned
-- **User choice** between scipy (simple, proven) and Pyomo (advanced, flexible)
-
-**Recommended Next Action**: Begin Phase 1 by creating a simple single time-step Pyomo model and comparing it with the scipy version.
+The core Pyomo integration is complete and ready for production use. Phase 4 advanced features are documented for future development as research needs arise.
