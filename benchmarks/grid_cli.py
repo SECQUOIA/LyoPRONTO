@@ -132,17 +132,20 @@ def generate(args: argparse.Namespace) -> int:
                     scipy_res = scipy_adapter(task, vial_c, product_c, ht_c, eq_cap_c, nVial_c, scen, dt=args.dt)
                     sc_metrics = compute_residuals(scipy_res["trajectory"]) if scipy_res["success"] else {}
                     rec = base_record()
+                    scipy_block = {
+                        "success": scipy_res["success"],
+                        "wall_time_s": scipy_res["wall_time_s"],
+                        "objective_time_hr": scipy_res.get("objective_time_hr"),
+                        "solver": scipy_res.get("solver", {}),
+                        "metrics": sc_metrics,
+                    }
+                    if args.save_trajectories and scipy_res["success"]:
+                        scipy_block["trajectory"] = scipy_res["trajectory"]  # numpy array, serialized via schema
                     rec.update({
                         "task": task,
                         "scenario": scenario_name,
                         "grid": {**{f"param{i+1}": {"path": p, "value": v} for i, (p, v) in enumerate(zip(vary_paths, combo))}},
-                        "scipy": {
-                            "success": scipy_res["success"],
-                            "wall_time_s": scipy_res["wall_time_s"],
-                            "objective_time_hr": scipy_res.get("objective_time_hr"),
-                            "solver": scipy_res.get("solver", {}),
-                            "metrics": sc_metrics,
-                        },
+                        "scipy": scipy_block,
                         "pyomo": None,  # placeholder for analysis scripts
                     })
                     rec["failed"] = (not rec["scipy"]["success"]) or (not rec["scipy"]["metrics"].get("dryness_target_met", True))
@@ -170,30 +173,43 @@ def generate(args: argparse.Namespace) -> int:
                     n_elements=args.n_elements,
                     n_collocation=args.n_collocation,
                     effective_nfe=(not args.raw_colloc),
+                    tsh_ramp_rate=args.tsh_ramp,
+                    pch_ramp_rate=args.pch_ramp,
                 )
                 sc_metrics = compute_residuals(scipy_res["trajectory"]) if scipy_res["success"] else {}
                 py_metrics = compute_residuals(py_res["trajectory"]) if py_res["success"] else {}
                 rec = base_record()
+                scipy_block = {
+                    "success": scipy_res["success"],
+                    "wall_time_s": scipy_res["wall_time_s"],
+                    "objective_time_hr": scipy_res.get("objective_time_hr"),
+                    "solver": scipy_res.get("solver", {}),
+                    "metrics": sc_metrics,
+                }
+                pyomo_block = {
+                    "success": py_res["success"],
+                    "wall_time_s": py_res["wall_time_s"],
+                    "objective_time_hr": py_res.get("objective_time_hr"),
+                    "solver": py_res.get("solver", {}),
+                    "metrics": py_metrics,
+                    "discretization": py_res.get("discretization"),
+                    "warmstart_used": py_res.get("warmstart_used"),
+                    "ramp_constraints": {
+                        "tsh_ramp_rate": args.tsh_ramp,
+                        "pch_ramp_rate": args.pch_ramp,
+                    } if args.tsh_ramp or args.pch_ramp else None,
+                }
+                if args.save_trajectories:
+                    if scipy_res["success"]:
+                        scipy_block["trajectory"] = scipy_res["trajectory"]
+                    if py_res["success"]:
+                        pyomo_block["trajectory"] = py_res["trajectory"]
                 rec.update({
                     "task": task,
                     "scenario": scenario_name,
                     "grid": {**{f"param{i+1}": {"path": p, "value": v} for i, (p, v) in enumerate(zip(vary_paths, combo))}},
-                    "scipy": {
-                        "success": scipy_res["success"],
-                        "wall_time_s": scipy_res["wall_time_s"],
-                        "objective_time_hr": scipy_res.get("objective_time_hr"),
-                        "solver": scipy_res.get("solver", {}),
-                        "metrics": sc_metrics,
-                    },
-                    "pyomo": {
-                        "success": py_res["success"],
-                        "wall_time_s": py_res["wall_time_s"],
-                        "objective_time_hr": py_res.get("objective_time_hr"),
-                        "solver": py_res.get("solver", {}),
-                        "metrics": py_metrics,
-                        "discretization": py_res.get("discretization"),
-                        "warmstart_used": py_res.get("warmstart_used"),
-                    },
+                    "scipy": scipy_block,
+                    "pyomo": pyomo_block,
                 })
                 rec["failed"] = (
                     (not rec["scipy"]["success"]) or
@@ -225,8 +241,11 @@ def build_parser() -> argparse.ArgumentParser:
     g.add_argument("--raw-colloc", action="store_true", help="Disable effective-nfe parity reporting for collocation")
     g.add_argument("--warmstart", action="store_true", help="Enable scipy warmstart (default off)")
     g.add_argument("--dt", type=float, default=0.01, help="Time step for scipy baseline trajectory")
+    g.add_argument("--tsh-ramp", type=float, default=None, help="Max shelf temperature ramp rate [°C/hr] (Pyomo only)")
+    g.add_argument("--pch-ramp", type=float, default=None, help="Max chamber pressure ramp rate [Torr/hr] (Pyomo only)")
     g.add_argument("--out", required=True, help="Output JSONL path")
     g.add_argument("--force", action="store_true", help="Force regeneration even if file exists")
+    g.add_argument("--save-trajectories", action="store_true", help="Store full trajectories in JSONL (larger files)")
 
     return p
 

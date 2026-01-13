@@ -87,6 +87,8 @@ def pyomo_adapter(
     n_elements: int = 24,
     n_collocation: int = 3,
     effective_nfe: bool = True,
+    tsh_ramp_rate: float | None = None,  # Max Tsh ramp rate [°C/hr]
+    pch_ramp_rate: float | None = None,  # Max Pch ramp rate [Torr/hr]
 ) -> Dict[str, Any]:
     """Run Pyomo optimizer counterpart for specified task with discretization controls.
 
@@ -106,10 +108,14 @@ def pyomo_adapter(
     if task == "Tsh":
         Pchamber = {"setpt": [0.1], "dt_setpt": [180.0], "ramp_rate": 0.5}
         Tshelf = {"min": -45.0, "max": 120.0}
+        if tsh_ramp_rate is not None:
+            Tshelf["max_ramp_rate"] = tsh_ramp_rate
         runner = pyomo_opt.optimize_Tsh_pyomo
         args = (vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial)
     elif task == "Pch":
         Pchamber = {"min": 0.05}
+        if pch_ramp_rate is not None:
+            Pchamber["max_ramp_rate"] = pch_ramp_rate
         # Shelf multi-step schedule with sufficient time for drying completion
         # NOTE: dt_setpt in MINUTES (Pyomo internally uses same convention as scipy)
         # High resistance products (A1=20) need ~86 hours, use 100 hours for margin
@@ -118,7 +124,11 @@ def pyomo_adapter(
         args = (vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial)
     elif task == "both":
         Pchamber = {"min": 0.05, "max": 0.5}
+        if pch_ramp_rate is not None:
+            Pchamber["max_ramp_rate"] = pch_ramp_rate
         Tshelf = {"min": -45.0, "max": 120.0, "init": -35.0}
+        if tsh_ramp_rate is not None:
+            Tshelf["max_ramp_rate"] = tsh_ramp_rate
         runner = pyomo_opt.optimize_Pch_Tsh_pyomo
         args = (vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial)
     else:
