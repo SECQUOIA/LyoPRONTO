@@ -430,6 +430,48 @@ def create_optimizer_model(
     model.equipment_capability = pyo.Constraint(model.t, rule=equipment_capability_rule)
     
     # ======================
+    # Ramp Rate Constraints (optional)
+    # ======================
+    
+    # Shelf temperature ramp rate constraint [°C/hr]
+    tsh_ramp_rate = Tshelf.get('max_ramp_rate') if Tshelf else None
+    if tsh_ramp_rate is not None and tsh_ramp_rate > 0:
+        # Create derivative variable for Tsh if not already present
+        if not hasattr(model, 'dTsh_dt'):
+            model.dTsh_dt = dae.DerivativeVar(model.Tsh, wrt=model.t)
+        
+        def tsh_ramp_up_rule(m, t):
+            """Limit rate of Tsh increase: dTsh/dt <= max_ramp_rate * t_final"""
+            # In normalized time: dTsh/d(tau) = dTsh/dt * t_final
+            # So: dTsh/dt = dTsh/d(tau) / t_final
+            # Constraint: dTsh/d(tau) / t_final <= max_ramp_rate
+            # Rearranged: dTsh/d(tau) <= max_ramp_rate * t_final
+            return m.dTsh_dt[t] <= tsh_ramp_rate * m.t_final
+        model.tsh_ramp_up = pyo.Constraint(model.t, rule=tsh_ramp_up_rule)
+        
+        def tsh_ramp_down_rule(m, t):
+            """Limit rate of Tsh decrease: dTsh/dt >= -max_ramp_rate * t_final"""
+            return m.dTsh_dt[t] >= -tsh_ramp_rate * m.t_final
+        model.tsh_ramp_down = pyo.Constraint(model.t, rule=tsh_ramp_down_rule)
+    
+    # Chamber pressure ramp rate constraint [Torr/hr]
+    pch_ramp_rate = Pchamber.get('max_ramp_rate') if Pchamber else None
+    if pch_ramp_rate is not None and pch_ramp_rate > 0:
+        # Create derivative variable for Pch if not already present
+        if not hasattr(model, 'dPch_dt'):
+            model.dPch_dt = dae.DerivativeVar(model.Pch, wrt=model.t)
+        
+        def pch_ramp_up_rule(m, t):
+            """Limit rate of Pch increase: dPch/dt <= max_ramp_rate * t_final"""
+            return m.dPch_dt[t] <= pch_ramp_rate * m.t_final
+        model.pch_ramp_up = pyo.Constraint(model.t, rule=pch_ramp_up_rule)
+        
+        def pch_ramp_down_rule(m, t):
+            """Limit rate of Pch decrease: dPch/dt >= -max_ramp_rate * t_final"""
+            return m.dPch_dt[t] >= -pch_ramp_rate * m.t_final
+        model.pch_ramp_down = pyo.Constraint(model.t, rule=pch_ramp_down_rule)
+    
+    # ======================
     # Terminal Constraint
     # ======================
     
