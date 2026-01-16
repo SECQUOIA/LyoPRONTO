@@ -1,8 +1,13 @@
-# Ignore most generated benchmark results
+# Ignore most generated benchmark results (large files with trajectories)
 *.jsonl
 *.png
 *.csv
 
-# But keep baseline examples for documentation
-!baseline_*.jsonl
+# Track summary files (metrics only, no trajectories - ~30KB each)
+!*_summary.jsonl
+
+# Track one small trajectory file for visualization examples (~400KB)
+!both_trajectories.jsonl
+
+# Track baseline PNG plots for documentation
 !baseline_*.png
