@@ -405,14 +405,15 @@ class TestPhysicalConstraints:
 class TestEdgeCases:
     """Test edge cases and error handling."""
     
-    @pytest.mark.xfail(reason="Test parameters now result in complete drying - needs update")
     def test_handles_partial_scipy_solution(self):
-        """Test that model handles scipy solution that doesn't complete drying."""
+        """Test that model handles scipy solution that doesn't complete drying.
+        
+        We simulate an incomplete solution by truncating a complete scipy trajectory.
+        """
         vial = {'Av': 3.14, 'Ap': 2.27, 'Vfill': 3.0}
         product = {'R0': 1.4, 'A1': 16.0, 'A2': 0.0, 'T_pr_crit': -25.0, 'cSolid': 0.05}
         ht = {'KC': 2.75e-4, 'KP': 8.93e-4, 'KD': 0.46}
         
-        # Conditions that won't complete drying in time limit
         Pchamber = {'setpt': [0.15], 'dt_setpt': [180.0], 'ramp_rate': 0.5}
         Tshelf = {'min': -45.0, 'max': 20.0, 'init': -35.0, 
                   'setpt': [20.0], 'dt_setpt': [180.0], 'ramp_rate': 1.0}
@@ -420,9 +421,17 @@ class TestEdgeCases:
         nVial = 398
         dt = 0.01
         
-        # Run scipy - will not complete
-        scipy_out = opt_Tsh.dry(vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial)
-        assert scipy_out[-1, 6] < 0.99, "Test requires incomplete scipy solution"
+        # Run scipy to completion
+        scipy_out_full = opt_Tsh.dry(vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial)
+        
+        # Truncate to simulate incomplete drying (take first 30% of trajectory)
+        n_points = len(scipy_out_full)
+        truncate_idx = max(5, n_points // 3)  # At least 5 points, or 1/3 of trajectory
+        scipy_out = scipy_out_full[:truncate_idx]
+        
+        # Verify truncated solution is incomplete
+        assert scipy_out[-1, 6] < 50.0, \
+            f"Truncated solution should be incomplete, got {scipy_out[-1, 6]:.1f}%"
         
         # Create model and warmstart - should handle gracefully
         model = create_optimizer_model(
