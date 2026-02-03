@@ -304,5 +304,179 @@ class TestDesignSpaceComparison:
         )
 
 
+# ==============================================================================
+# Coverage gap tests (migrated from test_coverage_gaps.py)
+# ==============================================================================
+
+
+class TestDesignSpaceCoverageGaps:
+    """Tests to cover missing lines in design_space.py."""
+
+    @pytest.fixture
+    def design_space_setup(self, standard_vial, standard_product, standard_ht):
+        """Setup for design space calculations."""
+        # Multiple pressure and temperature setpoints for full design space
+        Pchamber = {'setpt': [0.060, 0.080, 0.100]}
+        Tshelf = {
+            'init': -40.0,
+            'setpt': [-30.0, -20.0, -10.0],
+            'ramp_rate': 1.0  # Fast ramp to test different branches
+        }
+        dt = 0.02  # Larger timestep for faster completion
+        eq_cap = {'a': 5.0, 'b': 10.0}
+        nVial = 398
+
+        return {
+            'vial': standard_vial,
+            'product': standard_product,
+            'ht': standard_ht,
+            'Pchamber': Pchamber,
+            'Tshelf': Tshelf,
+            'dt': dt,
+            'eq_cap': eq_cap,
+            'nVial': nVial
+        }
+
+    def test_design_space_negative_sublimation(self, design_space_setup):
+        """Test design space with conditions that could lead to negative sublimation."""
+        # Set very low shelf temperature to potentially trigger dmdt < 0
+        design_space_setup['Tshelf']['init'] = -60.0
+        design_space_setup['Tshelf']['setpt'] = [-55.0]
+
+        output = design_space.dry(
+            design_space_setup['vial'],
+            design_space_setup['product'],
+            design_space_setup['ht'],
+            design_space_setup['Pchamber'],
+            design_space_setup['Tshelf'],
+            design_space_setup['dt'],
+            design_space_setup['eq_cap'],
+            design_space_setup['nVial']
+        )
+
+        # Should complete without crashing
+        assert len(output) == 3
+        assert output[0].shape[0] == 5  # [T_max, drying_time, sub_flux_avg, sub_flux_max, sub_flux_end]
+
+    @pytest.mark.skip(reason="Ramp-down scenarios cause temperatures too low for sublimation")
+    def test_design_space_shelf_temp_ramp_down(self, design_space_setup):
+        """Test design space with shelf temperature ramping down.
+
+        SKIPPED: Ramping temperature DOWN creates temperatures too low for
+        sublimation, causing OverflowError in Vapor_pressure calculation.
+        """
+        # Start warm, ramp down
+        design_space_setup['Tshelf']['init'] = 0.0
+        design_space_setup['Tshelf']['setpt'] = [-10.0]
+        design_space_setup['Tshelf']['ramp_rate'] = 1.0
+
+        output = design_space.dry(
+            design_space_setup['vial'],
+            design_space_setup['product'],
+            design_space_setup['ht'],
+            design_space_setup['Pchamber'],
+            design_space_setup['Tshelf'],
+            design_space_setup['dt'],
+            design_space_setup['eq_cap'],
+            design_space_setup['nVial']
+        )
+
+        assert len(output) == 3
+
+    def test_design_space_fast_completion(self, design_space_setup):
+        """Test design space with conditions leading to very fast drying."""
+        # Use high temperature and large timestep for fast drying
+        design_space_setup['Tshelf']['init'] = -15.0
+        design_space_setup['Tshelf']['setpt'] = [-10.0]
+        design_space_setup['dt'] = 0.5  # Very large timestep
+        design_space_setup['product']['cSolid'] = 0.01  # Very dilute for faster drying
+
+        output = design_space.dry(
+            design_space_setup['vial'],
+            design_space_setup['product'],
+            design_space_setup['ht'],
+            design_space_setup['Pchamber'],
+            design_space_setup['Tshelf'],
+            design_space_setup['dt'],
+            design_space_setup['eq_cap'],
+            design_space_setup['nVial']
+        )
+
+        # Should handle edge case where drying completes in one timestep
+        assert len(output) == 3
+        assert output[1].shape[0] == 5  # Product temp isotherms
+
+    def test_design_space_equipment_capability_section(self, design_space_setup):
+        """Test design space equipment capability calculations."""
+        # Use full range of pressures
+        design_space_setup['Pchamber']['setpt'] = [0.050, 0.075, 0.100, 0.125, 0.150]
+
+        output = design_space.dry(
+            design_space_setup['vial'],
+            design_space_setup['product'],
+            design_space_setup['ht'],
+            design_space_setup['Pchamber'],
+            design_space_setup['Tshelf'],
+            design_space_setup['dt'],
+            design_space_setup['eq_cap'],
+            design_space_setup['nVial']
+        )
+
+        # Equipment capability data is in output[2]
+        eq_cap_data = output[2]
+        assert eq_cap_data.shape[0] == 3  # [T_max_eq_cap, drying_time_eq_cap, sub_flux_eq_cap]
+        assert eq_cap_data[0].shape[0] == 5  # Should match number of pressure setpoints
+
+    def test_design_space_product_temp_isotherms(self, design_space_setup):
+        """Test product temperature isotherm section thoroughly."""
+        # Use minimal setup to focus on product temp isotherms
+        design_space_setup['Pchamber']['setpt'] = [0.060, 0.100]  # Just two pressures
+        design_space_setup['Tshelf']['setpt'] = [-25.0]
+
+        output = design_space.dry(
+            design_space_setup['vial'],
+            design_space_setup['product'],
+            design_space_setup['ht'],
+            design_space_setup['Pchamber'],
+            design_space_setup['Tshelf'],
+            design_space_setup['dt'],
+            design_space_setup['eq_cap'],
+            design_space_setup['nVial']
+        )
+
+        # Check product temperature isotherms output
+        product_temp_data = output[1]
+        assert product_temp_data.shape[0] == 5
+        assert product_temp_data[1].shape[0] == 2  # drying_time_pr for 2 pressures
+
+    def test_design_space_single_timestep_both_sections(self, design_space_setup):
+        """Test both shelf temp and product temp sections with single timestep completion."""
+        # Extreme conditions for very fast drying
+        design_space_setup['vial']['Vfill'] = 0.5  # Very small fill volume
+        design_space_setup['product']['cSolid'] = 0.005  # Very dilute
+        design_space_setup['Tshelf']['init'] = -10.0
+        design_space_setup['Tshelf']['setpt'] = [-5.0]
+        design_space_setup['Pchamber']['setpt'] = [0.150]  # High pressure
+        design_space_setup['dt'] = 1.0  # Large timestep
+
+        output = design_space.dry(
+            design_space_setup['vial'],
+            design_space_setup['product'],
+            design_space_setup['ht'],
+            design_space_setup['Pchamber'],
+            design_space_setup['Tshelf'],
+            design_space_setup['dt'],
+            design_space_setup['eq_cap'],
+            design_space_setup['nVial']
+        )
+
+        # Should handle single-timestep completion in both sections
+        assert len(output) == 3
+        # Output arrays should be properly formed
+        assert output[0] is not None
+        assert output[1] is not None
+        assert output[2] is not None
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
