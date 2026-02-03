@@ -2,8 +2,7 @@
 import pytest
 import numpy as np
 from lyopronto import opt_Pch
-from .test_helpers import assert_physically_reasonable_output
-from .utils import PERCENT_MAX, TEMP_ATOL, TEMP_RTOL
+from .utils import assert_physically_reasonable_output, PERCENT_MAX, TEMP_ATOL, TEMP_RTOL
 
 
 class TestOptPchOnly:

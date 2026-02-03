@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import os
 from lyopronto import opt_Tsh
-from .test_helpers import PERCENT_COMPLETE, TEMP_RTOL
+from .utils import PERCENT_COMPLETE, TEMP_RTOL
 
 
 class TestOptimizerWebInterface:

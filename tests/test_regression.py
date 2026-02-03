@@ -2,7 +2,7 @@
 import pytest
 import numpy as np
 from lyopronto import calc_knownRp
-from .test_helpers import PERCENT_COMPLETE
+from .utils import PERCENT_COMPLETE
 
 
 class TestRegressionStandardCase:

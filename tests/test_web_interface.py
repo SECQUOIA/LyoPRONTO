@@ -11,7 +11,7 @@ import pandas as pd
 from pathlib import Path
 
 from lyopronto import calc_knownRp
-from .test_helpers import PERCENT_COMPLETE, PERCENT_MAX
+from .utils import PERCENT_COMPLETE, PERCENT_MAX
 
 
 class TestWebInterfaceExample:
