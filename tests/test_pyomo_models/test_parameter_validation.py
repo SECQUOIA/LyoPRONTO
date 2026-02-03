@@ -1,6 +1,19 @@
 """Test parameter validation for create_optimizer_model."""
 
 import pytest
+
+# Try to import pyomo
+try:
+    import pyomo.environ as pyo
+    PYOMO_AVAILABLE = True
+except ImportError:
+    PYOMO_AVAILABLE = False
+
+pytestmark = [
+    pytest.mark.pyomo,
+    pytest.mark.skipif(not PYOMO_AVAILABLE, reason="Pyomo not installed"),
+]
+
 from lyopronto.pyomo_models.optimizers import create_optimizer_model
 
 # Common test parameters

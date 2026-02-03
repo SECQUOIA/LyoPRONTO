@@ -39,10 +39,13 @@ try:
 except ImportError:
     PYOMO_AVAILABLE = False
 
-pytestmark = pytest.mark.skipif(
-    not PYOMO_AVAILABLE,
-    reason="Pyomo not available"
-)
+pytestmark = [
+    pytest.mark.pyomo,
+    pytest.mark.skipif(
+        not PYOMO_AVAILABLE,
+        reason="Pyomo not available"
+    ),
+]
 
 
 class TestScipyComparison:

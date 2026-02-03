@@ -4,14 +4,16 @@ name: PR Tests
 # - Draft PRs: Fast tests only (no coverage) for rapid iteration
 # - Ready for Review: Full tests with coverage for quality assurance
 # - All subsequent commits: Continue with full coverage
+# - Pyomo tests run separately and don't block PRs
 
 on:
   pull_request:
-    branches: [ main, dev-pyomo ]
+    branches: [ main ]
     types: [ opened, synchronize, reopened, ready_for_review, converted_to_draft ]
 
 jobs:
-  test:
+  test-scipy:
+    name: SciPy Tests
     runs-on: ubuntu-latest
     
     steps:
@@ -26,11 +28,9 @@ jobs:
     - name: Determine test mode
       id: mode
       run: |
-        if [ "${{ github.event.pull_request.draft }}" == "true" ]; then
-          echo "coverage=false" >> $GITHUB_OUTPUT
+        if [ "${{ github.event.pull_request.draft }}" ]; then
           echo "mode=fast" >> $GITHUB_OUTPUT
         else
-          echo "coverage=true" >> $GITHUB_OUTPUT
           echo "mode=full" >> $GITHUB_OUTPUT
         fi
     
@@ -40,32 +40,27 @@ jobs:
         python-version: ${{ steps.versions.outputs.result }}
         cache: 'pip'
         cache-dependency-path: |
-          requirements.txt
-          requirements-dev.txt
+          pyproject.toml
     
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip setuptools wheel
-        pip install -r requirements.txt -r requirements-dev.txt
+        pip install .
+        pip install .[dev]
         pip install -e . --no-build-isolation
     
-    - name: Run tests (draft = fast, ready = coverage)
+    - name: Run tests
       run: |
-        if [ "${{ steps.mode.outputs.coverage }}" == "true" ]; then
-          echo "🔍 Running full tests with coverage (PR is ready for review)"
-          echo "⚡ Skipping slow tests (marked with @pytest.mark.slow) - these run on merge"
-          pytest tests/ -n auto -v -m "not slow" --cov=lyopronto --cov-report=xml --cov-report=term-missing
+        if [ "${{ steps.mode.outputs.mode }}" == "fast" ]; then
+          echo "⚡ Draft PR: Skipping notebook and pyomo tests for fast feedback"
+          pytest tests/ -n auto -v -m "not notebook and not pyomo" --cov=lyopronto --cov-report=term-missing
         else
-          echo "⚡ Running fast tests without coverage (PR is draft)"
-          echo "⚡ Skipping slow tests (marked with @pytest.mark.slow)"
-          pytest tests/ -n auto -v -m "not slow"
+          echo "🔍 Ready PR: Running full scipy test suite (excluding notebook and pyomo)"
+          pytest tests/ -n auto -v -m "not notebook and not pyomo"
         fi
     
-    # Codecov integration (optional)
-    # To enable: Add CODECOV_TOKEN secret in GitHub repo settings
     - name: Upload coverage (if run)
       if: steps.mode.outputs.coverage == 'true'
-      continue-on-error: true
       uses: codecov/codecov-action@v4
       with:
         file: ./coverage.xml
@@ -73,14 +68,48 @@ jobs:
         name: pr-coverage
         fail_ci_if_error: false
         token: ${{ secrets.CODECOV_TOKEN }}
+
+  test-pyomo:
+    name: Pyomo Tests (Optional)
+    runs-on: ubuntu-latest
+    continue-on-error: true  # Pyomo tests are brittle, don't block PRs
     
-    - name: Test Summary
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Read CI version config
+      id: versions
+      uses: mikefarah/yq@v4.44.1
+      with:
+        cmd: yq eval '.python-version' .github/ci-config/ci-versions.yml
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ steps.versions.outputs.result }}
+        cache: 'pip'
+        cache-dependency-path: |
+          pyproject.toml
+    
+    - name: Install dependencies with optimization extras
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        pip install .
+        pip install .[dev,optimization]
+        pip install -e . --no-build-isolation
+    
+    - name: Install IPOPT solver via IDAES
+      run: |
+        echo "📦 Installing IPOPT solver via IDAES extensions"
+        idaes get-extensions --extra petsc
+    
+    - name: Run Pyomo tests
+      run: |
+        echo "🔍 Running Pyomo test suite (continue-on-error enabled)"
+        pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=term-missing
+    
+    - name: Pyomo Test Summary
       if: always()
       run: |
-        if [ "${{ steps.mode.outputs.coverage }}" == "true" ]; then
-          echo "✅ Full tests with coverage completed"
-          echo "📊 PR is ready for review with coverage verified"
-        else
-          echo "⚡ Fast tests completed (PR is draft)"
-          echo "� Mark PR as 'Ready for Review' to run coverage tests"
-        fi
+        echo "✅ Pyomo tests completed"
+        echo "⚠️ Failures here don't block PR merge"

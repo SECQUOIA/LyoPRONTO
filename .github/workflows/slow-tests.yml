@@ -17,6 +17,14 @@ on:
         options:
           - 'true'
           - 'false'
+      include_pyomo:
+        description: 'Include Pyomo tests (requires IPOPT)'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
 
 jobs:
   slow-tests:
@@ -36,31 +44,45 @@ jobs:
         python-version: ${{ steps.versions.outputs.result }}
         cache: 'pip'
         cache-dependency-path: |
-          requirements.txt
-          requirements-dev.txt
+          pyproject.toml
     
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip setuptools wheel
-        pip install -r requirements.txt -r requirements-dev.txt
+        pip install .
+        pip install .[dev]
+        if [ "${{ inputs.include_pyomo }}" == "true" ]; then
+          pip install .[optimization]
+        fi
         pip install -e . --no-build-isolation
+    
+    - name: Install IPOPT solver via IDAES (if Pyomo enabled)
+      if: inputs.include_pyomo == 'true'
+      run: |
+        echo "📦 Installing IPOPT solver via IDAES extensions"
+        idaes get-extensions --extra petsc
     
     - name: Run slow tests
       run: |
         if [ "${{ inputs.run_all }}" == "true" ]; then
           echo "🔍 Running ALL tests (including slow optimization tests)"
           echo "⏱️ This may take 30-40 minutes on CI"
-          pytest tests/ -n auto -v --cov=lyopronto --cov-report=xml --cov-report=term-missing
+          if [ "${{ inputs.include_pyomo }}" == "true" ]; then
+            pytest tests/ -n auto -v --cov=lyopronto --cov-report=xml --cov-report=term-missing
+          else
+            pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml --cov-report=term-missing
+          fi
         else
           echo "🐌 Running ONLY slow tests (marked with @pytest.mark.slow)"
           echo "⏱️ This focuses on optimization tests that take minutes"
-          pytest tests/ -n auto -v -m "slow" --cov=lyopronto --cov-report=xml --cov-report=term-missing
+          if [ "${{ inputs.include_pyomo }}" == "true" ]; then
+            pytest tests/ -n auto -v -m "slow" --cov=lyopronto --cov-report=xml --cov-report=term-missing
+          else
+            pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml --cov-report=term-missing
+          fi
         fi
     
-    # Codecov integration (optional)
-    # To enable: Add CODECOV_TOKEN secret in GitHub repo settings
     - name: Upload coverage
-      continue-on-error: true
       uses: codecov/codecov-action@v4
       with:
         file: ./coverage.xml

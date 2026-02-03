@@ -49,10 +49,13 @@ except ImportError:
     PYOMO_AVAILABLE = False
     INCIDENCE_AVAILABLE = False
 
-pytestmark = pytest.mark.skipif(
-    not (PYOMO_AVAILABLE and INCIDENCE_AVAILABLE), 
-    reason="Pyomo or incidence analysis tools not available"
-)
+pytestmark = [
+    pytest.mark.pyomo,
+    pytest.mark.skipif(
+        not (PYOMO_AVAILABLE and INCIDENCE_AVAILABLE), 
+        reason="Pyomo or incidence analysis tools not available"
+    ),
+]
 
 
 class TestStructuralAnalysis:

@@ -31,6 +31,7 @@ if PYOMO_AVAILABLE:
             IPOPT_AVAILABLE = False
 
 pytestmark = [
+    pytest.mark.pyomo,
     pytest.mark.skipif(
         not (PYOMO_AVAILABLE and IPOPT_AVAILABLE),
         reason="Pyomo or IPOPT solver not available"

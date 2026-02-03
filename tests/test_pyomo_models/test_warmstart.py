@@ -7,7 +7,38 @@ trajectories from opt_Tsh, opt_Pch, and opt_Pch_Tsh, with proper:
 - Control variable initialization (both Pch and Tsh)
 """
 
+import pytest
 import numpy as np
+
+# Try to import pyomo
+try:
+    import pyomo.environ as pyo
+    PYOMO_AVAILABLE = True
+except ImportError:
+    PYOMO_AVAILABLE = False
+
+# Check for IPOPT solver
+IPOPT_AVAILABLE = False
+if PYOMO_AVAILABLE:
+    try:
+        from idaes.core.solvers import get_solver
+        solver = get_solver('ipopt')
+        IPOPT_AVAILABLE = True
+    except:
+        try:
+            solver = pyo.SolverFactory('ipopt')
+            IPOPT_AVAILABLE = solver.available()
+        except:
+            IPOPT_AVAILABLE = False
+
+pytestmark = [
+    pytest.mark.pyomo,
+    pytest.mark.skipif(
+        not (PYOMO_AVAILABLE and IPOPT_AVAILABLE),
+        reason="Pyomo or IPOPT solver not available"
+    ),
+]
+
 from lyopronto.pyomo_models.optimizers import create_optimizer_model
 from lyopronto import opt_Tsh, opt_Pch, opt_Pch_Tsh
 
