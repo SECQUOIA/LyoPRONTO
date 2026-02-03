@@ -1,4 +1,8 @@
-"""Test parameter validation for create_optimizer_model."""
+"""Tests for parameter validation in create_optimizer_model.
+
+This module tests that the Pyomo optimizer model creation properly validates
+input parameters and raises appropriate errors for invalid configurations.
+"""
 
 import pytest
 
@@ -16,196 +20,251 @@ pytestmark = [
 
 from lyopronto.pyomo_models.optimizers import create_optimizer_model
 
-# Common test parameters
-vial = {'Av': 3.8, 'Ap': 3.14, 'Vfill': 2.0}
-product = {'R0': 1.4, 'A1': 16.0, 'A2': 0.0, 'T_pr_crit': -5.0, 'cSolid': 0.05}
-ht = {'KC': 0.000275, 'KP': 0.000893, 'KD': 0.46}
-eq_cap = {'a': -0.182, 'b': 11.7}
-nVial = 398
 
-print("\n" + "="*60)
-print("PARAMETER VALIDATION TESTS")
-print("="*60)
+class TestParameterValidation:
+    """Tests for parameter validation in create_optimizer_model."""
+    
+    @pytest.fixture
+    def base_params(self):
+        """Common test parameters for model creation."""
+        return {
+            'vial': {'Av': 3.8, 'Ap': 3.14, 'Vfill': 2.0},
+            'product': {'R0': 1.4, 'A1': 16.0, 'A2': 0.0, 'T_pr_crit': -5.0, 'cSolid': 0.05},
+            'ht': {'KC': 0.000275, 'KP': 0.000893, 'KD': 0.46},
+            'eq_cap': {'a': -0.182, 'b': 11.7},
+            'nVial': 398,
+        }
+    
+    def test_invalid_control_mode_raises_error(self, base_params):
+        """Test that invalid control_mode raises ValueError."""
+        with pytest.raises(ValueError, match="control_mode"):
+            create_optimizer_model(
+                base_params['vial'],
+                base_params['product'],
+                base_params['ht'],
+                base_params['vial']['Vfill'],
+                base_params['eq_cap'],
+                base_params['nVial'],
+                control_mode='invalid',
+                n_elements=2
+            )
+    
+    def test_pch_mode_without_bounds_raises_error(self, base_params):
+        """Test that control_mode='Pch' without Pchamber bounds raises ValueError."""
+        with pytest.raises(ValueError, match="bounds|Pch"):
+            create_optimizer_model(
+                base_params['vial'],
+                base_params['product'],
+                base_params['ht'],
+                base_params['vial']['Vfill'],
+                base_params['eq_cap'],
+                base_params['nVial'],
+                control_mode='Pch',
+                Tshelf={'init': -35, 'setpt': [20], 'dt_setpt': [1800]},
+                n_elements=2
+            )
+    
+    def test_tsh_mode_without_bounds_raises_error(self, base_params):
+        """Test that control_mode='Tsh' without Tshelf bounds raises ValueError."""
+        with pytest.raises(ValueError, match="bounds|Tsh"):
+            create_optimizer_model(
+                base_params['vial'],
+                base_params['product'],
+                base_params['ht'],
+                base_params['vial']['Vfill'],
+                base_params['eq_cap'],
+                base_params['nVial'],
+                control_mode='Tsh',
+                Pchamber={'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5},
+                n_elements=2
+            )
+    
+    def test_both_mode_without_pchamber_bounds_raises_error(self, base_params):
+        """Test that control_mode='both' without Pchamber bounds raises ValueError."""
+        with pytest.raises(ValueError, match="bounds|Pch"):
+            create_optimizer_model(
+                base_params['vial'],
+                base_params['product'],
+                base_params['ht'],
+                base_params['vial']['Vfill'],
+                base_params['eq_cap'],
+                base_params['nVial'],
+                control_mode='both',
+                Tshelf={'min': -45, 'max': 30},
+                n_elements=2
+            )
+    
+    def test_invalid_pch_bounds_min_gte_max_raises_error(self, base_params):
+        """Test that Pch bounds with min >= max raises ValueError."""
+        with pytest.raises(ValueError, match="min|max|bounds"):
+            create_optimizer_model(
+                base_params['vial'],
+                base_params['product'],
+                base_params['ht'],
+                base_params['vial']['Vfill'],
+                base_params['eq_cap'],
+                base_params['nVial'],
+                control_mode='Pch',
+                Pchamber={'min': 0.2, 'max': 0.1},
+                Tshelf={'init': -35, 'setpt': [20], 'dt_setpt': [1800]},
+                n_elements=2
+            )
+    
+    def test_invalid_tsh_bounds_min_gte_max_raises_error(self, base_params):
+        """Test that Tsh bounds with min >= max raises ValueError."""
+        with pytest.raises(ValueError, match="min|max|bounds"):
+            create_optimizer_model(
+                base_params['vial'],
+                base_params['product'],
+                base_params['ht'],
+                base_params['vial']['Vfill'],
+                base_params['eq_cap'],
+                base_params['nVial'],
+                control_mode='Tsh',
+                Pchamber={'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5},
+                Tshelf={'min': 30, 'max': -45},
+                n_elements=2
+            )
 
-# Test 1: Invalid control_mode
-print("\n[Test 1] Invalid control_mode")
-try:
-    model = create_optimizer_model(
-        vial, product, ht, vial['Vfill'], eq_cap, nVial,
-        control_mode='invalid',
-        n_elements=2
-    )
-    print("  ✗ FAILED: Should have raised ValueError")
-except ValueError as e:
-    print(f"  ✓ PASSED: {e}")
 
-# Test 2: control_mode='Pch' without Pchamber bounds
-print("\n[Test 2] control_mode='Pch' without Pchamber bounds")
-try:
-    model = create_optimizer_model(
-        vial, product, ht, vial['Vfill'], eq_cap, nVial,
-        control_mode='Pch',
-        Tshelf={'init': -35, 'setpt': [20], 'dt_setpt': [1800]},
-        n_elements=2
-    )
-    print("  ✗ FAILED: Should have raised ValueError")
-except ValueError as e:
-    print(f"  ✓ PASSED: {e}")
+class TestValidConfigurations:
+    """Tests for valid parameter configurations."""
+    
+    @pytest.fixture
+    def base_params(self):
+        """Common test parameters for model creation."""
+        return {
+            'vial': {'Av': 3.8, 'Ap': 3.14, 'Vfill': 2.0},
+            'product': {'R0': 1.4, 'A1': 16.0, 'A2': 0.0, 'T_pr_crit': -5.0, 'cSolid': 0.05},
+            'ht': {'KC': 0.000275, 'KP': 0.000893, 'KD': 0.46},
+            'eq_cap': {'a': -0.182, 'b': 11.7},
+            'nVial': 398,
+        }
+    
+    def test_valid_tsh_mode_creates_model(self, base_params):
+        """Test that valid control_mode='Tsh' creates model successfully."""
+        model = create_optimizer_model(
+            base_params['vial'],
+            base_params['product'],
+            base_params['ht'],
+            base_params['vial']['Vfill'],
+            base_params['eq_cap'],
+            base_params['nVial'],
+            control_mode='Tsh',
+            Pchamber={'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5},
+            Tshelf={'min': -45, 'max': 30},
+            n_elements=2
+        )
+        
+        assert model is not None
+        assert hasattr(model, 'Tsh')
+        assert hasattr(model, 'Pch')
+    
+    def test_valid_pch_mode_creates_model(self, base_params):
+        """Test that valid control_mode='Pch' creates model successfully."""
+        model = create_optimizer_model(
+            base_params['vial'],
+            base_params['product'],
+            base_params['ht'],
+            base_params['vial']['Vfill'],
+            base_params['eq_cap'],
+            base_params['nVial'],
+            control_mode='Pch',
+            Pchamber={'min': 0.06, 'max': 0.20},
+            Tshelf={'init': -35, 'setpt': [20], 'dt_setpt': [1800]},
+            n_elements=2
+        )
+        
+        assert model is not None
+        assert hasattr(model, 'Pch')
+        assert hasattr(model, 'Tsh')
+    
+    def test_valid_both_mode_creates_model(self, base_params):
+        """Test that valid control_mode='both' creates model successfully."""
+        model = create_optimizer_model(
+            base_params['vial'],
+            base_params['product'],
+            base_params['ht'],
+            base_params['vial']['Vfill'],
+            base_params['eq_cap'],
+            base_params['nVial'],
+            control_mode='both',
+            Pchamber={'min': 0.06, 'max': 0.20},
+            Tshelf={'min': -45, 'max': 30},
+            n_elements=2
+        )
+        
+        assert model is not None
+        assert hasattr(model, 'Pch')
+        assert hasattr(model, 'Tsh')
 
-# Test 3: control_mode='Tsh' without Tshelf bounds
-print("\n[Test 3] control_mode='Tsh' without Tshelf bounds")
-try:
-    model = create_optimizer_model(
-        vial, product, ht, vial['Vfill'], eq_cap, nVial,
-        control_mode='Tsh',
-        Pchamber={'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5},
-        n_elements=2
-    )
-    print("  ✗ FAILED: Should have raised ValueError")
-except ValueError as e:
-    print(f"  ✓ PASSED: {e}")
 
-# Test 4: control_mode='both' without both bounds
-print("\n[Test 4] control_mode='both' without Pchamber bounds")
-try:
-    model = create_optimizer_model(
-        vial, product, ht, vial['Vfill'], eq_cap, nVial,
-        control_mode='both',
-        Tshelf={'min': -45, 'max': 30},
-        n_elements=2
-    )
-    print("  ✗ FAILED: Should have raised ValueError")
-except ValueError as e:
-    print(f"  ✓ PASSED: {e}")
+class TestBoundsValidation:
+    """Tests for bounds validation and defaults."""
+    
+    @pytest.fixture
+    def base_params(self):
+        """Common test parameters for model creation."""
+        return {
+            'vial': {'Av': 3.8, 'Ap': 3.14, 'Vfill': 2.0},
+            'product': {'R0': 1.4, 'A1': 16.0, 'A2': 0.0, 'T_pr_crit': -5.0, 'cSolid': 0.05},
+            'ht': {'KC': 0.000275, 'KP': 0.000893, 'KD': 0.46},
+            'eq_cap': {'a': -0.182, 'b': 11.7},
+            'nVial': 398,
+        }
+    
+    def test_pch_max_defaults_to_half_torr(self, base_params):
+        """Test that Pch max defaults to 0.5 Torr when not specified."""
+        model = create_optimizer_model(
+            base_params['vial'],
+            base_params['product'],
+            base_params['ht'],
+            base_params['vial']['Vfill'],
+            base_params['eq_cap'],
+            base_params['nVial'],
+            control_mode='Pch',
+            Pchamber={'min': 0.06},  # No 'max' specified
+            Tshelf={'init': -35, 'setpt': [20], 'dt_setpt': [1800]},
+            n_elements=2
+        )
+        
+        assert model is not None
+        # Check bounds on Pch variable
+        t0 = min(model.t)
+        assert model.Pch[t0].ub == 0.5, f"Expected Pch max = 0.5, got {model.Pch[t0].ub}"
+    
+    def test_pch_bounds_out_of_range_raises_error(self, base_params):
+        """Test that Pch bounds outside valid range raises ValueError."""
+        with pytest.raises(ValueError, match="bounds|range|Pch"):
+            create_optimizer_model(
+                base_params['vial'],
+                base_params['product'],
+                base_params['ht'],
+                base_params['vial']['Vfill'],
+                base_params['eq_cap'],
+                base_params['nVial'],
+                control_mode='Pch',
+                Pchamber={'min': 0.001, 'max': 2.0},  # Both out of valid range
+                Tshelf={'init': -35, 'setpt': [20], 'dt_setpt': [1800]},
+                n_elements=2
+            )
+    
+    def test_tsh_bounds_out_of_range_raises_error(self, base_params):
+        """Test that Tsh bounds outside valid range raises ValueError."""
+        with pytest.raises(ValueError, match="bounds|range|Tsh"):
+            create_optimizer_model(
+                base_params['vial'],
+                base_params['product'],
+                base_params['ht'],
+                base_params['vial']['Vfill'],
+                base_params['eq_cap'],
+                base_params['nVial'],
+                control_mode='Tsh',
+                Pchamber={'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5},
+                Tshelf={'min': -100, 'max': 200},  # Both out of valid range
+                n_elements=2
+            )
 
-# Test 5: Invalid Pch bounds (min >= max)
-print("\n[Test 5] Invalid Pch bounds (min >= max)")
-try:
-    model = create_optimizer_model(
-        vial, product, ht, vial['Vfill'], eq_cap, nVial,
-        control_mode='Pch',
-        Pchamber={'min': 0.2, 'max': 0.1},
-        Tshelf={'init': -35, 'setpt': [20], 'dt_setpt': [1800]},
-        n_elements=2
-    )
-    print("  ✗ FAILED: Should have raised ValueError")
-except ValueError as e:
-    print(f"  ✓ PASSED: {e}")
 
-# Test 6: Invalid Tsh bounds (min >= max)
-print("\n[Test 6] Invalid Tsh bounds (min >= max)")
-try:
-    model = create_optimizer_model(
-        vial, product, ht, vial['Vfill'], eq_cap, nVial,
-        control_mode='Tsh',
-        Pchamber={'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5},
-        Tshelf={'min': 30, 'max': -45},
-        n_elements=2
-    )
-    print("  ✗ FAILED: Should have raised ValueError")
-except ValueError as e:
-    print(f"  ✓ PASSED: {e}")
-
-# Test 7: Valid control_mode='Tsh' (should succeed)
-print("\n[Test 7] Valid control_mode='Tsh'")
-try:
-    model = create_optimizer_model(
-        vial, product, ht, vial['Vfill'], eq_cap, nVial,
-        control_mode='Tsh',
-        Pchamber={'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5},
-        Tshelf={'min': -45, 'max': 30},
-        n_elements=2
-    )
-    print("  ✓ PASSED: Model created successfully")
-    print(f"    Pch bounds: [{model.Pch[0].lb}, {model.Pch[0].ub}]")
-    print(f"    Tsh bounds: [{model.Tsh[0].lb}, {model.Tsh[0].ub}]")
-except Exception as e:
-    print(f"  ✗ FAILED: {type(e).__name__}: {e}")
-
-# Test 8: Valid control_mode='Pch' (should succeed)
-print("\n[Test 8] Valid control_mode='Pch'")
-try:
-    model = create_optimizer_model(
-        vial, product, ht, vial['Vfill'], eq_cap, nVial,
-        control_mode='Pch',
-        Pchamber={'min': 0.06, 'max': 0.20},
-        Tshelf={'init': -35, 'setpt': [20], 'dt_setpt': [1800]},
-        n_elements=2
-    )
-    print("  ✓ PASSED: Model created successfully")
-    print(f"    Pch bounds: [{model.Pch[0].lb}, {model.Pch[0].ub}]")
-    print(f"    Tsh bounds: [{model.Tsh[0].lb}, {model.Tsh[0].ub}]")
-except Exception as e:
-    print(f"  ✗ FAILED: {type(e).__name__}: {e}")
-
-# Test 9: Valid control_mode='both' (should succeed)
-print("\n[Test 9] Valid control_mode='both'")
-try:
-    model = create_optimizer_model(
-        vial, product, ht, vial['Vfill'], eq_cap, nVial,
-        control_mode='both',
-        Pchamber={'min': 0.06, 'max': 0.20},
-        Tshelf={'min': -45, 'max': 30},
-        n_elements=2
-    )
-    print("  ✓ PASSED: Model created successfully")
-    print(f"    Pch bounds: [{model.Pch[0].lb}, {model.Pch[0].ub}]")
-    print(f"    Tsh bounds: [{model.Tsh[0].lb}, {model.Tsh[0].ub}]")
-except Exception as e:
-    print(f"  ✗ FAILED: {type(e).__name__}: {e}")
-
-# Test 10: Verify Pch max bound is 0.5 Torr
-print("\n[Test 10] Verify Pch max bound defaults to 0.5 Torr")
-try:
-    model = create_optimizer_model(
-        vial, product, ht, vial['Vfill'], eq_cap, nVial,
-        control_mode='Pch',
-        Pchamber={'min': 0.06},  # No 'max' specified
-        Tshelf={'init': -35, 'setpt': [20], 'dt_setpt': [1800]},
-        n_elements=2
-    )
-    print("  ✓ PASSED: Model created successfully")
-    print(f"    Pch bounds: [{model.Pch[0].lb}, {model.Pch[0].ub}]")
-    assert model.Pch[0].ub == 0.5, f"Expected Pch max = 0.5, got {model.Pch[0].ub}"
-    print(f"    ✓ Pch max correctly defaults to 0.5 Torr")
-except Exception as e:
-    print(f"  ✗ FAILED: {type(e).__name__}: {e}")
-
-# Test 11: Pch bounds out of valid range
-print("\n[Test 11] Pch bounds out of valid range")
-try:
-    model = create_optimizer_model(
-        vial, product, ht, vial['Vfill'], eq_cap, nVial,
-        control_mode='Pch',
-        Pchamber={'min': 0.001, 'max': 2.0},  # Both out of [0.01, 1.0]
-        Tshelf={'init': -35, 'setpt': [20], 'dt_setpt': [1800]},
-        n_elements=2
-    )
-    print("  ✗ FAILED: Should have raised ValueError for Pch bounds")
-except ValueError as e:
-    print(f"  ✓ PASSED: {e}")
-
-# Test 12: Tsh bounds out of valid range
-print("\n[Test 12] Tsh bounds out of valid range")
-try:
-    model = create_optimizer_model(
-        vial, product, ht, vial['Vfill'], eq_cap, nVial,
-        control_mode='Tsh',
-        Pchamber={'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5},
-        Tshelf={'min': -100, 'max': 200},  # Both out of [-50, 150]
-        n_elements=2
-    )
-    print("  ✗ FAILED: Should have raised ValueError for Tsh bounds")
-except ValueError as e:
-    print(f"  ✓ PASSED: {e}")
-
-print("\n" + "="*60)
-print("VALIDATION TESTS COMPLETE")
-print("="*60)
-print("Summary:")
-print("  - Invalid control_mode: ✓")
-print("  - Missing required parameters: ✓")
-print("  - Invalid bounds: ✓")
-print("  - Valid configurations: ✓")
-print("  - Default values: ✓")
-print("\nAll parameter validation working correctly!")
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])
