@@ -67,8 +67,7 @@ def standard_opt_tsh_inputs():
     Pchamber = {
         'setpt': np.array([0.15]),      # Set point [Torr]
         'dt_setpt': np.array([1800]),   # Hold time [min]
-        'ramp_rate': 0.5,                # Ramp rate [Torr/min]
-        'time': [0]                     # Initial time
+        'ramp_rate': 0.5                # Ramp rate [Torr/min]
     }
     
     Tshelf = {

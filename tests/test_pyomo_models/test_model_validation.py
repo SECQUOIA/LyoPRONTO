@@ -53,8 +53,8 @@ class TestScipyComparison:
     
     def test_warmstart_creates_feasible_initial_point(self, standard_vial, standard_product, standard_ht):
         """Verify warmstart from scipy creates a reasonable initial point."""
-        Pchamber = {'setpt': [0.1], 'time': [0]}
-        Tshelf = {'setpt': [-10.0], 'time': [0], 'ramp_rate': 1.0, 'init': -40.0}
+        Pchamber = {'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5}
+        Tshelf = {'setpt': [-10.0], 'dt_setpt': [1800], 'ramp_rate': 1.0, 'init': -40.0}
         scipy_traj = calc_knownRp.dry(
             standard_vial, standard_product, standard_ht,
             Pchamber, Tshelf, dt=1.0
@@ -83,8 +83,8 @@ class TestScipyComparison:
     
     def test_warmstart_preserves_scipy_trends(self, standard_vial, standard_product, standard_ht):
         """Verify warmstart preserves key trends from scipy simulation."""
-        Pchamber = {'setpt': [0.1], 'time': [0]}
-        Tshelf = {'setpt': [-10.0], 'time': [0], 'ramp_rate': 1.0, 'init': -40.0}
+        Pchamber = {'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5}
+        Tshelf = {'setpt': [-10.0], 'dt_setpt': [1800], 'ramp_rate': 1.0, 'init': -40.0}
         scipy_traj = calc_knownRp.dry(
             standard_vial, standard_product, standard_ht,
             Pchamber, Tshelf, dt=1.0
@@ -103,24 +103,24 @@ class TestScipyComparison:
         # Compare trends
         scipy_Tsub_start = scipy_traj[0, 1]
         scipy_Tsub_end = scipy_traj[-1, 1]
-        scipy_fraction_end = scipy_traj[-1, 6]
+        scipy_percent_end = scipy_traj[-1, 6]  # Scipy returns percentage (0-100)
         
         t_points = sorted(model.t)
         pyomo_Tsub_start = pyo.value(model.Tsub[t_points[0]])
         pyomo_Tsub_end = pyo.value(model.Tsub[t_points[-1]])
         
         Lpr0 = functions.Lpr0_FUN(standard_vial['Vfill'], standard_vial['Ap'], standard_product['cSolid'])
-        pyomo_fraction_end = pyo.value(model.Lck[t_points[-1]]) / Lpr0
+        pyomo_percent_end = pyo.value(model.Lck[t_points[-1]]) / Lpr0 * 100.0  # Convert to percentage
         
         # Trends should match (allow 20% tolerance for interpolation)
         assert abs(pyomo_Tsub_start - scipy_Tsub_start) < 10, "Initial Tsub should match"
         assert abs(pyomo_Tsub_end - scipy_Tsub_end) < 5, "Final Tsub should match"
-        assert abs(pyomo_fraction_end - scipy_fraction_end) < 0.2, "Final dryness should match"
+        assert abs(pyomo_percent_end - scipy_percent_end) < 20.0, "Final dryness should match (within 20%)"
     
     def test_model_respects_temperature_bounds(self, standard_vial, standard_product, standard_ht):
         """Verify temperature variables stay within physical bounds after warmstart."""
-        Pchamber = {'setpt': [0.1], 'time': [0]}
-        Tshelf = {'setpt': [-10.0], 'time': [0], 'ramp_rate': 1.0, 'init': -40.0}
+        Pchamber = {'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5}
+        Tshelf = {'setpt': [-10.0], 'dt_setpt': [1800], 'ramp_rate': 1.0, 'init': -40.0}
         scipy_traj = calc_knownRp.dry(
             standard_vial, standard_product, standard_ht,
             Pchamber, Tshelf, dt=1.0
@@ -157,8 +157,8 @@ class TestScipyComparison:
     
     def test_algebraic_equations_approximately_satisfied(self, standard_vial, standard_product, standard_ht):
         """Verify algebraic constraints are approximately satisfied after warmstart."""
-        Pchamber = {'setpt': [0.1], 'time': [0]}
-        Tshelf = {'setpt': [-10.0], 'time': [0], 'ramp_rate': 1.0, 'init': -40.0}
+        Pchamber = {'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5}
+        Tshelf = {'setpt': [-10.0], 'dt_setpt': [1800], 'ramp_rate': 1.0, 'init': -40.0}
         scipy_traj = calc_knownRp.dry(
             standard_vial, standard_product, standard_ht,
             Pchamber, Tshelf, dt=1.0
@@ -207,8 +207,8 @@ class TestPhysicsConsistency:
     
     def test_cake_length_monotonically_increases(self, standard_vial, standard_product, standard_ht):
         """Verify dried cake length increases monotonically over time."""
-        Pchamber = {'setpt': [0.1], 'time': [0]}
-        Tshelf = {'setpt': [-10.0], 'time': [0], 'ramp_rate': 1.0, 'init': -40.0}
+        Pchamber = {'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5}
+        Tshelf = {'setpt': [-10.0], 'dt_setpt': [1800], 'ramp_rate': 1.0, 'init': -40.0}
         scipy_traj = calc_knownRp.dry(
             standard_vial, standard_product, standard_ht,
             Pchamber, Tshelf, dt=1.0
@@ -236,8 +236,8 @@ class TestPhysicsConsistency:
     
     def test_sublimation_rate_positive(self, standard_vial, standard_product, standard_ht):
         """Verify sublimation rate is non-negative (can't un-dry)."""
-        Pchamber = {'setpt': [0.1], 'time': [0]}
-        Tshelf = {'setpt': [-10.0], 'time': [0], 'ramp_rate': 1.0, 'init': -40.0}
+        Pchamber = {'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5}
+        Tshelf = {'setpt': [-10.0], 'dt_setpt': [1800], 'ramp_rate': 1.0, 'init': -40.0}
         scipy_traj = calc_knownRp.dry(
             standard_vial, standard_product, standard_ht,
             Pchamber, Tshelf, dt=1.0
@@ -260,8 +260,8 @@ class TestPhysicsConsistency:
     
     def test_temperature_gradient_physically_reasonable(self, standard_vial, standard_product, standard_ht):
         """Verify Tbot >= Tsub (heat flows from bottom to sublimation front)."""
-        Pchamber = {'setpt': [0.1], 'time': [0]}
-        Tshelf = {'setpt': [-10.0], 'time': [0], 'ramp_rate': 1.0, 'init': -40.0}
+        Pchamber = {'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5}
+        Tshelf = {'setpt': [-10.0], 'dt_setpt': [1800], 'ramp_rate': 1.0, 'init': -40.0}
         scipy_traj = calc_knownRp.dry(
             standard_vial, standard_product, standard_ht,
             Pchamber, Tshelf, dt=1.0
@@ -298,8 +298,8 @@ class TestOptimizationComparison:
     @pytest.mark.skip(reason="Full optimization is slow, enable for integration testing")
     def test_optimization_improves_over_scipy(self, standard_vial, standard_product, standard_ht):
         """Verify Pyomo optimization can improve on scipy constant setpoints."""
-        Pchamber = {'setpt': [0.1], 'time': [0]}
-        Tshelf = {'setpt': [-10.0], 'time': [0], 'ramp_rate': 1.0, 'init': -40.0}
+        Pchamber = {'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5}
+        Tshelf = {'setpt': [-10.0], 'dt_setpt': [1800], 'ramp_rate': 1.0, 'init': -40.0}
         scipy_traj = calc_knownRp.dry(
             standard_vial, standard_product, standard_ht,
             Pchamber, Tshelf, dt=1.0
@@ -321,8 +321,8 @@ class TestOptimizationComparison:
     @pytest.mark.skip(reason="Full optimization is slow, enable for integration testing")  
     def test_optimized_solution_satisfies_constraints(self, standard_vial, standard_product, standard_ht):
         """Verify optimized solution respects all constraints."""
-        Pchamber = {'setpt': [0.1], 'time': [0]}
-        Tshelf = {'setpt': [-10.0], 'time': [0], 'ramp_rate': 1.0, 'init': -40.0}
+        Pchamber = {'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5}
+        Tshelf = {'setpt': [-10.0], 'dt_setpt': [1800], 'ramp_rate': 1.0, 'init': -40.0}
         scipy_traj = calc_knownRp.dry(
             standard_vial, standard_product, standard_ht,
             Pchamber, Tshelf, dt=1.0

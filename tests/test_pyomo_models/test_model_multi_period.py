@@ -258,8 +258,8 @@ class TestModelWarmstart:
         from lyopronto import calc_knownRp
         
         # Get scipy trajectory - need to match the API
-        Pchamber = {'setpt': [0.1], 'time': [0]}
-        Tshelf = {'setpt': [-10.0], 'time': [0], 'ramp_rate': 1.0, 'init': -40.0}
+        Pchamber = {'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5}
+        Tshelf = {'setpt': [-10.0], 'dt_setpt': [1800], 'ramp_rate': 1.0, 'init': -40.0}
         dt = 1.0
         
         scipy_traj = calc_knownRp.dry(
@@ -361,8 +361,8 @@ class TestModelStructuralAnalysis:
         For DAE models, this checks the discretized system structure.
         """
         # Create model with scipy warmstart
-        Pchamber = {'setpt': [0.1], 'time': [0]}
-        Tshelf = {'setpt': [-10.0], 'time': [0], 'ramp_rate': 1.0, 'init': -40.0}
+        Pchamber = {'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5}
+        Tshelf = {'setpt': [-10.0], 'dt_setpt': [1800], 'ramp_rate': 1.0, 'init': -40.0}
         scipy_traj = calc_knownRp.dry(
             standard_vial, standard_product, standard_ht,
             Pchamber, Tshelf, dt=1.0
@@ -449,8 +449,8 @@ class TestModelStructuralAnalysis:
             pytest.skip("PyNumero not available for block triangularization")
         
         # Create small model for faster analysis
-        Pchamber = {'setpt': [0.1], 'time': [0]}
-        Tshelf = {'setpt': [-10.0], 'time': [0], 'ramp_rate': 1.0, 'init': -40.0}
+        Pchamber = {'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5}
+        Tshelf = {'setpt': [-10.0], 'dt_setpt': [1800], 'ramp_rate': 1.0, 'init': -40.0}
         scipy_traj = calc_knownRp.dry(
             standard_vial, standard_product, standard_ht,
             Pchamber, Tshelf, dt=1.0
@@ -546,8 +546,8 @@ class TestModelNumerics:
     def test_variable_magnitudes_with_scaling(self, standard_vial, standard_product, standard_ht):
         """Verify scaling improves variable magnitudes."""
         # Create warmstart from scipy
-        Pchamber = {'setpt': [0.1], 'time': [0]}
-        Tshelf = {'setpt': [-10.0], 'time': [0], 'ramp_rate': 1.0, 'init': -40.0}
+        Pchamber = {'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5}
+        Tshelf = {'setpt': [-10.0], 'dt_setpt': [1800], 'ramp_rate': 1.0, 'init': -40.0}
         scipy_traj = calc_knownRp.dry(
             standard_vial, standard_product, standard_ht,
             Pchamber, Tshelf, dt=1.0
@@ -629,8 +629,8 @@ class TestModelOptimization:
     def test_optimization_runs(self, standard_vial, standard_product, standard_ht):
         """Verify optimization completes (slow test)."""
         # Get warmstart
-        Pchamber = {'setpt': [0.1], 'time': [0]}
-        Tshelf = {'setpt': [-10.0], 'time': [0], 'ramp_rate': 1.0, 'init': -40.0}
+        Pchamber = {'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5}
+        Tshelf = {'setpt': [-10.0], 'dt_setpt': [1800], 'ramp_rate': 1.0, 'init': -40.0}
         scipy_traj = calc_knownRp.dry(
             standard_vial, standard_product, standard_ht,
             Pchamber, Tshelf, dt=1.0

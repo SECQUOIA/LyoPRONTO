@@ -58,7 +58,7 @@ try:
     model = create_optimizer_model(
         vial, product, ht, vial['Vfill'], eq_cap, nVial,
         control_mode='Tsh',
-        Pchamber={'setpt': [0.1], 'dt_setpt': [1800]},
+        Pchamber={'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5},
         n_elements=2
     )
     print("  ✗ FAILED: Should have raised ValueError")
@@ -98,7 +98,7 @@ try:
     model = create_optimizer_model(
         vial, product, ht, vial['Vfill'], eq_cap, nVial,
         control_mode='Tsh',
-        Pchamber={'setpt': [0.1], 'dt_setpt': [1800]},
+        Pchamber={'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5},
         Tshelf={'min': 30, 'max': -45},
         n_elements=2
     )
@@ -112,7 +112,7 @@ try:
     model = create_optimizer_model(
         vial, product, ht, vial['Vfill'], eq_cap, nVial,
         control_mode='Tsh',
-        Pchamber={'setpt': [0.1], 'dt_setpt': [1800]},
+        Pchamber={'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5},
         Tshelf={'min': -45, 'max': 30},
         n_elements=2
     )
@@ -191,7 +191,7 @@ try:
     model = create_optimizer_model(
         vial, product, ht, vial['Vfill'], eq_cap, nVial,
         control_mode='Tsh',
-        Pchamber={'setpt': [0.1], 'dt_setpt': [1800]},
+        Pchamber={'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5},
         Tshelf={'min': -100, 'max': 200},  # Both out of [-50, 150]
         n_elements=2
     )

@@ -58,8 +58,7 @@ ht = {
 Pchamber = {
     'setpt': np.array([0.15]),
     'dt_setpt': np.array([1800]),
-    'ramp_rate': 0.5,
-    'time': [0]
+    'ramp_rate': 0.5
 }
 
 Tshelf = {
