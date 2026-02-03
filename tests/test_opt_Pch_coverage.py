@@ -1,8 +1,9 @@
-"""Tests for opt_Pch.py to increase coverage from 14% to 80%+."""
+"""Tests for opt_Pch.py to increase coverage."""
 import pytest
 import numpy as np
 from lyopronto import opt_Pch
 from .test_helpers import assert_physically_reasonable_output
+from .utils import PERCENT_MAX, TEMP_ATOL, TEMP_RTOL
 
 
 class TestOptPchOnly:
@@ -157,7 +158,7 @@ class TestOptPchOnly:
         # Should not exceed equipment capability (with small tolerance)
         violations = dmdt - eq_cap_max
         max_violation = np.max(violations)
-        assert max_violation <= 0.01, \
+        assert max_violation <= TEMP_RTOL, \
             f"Equipment capability exceeded by {max_violation:.4f} kg/hr"
     
     def test_opt_pch_physically_reasonable(self, opt_pch_setup):
@@ -196,8 +197,8 @@ class TestOptPchOnly:
         # Optimizer should show progress, but may not reach full completion
         assert final_percent > 0.0, \
             f"Should show drying progress, got {final_percent:.1f}%"
-        assert final_percent <= 101.0, \
-            f"Percent dried should not significantly exceed 100%, got {final_percent:.1f}%"
+        assert final_percent <= PERCENT_MAX, \
+            f"Percent dried should not exceed {PERCENT_MAX}%, got {final_percent:.1f}%"
     
     def test_opt_pch_convergence(self, opt_pch_setup):
         """Test optimization converges to a solution."""
@@ -296,7 +297,7 @@ class TestOptPchEdgeCases:
         T_crit = conservative_setup['product']['T_pr_crit']
         
         # Should respect conservative constraint
-        assert np.max(Tbot) <= T_crit + 0.5
+        assert np.max(Tbot) <= T_crit + TEMP_ATOL
     
     def test_high_product_resistance(self, conservative_setup):
         """Test with high product resistance."""
@@ -362,4 +363,4 @@ class TestOptPchEdgeCases:
         assert output.size > 0
         final_percent = output[-1, 6]
         assert final_percent >= 0.0, "Should have non-negative drying progress"
-        assert final_percent <= 101.0, "Percent should not significantly exceed 100%"
+        assert final_percent <= PERCENT_MAX, f"Percent should not exceed {PERCENT_MAX}%"

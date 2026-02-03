@@ -1,13 +1,28 @@
 """Helper functions for test validation."""
 import numpy as np
 
+# Import tolerance constants from single source of truth
+from tests.utils import (
+    FLOAT_RTOL,
+    INITIAL_PERCENT_ATOL,
+    MONOTONIC_ATOL,
+    PERCENT_ATOL,
+    PERCENT_COMPLETE,
+    PERCENT_MAX,
+    PRESSURE_ATOL,
+    PYOMO_PERCENT_COMPLETE,
+    PYOMO_SOLVER_TOL,
+    TEMP_ATOL,
+    TEMP_RTOL,
+)
+
 
 def assert_physically_reasonable_output(output):
     """Assert that simulation output has physically reasonable values.
     
     Args:
         output: Numpy array with shape (n_steps, 7) containing simulation results
-                Columns: time, Tsub, Tbot, Tsh, Pch, flux, dried_fraction
+                Columns: time, Tsub, Tbot, Tsh, Pch, flux, percent_dried (0-100%)
     """
     # Column 0: Time should be non-negative and increasing
     assert np.all(output[:, 0] >= 0), "Time should be non-negative"
@@ -35,10 +50,11 @@ def assert_physically_reasonable_output(output):
     # Column 5: Flux should be non-negative
     assert np.all(output[:, 5] >= 0), "Sublimation flux should be non-negative"
     
-    # Column 6: Dried fraction should be non-negative (simulation may run past 100%)
-    assert np.all(output[:, 6] >= 0), "Dried fraction should be >= 0"
-    # Note: Dried fraction can exceed 1.0 if simulation runs past completion
-    # This is expected behavior - the simulation continues until max_time is reached
+    # Column 6: Percent dried should be between 0 and 100 (allow tiny float precision)
+    assert np.all(output[:, 6] >= 0), "Percent dried should be >= 0"
+    assert np.all(output[:, 6] <= PERCENT_MAX + FLOAT_RTOL), \
+        f"Percent dried should not exceed {PERCENT_MAX}%, got {output[:, 6].max():.10f}%"
     
-    # Dried fraction should be monotonically increasing
-    assert np.all(np.diff(output[:, 6]) >= 0), "Dried fraction should increase over time"
+    # Percent dried should be monotonically increasing
+    assert np.all(np.diff(output[:, 6]) >= -MONOTONIC_ATOL), \
+        "Percent dried should increase over time (allowing small numerical errors)"

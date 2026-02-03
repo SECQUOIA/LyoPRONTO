@@ -52,6 +52,12 @@ from lyopronto.pyomo_models.optimizers import (
     _warmstart_from_scipy_output,
 )
 
+# Import tolerance constants
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from test_helpers import PYOMO_PERCENT_COMPLETE, PERCENT_MAX, FLOAT_RTOL, INITIAL_PERCENT_ATOL
+
 
 class TestPyomoOptPchModelStructure:
     """Test that Pyomo model has correct structure for Pch optimization."""
@@ -262,8 +268,9 @@ class TestPyomoOptPchOptimization:
         
         # Check column 6: percent dried (0-100, not fraction)
         percent_dried = result[:, 6]
-        assert 0 <= percent_dried.min() <= 1.0, "Initial dryness should be near 0%"
-        assert 98.9 <= percent_dried.max() <= 101.0, "Final dryness should be near 100% (allow small numerical tolerance)"
+        assert 0 <= percent_dried.min() <= INITIAL_PERCENT_ATOL, "Initial dryness should be near 0%"
+        assert PYOMO_PERCENT_COMPLETE <= percent_dried.max() <= PERCENT_MAX + FLOAT_RTOL, \
+            "Final dryness should be ~100%"
 
 
 class TestPyomoOptPchStagedSolve:

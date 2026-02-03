@@ -11,6 +11,7 @@ import pandas as pd
 from pathlib import Path
 
 from lyopronto import calc_knownRp
+from .test_helpers import PERCENT_COMPLETE, PERCENT_MAX
 
 
 class TestWebInterfaceExample:
@@ -79,9 +80,9 @@ class TestWebInterfaceExample:
         assert max_temp <= -5.0 + 0.5, \
             f"Temperature {max_temp:.2f}°C exceeds critical temp (-5°C)"
         
-        # Check drying completion
-        assert final_dried >= 0.99, \
-            f"Final dried fraction {final_dried:.2f} < 0.99"
+        # Check drying completion (percent format: 0-100)
+        assert final_dried >= PERCENT_COMPLETE, \
+            f"Final dried percent {final_dried:.1f}% < {PERCENT_COMPLETE}%"
     
     def test_compare_with_reference_csv(self, web_interface_inputs):
         """Test that output matches reference CSV from web interface."""
@@ -221,9 +222,9 @@ class TestWebInterfaceExample:
             "Pch should be [mTorr] (150, not 0.15)"
         
         # Column 6: Dried should be percentage 0-100 (not fraction)
-        assert 0 <= output[0, 6] <= 100.0, "Dried should be percentage 0-100"
-        assert output[-1, 6] == pytest.approx(100.0, abs=1.0), \
-            "Final dried should be ~100%"
+        assert 0 <= output[0, 6] <= PERCENT_MAX, "Dried should be percentage 0-100"
+        assert output[-1, 6] == pytest.approx(PERCENT_MAX, abs=1.0), \
+            f"Final dried should be ~{PERCENT_MAX}%"
 
 
 class TestWebInterfaceComparison:

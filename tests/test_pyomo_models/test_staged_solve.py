@@ -2,7 +2,7 @@
 
 import pytest
 import numpy as np
-
+from tests.utils import PERCENT_COMPLETE
 # Try to import pyomo
 try:
     import pyomo.environ as pyo
@@ -107,16 +107,16 @@ print("="*70)
 print(f"Output shape: {output.shape}")
 print(f"Final time: {output[-1, 0]:.3f} hr")
 print(f"Final Tsub: {output[-1, 1]:.2f} °C")
-print(f"Final fraction dried: {output[-1, 6]:.4f}")
+print(f"Final percent dried: {output[-1, 6]:.2f}%")
 print(f"Max Tsub: {np.max(output[:, 1]):.2f} °C (limit: -5.0 °C)")
 
 # Check key constraints
 critical_temp_satisfied = np.all(output[:, 1] <= -4.5)
-drying_complete = output[-1, 6] >= 0.99
+drying_complete = output[-1, 6] >= PERCENT_COMPLETE
 Pch_fixed = np.allclose(output[:, 4], 150.0, rtol=0.01)  # 150 mTorr
 
-print(f"\n✓ Critical temperature satisfied: {critical_temp_satisfied}")
-print(f"✓ Drying complete (≥99%): {drying_complete}")
+print(f\"\\n✓ Critical temperature satisfied: {critical_temp_satisfied}\")
+print(f\"✓ Drying complete (≥{PERCENT_COMPLETE}%): {drying_complete}\")
 print(f"✓ Chamber pressure fixed: {Pch_fixed}")
 
 if critical_temp_satisfied and drying_complete:

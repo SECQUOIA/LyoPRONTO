@@ -52,6 +52,12 @@ from lyopronto.pyomo_models.optimizers import (
     _warmstart_from_scipy_output,
 )
 
+# Import tolerance constants
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from test_helpers import TEMP_ATOL
+
 
 class TestPyomoModelStructure:
     """Test that Pyomo model has correct mathematical structure."""
@@ -312,7 +318,7 @@ class TestReferenceData:
         
         # Product temperature should not exceed critical temperature
         # Allow small tolerance for numerical precision
-        assert np.all(Tsub <= T_crit + 0.5), \
+        assert np.all(Tsub <= T_crit + TEMP_ATOL), \\
             f"Product temperature exceeded critical: max={Tsub.max():.2f}°C, crit={T_crit}°C"
 
 

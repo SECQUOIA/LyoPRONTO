@@ -13,6 +13,7 @@ from .utils import (
     assert_physically_reasonable_output,
     assert_complete_drying,
     assert_incomplete_drying,
+    TEMP_RTOL,
 )
 
 
@@ -56,7 +57,7 @@ def opt_tsh_consistency(output, setup):
 
     # Tbot (column 2) should stay at or below T_pr_crit
     T_crit = product["T_pr_crit"]
-    assert np.all(output[:, 2] <= T_crit + 0.01), (
+    assert np.all(output[:, 2] <= T_crit + TEMP_RTOL), (
         f"Product temperature should be <= {T_crit}°C (critical)"
     )
 
@@ -165,17 +166,17 @@ class TestOptTsh:
 
         # Product temperature should not exceed critical temperature
         # Allow small tolerance for numerical precision
-        assert np.all(T_bot <= T_crit + 0.01), (
+        assert np.all(T_bot <= T_crit + TEMP_RTOL), (
             f"Product temperature exceeded critical: max={T_bot.max():.2f}°C, crit={T_crit}°C"
         )
 
         T_shelf = output[:, 3]
 
         # Shelf temperature should be within min/max bounds
-        assert np.all(T_shelf >= Tshelf["min"] - 0.01), (
+        assert np.all(T_shelf >= Tshelf["min"] - TEMP_RTOL), (
             f"Shelf temperature below minimum: min_T={T_shelf.min():.2f}°C"
         )
-        assert np.all(T_shelf <= Tshelf["max"] + 0.01), (
+        assert np.all(T_shelf <= Tshelf["max"] + TEMP_RTOL), (
             f"Shelf temperature above maximum: max_T={T_shelf.max():.2f}°C"
         )
 

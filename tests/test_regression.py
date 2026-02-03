@@ -2,6 +2,7 @@
 import pytest
 import numpy as np
 from lyopronto import calc_knownRp
+from .test_helpers import PERCENT_COMPLETE
 
 
 class TestRegressionStandardCase:
@@ -79,7 +80,7 @@ class TestRegressionStandardCase:
         assert np.isclose(final_Tsh, 20.0, rtol=0.01)  # Should reach target shelf temp
         # Flux stays relatively high (not near zero) because heat input continues
         assert final_flux > 0.5  # Flux should still be significant
-        assert final_fraction >= 0.99  # Should be essentially complete
+        assert final_fraction >= PERCENT_COMPLETE  # Should be essentially complete (percent)
 
 
 class TestRegressionParametricCases:
@@ -96,8 +97,8 @@ class TestRegressionParametricCases:
         
         output = calc_knownRp.dry(vial, product, ht, Pchamber, Tshelf, dt)
         
-        # Should complete successfully (fraction >= 0.99)
-        assert output[-1, 6] >= 0.99
+        # Should complete successfully (percent >= 99%)
+        assert output[-1, 6] >= PERCENT_COMPLETE
         
         # Drying time should be in reasonable range
         drying_time = output[-1, 0]
@@ -114,8 +115,8 @@ class TestRegressionParametricCases:
         
         output = calc_knownRp.dry(vial, product, ht, Pchamber, Tshelf, dt)
         
-        # Should complete successfully (fraction >= 0.99)
-        assert output[-1, 6] >= 0.99
+        # Should complete successfully (percent >= 99%)
+        assert output[-1, 6] >= PERCENT_COMPLETE
         
         # Check it completes (timing depends on many factors)
         drying_time = output[-1, 0]
@@ -132,8 +133,8 @@ class TestRegressionParametricCases:
         
         output = calc_knownRp.dry(vial, product, ht, Pchamber, Tshelf, dt)
         
-        # Should complete successfully (fraction >= 0.99)
-        assert output[-1, 6] >= 0.99
+        # Should complete successfully (percent >= 99%)
+        assert output[-1, 6] >= PERCENT_COMPLETE
         
         # Product temperature should stay safely cold
         assert np.all(output[:, 2] < -5.0)  # Tbot should stay below -5°C
@@ -160,7 +161,7 @@ class TestRegressionConsistency:
         # Verify column meanings are preserved
         # [time, Tsub, Tbot, Tsh, Pch_mTorr, flux, percent_dried]
         assert output[0, 0] == 0.0  # Time starts at 0
-        assert output[-1, 6] >= 99.0  # Last column is percent dried, should reach ~100%
+        assert output[-1, 6] >= PERCENT_COMPLETE  # Last column is percent dried, should reach ~100%
     
     def test_numerical_stability(self):
         """Test that simulation is numerically stable."""

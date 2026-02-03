@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import os
 from lyopronto import opt_Tsh
+from .test_helpers import PERCENT_COMPLETE, TEMP_RTOL
 
 
 class TestOptimizerWebInterface:
@@ -87,7 +88,7 @@ class TestOptimizerWebInterface:
         
         # Check that drying completes (percent dried reaches ~100%)
         percent_dried = results[:, 6]
-        assert percent_dried[-1] >= 0.99, f"Drying incomplete: {percent_dried[-1]}% dried"
+        assert percent_dried[-1] >= PERCENT_COMPLETE, f"Drying incomplete: {percent_dried[-1]:.1f}% dried"
     
     def test_optimizer_output_shape(self, optimizer_params):
         """Test that optimizer output has correct shape and columns."""
@@ -112,7 +113,7 @@ class TestOptimizerWebInterface:
         
         # Product temperature should not exceed critical temperature
         # Allow small tolerance for numerical precision
-        assert np.all(T_bot <= T_crit + 0.01), \
+        assert np.all(T_bot <= T_crit + TEMP_RTOL), \
             f"Product temperature exceeded critical: max={T_bot.max():.2f}°C, crit={T_crit}°C"
     
     def test_optimizer_shelf_temperature_bounds(self, optimizer_params):
@@ -173,7 +174,7 @@ class TestOptimizerWebInterface:
         assert np.all(dried_diffs >= 0), "Percent dried decreased"
         
         # Should end at approximately 100%
-        assert percent_dried[-1] >= 0.99
+        assert percent_dried[-1] >= PERCENT_COMPLETE
     
     def test_optimizer_matches_reference_timing(self, optimizer_params, reference_results):
         """Test that optimizer drying time matches reference output."""
@@ -263,7 +264,7 @@ class TestOptimizerWebInterface:
         # Verify results
         assert results is not None
         assert results.size > 0
-        assert results[-1, 6] >= 0.99  # Drying complete
+        assert results[-1, 6] >= PERCENT_COMPLETE  # Drying complete (percent)
 
 
 class TestOptimizerEdgeCases:
@@ -327,7 +328,7 @@ class TestOptimizerEdgeCases:
         
         # Should still complete successfully
         assert results_large is not None
-        assert results_large[-1, 6] >= 0.99
+        assert results_large[-1, 6] >= PERCENT_COMPLETE
         
         # Test with smaller time step
         dt_small = 0.005
@@ -335,7 +336,7 @@ class TestOptimizerEdgeCases:
         
         # Should still complete successfully with more steps
         assert results_small is not None
-        assert results_small[-1, 6] >= 0.99
+        assert results_small[-1, 6] >= PERCENT_COMPLETE
         assert len(results_small) > len(results_large)
     
     def test_optimizer_different_critical_temps(self, optimizer_params):

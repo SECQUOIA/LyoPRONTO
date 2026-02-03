@@ -2,7 +2,12 @@
 import pytest
 import numpy as np
 from lyopronto import calc_knownRp, calc_unknownRp
-from .test_helpers import assert_physically_reasonable_output
+from .test_helpers import (
+    assert_physically_reasonable_output,
+    PERCENT_COMPLETE,
+    PERCENT_MAX,
+    FLOAT_RTOL,
+)
 
 
 class TestCalcKnownRp:
@@ -35,10 +40,10 @@ class TestCalcKnownRp:
             standard_setup['dt']
         )
         
-        # Should reach at least 99% dried (column 6 is fraction 0-1, not percentage)
-        final_fraction_dried = output[-1, 6]
-        assert final_fraction_dried >= 0.99, \
-            f"Only {final_fraction_dried*100:.1f}% dried (fraction={final_fraction_dried:.4f})"
+        # Should reach at least 99% dried (column 6 is percent 0-100)
+        final_percent_dried = output[-1, 6]
+        assert final_percent_dried >= PERCENT_COMPLETE, \
+            f"Only {final_percent_dried:.1f}% dried"
     
     def test_reasonable_drying_time(self, standard_setup):
         """Test that drying time is in a reasonable range."""
@@ -150,9 +155,9 @@ class TestCalcKnownRp:
         
         # Higher pressure generally allows higher shelf temp without exceeding
         # critical product temp, but with same shelf temp, low pressure is better
-        # Check they both complete (fraction >= 0.99)
-        assert output_low[-1, 6] >= 0.99
-        assert output_high[-1, 6] >= 0.99
+        # Check they both complete (percent >= 99%)
+        assert output_low[-1, 6] >= PERCENT_COMPLETE
+        assert output_high[-1, 6] >= PERCENT_COMPLETE
     
     def test_concentrated_product_takes_longer(self, standard_vial, dilute_product,
                                                concentrated_product, standard_ht,
@@ -260,7 +265,7 @@ class TestEdgeCases:
         assert output.shape[0] > 0
         # Skip physical reasonableness check for this edge case
         # since very low temperatures can cause numerical issues
-        assert np.all(output[:, 6] >= 0) and np.all(output[:, 6] <= 101.0)
+        assert np.all(output[:, 6] >= 0) and np.all(output[:, 6] <= PERCENT_MAX)
         assert np.all(output[:, 5] >= 0)  # Non-negative flux
     
     def test_very_small_fill(self, standard_setup):
@@ -277,8 +282,8 @@ class TestEdgeCases:
             setup['dt']
         )
         
-        # Should complete quickly (fraction >= 0.99)
-        assert output[-1, 6] >= 0.99
+        # Should complete quickly (percent >= 99%)
+        assert output[-1, 6] >= PERCENT_COMPLETE
         assert output[-1, 0] < 20.0  # Should dry in less than 20 hours
     
     def test_high_resistance_product(self, standard_setup):
@@ -296,7 +301,7 @@ class TestEdgeCases:
         )
         
         # High resistance means longer drying, but check it completes
-        assert output[-1, 6] >= 0.99  # Should eventually complete
+        assert output[-1, 6] >= PERCENT_COMPLETE  # Should eventually complete
         # Note: May not take >20 hours depending on other parameters
 
 

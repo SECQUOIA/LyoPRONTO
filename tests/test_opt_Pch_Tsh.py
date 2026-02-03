@@ -8,7 +8,7 @@ Tests based on working example_optimizer.py structure.
 import pytest
 import numpy as np
 from lyopronto import opt_Pch_Tsh, opt_Pch, constant, opt_Tsh
-from .utils import assert_physically_reasonable_output, assert_complete_drying
+from .utils import assert_physically_reasonable_output, assert_complete_drying, TEMP_RTOL
 
 # Constants for test assertions
 MAX_AGGRESSIVE_OPTIMIZATION_TIME = (
@@ -111,7 +111,7 @@ def opt_both_consistency(output, setup):
 
     # Tbot (column 2) should stay at or below T_pr_crit
     T_crit = product["T_pr_crit"]
-    assert np.all(output[:, 2] <= T_crit + 0.01), (
+    assert np.all(output[:, 2] <= T_crit + TEMP_RTOL), (
         f"Product temperature should be <= {T_crit}°C (critical)"
     )
 

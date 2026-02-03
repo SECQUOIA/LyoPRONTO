@@ -3,6 +3,46 @@
 import numpy as np
 
 
+# =============================================================================
+# Test Tolerance Constants
+# =============================================================================
+# These tolerances are used consistently across all tests to ensure disciplined
+# assertions while accounting for numerical precision.
+
+# Machine precision tolerance for floating point comparisons
+FLOAT_RTOL = 1e-10
+
+# Tolerance for checking monotonicity (allows small numerical wobbles from integration)
+MONOTONIC_ATOL = 1e-6
+
+# Tolerance for numerical precision in temperature comparisons
+TEMP_RTOL = 0.01  # °C - for tight numerical precision checks
+
+# Tolerance for temperature constraint checks (numerical optimization tolerance)
+TEMP_ATOL = 0.5  # °C - for looser optimization tolerance
+
+# Tolerance for initial percent values (should be near zero)
+INITIAL_PERCENT_ATOL = 1.0  # percent
+
+# Tolerance for percent dried comparisons (allows small interpolation/numerical error)
+PERCENT_ATOL = 0.5  # percent - for looser percentage checks
+
+# Tolerance for pressure comparisons in mTorr
+PRESSURE_ATOL = 1.0  # mTorr
+
+# Percent dried threshold for considering drying "complete" (scipy)
+PERCENT_COMPLETE = 99.0
+
+# Pyomo solver tolerance (relative to PERCENT_COMPLETE)
+PYOMO_SOLVER_TOL = 0.01  # Pyomo may return 98.999... instead of 99.0
+
+# Percent dried threshold for Pyomo solver
+PYOMO_PERCENT_COMPLETE = PERCENT_COMPLETE - PYOMO_SOLVER_TOL
+
+# Maximum percent dried value (should never exceed 100% except for float precision)
+PERCENT_MAX = 100.0
+
+
 def assert_physically_reasonable_output(output, Tmax=60):
     """
     Assert that simulation output is physically reasonable.
@@ -65,13 +105,13 @@ def assert_physically_reasonable_output(output, Tmax=60):
         "Chamber pressure unreasonably high (check units)"
     )
 
-    # Percent dried should be between 0 and 100
-    assert np.all(output[:, 6] >= 0) and np.all(output[:, 6] <= 101.0), (
-        "Percent dried should be between 0 and 100 (allowing small numerical overshoot)"
+    # Percent dried should be between 0 and 100 (allow tiny floating point tolerance)
+    assert np.all(output[:, 6] >= 0) and np.all(output[:, 6] <= PERCENT_MAX + FLOAT_RTOL), (
+        f"Percent dried should be between 0 and {PERCENT_MAX}, got max={output[:, 6].max():.10f}"
     )
 
     # Percent dried should be monotonically increasing
-    assert np.all(np.diff(output[:, 6]) >= -1e-6), (
+    assert np.all(np.diff(output[:, 6]) >= -MONOTONIC_ATOL), (
         "Percent dried should be monotonically increasing (allowing small numerical errors)"
     )
 
@@ -84,7 +124,7 @@ def assert_complete_drying(output):
         output: numpy array with columns [time, Tsub, Tbot, Tsh, Pch_mTorr, flux, frac_dried]
     """
     final_percent_dried = output[-1, 6]
-    assert final_percent_dried >= 99.0, (
+    assert final_percent_dried >= PERCENT_COMPLETE, (
         f"Drying did not complete, reached only {final_percent_dried:.1f}%"
     )
 
@@ -97,6 +137,6 @@ def assert_incomplete_drying(output):
         output: numpy array with columns [time, Tsub, Tbot, Tsh, Pch_mTorr, flux, frac_dried]
     """
     final_percent_dried = output[-1, 6]
-    assert final_percent_dried < 99.0, (
+    assert final_percent_dried < PERCENT_COMPLETE, (
         f"Drying unexpectedly completed, reached {final_percent_dried:.1f}%"
     )

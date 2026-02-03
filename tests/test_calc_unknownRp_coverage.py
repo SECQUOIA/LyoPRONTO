@@ -1,9 +1,14 @@
-"""Tests for calc_unknownRp.py to increase coverage from 11% to 80%+."""
+"""Tests for calc_unknownRp.py to increase coverage."""
 import pytest
 import numpy as np
 import os
 from lyopronto import calc_unknownRp
-from .test_helpers import assert_physically_reasonable_output
+from .test_helpers import (
+    assert_physically_reasonable_output,
+    PERCENT_MAX,
+    FLOAT_RTOL,
+    MONOTONIC_ATOL,
+)
 
 
 class TestCalcUnknownRp:
@@ -194,15 +199,16 @@ class TestCalcUnknownRp:
             unknown_rp_setup['Tbot_exp']
         )
         
-        final_fraction = output[-1, 6]
+        final_percent = output[-1, 6]
         # Parameter estimation may have limited progress - check for any drying
-        assert final_fraction > 0.0, \
-            f"Should show drying progress, got {final_fraction*100:.1f}%"
-        # Note: Simulation may run past 100% completion if max_time is long enough
-        # This is expected behavior - just check we made progress
+        assert final_percent > 0.0, \
+            f"Should show drying progress, got {final_percent:.1f}%"
+        # Percent dried must not exceed 100%
+        assert final_percent <= PERCENT_MAX + FLOAT_RTOL, \
+            f"Percent dried should not exceed {PERCENT_MAX}%, got {final_percent:.10f}%"
     
-    def test_unknown_rp_fraction_dried_monotonic(self, unknown_rp_setup):
-        """Test fraction dried increases monotonically."""
+    def test_unknown_rp_percent_dried_monotonic(self, unknown_rp_setup):
+        """Test percent dried increases monotonically."""
         output, product_res = calc_unknownRp.dry(
             unknown_rp_setup['vial'],
             unknown_rp_setup['product'],
@@ -213,11 +219,11 @@ class TestCalcUnknownRp:
             unknown_rp_setup['Tbot_exp']
         )
         
-        frac_dried = output[:, 6]
+        percent_dried = output[:, 6]
         
-        # Fraction dried should be monotonically increasing
-        diffs = np.diff(frac_dried)
-        assert np.all(diffs >= -1e-6), "Fraction dried must increase monotonically"
+        # Percent dried should be monotonically increasing
+        diffs = np.diff(percent_dried)
+        assert np.all(diffs >= -MONOTONIC_ATOL), "Percent dried must increase monotonically"
     
     def test_unknown_rp_flux_positive(self, unknown_rp_setup):
         """Test sublimation flux is non-negative."""

@@ -1,4 +1,4 @@
-"""Additional tests to reach 100% coverage for functions.py and design_space.py."""
+"""Additional tests for coverage of functions.py and design_space.py."""
 import pytest
 import numpy as np
 from lyopronto import functions, design_space

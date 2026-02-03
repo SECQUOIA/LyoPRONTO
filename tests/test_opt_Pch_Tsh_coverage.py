@@ -1,8 +1,9 @@
-"""Tests for opt_Pch_Tsh.py to increase coverage from 19% to 80%+."""
+"""Tests for opt_Pch_Tsh.py to increase coverage."""
 import pytest
 import numpy as np
 from lyopronto import opt_Pch_Tsh, opt_Pch, opt_Tsh
-from .test_helpers import assert_physically_reasonable_output
+from .test_helpers import assert_physically_reasonable_output, PERCENT_COMPLETE
+from .utils import TEMP_ATOL, TEMP_RTOL
 
 
 class TestOptPchTsh:
@@ -183,7 +184,7 @@ class TestOptPchTsh:
         # Should not exceed equipment capability (with small tolerance)
         violations = dmdt - eq_cap_max
         max_violation = np.max(violations)
-        assert max_violation <= 0.01, \
+        assert max_violation <= TEMP_RTOL, \
             f"Equipment capability exceeded by {max_violation:.4f} kg/hr"
     
     @pytest.mark.slow
@@ -216,9 +217,9 @@ class TestOptPchTsh:
             opt_both_setup['nVial']
         )
         
-        final_fraction = output[-1, 6]
-        assert final_fraction >= 0.99, \
-            f"Should reach 99% dried, got {final_fraction*100:.1f}%"
+        final_percent = output[-1, 6]
+        assert final_percent >= PERCENT_COMPLETE, \
+            f"Should reach {PERCENT_COMPLETE}% dried, got {final_percent:.1f}%"
     
     @pytest.mark.slow
     def test_opt_both_convergence(self, opt_both_setup):
@@ -441,7 +442,7 @@ class TestOptPchTshEdgeCases:
         T_crit = conservative_setup['product']['T_pr_crit']
         
         # Should respect conservative constraint
-        assert np.max(Tbot) <= T_crit + 0.5
+        assert np.max(Tbot) <= T_crit + TEMP_ATOL
     
     @pytest.mark.slow
     def test_high_product_resistance(self, conservative_setup):

@@ -12,6 +12,7 @@ from .utils import (
     assert_physically_reasonable_output,
     assert_complete_drying,
     assert_incomplete_drying,
+    TEMP_RTOL,
 )
 
 
@@ -53,7 +54,7 @@ def opt_pch_consistency(output, setup):
 
     # Tbot (column 2) should stay at or below T_pr_crit
     T_crit = product["T_pr_crit"]
-    assert np.all(output[:, 2] <= T_crit + 0.01), (
+    assert np.all(output[:, 2] <= T_crit + TEMP_RTOL), (
         f"Product temperature should be <= {T_crit}°C (critical)"
     )
 
