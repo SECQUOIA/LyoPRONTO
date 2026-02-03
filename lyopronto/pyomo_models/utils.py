@@ -35,7 +35,7 @@ def initialize_from_scipy(scipy_output, time_index, vial, product, Lpr0, ht=None
     Args:
         scipy_output (np.ndarray): Output from opt_Pch_Tsh.dry() or similar,
             with shape (n_steps, 7) and columns:
-            [time, Tsub, Tbot, Tsh, Pch_mTorr, flux, frac_dried]
+            [time, Tsub, Tbot, Tsh, Pch_mTorr, flux, percent_dried (0-100)]
         time_index (int): Index of the time step to extract (0-based)
         vial (dict): Vial geometry with 'Av', 'Ap' keys
         product (dict): Product properties with 'R0', 'A1', 'A2' keys
@@ -59,14 +59,15 @@ def initialize_from_scipy(scipy_output, time_index, vial, product, Lpr0, ht=None
         >>> # Use warmstart dict to initialize Pyomo model
     """
     # Extract values from scipy output
-    # Columns: [time, Tsub, Tbot, Tsh, Pch_mTorr, flux, frac_dried]
+    # Columns: [time, Tsub, Tbot, Tsh, Pch_mTorr, flux, percent_dried]
     Tsub = scipy_output[time_index, 1]
     Tbot = scipy_output[time_index, 2]
     Tsh = scipy_output[time_index, 3]
     Pch = scipy_output[time_index, 4] / constant.Torr_to_mTorr  # mTorr → Torr
-    frac_dried = scipy_output[time_index, 6]
+    percent_dried = scipy_output[time_index, 6]  # 0-100 percentage
     
     # Calculate derived quantities
+    frac_dried = percent_dried / 100.0  # Convert percentage to fraction (0-1)
     Lck = frac_dried * Lpr0  # Current dried cake length [cm]
     Rp = functions.Rp_FUN(Lck, product['R0'], product['A1'], product['A2'])
     Psub = functions.Vapor_pressure(Tsub)

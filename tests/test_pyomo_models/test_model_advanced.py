@@ -317,12 +317,13 @@ class TestScipyComparison:
     """Tests comparing Pyomo single-step with scipy baseline optimization."""
     
     @pytest.mark.slow
-    def test_single_step_produces_valid_optimization(self, standard_vial, standard_product, standard_ht):
-        """Verify Pyomo single-step produces physically valid optimized controls.
+    def test_matches_scipy_single_step(self, standard_vial, standard_product, standard_ht):
+        """Verify Pyomo matches scipy at multiple time points.
         
-        Note: Single-step optimization at each point may find different solutions
-        than scipy's trajectory approach. We verify physical validity rather than
-        exact match to scipy values.
+        This test validates that the Pyomo single-step model produces the same
+        optimal solutions as scipy's sequential optimizer when initialized with
+        scipy's solution (warmstart). The key is using percent_dried/100 to get
+        the correct fraction for Lck calculation.
         """
         Lpr0 = functions.Lpr0_FUN(2.0, standard_vial['Ap'], standard_product['cSolid'])
         eq_cap = {'a': -0.182, 'b': 11.7}
@@ -339,7 +340,10 @@ class TestScipyComparison:
         test_indices = [len(scipy_output)//4, len(scipy_output)//2]
         
         for idx in test_indices:
-            frac_dried = scipy_output[idx, 6]
+            percent_dried = scipy_output[idx, 6]  # 0-100 percentage
+            frac_dried = percent_dried / 100.0  # Convert to fraction (0-1)
+            scipy_Pch = scipy_output[idx, 4] / constant.Torr_to_mTorr
+            scipy_Tsh = scipy_output[idx, 3]
             Lck = frac_dried * Lpr0
             
             if Lck < 0.01:  # Skip near-zero drying
@@ -356,17 +360,11 @@ class TestScipyComparison:
                 warmstart_data=warmstart, tee=False
             )
             
-            # Verify solution is within physical bounds
-            assert 0.05 <= pyomo_solution['Pch'] <= 0.5, \
-                f"Pch={pyomo_solution['Pch']:.3f} out of bounds [0.05, 0.5]"
-            assert -45.0 <= pyomo_solution['Tsh'] <= 120.0, \
-                f"Tsh={pyomo_solution['Tsh']:.1f} out of bounds [-45, 120]"
-            
-            # Verify temperatures are physically reasonable
-            assert pyomo_solution['Tsub'] < 0, "Sublimation temp should be below freezing"
-            # Allow small tolerance for Tbot >= Tsub (numerical solver tolerance)
-            assert pyomo_solution['Tbot'] >= pyomo_solution['Tsub'] - 1.0, \
-                f"Tbot ({pyomo_solution['Tbot']:.2f}) should be near or above Tsub ({pyomo_solution['Tsub']:.2f})"
+            # Pyomo should match scipy within 5% tolerance
+            assert np.isclose(pyomo_solution['Pch'], scipy_Pch, rtol=0.05), \
+                f"Pch mismatch: pyomo={pyomo_solution['Pch']:.4f}, scipy={scipy_Pch:.4f}"
+            assert np.isclose(pyomo_solution['Tsh'], scipy_Tsh, rtol=0.05, atol=1.0), \
+                f"Tsh mismatch: pyomo={pyomo_solution['Tsh']:.2f}, scipy={scipy_Tsh:.2f}"
     
     @pytest.mark.slow
     def test_energy_balance_consistency(self, standard_vial, standard_product, standard_ht):
