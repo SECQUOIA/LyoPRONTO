@@ -72,8 +72,7 @@ class TestOptimizerWebInterface:
         """Load reference results from web interface optimizer output."""
         csv_path = 'test_data/reference_optimizer.csv'
         df = pd.read_csv(csv_path, sep=';')
-        # Convert percent dried from percentage (0-100) to fraction (0-1) to match current output format
-        df['Percent Dried'] = df['Percent Dried'] / 100.0
+        # Percent Dried is already in percentage format (0-100) matching current output
         return df
     
     def test_optimizer_completes(self, optimizer_params):

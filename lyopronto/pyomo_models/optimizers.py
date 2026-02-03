@@ -1226,15 +1226,15 @@ def _warmstart_from_scipy_output(
     Tbot_scipy = scipy_output[:, 2]  # °C
     Tsh_scipy = scipy_output[:, 3]   # °C
     Pch_scipy = scipy_output[:, 4] / 1000  # mTorr → Torr
-    frac_scipy = scipy_output[:, 6]  # 0-1
+    percent_scipy = scipy_output[:, 6]  # 0-100
     
     # Get final time and normalize
     t_final_scipy = time_scipy[-1]
     model.t_final.set_value(t_final_scipy)
     
-    # Calculate Lck from fraction dried
+    # Calculate Lck from percent dried
     Lpr0 = functions.Lpr0_FUN(vial['Vfill'], vial['Ap'], product['cSolid'])
-    Lck_scipy = frac_scipy * Lpr0
+    Lck_scipy = (percent_scipy / 100.0) * Lpr0
     
     # **CRITICAL**: Update initial condition constraints to match scipy
     # Scipy's initial state may not be at -40°C due to solver behavior
@@ -1321,7 +1321,7 @@ def _extract_output_array(
         
     Returns:
         output (ndarray): Shape (n_points, 7) with columns:
-            [time, Tsub, Tbot, Tsh, Pch_mTorr, flux, frac_dried]
+            [time, Tsub, Tbot, Tsh, Pch_mTorr, flux, percent_dried]
     """
     # Calculate total product length once
     Lpr0 = functions.Lpr0_FUN(vial['Vfill'], vial['Ap'], product['cSolid'])
@@ -1342,9 +1342,9 @@ def _extract_output_array(
         # Convert to output format
         Pch_mTorr = Pch_torr * 1000
         flux = dmdt / (vial['Ap'] * 0.01**2)  # kg/hr/m²
-        frac_dried = Lck / Lpr0 if Lpr0 > 0 else 0.0
+        percent_dried = (Lck / Lpr0 * 100.0) if Lpr0 > 0 else 0.0
         
-        output.append([time_hr, Tsub, Tbot, Tsh, Pch_mTorr, flux, frac_dried])
+        output.append([time_hr, Tsub, Tbot, Tsh, Pch_mTorr, flux, percent_dried])
     
     return np.array(output)
 

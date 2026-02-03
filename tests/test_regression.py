@@ -158,9 +158,9 @@ class TestRegressionConsistency:
         assert output.shape[1] == 7
         
         # Verify column meanings are preserved
-        # [time, Tsub, Tbot, Tsh, Pch_mTorr, flux, frac_dried]
+        # [time, Tsub, Tbot, Tsh, Pch_mTorr, flux, percent_dried]
         assert output[0, 0] == 0.0  # Time starts at 0
-        assert output[-1, 6] >= 0.99  # Last column is fraction dried, should reach ~1.0
+        assert output[-1, 6] >= 99.0  # Last column is percent dried, should reach ~100%
     
     def test_numerical_stability(self):
         """Test that simulation is numerically stable."""

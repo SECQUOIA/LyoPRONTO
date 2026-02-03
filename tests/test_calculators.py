@@ -260,7 +260,7 @@ class TestEdgeCases:
         assert output.shape[0] > 0
         # Skip physical reasonableness check for this edge case
         # since very low temperatures can cause numerical issues
-        assert np.all(output[:, 6] >= 0) and np.all(output[:, 6] <= 1.01)
+        assert np.all(output[:, 6] >= 0) and np.all(output[:, 6] <= 101.0)
         assert np.all(output[:, 5] >= 0)  # Non-negative flux
     
     def test_very_small_fill(self, standard_setup):

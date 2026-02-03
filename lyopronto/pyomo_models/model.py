@@ -404,7 +404,7 @@ def warmstart_from_scipy_trajectory(
     Args:
         model (ConcreteModel): Pyomo model to initialize
         scipy_trajectory (ndarray): Output from calc_knownRp.dry()
-            Columns: [time, Tsub, Tbot, Tsh, Pch, flux, frac_dried]
+            Columns: [time, Tsub, Tbot, Tsh, Pch, flux, percent_dried]
         vial (dict): Vial parameters (needed for Lck calculation)
         product (dict): Product parameters (needed for Lck calculation)
         ht (dict): Heat transfer parameters
@@ -415,7 +415,7 @@ def warmstart_from_scipy_trajectory(
     Tbot_scipy = scipy_trajectory[:, 2]  # Tbot [°C]
     Tsh_scipy = scipy_trajectory[:, 3]  # Tsh [°C]
     Pch_scipy = scipy_trajectory[:, 4] / 1000.0  # Pch [Torr] (from mTorr)
-    frac_dried_scipy = scipy_trajectory[:, 6]  # Fraction dried [0-1]
+    percent_dried_scipy = scipy_trajectory[:, 6]  # Percent dried [0-100]
     
     # Get Pyomo time points (normalized to [0, 1])
     t_pyomo = sorted(model.t)
@@ -439,7 +439,7 @@ def warmstart_from_scipy_trajectory(
         Tbot_interp = np.interp(t_actual, t_scipy, Tbot_scipy)
         Tsh_interp = np.interp(t_actual, t_scipy, Tsh_scipy)
         Pch_interp = np.interp(t_actual, t_scipy, Pch_scipy)
-        frac_interp = np.interp(t_actual, t_scipy, frac_dried_scipy)
+        percent_interp = np.interp(t_actual, t_scipy, percent_dried_scipy)
         
         # Set variable values
         model.Tsub[t_norm].set_value(Tsub_interp)
@@ -447,8 +447,8 @@ def warmstart_from_scipy_trajectory(
         model.Tsh[t_norm].set_value(Tsh_interp)
         model.Pch[t_norm].set_value(Pch_interp)
         
-        # Compute Lck from fraction dried
-        Lck_interp = frac_interp * Lpr0
+        # Compute Lck from percent dried (convert to fraction first)
+        Lck_interp = (percent_interp / 100.0) * Lpr0
         model.Lck[t_norm].set_value(Lck_interp)
         
         # Compute algebraic variables

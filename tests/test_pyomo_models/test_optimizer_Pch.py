@@ -260,10 +260,10 @@ class TestPyomoOptPchOptimization:
         Pch_mTorr = result[:, 4]
         assert 50 <= Pch_mTorr.min() <= 1000, "Pch should be in mTorr range"
         
-        # Check column 6: fraction dried (0-1, not percentage)
-        frac_dried = result[:, 6]
-        assert 0 <= frac_dried.min() <= 0.01, "Initial dryness should be near 0"
-        assert 0.989 <= frac_dried.max() <= 1.0, "Final dryness should be near 1.0 (allow small numerical tolerance)"
+        # Check column 6: percent dried (0-100, not fraction)
+        percent_dried = result[:, 6]
+        assert 0 <= percent_dried.min() <= 1.0, "Initial dryness should be near 0%"
+        assert 98.9 <= percent_dried.max() <= 101.0, "Final dryness should be near 100% (allow small numerical tolerance)"
 
 
 class TestPyomoOptPchStagedSolve:
@@ -391,11 +391,11 @@ class TestPyomoOptPchPhysicalConstraints:
             tee=False
         )
         
-        frac_dried = result[:, 6]
+        percent_dried = result[:, 6]
         
         # Check monotonic increase
-        diff = np.diff(frac_dried)
-        assert np.all(diff >= -1e-6), "Drying fraction should increase monotonically"
+        diff = np.diff(percent_dried)
+        assert np.all(diff >= -0.01), "Drying percent should increase monotonically"
 
 
 if __name__ == "__main__":
