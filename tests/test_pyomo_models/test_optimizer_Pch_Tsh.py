@@ -53,10 +53,7 @@ from lyopronto.pyomo_models.optimizers import (
 )
 
 # Import tolerance constants
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from test_helpers import PYOMO_PERCENT_COMPLETE, PERCENT_MAX, FLOAT_RTOL, INITIAL_PERCENT_ATOL
+from tests.utils import PYOMO_PERCENT_COMPLETE, PERCENT_MAX, FLOAT_RTOL, INITIAL_PERCENT_ATOL
 
 
 class TestPyomoOptPchTshModelStructure:
