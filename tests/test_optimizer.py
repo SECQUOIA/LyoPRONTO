@@ -267,8 +267,8 @@ class TestOptimizerWebInterface:
         assert results[-1, 6] >= PERCENT_COMPLETE  # Drying complete (percent)
 
 
-class TestOptimizerEdgeCases:
-    """Test edge cases and error handling for optimizer."""
+class TestOptimizerWebEdgeCases:
+    """Test edge cases and error handling for web interface optimizer."""
     
     @pytest.fixture
     def optimizer_params(self):

@@ -10,8 +10,8 @@ from .utils import (
 )
 
 
-class TestCalcKnownRp:
-    """Tests for the calc_knownRp.dry calculator."""
+class TestCalculatorsCalcKnownRp:
+    """Tests for the calc_knownRp.dry calculator in integration context."""
     
     def test_dry_completes_successfully(self, standard_setup):
         """Test that primary drying calculator completes without errors."""
@@ -237,8 +237,8 @@ class TestCalcKnownRp:
         assert np.isclose(time_coarse, time_fine, rtol=0.05)
 
 
-class TestEdgeCases:
-    """Tests for edge cases and error handling."""
+class TestCalculatorsEdgeCases:
+    """Tests for edge cases and error handling in calculator integration."""
     
     def test_very_low_shelf_temperature(self, standard_setup):
         """Test with very low shelf temperature (should dry very slowly or not at all).
