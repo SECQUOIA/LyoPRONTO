@@ -7,8 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.0] - 2026-01-12
-
 ### Added
 
 #### Pyomo-Based Optimization Framework
@@ -34,11 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Schema v2**: Structured output with trajectories, metadata, and content hashing
 
 #### Documentation
-- `docs/PYOMO_ROADMAP.md`: Comprehensive 500+ line development roadmap
-- `docs/COEXISTENCE_PHILOSOPHY.md`: scipy/Pyomo coexistence design philosophy
 - `docs/PHYSICS_REFERENCE.md`: Physics equations and model documentation
-- `docs/GETTING_STARTED.md`: Developer onboarding guide
-- `examples/example_pyomo_optimizer.py`: Working usage example (177 lines)
+- `examples/example_pyomo_optimizer.py`: Working usage example
 
 #### Testing Infrastructure
 - 93% code coverage on Pyomo modules
@@ -129,14 +124,4 @@ Both scipy and Pyomo optimizers will continue to be maintained:
 - **scipy**: Fast, reliable, good for most use cases
 - **Pyomo**: Rigorous DAE formulation, extensible, better for research
 
-See `docs/COEXISTENCE_PHILOSOPHY.md` for detailed rationale.
-
----
-
-## Version History
-
-- **1.0.0** (2026-01-12): Major release with Pyomo integration
-- **0.x.x** (Pre-2026): Initial development versions (scipy-only)
-
-[Unreleased]: https://github.com/LyoHUB/LyoPRONTO/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/LyoHUB/LyoPRONTO/releases/tag/v1.0.0
+[Unreleased]: https://github.com/LyoHUB/LyoPRONTO/compare/main...HEAD

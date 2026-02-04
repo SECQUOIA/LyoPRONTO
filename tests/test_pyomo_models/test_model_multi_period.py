@@ -441,8 +441,19 @@ class TestModelStructuralAnalysis:
         Block triangularization requires a square system (DOF = 0).
         We fix controls (Pch, Tsh) and t_final to make the system square.
         
-        Note: Currently xfailed because multi-period model has additional
-        degrees of freedom from initial conditions and derivative variables.
+        KNOWN LIMITATION (xfailed):
+        The multi-period DAE model has additional degrees of freedom from:
+        1. Initial condition variables (Tsub[0], Tbot[0], frac_dried[0], etc.)
+        2. Derivative variables at collocation points
+        3. Discretization artifacts from orthogonal collocation
+        
+        Unlike the single-step model (which can be made square by fixing Pch, Tsh),
+        the multi-period model has ~5 extra DOF that would require:
+        - Fixing initial state variables explicitly
+        - Or adding initial condition constraints
+        
+        This is a structural analysis limitation, NOT a functional bug.
+        The optimizer converges correctly via the 4-stage solve framework.
         
         Following Pyomo tutorial:
         https://pyomo.readthedocs.io/en/6.8.1/explanation/analysis/incidence/tutorial.bt.html

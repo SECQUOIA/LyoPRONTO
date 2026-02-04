@@ -1,5 +1,9 @@
 # ----------- Files excluded for this project
 #
+# Local AI assistant instructions (not tracked in repo)
+.github/copilot-instructions.md
+.github/copilot-examples.md
+
 # Python precompiled files
 *.pyc
 __pycache__/
