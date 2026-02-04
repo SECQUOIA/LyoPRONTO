@@ -14,7 +14,7 @@ IDX_TBOT = 2
 IDX_TSH  = 3
 IDX_PCH  = 4  # mTorr
 IDX_FLUX = 5
-IDX_FRAC = 6
+IDX_PERCENT = 6  # percent_dried (0-100%)
 
 def _safe(arr: np.ndarray) -> np.ndarray:
     return arr if arr.size else np.array([])
@@ -24,31 +24,31 @@ def compute_residuals(traj: np.ndarray) -> Dict[str, Any]:
     if traj.size == 0:
         return {
             "n_points": 0,
-            "final_frac_dried": None,
+            "final_percent_dried": None,
             "monotonic_dried": None,
             "tsh_bounds_ok": None,
             "pch_positive": None,
             "flux_nonnegative": None,
             "dryness_target_met": None,
         }
-    frac = traj[:, IDX_FRAC]
+    percent = traj[:, IDX_PERCENT]
     tsh = traj[:, IDX_TSH]
     pch_mTorr = traj[:, IDX_PCH]
     flux = traj[:, IDX_FLUX]
 
     # Monotonicity (allow tiny numerical dips)
-    diffs = np.diff(frac)
-    monotonic = bool(np.all(diffs >= -1e-4))
+    diffs = np.diff(percent)
+    monotonic = bool(np.all(diffs >= -1e-2))  # tolerance in percentage units
 
     tsh_ok = bool(np.all((tsh > -60) & (tsh < 60)))
     pch_pos = bool(np.all(pch_mTorr > 0))
     flux_ok = bool(np.all(flux >= -1e-8))
 
-    dryness_target = frac[-1] >= 0.989 - 1e-3
+    dryness_target = percent[-1] >= 98.9 - 0.1  # 98.8% threshold
 
     return {
         "n_points": int(traj.shape[0]),
-        "final_frac_dried": float(frac[-1]),
+        "final_percent_dried": float(percent[-1]),
         "monotonic_dried": monotonic,
         "tsh_bounds_ok": tsh_ok,
         "pch_positive": pch_pos,
@@ -72,7 +72,7 @@ def compare_trajectories(
     Parameters
     ----------
     scipy_traj : np.ndarray
-        Scipy trajectory array (n_scipy, 7): time, Tsub, Tbot, Tsh, Pch_mTorr, flux, frac_dried
+        Scipy trajectory array (n_scipy, 7): time, Tsub, Tbot, Tsh, Pch_mTorr, flux, percent_dried
     pyomo_traj : np.ndarray
         Pyomo trajectory array (n_pyomo, 7): same columns
     rtol : float
@@ -94,7 +94,7 @@ def compare_trajectories(
         - max_Tsub_diff: float (max sublimation temp difference in °C)
         - rmse_Tsh: float (RMSE of shelf temperature)
         - rmse_Pch: float (RMSE of chamber pressure)
-        - mean_frac_dried_diff: float (mean difference in drying fraction)
+        - mean_percent_dried_diff: float (mean difference in drying percentage)
         - n_scipy_points: int
         - n_pyomo_points: int
         - interpolated: bool (True if interpolation was used)
@@ -110,7 +110,7 @@ def compare_trajectories(
             "max_Tsub_diff": None,
             "rmse_Tsh": None,
             "rmse_Pch": None,
-            "mean_frac_dried_diff": None,
+            "mean_percent_dried_diff": None,
             "n_scipy_points": len(scipy_traj) if scipy_traj.size > 0 else 0,
             "n_pyomo_points": len(pyomo_traj) if pyomo_traj.size > 0 else 0,
             "interpolated": False,
@@ -146,7 +146,7 @@ def compare_trajectories(
             "max_Tsub_diff": None,
             "rmse_Tsh": None,
             "rmse_Pch": None,
-            "mean_frac_dried_diff": None,
+            "mean_percent_dried_diff": None,
             "n_scipy_points": len(scipy_traj),
             "n_pyomo_points": len(pyomo_traj),
             "interpolated": False,
@@ -156,7 +156,7 @@ def compare_trajectories(
     # Interpolate Pyomo values onto common time grid
     pyomo_interp = np.zeros((len(t_common), 7))
     pyomo_interp[:, IDX_TIME] = t_common
-    for col in [IDX_TSUB, IDX_TBOT, IDX_TSH, IDX_PCH, IDX_FLUX, IDX_FRAC]:
+    for col in [IDX_TSUB, IDX_TBOT, IDX_TSH, IDX_PCH, IDX_FLUX, IDX_PERCENT]:
         pyomo_interp[:, col] = np.interp(t_common, t_pyomo, pyomo_traj[:, col])
 
     # Get scipy values at common times
@@ -166,7 +166,7 @@ def compare_trajectories(
     Tsh_diff = pyomo_interp[:, IDX_TSH] - scipy_common[:, IDX_TSH]
     Pch_diff = pyomo_interp[:, IDX_PCH] - scipy_common[:, IDX_PCH]
     Tsub_diff = pyomo_interp[:, IDX_TSUB] - scipy_common[:, IDX_TSUB]
-    dried_diff = pyomo_interp[:, IDX_FRAC] - scipy_common[:, IDX_FRAC]
+    dried_diff = pyomo_interp[:, IDX_PERCENT] - scipy_common[:, IDX_PERCENT]
 
     max_Tsh_diff = float(np.max(np.abs(Tsh_diff)))
     max_Pch_diff = float(np.max(np.abs(Pch_diff)))
@@ -190,7 +190,7 @@ def compare_trajectories(
         "max_Tsub_diff": max_Tsub_diff,
         "rmse_Tsh": rmse_Tsh,
         "rmse_Pch": rmse_Pch,
-        "mean_frac_dried_diff": mean_dried_diff,
+        "mean_percent_dried_diff": mean_dried_diff,
         "n_scipy_points": len(scipy_traj),
         "n_pyomo_points": len(pyomo_traj),
         "interpolated": True,

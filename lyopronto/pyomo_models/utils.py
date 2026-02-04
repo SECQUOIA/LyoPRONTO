@@ -49,7 +49,7 @@ def initialize_from_scipy(scipy_output, time_index, vial, product, Lpr0, ht=None
     
     Notes:
         - Pch is converted from mTorr to Torr (divides by 1000)
-        - Lck is calculated from frac_dried
+        - Lck is calculated from percent_dried (column 6 is 0-100%, converted to fraction)
         - Derived quantities (Psub, dmdt, Kv) are computed from physics functions
     
     Examples:
@@ -107,12 +107,12 @@ def extract_solution_to_array(solution, time):
     
     Returns:
         np.ndarray: Array of shape (7,) with columns:
-            [time, Tsub, Tbot, Tsh, Pch_mTorr, flux, frac_dried]
+            [time, Tsub, Tbot, Tsh, Pch_mTorr, flux, percent_dried]
     
     Notes:
         - Pch is converted from Torr to mTorr
         - flux is dmdt normalized by product area
-        - frac_dried must be computed externally (requires Lck and Lpr0)
+        - percent_dried must be computed externally (requires Lck and Lpr0)
     
     Examples:
         >>> solution = solve_single_step(model)
@@ -127,7 +127,7 @@ def extract_solution_to_array(solution, time):
         solution['Tsh'],
         solution['Pch'] * constant.Torr_to_mTorr,  # Torr → mTorr
         solution['dmdt'],  # Note: needs conversion to flux [kg/hr/m²]
-        0.0,  # frac_dried - needs to be computed externally
+        0.0,  # percent_dried - needs to be computed externally
     ])
     
     return output

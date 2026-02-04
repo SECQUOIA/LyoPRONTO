@@ -1,7 +1,7 @@
 """Adapters normalizing scipy and Pyomo optimizer outputs.
 
 Each adapter returns a dictionary with standardized keys:
-- trajectory: np.ndarray (time, Tsub, Tbot, Tsh, Pch_mTorr, flux, frac_dried)
+- trajectory: np.ndarray (time, Tsub, Tbot, Tsh, Pch_mTorr, flux, percent_dried)
 - success: bool
 - message: str
 - raw: original solver output or model reference
@@ -15,7 +15,7 @@ import numpy as np
 from lyopronto import opt_Tsh, opt_Pch, opt_Pch_Tsh, constant
 from lyopronto.pyomo_models import optimizers as pyomo_opt
 
-DRYNESS_TARGET = 0.989
+DRYNESS_TARGET = 98.9  # Percentage (0-100)
 
 # Scipy adapters -------------------------------------------------------------
 

@@ -1028,7 +1028,7 @@ def optimize_Tsh_pyomo(
             - Column 3: Shelf temperature Tsh [°C]
             - Column 4: Chamber pressure Pch [mTorr] (note: milli-Torr!)
             - Column 5: Sublimation flux [kg/hr/m²]
-            - Column 6: Fraction dried [0-1] (note: NOT percentage!)
+            - Column 6: Percent dried [0-100%] (note: percentage, NOT fraction!)
     
     Raises:
         ValueError: If optimization fails and no solution available

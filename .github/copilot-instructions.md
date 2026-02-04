@@ -98,16 +98,16 @@ output[:, 0]  # time [hr]
 output[:, 1]  # Tsub - sublimation temperature [degC]
 output[:, 2]  # Tbot - vial bottom temperature [degC]
 output[:, 3]  # Tsh - shelf temperature [degC]
-output[:, 4]  # Pch - chamber pressure mTorr, NOT Torr!)
+output[:, 4]  # Pch - chamber pressure [mTorr, NOT Torr!]
 output[:, 5]  # flux - sublimation flux [kg/hr/m**2]
-output[:, 6]  # frac_dried - fraction dried (0-1, NOT percentage!)
+output[:, 6]  # percent_dried - percent dried (0-100%, NOT fraction!)
 ```
 
 ## Common Pitfalls to Avoid
 
 1. **Unit Confusion**
    - ❌ Don't assume Pch is in Torr (it's in mTorr in output)
-   - ❌ Don't assume dried is percentage (it's a fraction 0-1)
+   - ❌ Don't assume dried is fraction 0-1 (it's percentage 0-100)
    - ❌ Don't forget flux is normalized by area (kg/hr/m²)
 
 2. **Physics Behavior**

@@ -48,7 +48,7 @@ def assert_physically_reasonable_output(output, Tmax=60):
     Assert that simulation output is physically reasonable.
 
     Args:
-        output: numpy array with columns [time, Tsub, Tbot, Tsh, Pch_mTorr, flux, frac_dried]
+        output: numpy array with columns [time, Tsub, Tbot, Tsh, Pch_mTorr, flux, percent_dried]
 
     Column descriptions:
         [0] time [hr]
@@ -68,7 +68,7 @@ def assert_physically_reasonable_output(output, Tmax=60):
     assert np.all(np.isfinite(output[:, 3])), "Tsh column has invalid values"
     assert np.all(np.isfinite(output[:, 4])), "Pch column has invalid values"
     assert np.all(np.isfinite(output[:, 5])), "flux column has invalid values"
-    assert np.all(np.isfinite(output[:, 6])), "frac_dried column has invalid values"
+    assert np.all(np.isfinite(output[:, 6])), "percent_dried column has invalid values"
 
     # Time should be non-negative and monotonically increasing
     assert np.all(output[:, 0] >= 0), "Time should be non-negative"
@@ -121,7 +121,7 @@ def assert_complete_drying(output):
     Assert that drying completed for given simulation output.
 
     Args:
-        output: numpy array with columns [time, Tsub, Tbot, Tsh, Pch_mTorr, flux, frac_dried]
+        output: numpy array with columns [time, Tsub, Tbot, Tsh, Pch_mTorr, flux, percent_dried]
     """
     final_percent_dried = output[-1, 6]
     assert final_percent_dried >= PERCENT_COMPLETE, (
@@ -134,7 +134,7 @@ def assert_incomplete_drying(output):
     Assert that drying did not complete for given simulation output.
 
     Args:
-        output: numpy array with columns [time, Tsub, Tbot, Tsh, Pch_mTorr, flux, frac_dried]
+        output: numpy array with columns [time, Tsub, Tbot, Tsh, Pch_mTorr, flux, percent_dried]
     """
     final_percent_dried = output[-1, 6]
     assert final_percent_dried < PERCENT_COMPLETE, (
