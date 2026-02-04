@@ -52,10 +52,10 @@ jobs:
     - name: Run tests
       run: |
         if [ "${{ steps.mode.outputs.mode }}" == "fast" ]; then
-          echo "⚡ Draft PR: Skipping notebook and pyomo tests for fast feedback"
+          echo "Draft PR: Skipping notebook and pyomo tests for fast feedback"
           pytest tests/ -n auto -v -m "not notebook and not pyomo" --cov=lyopronto --cov-report=term-missing
         else
-          echo "🔍 Ready PR: Running full scipy test suite (excluding notebook and pyomo)"
+          echo "Ready PR: Running full scipy test suite (excluding notebook and pyomo)"
           pytest tests/ -n auto -v -m "not notebook and not pyomo"
         fi
     
@@ -100,16 +100,16 @@ jobs:
     
     - name: Install IPOPT solver via IDAES
       run: |
-        echo "📦 Installing IPOPT solver via IDAES extensions"
+        echo "Installing IPOPT solver via IDAES extensions"
         idaes get-extensions --extra petsc
     
     - name: Run Pyomo tests
       run: |
-        echo "🔍 Running Pyomo test suite (continue-on-error enabled)"
+        echo "Running Pyomo test suite (continue-on-error enabled)"
         pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=term-missing
     
     - name: Pyomo Test Summary
       if: always()
       run: |
-        echo "✅ Pyomo tests completed"
-        echo "⚠️ Failures here don't block PR merge"
+        echo "Pyomo tests completed"
+        echo "Failures here don't block PR merge"

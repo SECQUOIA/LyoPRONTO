@@ -59,22 +59,24 @@ jobs:
     - name: Install IPOPT solver via IDAES (if Pyomo enabled)
       if: inputs.include_pyomo == 'true'
       run: |
-        echo "📦 Installing IPOPT solver via IDAES extensions"
+        echo "Installing IPOPT solver via IDAES extensions"
         idaes get-extensions --extra petsc
     
     - name: Run slow tests
+      env:
+        RUN_SLOW_TESTS: "1"
       run: |
         if [ "${{ inputs.run_all }}" == "true" ]; then
-          echo "🔍 Running ALL tests (including slow optimization tests)"
-          echo "⏱️ This may take 30-40 minutes on CI"
+          echo "Running ALL tests (including slow optimization tests)"
+          echo "This may take 30-40 minutes on CI"
           if [ "${{ inputs.include_pyomo }}" == "true" ]; then
             pytest tests/ -n auto -v --cov=lyopronto --cov-report=xml --cov-report=term-missing
           else
             pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml --cov-report=term-missing
           fi
         else
-          echo "🐌 Running ONLY slow tests (marked with @pytest.mark.slow)"
-          echo "⏱️ This focuses on optimization tests that take minutes"
+          echo "Running ONLY slow tests (marked with @pytest.mark.slow)"
+          echo "This focuses on optimization tests that take minutes"
           if [ "${{ inputs.include_pyomo }}" == "true" ]; then
             pytest tests/ -n auto -v -m "slow" --cov=lyopronto --cov-report=xml --cov-report=term-missing
           else
@@ -95,8 +97,8 @@ jobs:
       if: always()
       run: |
         if [ "${{ inputs.run_all }}" == "true" ]; then
-          echo "✅ Complete test suite finished"
+          echo "Complete test suite finished"
         else
-          echo "🐌 Slow tests completed"
+          echo "Slow tests completed"
         fi
-        echo "📊 Coverage uploaded to Codecov"
+        echo "Coverage uploaded to Codecov"

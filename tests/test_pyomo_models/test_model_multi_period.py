@@ -122,12 +122,11 @@ class TestModelStructure:
             apply_scaling=False
         )
         
-        # State variables (with derivatives)
+        # State variable with derivative (only Lck has ODE in new algebraic model)
         assert hasattr(model, 'Tsub')
         assert hasattr(model, 'Tbot')
         assert hasattr(model, 'Lck')
-        assert hasattr(model, 'dTsub_dt')
-        assert hasattr(model, 'dTbot_dt')
+        # Only Lck has a derivative - Tsub and Tbot are algebraic variables
         assert hasattr(model, 'dLck_dt')
         
     def test_model_has_control_variables(self, standard_vial, standard_product, standard_ht):
@@ -183,14 +182,14 @@ class TestModelStructure:
         assert hasattr(model, 'kv_calc')
         assert hasattr(model, 'sublimation_rate')
         
-        # Differential equations
-        assert hasattr(model, 'heat_balance_ode')
-        assert hasattr(model, 'vial_bottom_temp_ode')
+        # Quasi-steady heat balance (algebraic, not ODE)
+        assert hasattr(model, 'heat_balance')
+        assert hasattr(model, 'bottom_temp')
+        
+        # Differential equation (only Lck has an ODE now)
         assert hasattr(model, 'cake_length_ode')
         
-        # Initial conditions
-        assert hasattr(model, 'tsub_ic')
-        assert hasattr(model, 'tbot_ic')
+        # Initial condition (only Lck now - Tsub/Tbot are algebraic)
         assert hasattr(model, 'lck_ic')
         
         # Terminal constraints
@@ -424,12 +423,12 @@ class TestModelStructuralAnalysis:
         print(f"  Unmatched constraints: {len(con_dmp.unmatched)}")
         
         if var_dmp.unmatched:
-            print("  ⚠️  WARNING: Unmatched variables (first 5):")
+            print("  WARNING: Unmatched variables (first 5):")
             for v in list(var_dmp.unmatched)[:5]:
                 print(f"    - {v.name}")
         
         if con_dmp.unmatched:
-            print("  ⚠️  WARNING: Unmatched constraints (first 5):")
+            print("  WARNING: Unmatched constraints (first 5):")
             for c in list(con_dmp.unmatched)[:5]:
                 print(f"    - {c.name}")
         
@@ -555,7 +554,7 @@ class TestModelStructuralAnalysis:
                     print(f"  Condition number: {cond:.2e}")
                     
                     if cond > cond_threshold:
-                        print(f"  ⚠️  WARNING: Block {i} is ill-conditioned!")
+                        print(f"  WARNING: Block {i} is ill-conditioned!")
                         # Show first few variables in ill-conditioned block
                         print("  First variables:")
                         for v in list(vblock)[:3]:
@@ -570,7 +569,7 @@ class TestModelStructuralAnalysis:
         
         # Basic check
         assert len(var_blocks) > 0, "Should have at least one block"
-        print("\nBlock triangularization completed ✓")
+        print("\nBlock triangularization completed")
 
 
 class TestModelNumerics:
@@ -616,7 +615,11 @@ class TestModelNumerics:
         print(f"  Scaled model has scaling_factor: {hasattr(model_scaled, 'scaling_factor')}")
     
     def test_initial_conditions_satisfied(self, standard_vial, standard_product, standard_ht):
-        """Verify initial conditions are properly enforced."""
+        """Verify initial conditions are properly enforced.
+        
+        In the algebraic DAE model, only Lck has an initial condition.
+        Tsub and Tbot are algebraic variables determined by heat balance.
+        """
         model = model_module.create_multi_period_model(
             standard_vial, standard_product, standard_ht,
             Vfill=2.0,
@@ -625,32 +628,22 @@ class TestModelNumerics:
             apply_scaling=False
         )
         
-        # Check IC constraints exist
-        assert hasattr(model, 'tsub_ic')
-        assert hasattr(model, 'tbot_ic')
+        # Check IC constraint exists (only Lck in new algebraic model)
         assert hasattr(model, 'lck_ic')
         
         # Get the first time point
         t0 = min(model.t)
         
-        # Set variables to values that satisfy ICs
-        model.Tsub[t0].set_value(-40.0)
-        model.Tbot[t0].set_value(-40.0)
+        # Set Lck to the IC value
         model.Lck[t0].set_value(0.0)
         
-        # Check IC constraint residuals
-        ic_Tsub = pyo.value(model.tsub_ic.body) - pyo.value(model.tsub_ic.lower)
-        ic_Tbot = pyo.value(model.tbot_ic.body) - pyo.value(model.tbot_ic.lower)
+        # Check IC constraint residual
         ic_Lck = pyo.value(model.lck_ic.body) - pyo.value(model.lck_ic.lower)
         
         print("\nInitial condition residuals:")
-        print(f"  Tsub(0) = {pyo.value(model.Tsub[t0]):.2f}, constraint = -40.0, residual: {ic_Tsub:.6e}")
-        print(f"  Tbot(0) = {pyo.value(model.Tbot[t0]):.2f}, constraint = -40.0, residual: {ic_Tbot:.6e}")
         print(f"  Lck(0) = {pyo.value(model.Lck[t0]):.4f}, constraint = 0.0, residual: {ic_Lck:.6e}")
         
-        # All should be exactly zero (equality constraints)
-        assert abs(ic_Tsub) < 1e-10, "Tsub IC should be exact"
-        assert abs(ic_Tbot) < 1e-10, "Tbot IC should be exact"
+        # Should be exactly zero (equality constraint)
         assert abs(ic_Lck) < 1e-10, "Lck IC should be exact"
 
 

@@ -36,7 +36,7 @@ jobs:
     
     - name: Run SciPy tests (excluding Pyomo tests)
       run: |
-        echo "🔍 Running SciPy test suite (excluding Pyomo tests)"
+        echo "Running SciPy test suite (excluding Pyomo tests)"
         pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml --cov-report=term-missing
     
     - name: Upload coverage to Codecov
@@ -51,8 +51,8 @@ jobs:
     - name: Coverage Summary
       if: always()
       run: |
-        echo "✅ SciPy tests completed for main branch"
-        echo "📊 Coverage metrics updated in Codecov"
+        echo "SciPy tests completed for main branch"
+        echo "Coverage metrics updated in Codecov"
 
   test-pyomo:
     name: Pyomo Tests
@@ -83,13 +83,13 @@ jobs:
     
     - name: Install IPOPT solver via IDAES
       run: |
-        echo "📦 Installing IPOPT solver via IDAES extensions"
+        echo "Installing IPOPT solver via IDAES extensions"
         idaes get-extensions --extra petsc
     
     - name: Run Pyomo tests
       run: |
-        echo "🔍 Running Pyomo test suite"
-        echo "⚠️ These tests require IPOPT solver and may be slower"
+        echo "Running Pyomo test suite"
+        echo "These tests require IPOPT solver and may be slower"
         pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml --cov-report=term-missing
     
     - name: Upload coverage to Codecov
@@ -104,5 +104,5 @@ jobs:
     - name: Pyomo Test Summary
       if: always()
       run: |
-        echo "✅ Pyomo tests completed (continue-on-error enabled)"
-        echo "📊 Coverage metrics updated in Codecov"
+        echo "Pyomo tests completed (continue-on-error enabled)"
+        echo "Coverage metrics updated in Codecov"
