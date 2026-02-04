@@ -37,7 +37,7 @@ jobs:
     - name: Run SciPy tests (excluding Pyomo tests)
       run: |
         echo "Running SciPy test suite (excluding Pyomo tests)"
-        pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml --cov-report=term-missing
+        pytest tests/ -n auto -v -m "not pyomo" --ignore=tests/test_pyomo_models --cov=lyopronto --cov-report=xml --cov-report=term-missing
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4

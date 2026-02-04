@@ -53,10 +53,10 @@ jobs:
       run: |
         if [ "${{ steps.mode.outputs.mode }}" == "fast" ]; then
           echo "Draft PR: Skipping notebook and pyomo tests for fast feedback"
-          pytest tests/ -n auto -v -m "not notebook and not pyomo"
+          pytest tests/ -n auto -v -m "not notebook and not pyomo" --ignore=tests/test_pyomo_models
         else
           echo "Ready PR: Running full scipy test suite (excluding notebook and pyomo)"
-          pytest tests/ -n auto -v -m "not notebook and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml
+          pytest tests/ -n auto -v -m "not notebook and not pyomo" --ignore=tests/test_pyomo_models --cov=lyopronto --cov-report=xml:coverage.xml
         fi
     
     - name: Upload coverage
