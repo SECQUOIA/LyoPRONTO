@@ -1,0 +1,40 @@
+# Pre-commit hooks for LyoPRONTO
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # Ruff - fast Python linter and formatter
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.6
+    hooks:
+      # Run linter with auto-fix
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+        types_or: [python, pyi]
+      # Run formatter
+      - id: ruff-format
+        types_or: [python, pyi]
+
+  # Standard pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+      - id: check-merge-conflict
+      - id: debug-statements
+
+  # Run fast tests on commit (optional - can be slow)
+  # Uncomment to enable test runs on every commit
+  # - repo: local
+  #   hooks:
+  #     - id: pytest-fast
+  #       name: pytest (fast tests only)
+  #       entry: pytest tests/ -m "fast" -x -q --tb=no
+  #       language: system
+  #       types: [python]
+  #       pass_filenames: false
+  #       always_run: true
