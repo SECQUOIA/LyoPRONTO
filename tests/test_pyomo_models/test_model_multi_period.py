@@ -434,9 +434,15 @@ class TestModelStructuralAnalysis:
         assert len(con_dmp.unmatched) == 0, "Unmatched constraints indicate structural singularity"
     
     @pytest.mark.skipif(not INCIDENCE_AVAILABLE, reason="Incidence analysis not available")
-    @pytest.mark.xfail(reason="Pyomo incidence analysis doesn't support unequal variable/constraint counts")
+    @pytest.mark.xfail(reason="Multi-period model has additional DOF from initial conditions - needs structural fix")
     def test_block_triangularization(self, standard_vial, standard_product, standard_ht):
         """Analyze block structure for multi-period DAE model.
+        
+        Block triangularization requires a square system (DOF = 0).
+        We fix controls (Pch, Tsh) and t_final to make the system square.
+        
+        Note: Currently xfailed because multi-period model has additional
+        degrees of freedom from initial conditions and derivative variables.
         
         Following Pyomo tutorial:
         https://pyomo.readthedocs.io/en/6.8.1/explanation/analysis/incidence/tutorial.bt.html

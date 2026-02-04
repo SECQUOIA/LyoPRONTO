@@ -176,9 +176,11 @@ class TestStructuralAnalysis:
         assert len(con_dmp.unmatched) == 0, "Unmatched constraints indicate structural singularity"
         assert len(var_dmp.unmatched) == 2, f"Should have 2 DOF, got {len(var_dmp.unmatched)}"
     
-    @pytest.mark.xfail(reason="Pyomo incidence analysis doesn't support unequal variable/constraint counts")
     def test_block_triangularization(self, standard_vial, standard_product, standard_ht):
         """Analyze block structure for numerical conditioning.
+        
+        Block triangularization requires a square system (DOF = 0).
+        We fix the control variables (Pch, Tsh) to make the system square.
         
         Reference: https://pyomo.readthedocs.io/en/6.8.1/explanation/analysis/incidence/tutorial.bt.html
         """
@@ -200,9 +202,12 @@ class TestStructuralAnalysis:
             obj.deactivate()
         model._obj = pyo.Objective(expr=0.0)
         
-        # Set reasonable values
-        model.Pch.set_value(0.1)
-        model.Tsh.set_value(-10.0)
+        # Fix control variables to make system square (DOF = 0)
+        # Block triangularization requires equal variables and constraints
+        model.Pch.fix(0.1)
+        model.Tsh.fix(-10.0)
+        
+        # Set reasonable values for other variables
         model.Tsub.set_value(-25.0)
         model.Tbot.set_value(-20.0)
         model.Psub.set_value(0.5)

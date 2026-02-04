@@ -12,6 +12,10 @@ import numpy as np
 # Machine precision tolerance for floating point comparisons
 FLOAT_RTOL = 1e-10
 
+# Tolerance for time comparisons (proportional to drying time)
+# Accounts for numerical differences in sequential optimization paths
+TIME_RTOL = 0.001  # 0.1% relative tolerance
+
 # Tolerance for checking monotonicity (allows small numerical wobbles from integration)
 MONOTONIC_ATOL = 1e-6
 

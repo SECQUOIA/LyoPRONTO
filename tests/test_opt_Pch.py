@@ -361,11 +361,11 @@ class TestOptPchReference:
         # trajectories due to the greedy sequential optimization approach.
         drying_time_ref = output_ref[-1, 0]
         drying_time = output[-1, 0]
-        # Allow 0.1% tolerance for numerical differences in optimization path
-        tolerance = drying_time_ref * 0.001
+        # Use proportional tolerance from utils.py for numerical differences
+        tolerance = drying_time_ref * TIME_RTOL
         assert drying_time <= drying_time_ref + tolerance, (
             f"Drying time {drying_time:.2f} hr should be <= reference "
-            + f"{drying_time_ref:.2f} hr (tolerance: {tolerance:.4f} hr)"
+            + f"{drying_time_ref:.2f} hr (tolerance: {TIME_RTOL*100:.1f}% = {tolerance:.4f} hr)"
         )
         # array_compare = np.isclose(output, output_ref, atol=1e-3)
         # assert array_compare.all(), (
@@ -379,7 +379,7 @@ class TestOptPchReference:
 # Coverage tests (migrated from test_opt_Pch_coverage.py)
 # ==============================================================================
 
-from .utils import PERCENT_MAX, TEMP_ATOL
+from .utils import PERCENT_MAX, TEMP_ATOL, TIME_RTOL
 
 
 class TestOptPchCoverageOnly:
