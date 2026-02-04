@@ -26,6 +26,8 @@ Tests include:
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import os
+
 import pytest
 import numpy as np
 from lyopronto import functions, calc_knownRp
@@ -38,6 +40,20 @@ try:
     PYOMO_AVAILABLE = True
 except ImportError:
     PYOMO_AVAILABLE = False
+
+# Check for IPOPT solver
+IPOPT_AVAILABLE = False
+if PYOMO_AVAILABLE:
+    try:
+        from idaes.core.solvers import get_solver
+        solver = get_solver('ipopt')
+        IPOPT_AVAILABLE = True
+    except Exception:
+        try:
+            solver = pyo.SolverFactory('ipopt')
+            IPOPT_AVAILABLE = solver.available()
+        except Exception:
+            IPOPT_AVAILABLE = False
 
 pytestmark = [
     pytest.mark.pyomo,
@@ -292,10 +308,14 @@ class TestPhysicsConsistency:
 
 
 @pytest.mark.slow
+@pytest.mark.skipif(not IPOPT_AVAILABLE, reason="IPOPT solver not available")
 class TestOptimizationComparison:
     """Compare optimized multi-period results to scipy (slow tests)."""
-    
-    @pytest.mark.skip(reason="Full optimization is slow, enable for integration testing")
+
+    @pytest.mark.skipif(
+        not os.environ.get('RUN_SLOW_TESTS'),
+        reason="Full optimization is slow, set RUN_SLOW_TESTS=1 to enable"
+    )
     def test_optimization_improves_over_scipy(self, standard_vial, standard_product, standard_ht):
         """Verify Pyomo optimization can improve on scipy constant setpoints."""
         Pchamber = {'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5}
@@ -306,8 +326,8 @@ class TestOptimizationComparison:
         )
         
         scipy_time = scipy_traj[-1, 0]
-        
-        solution = model.optimize_multi_period(
+
+        solution = model_module.optimize_multi_period(
             standard_vial, standard_product, standard_ht,
             Vfill=standard_vial['Vfill'],
             n_elements=5, n_collocation=3,
@@ -317,8 +337,14 @@ class TestOptimizationComparison:
         # Pyomo should achieve similar or better time
         assert solution['t_final'] <= scipy_time * 1.2, \
             "Pyomo should not be much slower than scipy"
-    
-    @pytest.mark.skip(reason="Full optimization is slow, enable for integration testing")  
+
+    @pytest.mark.skipif(
+        not os.environ.get('RUN_SLOW_TESTS'),
+        reason="Full optimization is slow, set RUN_SLOW_TESTS=1 to enable"
+    )
+    @pytest.mark.xfail(
+        reason="Model may converge to infeasible point depending on warmstart quality - model formulation needs improvement"
+    )
     def test_optimized_solution_satisfies_constraints(self, standard_vial, standard_product, standard_ht):
         """Verify optimized solution respects all constraints."""
         Pchamber = {'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5}
@@ -327,8 +353,8 @@ class TestOptimizationComparison:
             standard_vial, standard_product, standard_ht,
             Pchamber, Tshelf, dt=1.0
         )
-        
-        solution = model.optimize_multi_period(
+
+        solution = model_module.optimize_multi_period(
             standard_vial, standard_product, standard_ht,
             Vfill=standard_vial['Vfill'],
             n_elements=5, n_collocation=3,

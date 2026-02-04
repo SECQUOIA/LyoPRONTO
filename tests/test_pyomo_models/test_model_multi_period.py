@@ -28,6 +28,8 @@ Tests include:
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import os
+
 import pytest
 import numpy as np
 from lyopronto import calc_knownRp
@@ -43,6 +45,20 @@ try:
 except ImportError:
     PYOMO_AVAILABLE = False
     INCIDENCE_AVAILABLE = False
+
+# Check for IPOPT solver
+IPOPT_AVAILABLE = False
+if PYOMO_AVAILABLE:
+    try:
+        from idaes.core.solvers import get_solver
+        solver = get_solver('ipopt')
+        IPOPT_AVAILABLE = True
+    except Exception:
+        try:
+            solver = pyo.SolverFactory('ipopt')
+            IPOPT_AVAILABLE = solver.available()
+        except Exception:
+            IPOPT_AVAILABLE = False
 
 pytestmark = [
     pytest.mark.pyomo,
@@ -335,7 +351,7 @@ class TestModelStructuralAnalysis:
         n_ineq_cons = sum(1 for c in model.component_data_objects(pyo.Constraint, active=True)
                          if not c.equality)
         
-        print(f"\nMulti-period model structure:")
+        print("\nMulti-period model structure:")
         print(f"  Variables: {n_vars}")
         print(f"  Equality constraints: {n_eq_cons}")
         print(f"  Inequality constraints: {n_ineq_cons}")
@@ -403,22 +419,22 @@ class TestModelStructuralAnalysis:
         var_dmp, con_dmp = igraph.dulmage_mendelsohn()
         
         # Check for structural singularity
-        print(f"\nStructural singularity check:")
+        print("\nStructural singularity check:")
         print(f"  Unmatched variables: {len(var_dmp.unmatched)}")
         print(f"  Unmatched constraints: {len(con_dmp.unmatched)}")
         
         if var_dmp.unmatched:
-            print(f"  ⚠️  WARNING: Unmatched variables (first 5):")
+            print("  ⚠️  WARNING: Unmatched variables (first 5):")
             for v in list(var_dmp.unmatched)[:5]:
                 print(f"    - {v.name}")
         
         if con_dmp.unmatched:
-            print(f"  ⚠️  WARNING: Unmatched constraints (first 5):")
+            print("  ⚠️  WARNING: Unmatched constraints (first 5):")
             for c in list(con_dmp.unmatched)[:5]:
                 print(f"    - {c.name}")
         
         # Report subsystems
-        print(f"\nDM partition subsystems:")
+        print("\nDM partition subsystems:")
         print(f"  Overconstrained: {len(var_dmp.overconstrained)} vars, {len(con_dmp.overconstrained)} cons")
         print(f"  Underconstrained: {len(var_dmp.underconstrained)} vars, {len(con_dmp.underconstrained)} cons")
         print(f"  Square (well-posed): {len(var_dmp.square)} vars, {len(con_dmp.square)} cons")
@@ -541,20 +557,20 @@ class TestModelStructuralAnalysis:
                     if cond > cond_threshold:
                         print(f"  ⚠️  WARNING: Block {i} is ill-conditioned!")
                         # Show first few variables in ill-conditioned block
-                        print(f"  First variables:")
+                        print("  First variables:")
                         for v in list(vblock)[:3]:
                             print(f"    - {v.name}")
                 except Exception as e:
                     print(f"  Could not compute condition number: {e}")
             else:
-                print(f"  (Block too large for condition number computation)")
+                print("  (Block too large for condition number computation)")
         
         if len(var_blocks) > blocks_to_analyze:
             print(f"\n... and {len(var_blocks) - blocks_to_analyze} more blocks")
         
         # Basic check
         assert len(var_blocks) > 0, "Should have at least one block"
-        print(f"\nBlock triangularization completed ✓")
+        print("\nBlock triangularization completed ✓")
 
 
 class TestModelNumerics:
@@ -627,7 +643,7 @@ class TestModelNumerics:
         ic_Tbot = pyo.value(model.tbot_ic.body) - pyo.value(model.tbot_ic.lower)
         ic_Lck = pyo.value(model.lck_ic.body) - pyo.value(model.lck_ic.lower)
         
-        print(f"\nInitial condition residuals:")
+        print("\nInitial condition residuals:")
         print(f"  Tsub(0) = {pyo.value(model.Tsub[t0]):.2f}, constraint = -40.0, residual: {ic_Tsub:.6e}")
         print(f"  Tbot(0) = {pyo.value(model.Tbot[t0]):.2f}, constraint = -40.0, residual: {ic_Tbot:.6e}")
         print(f"  Lck(0) = {pyo.value(model.Lck[t0]):.4f}, constraint = 0.0, residual: {ic_Lck:.6e}")
@@ -639,10 +655,14 @@ class TestModelNumerics:
 
 
 @pytest.mark.slow
+@pytest.mark.skipif(not IPOPT_AVAILABLE, reason="IPOPT solver not available")
 class TestModelOptimization:
     """Tests for full optimization (slow, marked for optional execution)."""
-    
-    @pytest.mark.skip(reason="Full optimization is slow, enable manually for integration testing")
+
+    @pytest.mark.skipif(
+        not os.environ.get('RUN_SLOW_TESTS'),
+        reason="Full optimization is slow, set RUN_SLOW_TESTS=1 to enable"
+    )
     def test_optimization_runs(self, standard_vial, standard_product, standard_ht):
         """Verify optimization completes (slow test)."""
         # Get warmstart
@@ -654,7 +674,7 @@ class TestModelOptimization:
         )
         
         # Run optimization (small problem for testing)
-        solution = model.optimize_multi_period(
+        solution = model_module.optimize_multi_period(
             standard_vial,
             standard_product,
             standard_ht,

@@ -23,7 +23,7 @@ against the scipy baseline to ensure correctness and consistency.
 
 import pytest
 import numpy as np
-from lyopronto import functions, constant
+from lyopronto import functions
 from lyopronto.pyomo_models import single_step, utils
 
 # Try to import pyomo - skip tests if not available

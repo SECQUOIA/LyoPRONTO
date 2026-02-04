@@ -44,7 +44,7 @@ pytestmark = [
     ),
 ]
 
-from lyopronto import opt_Pch_Tsh, opt_Tsh, opt_Pch
+from lyopronto import opt_Pch_Tsh, opt_Tsh
 from lyopronto.pyomo_models.optimizers import (
     create_optimizer_model,
     optimize_Pch_Tsh_pyomo,
@@ -259,7 +259,7 @@ class TestPyomoOptPchTshOptimization:
         
         # Check drying completion
         final_dryness = result[-1, 6]
-        assert final_dryness >= 0.989, f"Should reach 99% drying with trust region"
+        assert final_dryness >= 0.989, "Should reach 99% drying with trust region"
     
     def test_optimize_Pch_Tsh_output_format(self, optimizer_params):
         """Test that output format matches scipy."""

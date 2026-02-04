@@ -161,7 +161,7 @@ class TestPyomoOptTshBasic:
         
         # Should remain at setpoint (small tolerance for numerical precision)
         assert np.all(np.abs(P_chamber_mTorr - P_setpoint_mTorr) < 1.0), \
-            f"Pressure deviated from setpoint"
+            "Pressure deviated from setpoint"
     
     def test_shelf_temperature_optimized(self, standard_opt_tsh_inputs):
         """Test that shelf temperature varies (is optimized)."""

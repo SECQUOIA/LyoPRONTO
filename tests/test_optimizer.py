@@ -8,7 +8,6 @@ optimizer functionality with fixed chamber pressure and shelf temperature optimi
 import pytest
 import numpy as np
 import pandas as pd
-import os
 from lyopronto import opt_Tsh
 from .utils import PERCENT_COMPLETE, TEMP_RTOL
 

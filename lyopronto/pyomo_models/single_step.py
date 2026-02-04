@@ -35,7 +35,6 @@ The model includes:
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import pyomo.environ as pyo
-import numpy as np
 from .. import constant
 
 

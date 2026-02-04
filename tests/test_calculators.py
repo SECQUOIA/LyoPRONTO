@@ -1,12 +1,10 @@
 """Integration tests for primary drying calculators."""
-import pytest
 import numpy as np
-from lyopronto import calc_knownRp, calc_unknownRp
+from lyopronto import calc_knownRp
 from .utils import (
     assert_physically_reasonable_output,
     PERCENT_COMPLETE,
     PERCENT_MAX,
-    FLOAT_RTOL,
 )
 
 
@@ -320,7 +318,7 @@ class TestMassBalance:
         )
         
         # Calculate initial water mass
-        from lyopronto import constant, functions
+        from lyopronto import constant
         Vfill = standard_setup['vial']['Vfill']  # mL
         cSolid = standard_setup['product']['cSolid']
         water_mass_initial = Vfill * constant.rho_solution * (1 - cSolid) / constant.kg_To_g  # kg

@@ -33,7 +33,7 @@ Reference:
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import numpy as np
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional
 import pyomo.environ as pyo
 import pyomo.dae as dae
 from lyopronto import functions
@@ -516,17 +516,42 @@ def optimize_multi_period(
         ... )
         >>> print(f"Optimal drying time: {solution['t_final']:.2f} hr")
     """
-    # Create model
+    # Create model WITHOUT scaling first (for warmstart)
     model = create_multi_period_model(
         vial, product, ht, Vfill,
         n_elements=n_elements,
         n_collocation=n_collocation,
-        apply_scaling=apply_scaling
+        apply_scaling=False  # Don't scale yet
     )
-    
-    # Apply warmstart if provided
+
+    # Apply warmstart if provided (must be done before scaling)
     if warmstart_data is not None:
         warmstart_from_scipy_trajectory(model, warmstart_data, vial, product, ht)
+
+    # Now apply scaling if requested
+    if apply_scaling:
+        model.scaling_factor = pyo.Suffix(direction=pyo.Suffix.EXPORT)
+
+        # Variables
+        for t in model.t:
+            model.scaling_factor[model.Tsub[t]] = 1.0
+            model.scaling_factor[model.Tbot[t]] = 1.0
+            model.scaling_factor[model.Tsh[t]] = 1.0
+            model.scaling_factor[model.Pch[t]] = 1.0
+            model.scaling_factor[model.Psub[t]] = 1.0
+            model.scaling_factor[model.log_Psub[t]] = 1.0
+            model.scaling_factor[model.dmdt[t]] = 0.1
+            model.scaling_factor[model.Kv[t]] = 1000.0
+            model.scaling_factor[model.Rp[t]] = 0.01
+            model.scaling_factor[model.Lck[t]] = 1.0
+            model.scaling_factor[model.dTsub_dt[t]] = 0.1
+            model.scaling_factor[model.dTbot_dt[t]] = 0.1
+            model.scaling_factor[model.dLck_dt[t]] = 1.0
+
+        model.scaling_factor[model.t_final] = 0.1
+
+        scaling_transform = pyo.TransformationFactory('core.scale_model')
+        model = scaling_transform.create_using(model)
     
     # Solve
     opt = pyo.SolverFactory(solver)
@@ -536,27 +561,43 @@ def optimize_multi_period(
         opt.options['tol'] = 1e-6
         opt.options['acceptable_tol'] = 1e-4
         opt.options['print_level'] = 5 if tee else 0
-        opt.options['sb'] = 'yes'  # Skip barrier initialization
         opt.options['mu_strategy'] = 'adaptive'
     
     results = opt.solve(model, tee=tee)
-    
+
+    # Helper to get variable (handles scaled vs unscaled model)
+    def get_var(name):
+        if hasattr(model, name):
+            return getattr(model, name)
+        return getattr(model, f'scaled_{name}')
+
     # Extract solution
+    t_final_var = get_var('t_final')
     solution = {
         'status': str(results.solver.termination_condition),
-        't_final': pyo.value(model.t_final),
+        't_final': pyo.value(t_final_var),
     }
-    
+
     # Extract trajectories
-    t_points = sorted(model.t)
+    t_set = get_var('t') if hasattr(model, 't') else model.scaled_t
+    t_points = sorted(t_set)
+    Pch_var = get_var('Pch')
+    Tsh_var = get_var('Tsh')
+    Tsub_var = get_var('Tsub')
+    Tbot_var = get_var('Tbot')
+    Lck_var = get_var('Lck')
+    dmdt_var = get_var('dmdt')
+    Psub_var = get_var('Psub')
+    Rp_var = get_var('Rp')
+
     solution['t'] = np.array([t * solution['t_final'] for t in t_points])
-    solution['Pch'] = np.array([pyo.value(model.Pch[t]) for t in t_points])
-    solution['Tsh'] = np.array([pyo.value(model.Tsh[t]) for t in t_points])
-    solution['Tsub'] = np.array([pyo.value(model.Tsub[t]) for t in t_points])
-    solution['Tbot'] = np.array([pyo.value(model.Tbot[t]) for t in t_points])
-    solution['Lck'] = np.array([pyo.value(model.Lck[t]) for t in t_points])
-    solution['dmdt'] = np.array([pyo.value(model.dmdt[t]) for t in t_points])
-    solution['Psub'] = np.array([pyo.value(model.Psub[t]) for t in t_points])
-    solution['Rp'] = np.array([pyo.value(model.Rp[t]) for t in t_points])
+    solution['Pch'] = np.array([pyo.value(Pch_var[t]) for t in t_points])
+    solution['Tsh'] = np.array([pyo.value(Tsh_var[t]) for t in t_points])
+    solution['Tsub'] = np.array([pyo.value(Tsub_var[t]) for t in t_points])
+    solution['Tbot'] = np.array([pyo.value(Tbot_var[t]) for t in t_points])
+    solution['Lck'] = np.array([pyo.value(Lck_var[t]) for t in t_points])
+    solution['dmdt'] = np.array([pyo.value(dmdt_var[t]) for t in t_points])
+    solution['Psub'] = np.array([pyo.value(Psub_var[t]) for t in t_points])
+    solution['Rp'] = np.array([pyo.value(Rp_var[t]) for t in t_points])
     
     return solution
