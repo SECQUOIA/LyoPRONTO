@@ -12,6 +12,7 @@ from .utils import (
     assert_physically_reasonable_output,
     assert_complete_drying,
     assert_incomplete_drying,
+    PERCENT_MAX,
     RTOL,
     TEMP_ATOL,
 )
@@ -163,7 +164,6 @@ class TestOptPchBasic:
 class TestOptPchEdgeCases:
     """Edge case tests for opt_Pch module."""
 
-    # @pytest.mark.skip(reason="TODO: needs some feasibility checking")
     def test_low_critical_temperature(self, standard_opt_pch_inputs):
         """Test with very low critical temperature (-35°C)."""
         vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial = standard_opt_pch_inputs
@@ -368,19 +368,11 @@ class TestOptPchReference:
             f"Drying time {drying_time:.2f} hr should be <= reference "
             + f"{drying_time_ref:.2f} hr (tolerance: {RTOL*100:.1f}% = {drying_time_ref*RTOL:.4f} hr)"
         )
-        # array_compare = np.isclose(output, output_ref, atol=1e-3)
-        # assert array_compare.all(), (
-        #     "opt_Pch output should match reference data, but reference data is known to "
-        #     + "be odd, so (with maintainer approval) the reference data may be updated."
-        #     + f"Not matching at positions:\n {np.where(~array_compare)}"
-        # )
 
 
 # ==============================================================================
 # Coverage tests (migrated from test_opt_Pch_coverage.py)
 # ==============================================================================
-
-from .utils import PERCENT_MAX, TEMP_ATOL, RTOL
 
 
 class TestOptPchCoverageOnly:

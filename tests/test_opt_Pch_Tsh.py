@@ -8,7 +8,13 @@ Tests based on working example_optimizer.py structure.
 import pytest
 import numpy as np
 from lyopronto import opt_Pch_Tsh, opt_Pch, constant, opt_Tsh
-from .utils import assert_physically_reasonable_output, assert_complete_drying, TEMP_RTOL
+from .utils import (
+    assert_physically_reasonable_output,
+    assert_complete_drying,
+    PERCENT_COMPLETE,
+    TEMP_ATOL,
+    TEMP_RTOL,
+)
 
 # Constants for test assertions
 MAX_AGGRESSIVE_OPTIMIZATION_TIME = (
@@ -358,8 +364,6 @@ class TestOptPchTshValidation:
 # ==============================================================================
 # Coverage tests (migrated from test_opt_Pch_Tsh_coverage.py)
 # ==============================================================================
-
-from .utils import PERCENT_COMPLETE, TEMP_ATOL
 
 
 class TestOptPchTshCoverage:
