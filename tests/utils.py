@@ -2,7 +2,6 @@
 
 import numpy as np
 
-
 # =============================================================================
 # Test Tolerance Constants
 # =============================================================================
@@ -110,7 +109,9 @@ def assert_physically_reasonable_output(output, Tmax=60):
     )
 
     # Percent dried should be between 0 and 100 (allow tiny floating point tolerance)
-    assert np.all(output[:, 6] >= 0) and np.all(output[:, 6] <= PERCENT_MAX + FLOAT_RTOL), (
+    assert np.all(output[:, 6] >= 0) and np.all(
+        output[:, 6] <= PERCENT_MAX + FLOAT_RTOL
+    ), (
         f"Percent dried should be between 0 and {PERCENT_MAX}, got max={output[:, 6].max():.10f}"
     )
 

@@ -14,8 +14,8 @@ Coverage Impact:
     - Validates validation module code paths work in real-world scenarios
 """
 
-import pytest
 import papermill as pm
+import pytest
 
 
 class TestDocsNotebooks:
@@ -36,6 +36,6 @@ class TestDocsNotebooks:
         pm.execute_notebook(
             repo_root / "docs/examples/unknownRp_PD.ipynb",
             repo_root / "docs/examples/unknownRp_PD_output.ipynb",
-            parameters=dict(data_path=str(repo_root / "docs" / "examples") + "/"),
+            parameters={"data_path": str(repo_root / "docs" / "examples") + "/"},
         )
         # Will error if execution fails

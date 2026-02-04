@@ -1,15 +1,15 @@
 """Tests for LyoPRONTO freezing functionality."""
 
-import pytest
 import numpy as np
+import pytest
+from lyopronto import constant
 from lyopronto.freezing import freeze
 from lyopronto.functions import (
+    RampInterpolator,
     crystallization_time_FUN,
     lumped_cap_Tpr_ice,
     lumped_cap_Tpr_sol,
-    RampInterpolator,
 )
-from lyopronto import constant
 
 
 def check_max_time(output, Tshelf, dt):

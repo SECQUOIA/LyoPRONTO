@@ -1,8 +1,8 @@
 """Unit tests for core physics functions in lyopronto.functions."""
 
-import pytest
 import numpy as np
-from lyopronto import functions, constant
+import pytest
+from lyopronto import constant, functions
 
 
 class TestVaporPressure:
@@ -711,9 +711,7 @@ class TestFunctionsCoverageGaps:
     def test_ineq_constraints_boundary_cases(self):
         """Test Ineq_Constraints at boundary conditions."""
         # At critical temperature
-        result = functions.Ineq_Constraints(
-            0.080, 0.05, -30.0, -30.0, 5.0, 10.0, 398
-        )
+        result = functions.Ineq_Constraints(0.080, 0.05, -30.0, -30.0, 5.0, 10.0, 398)
         assert result[1] >= -1e-6  # Should be at or near boundary
 
         # At equipment capability limit
@@ -727,9 +725,7 @@ class TestFunctionsCoverageGaps:
     def test_ineq_constraints_negative_values(self):
         """Test Ineq_Constraints with negative sublimation rate."""
         # Should handle edge cases gracefully
-        result = functions.Ineq_Constraints(
-            0.080, -0.01, -30.0, -35.0, 5.0, 10.0, 398
-        )
+        result = functions.Ineq_Constraints(0.080, -0.01, -30.0, -35.0, 5.0, 10.0, 398)
         assert len(result) == 2
         assert isinstance(result[0], (int, float))
         assert isinstance(result[1], (int, float))

@@ -5,15 +5,16 @@ These tests validate the optimizer examples that match the web interface
 optimizer functionality with fixed chamber pressure and shelf temperature optimization.
 """
 
-import pytest
 import numpy as np
 import pandas as pd
-from lyopronto import opt_Tsh, constant, functions
+import pytest
+from lyopronto import constant, functions, opt_Tsh
+
 from .utils import (
-    assert_physically_reasonable_output,
+    TEMP_RTOL,
     assert_complete_drying,
     assert_incomplete_drying,
-    TEMP_RTOL,
+    assert_physically_reasonable_output,
 )
 
 

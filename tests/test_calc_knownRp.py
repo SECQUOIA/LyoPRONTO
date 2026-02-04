@@ -1,12 +1,13 @@
 """Integration tests for primary drying calculators."""
 
-import pytest
 import numpy as np
+import pytest
 from lyopronto import calc_knownRp, constant
+
 from .utils import (
-    assert_physically_reasonable_output,
     assert_complete_drying,
     assert_incomplete_drying,
+    assert_physically_reasonable_output,
 )
 
 
@@ -28,7 +29,7 @@ class TestCalcKnownRp:
 
     def test_dry_basics(self, knownRp_standard_setup):
         """Test that primary drying calculator completes without errors."""
-        """Test that: 
+        """Test that:
         - drying reaches near completion.
         - array has appropriate shape.
         - values are physically reasonable.
