@@ -36,7 +36,7 @@ import numpy as np
 from typing import Dict, Optional
 import pyomo.environ as pyo
 import pyomo.dae as dae
-from lyopronto import functions
+from lyopronto import functions, constant
 
 
 def create_multi_period_model(
@@ -130,8 +130,8 @@ def create_multi_period_model(
     # Compute initial product length
     Lpr0 = functions.Lpr0_FUN(Vfill, Ap, cSolid)
     
-    # Physical constants
-    dHs = 677.0  # Heat of sublimation [cal/g]
+    # Physical constants - use values from constant.py
+    dHs = constant.dHs  # Heat of sublimation [cal/g] (678.0)
     
     # ======================
     # TIME DOMAIN
@@ -184,8 +184,7 @@ def create_multi_period_model(
     # DERIVATIVES
     # ======================
     
-    model.dTsub_dt = dae.DerivativeVar(model.Tsub, wrt=model.t)
-    model.dTbot_dt = dae.DerivativeVar(model.Tbot, wrt=model.t)
+    # Only Lck has a true derivative - Tsub and Tbot are algebraic (quasi-steady)
     model.dLck_dt = dae.DerivativeVar(model.Lck, wrt=model.t)
     
     # ======================
@@ -211,61 +210,73 @@ def create_multi_period_model(
     model.product_resistance = pyo.Constraint(model.t, rule=product_resistance_rule)
     
     def kv_calc_rule(m, t):
-        """Vial heat transfer coefficient."""
-        return m.Kv[t] == KC + KP * m.Pch[t] + KD * m.Pch[t]**2
+        """Vial heat transfer coefficient.
+        
+        Kv = KC + KP * Pch / (1 + KD * Pch)  [cal/s/K/cm^2]
+        """
+        return m.Kv[t] == KC + KP * m.Pch[t] / (1.0 + KD * m.Pch[t])
     
     model.kv_calc = pyo.Constraint(model.t, rule=kv_calc_rule)
     
     def sublimation_rate_rule(m, t):
-        """Mass transfer equation for sublimation rate."""
-        # dmdt in kg/hr, normalize by area
-        return m.dmdt[t] * m.Rp[t] == Ap * (m.Psub[t] - m.Pch[t]) / 100.0
+        """Mass transfer equation for sublimation rate.
+        
+        From functions.sub_rate: dmdt = Ap/Rp/kg_To_g*(Psub-Pch)
+        Rearranged: dmdt * Rp = Ap * (Psub - Pch) / kg_To_g
+        """
+        if t == 0:
+            return pyo.Constraint.Skip  # Initial condition handled separately
+        # dmdt in kg/hr; kg_To_g = 1000 from constant.py
+        return m.dmdt[t] * m.Rp[t] == Ap * (m.Psub[t] - m.Pch[t]) / constant.kg_To_g
     
     model.sublimation_rate = pyo.Constraint(model.t, rule=sublimation_rate_rule)
     
     # ======================
-    # DIFFERENTIAL EQUATIONS
+    # QUASI-STEADY HEAT BALANCE (ALGEBRAIC CONSTRAINTS)
     # ======================
+    # The scipy model uses quasi-steady state heat balance:
+    # Qsub = dHs * (Psub - Pch) * Ap / Rp / hr_To_s  [cal/s]
+    # Tbot = Tsub + Qsub / Ap / k_ice * (Lpr0 - Lck)
+    # Qsh = Kv * Av * (Tsh - Tbot)                   [cal/s]
+    # At steady state: Qsub = Qsh
     
-    def heat_balance_ode_rule(m, t):
-        """Energy balance at sublimation front.
+    k_ice = constant.k_ice  # Thermal conductivity of ice [cal/cm/s/K] (0.0059)
+    hr_To_s = constant.hr_To_s  # Seconds per hour (3600.0)
+    
+    def heat_balance_rule(m, t):
+        """Quasi-steady heat balance: heat in from shelf = heat for sublimation.
         
-        Heat in from shelf = Heat consumed by sublimation
-        This determines the rate of change of Tsub.
-        
-        For simplicity, we use a quasi-steady approximation where
-        the sublimation front temperature adjusts rapidly.
+        This replaces the ODE approach with the correct algebraic constraint.
         """
-        if t == 0:
-            return pyo.Constraint.Skip
+        # Heat for sublimation [cal/s]
+        # Qsub = dHs * (Psub - Pch) * Ap / Rp / hr_To_s
+        Qsub = dHs * (m.Psub[t] - m.Pch[t]) * Ap / m.Rp[t] / hr_To_s
         
-        # Heat from shelf [cal/hr]
-        Q_shelf = m.Kv[t] * Av * (m.Tsh[t] - m.Tbot[t]) * 3600
+        # Heat from shelf [cal/s]
+        Qsh = m.Kv[t] * Av * (m.Tsh[t] - m.Tbot[t])
         
-        # Heat for sublimation [cal/hr]
-        Q_sub = m.dmdt[t] * dHs * 1000  # kg/hr * cal/g * 1000 g/kg
-        
-        # Simplified ODE: rate of Tsub change proportional to imbalance
-        # This is a relaxation; in reality Tsub adjusts to maintain balance
-        tau_thermal = 0.1  # Thermal time constant [hr]
-        
-        return m.dTsub_dt[t] == (Q_shelf - Q_sub) / (tau_thermal * Q_sub + 1e-6) * m.t_final
+        # Quasi-steady: Qsub = Qsh
+        return Qsub == Qsh
     
-    model.heat_balance_ode = pyo.Constraint(model.t, rule=heat_balance_ode_rule)
+    model.heat_balance = pyo.Constraint(model.t, rule=heat_balance_rule)
     
-    def vial_bottom_temp_ode_rule(m, t):
-        """Vial bottom temperature dynamics.
+    def bottom_temp_rule(m, t):
+        """Vial bottom temperature from temperature gradient through frozen product.
         
-        Tbot tracks Tsh with thermal lag.
+        Tbot = Tsub + Qsub / (Ap * k_ice) * (Lpr0 - Lck)
         """
-        if t == 0:
-            return pyo.Constraint.Skip
+        # Heat for sublimation [cal/s]
+        Qsub = dHs * (m.Psub[t] - m.Pch[t]) * Ap / m.Rp[t] / hr_To_s
         
-        tau_vial = 0.5  # Vial thermal time constant [hr]
-        
-        return m.dTbot_dt[t] == (m.Tsh[t] - m.Tbot[t]) / tau_vial * m.t_final
+        # Temperature gradient: dT/dx = Q / (A * k)
+        # So Tbot - Tsub = Q * L / (A * k)
+        return m.Tbot[t] == m.Tsub[t] + Qsub / (Ap * k_ice) * (Lpr0 - m.Lck[t])
     
-    model.vial_bottom_temp_ode = pyo.Constraint(model.t, rule=vial_bottom_temp_ode_rule)
+    model.bottom_temp = pyo.Constraint(model.t, rule=bottom_temp_rule)
+    
+    # ======================
+    # DIFFERENTIAL EQUATION FOR CAKE LENGTH
+    # ======================
     
     def cake_length_ode_rule(m, t):
         """Dried cake length increases with sublimation.
@@ -285,18 +296,6 @@ def create_multi_period_model(
     # ======================
     # INITIAL CONDITIONS
     # ======================
-    
-    def tsub_ic_rule(m):
-        """Initial sublimation temperature."""
-        return m.Tsub[0] == -40.0  # Start cold
-    
-    model.tsub_ic = pyo.Constraint(rule=tsub_ic_rule)
-    
-    def tbot_ic_rule(m):
-        """Initial vial bottom temperature."""
-        return m.Tbot[0] == -40.0  # Start at shelf temp
-    
-    model.tbot_ic = pyo.Constraint(rule=tbot_ic_rule)
     
     def lck_ic_rule(m):
         """Initial cake length is zero."""
@@ -319,7 +318,12 @@ def create_multi_period_model(
     # ======================
     
     def temp_limit_rule(m, t):
-        """Product temperature must not exceed maximum."""
+        """Product temperature must not exceed maximum.
+        
+        Skip at t=0 since the process starts from cold shelf temperature.
+        """
+        if t == 0:
+            return pyo.Constraint.Skip
         return m.Tsub[t] >= Tpr_max
     
     model.temp_limit = pyo.Constraint(model.t, rule=temp_limit_rule)
@@ -375,9 +379,7 @@ def create_multi_period_model(
             # Lck O(1) already good
             model.scaling_factor[model.Lck[t]] = 1.0
             
-            # Derivatives (per normalized time)
-            model.scaling_factor[model.dTsub_dt[t]] = 0.1
-            model.scaling_factor[model.dTbot_dt[t]] = 0.1
+            # Derivatives (per normalized time) - only Lck has a derivative now
             model.scaling_factor[model.dLck_dt[t]] = 1.0
         
         # Scalar variables
@@ -469,6 +471,32 @@ def warmstart_from_scipy_trajectory(
         else:
             model.dmdt[t_norm].set_value(0.1)
 
+    # Initialize derivative variable (dLck_dt only) by computing from state trajectories
+    # The derivatives are with respect to normalized time, so scale by t_final
+    t_pyomo_list = list(t_pyomo)
+
+    for i, t_norm in enumerate(t_pyomo_list):
+        if i == 0:
+            # Use forward difference for first point
+            if len(t_pyomo_list) > 1:
+                t_next = t_pyomo_list[1]
+                dt_norm = t_next - t_norm
+                dLck_dt = (pyo.value(model.Lck[t_next]) - pyo.value(model.Lck[t_norm])) / dt_norm
+            else:
+                dLck_dt = 0.0
+        else:
+            # Use backward difference
+            t_prev = t_pyomo_list[i - 1]
+            dt_norm = t_norm - t_prev
+            if dt_norm > 1e-10:
+                dLck_dt = (pyo.value(model.Lck[t_norm]) - pyo.value(model.Lck[t_prev])) / dt_norm
+            else:
+                dLck_dt = 0.0
+
+        # Set derivative value (skip t=0 as it doesn't have derivative vars after discretization)
+        if hasattr(model, 'dLck_dt') and t_norm in model.dLck_dt:
+            model.dLck_dt[t_norm].set_value(dLck_dt)
+
 
 def optimize_multi_period(
     vial: Dict[str, float],
@@ -544,8 +572,6 @@ def optimize_multi_period(
             model.scaling_factor[model.Kv[t]] = 1000.0
             model.scaling_factor[model.Rp[t]] = 0.01
             model.scaling_factor[model.Lck[t]] = 1.0
-            model.scaling_factor[model.dTsub_dt[t]] = 0.1
-            model.scaling_factor[model.dTbot_dt[t]] = 0.1
             model.scaling_factor[model.dLck_dt[t]] = 1.0
 
         model.scaling_factor[model.t_final] = 0.1

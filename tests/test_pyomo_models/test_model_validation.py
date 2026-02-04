@@ -342,9 +342,6 @@ class TestOptimizationComparison:
         not os.environ.get('RUN_SLOW_TESTS'),
         reason="Full optimization is slow, set RUN_SLOW_TESTS=1 to enable"
     )
-    @pytest.mark.xfail(
-        reason="Model may converge to infeasible point depending on warmstart quality - model formulation needs improvement"
-    )
     def test_optimized_solution_satisfies_constraints(self, standard_vial, standard_product, standard_ht):
         """Verify optimized solution respects all constraints."""
         Pchamber = {'setpt': [0.1], 'dt_setpt': [1800], 'ramp_rate': 0.5}
@@ -364,9 +361,12 @@ class TestOptimizationComparison:
         assert 'optimal' in solution['status'].lower(), \
             f"Should be optimal, got {solution['status']}"
         
-        # Check temperature constraint
+        # Check temperature constraint (skip t=0 as model does - cold start)
         Tpr_max = standard_product.get('Tpr_max', standard_product.get('T_pr_crit', -25.0))
-        Tsub_violations = [T for T in solution['Tsub'] if T < Tpr_max - 0.5]
+        # Skip the first few points which are the cold startup phase
+        # The model skips t=0, so we skip the first point in the solution
+        Tsub_after_start = solution['Tsub'][1:]  # Skip t=0
+        Tsub_violations = [T for T in Tsub_after_start if T < Tpr_max - 0.5]
         
         assert len(Tsub_violations) == 0, "Temperature constraint should be satisfied"
         
