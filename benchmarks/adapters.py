@@ -7,20 +7,31 @@ Each adapter returns a dictionary with standardized keys:
 - raw: original solver output or model reference
 - solver_stats: dict (iterations, evals, etc.)
 """
-from __future__ import annotations
-import time
-from typing import Dict, Any
-import numpy as np
 
-from lyopronto import opt_Tsh, opt_Pch, opt_Pch_Tsh, constant
+from __future__ import annotations
+
+import time
+from typing import Any
+
+import numpy as np
+from lyopronto import opt_Pch, opt_Pch_Tsh, opt_Tsh
 from lyopronto.pyomo_models import optimizers as pyomo_opt
 
 DRYNESS_TARGET = 98.9  # Percentage (0-100)
 
 # Scipy adapters -------------------------------------------------------------
 
-def scipy_adapter(task: str, vial: Dict[str,float], product: Dict[str,float], ht: Dict[str,float],
-                  eq_cap: Dict[str,float], nVial: int, scenario: Dict[str,Any], dt: float = 0.01) -> Dict[str,Any]:
+
+def scipy_adapter(
+    task: str,
+    vial: dict[str, float],
+    product: dict[str, float],
+    ht: dict[str, float],
+    eq_cap: dict[str, float],
+    nVial: int,
+    scenario: dict[str, Any],
+    dt: float = 0.01,
+) -> dict[str, Any]:
     """Run scipy baseline optimizer variant for specified task.
 
     task 'Tsh': optimize shelf temperature only (pressure schedule fixed)
@@ -40,7 +51,12 @@ def scipy_adapter(task: str, vial: Dict[str,float], product: Dict[str,float], ht
         # Shelf multi-step schedule with sufficient time for drying completion
         # NOTE: dt_setpt in MINUTES (opt_Pch expects minutes, converts internally)
         # High resistance products (A1=20) need ~86 hours, use 100 hours for margin
-        Tshelf = {"init": -35.0, "setpt": [-20.0, 120.0], "dt_setpt": [300.0, 5700.0], "ramp_rate": 1.0}
+        Tshelf = {
+            "init": -35.0,
+            "setpt": [-20.0, 120.0],
+            "dt_setpt": [300.0, 5700.0],
+            "ramp_rate": 1.0,
+        }
         runner = opt_Pch.dry
         args = (vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial)
     elif task == "both":
@@ -58,7 +74,7 @@ def scipy_adapter(task: str, vial: Dict[str,float], product: Dict[str,float], ht
     traj = out
     success = traj.size > 0
     message = "scipy run completed"
-    objective_time_hr = float(traj[-1,0]) if success else None
+    objective_time_hr = float(traj[-1, 0]) if success else None
 
     return {
         "trajectory": traj,
@@ -71,16 +87,18 @@ def scipy_adapter(task: str, vial: Dict[str,float], product: Dict[str,float], ht
         "raw": out,
     }
 
+
 # Pyomo adapters -------------------------------------------------------------
+
 
 def pyomo_adapter(
     task: str,
-    vial: Dict[str, float],
-    product: Dict[str, float],
-    ht: Dict[str, float],
-    eq_cap: Dict[str, float],
+    vial: dict[str, float],
+    product: dict[str, float],
+    ht: dict[str, float],
+    eq_cap: dict[str, float],
     nVial: int,
-    scenario: Dict[str, Any],
+    scenario: dict[str, Any],
     dt: float = 0.01,
     warmstart: bool = False,
     method: str = "fd",  # 'fd' or 'colloc'
@@ -89,7 +107,8 @@ def pyomo_adapter(
     effective_nfe: bool = True,
     tsh_ramp_rate: float | None = None,  # Max Tsh ramp rate [°C/hr]
     pch_ramp_rate: float | None = None,  # Max Pch ramp rate [Torr/hr]
-) -> Dict[str, Any]:
+    use_secant_ramp_constraints: bool = True,  # Add secant slope constraints for collocation
+) -> dict[str, Any]:
     """Run Pyomo optimizer counterpart for specified task with discretization controls.
 
     Parameters
@@ -104,6 +123,10 @@ def pyomo_adapter(
         If True (collocation only), treat n_elements as effective (parity with FD) for reporting.
     warmstart : bool
         Use staged solve with scipy warmstart trajectory. Default False for robustness benchmarking.
+    use_secant_ramp_constraints : bool
+        When using collocation with ramp constraints, add explicit secant slope constraints.
+        Default True. If False, only polynomial derivative constraints are used, which may
+        allow numerical derivatives between mesh points to exceed the ramp limit (by ~15%).
     """
     if task == "Tsh":
         Pchamber = {"setpt": [0.1], "dt_setpt": [180.0], "ramp_rate": 0.5}
@@ -119,7 +142,12 @@ def pyomo_adapter(
         # Shelf multi-step schedule with sufficient time for drying completion
         # NOTE: dt_setpt in MINUTES (Pyomo internally uses same convention as scipy)
         # High resistance products (A1=20) need ~86 hours, use 100 hours for margin
-        Tshelf = {"init": -35.0, "setpt": [-20.0, 120.0], "dt_setpt": [300.0, 5700.0], "ramp_rate": 1.0}
+        Tshelf = {
+            "init": -35.0,
+            "setpt": [-20.0, 120.0],
+            "dt_setpt": [300.0, 5700.0],
+            "ramp_rate": 1.0,
+        }
         runner = pyomo_opt.optimize_Pch_pyomo
         args = (vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial)
     elif task == "both":
@@ -138,7 +166,7 @@ def pyomo_adapter(
     treat_eff = (not use_fd) and bool(effective_nfe)
 
     start = time.perf_counter()
-    meta: Dict[str, Any] = {}
+    meta: dict[str, Any] = {}
     try:
         res = runner(
             *args,
@@ -149,6 +177,7 @@ def pyomo_adapter(
             warmstart_scipy=warmstart,
             return_metadata=True,
             tee=False,
+            use_secant_ramp_constraints=use_secant_ramp_constraints,
         )
         if isinstance(res, dict) and "output" in res:
             traj = res["output"]
@@ -167,7 +196,9 @@ def pyomo_adapter(
         default_t = float(traj[-1, 0])
     else:
         default_t = None
-    objective_time_hr = float(meta.get("objective_time_hr", default_t)) if success else None
+    objective_time_hr = (
+        float(meta.get("objective_time_hr", default_t)) if success else None
+    )
 
     solver_info = {
         "status": meta.get("status"),
@@ -195,7 +226,9 @@ def pyomo_adapter(
     # Merge any mesh_info from metadata if present
     mesh_info = meta.get("mesh_info")
     if isinstance(mesh_info, dict):
-        discretization.update({k: v for k, v in mesh_info.items() if k not in discretization})
+        discretization.update(
+            {k: v for k, v in mesh_info.items() if k not in discretization}
+        )
 
     return {
         "trajectory": traj,

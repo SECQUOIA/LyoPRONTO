@@ -3,23 +3,28 @@
 Computes physical residuals and simple quality checks.
 Returns a dict of metrics and flags.
 """
+
 from __future__ import annotations
+
+from typing import Any
+
 import numpy as np
-from typing import Dict, Any
 
 # Column indices per project instructions
 IDX_TIME = 0
 IDX_TSUB = 1
 IDX_TBOT = 2
-IDX_TSH  = 3
-IDX_PCH  = 4  # mTorr
+IDX_TSH = 3
+IDX_PCH = 4  # mTorr
 IDX_FLUX = 5
 IDX_PERCENT = 6  # percent_dried (0-100%)
+
 
 def _safe(arr: np.ndarray) -> np.ndarray:
     return arr if arr.size else np.array([])
 
-def compute_residuals(traj: np.ndarray) -> Dict[str, Any]:
+
+def compute_residuals(traj: np.ndarray) -> dict[str, Any]:
     """Compute residual style metrics for a trajectory."""
     if traj.size == 0:
         return {
@@ -63,7 +68,7 @@ def compare_trajectories(
     rtol: float = 0.05,
     atol_temp: float = 0.5,
     atol_pch: float = 5.0,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Compare scipy and Pyomo trajectories point-by-point.
 
     Interpolates Pyomo trajectory onto scipy time grid for fair comparison.

@@ -3,19 +3,27 @@
 Extended to support trajectory storage and discretization metadata for
 robust Scipy vs Pyomo (FD & collocation) benchmarking.
 """
+
 from __future__ import annotations
-import sys, platform, datetime, json, hashlib
-from typing import Any, Dict, List, Tuple
+
+import datetime
+import hashlib
+import json
+import platform
+import sys
+from typing import Any
 
 try:
     import pyomo
+
     PYOMO_VERSION = getattr(pyomo, "__version__", "unknown")
 except Exception:
     PYOMO_VERSION = None
 
 import numpy as np
 
-def environment_info() -> Dict[str, Any]:
+
+def environment_info() -> dict[str, Any]:
     return {
         "python": sys.version.split()[0],
         "platform": platform.platform(),
@@ -23,7 +31,8 @@ def environment_info() -> Dict[str, Any]:
         "pyomo": PYOMO_VERSION,
     }
 
-def base_record() -> Dict[str, Any]:
+
+def base_record() -> dict[str, Any]:
     """Create a base record with timestamp and environment.
 
     Additional fields will be added by generators (params, solver blocks,
@@ -35,19 +44,22 @@ def base_record() -> Dict[str, Any]:
         "version": 2,  # schema version
     }
 
-def hash_inputs(params: Dict[str, Any]) -> str:
+
+def hash_inputs(params: dict[str, Any]) -> str:
     """Stable hash for varied input parameters (order-independent)."""
     items = sorted((k, params[k]) for k in params)
     raw = json.dumps(items, separators=(",", ":"))
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
 
-def hash_record(record: Dict[str, Any]) -> str:
+
+def hash_record(record: dict[str, Any]) -> str:
     """Hash entire record excluding existing hash fields to detect duplicates."""
     shadow = {k: v for k, v in record.items() if not k.startswith("hash.")}
     raw = json.dumps(shadow, default=str, separators=(",", ":"))
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
 
-def serialize(record: Dict[str, Any]) -> str:
+
+def serialize(record: dict[str, Any]) -> str:
     """Serialize a record to compact JSON.
 
     Ensures hashes are present; if trajectory is a numpy array it is converted
@@ -63,9 +75,11 @@ def serialize(record: Dict[str, Any]) -> str:
             return list(o)
         try:
             import numpy as _np
+
             if isinstance(o, _np.ndarray):
                 return o.tolist()
         except Exception:
             pass
         return str(o)
+
     return json.dumps(record, default=default, separators=(",", ":"))

@@ -21,28 +21,25 @@ Generate baseline + FD + collocation over two parameters:
 
 Analysis notebook should treat resulting JSONL as read-only input.
 """
+
 from __future__ import annotations
+
 import argparse
+import copy
 import itertools
-import json
-import math
 import sys
 from pathlib import Path
-from typing import Dict, Any, List
-import time
-import copy
+from typing import Any
 
-import numpy as np
-
+from benchmarks.adapters import pyomo_adapter, scipy_adapter
 from benchmarks.scenarios import SCENARIOS
 from benchmarks.schema import base_record, serialize
 from benchmarks.validate import compute_residuals
-from benchmarks.adapters import scipy_adapter, pyomo_adapter
 
 VALID_METHODS = {"scipy", "fd", "colloc"}
 
 
-def parse_vary(values: List[str]) -> List[Dict[str, Any]]:
+def parse_vary(values: list[str]) -> list[dict[str, Any]]:
     """Parse --vary specifications into list of {path, values} dicts."""
     specs = []
     for item in values:
@@ -70,7 +67,7 @@ def parse_vary(values: List[str]) -> List[Dict[str, Any]]:
     return specs
 
 
-def set_nested(d: Dict[str, Any], path: str, value: Any) -> None:
+def set_nested(d: dict[str, Any], path: str, value: Any) -> None:
     cur = d
     parts = path.split(".")
     for key in parts[:-1]:
@@ -89,7 +86,10 @@ def generate(args: argparse.Namespace) -> int:
         print(f"ERROR: Unknown methods: {unknown}", file=sys.stderr)
         return 2
     if scenario_name not in SCENARIOS:
-        print(f"ERROR: Unknown scenario '{scenario_name}'. Available: {list(SCENARIOS.keys())}", file=sys.stderr)
+        print(
+            f"ERROR: Unknown scenario '{scenario_name}'. Available: {list(SCENARIOS.keys())}",
+            file=sys.stderr,
+        )
         return 2
     vary_specs = parse_vary(args.vary)
     out_path = Path(args.out)
@@ -100,10 +100,10 @@ def generate(args: argparse.Namespace) -> int:
         return 0
 
     base_scen = copy.deepcopy(SCENARIOS[scenario_name])
-    vial = base_scen["vial"]
-    product = base_scen["product"]
-    ht = base_scen["ht"]
-    eq_cap = base_scen["eq_cap"]
+    base_scen["vial"]
+    base_scen["product"]
+    base_scen["ht"]
+    base_scen["eq_cap"]
     nVial = base_scen.get("nVial", 400)
 
     # Build cartesian product of parameter values
@@ -112,7 +112,9 @@ def generate(args: argparse.Namespace) -> int:
     combos = list(itertools.product(*vary_values_lists))
 
     total = len(combos)
-    print(f"Generating {total} combinations × {len(methods)} methods → {total * len(methods)} records")
+    print(
+        f"Generating {total} combinations × {len(methods)} methods → {total * len(methods)} records"
+    )
 
     with out_path.open("w", encoding="utf-8") as f:
         k = 0
@@ -121,16 +123,32 @@ def generate(args: argparse.Namespace) -> int:
             scen = copy.deepcopy(base_scen)
             for path, val in zip(vary_paths, combo):
                 set_nested(scen, path, val)
-            vial_c = scen["vial"]; product_c = scen["product"]; ht_c = scen["ht"]
-            eq_cap_c = scen["eq_cap"]; nVial_c = scen.get("nVial", nVial)
+            vial_c = scen["vial"]
+            product_c = scen["product"]
+            ht_c = scen["ht"]
+            eq_cap_c = scen["eq_cap"]
+            nVial_c = scen.get("nVial", nVial)
 
             scipy_res = None  # compute baseline once if requested
             for method in methods:
                 k += 1
                 # Run scipy baseline if method == 'scipy'
                 if method == "scipy":
-                    scipy_res = scipy_adapter(task, vial_c, product_c, ht_c, eq_cap_c, nVial_c, scen, dt=args.dt)
-                    sc_metrics = compute_residuals(scipy_res["trajectory"]) if scipy_res["success"] else {}
+                    scipy_res = scipy_adapter(
+                        task,
+                        vial_c,
+                        product_c,
+                        ht_c,
+                        eq_cap_c,
+                        nVial_c,
+                        scen,
+                        dt=args.dt,
+                    )
+                    sc_metrics = (
+                        compute_residuals(scipy_res["trajectory"])
+                        if scipy_res["success"]
+                        else {}
+                    )
                     rec = base_record()
                     scipy_block = {
                         "success": scipy_res["success"],
@@ -140,15 +158,26 @@ def generate(args: argparse.Namespace) -> int:
                         "metrics": sc_metrics,
                     }
                     if args.save_trajectories and scipy_res["success"]:
-                        scipy_block["trajectory"] = scipy_res["trajectory"]  # numpy array, serialized via schema
-                    rec.update({
-                        "task": task,
-                        "scenario": scenario_name,
-                        "grid": {**{f"param{i+1}": {"path": p, "value": v} for i, (p, v) in enumerate(zip(vary_paths, combo))}},
-                        "scipy": scipy_block,
-                        "pyomo": None,  # placeholder for analysis scripts
-                    })
-                    rec["failed"] = (not rec["scipy"]["success"]) or (not rec["scipy"]["metrics"].get("dryness_target_met", True))
+                        scipy_block["trajectory"] = scipy_res[
+                            "trajectory"
+                        ]  # numpy array, serialized via schema
+                    rec.update(
+                        {
+                            "task": task,
+                            "scenario": scenario_name,
+                            "grid": {
+                                **{
+                                    f"param{i + 1}": {"path": p, "value": v}
+                                    for i, (p, v) in enumerate(zip(vary_paths, combo))
+                                }
+                            },
+                            "scipy": scipy_block,
+                            "pyomo": None,  # placeholder for analysis scripts
+                        }
+                    )
+                    rec["failed"] = (not rec["scipy"]["success"]) or (
+                        not rec["scipy"]["metrics"].get("dryness_target_met", True)
+                    )
                     f.write(serialize(rec) + "\n")
                     f.flush()
                     status = "FAIL" if rec["failed"] else "OK"
@@ -158,7 +187,16 @@ def generate(args: argparse.Namespace) -> int:
                 # Pyomo methods
                 # Ensure scipy baseline available for potential future warmstart logic
                 if scipy_res is None:
-                    scipy_res = scipy_adapter(task, vial_c, product_c, ht_c, eq_cap_c, nVial_c, scen, dt=args.dt)
+                    scipy_res = scipy_adapter(
+                        task,
+                        vial_c,
+                        product_c,
+                        ht_c,
+                        eq_cap_c,
+                        nVial_c,
+                        scen,
+                        dt=args.dt,
+                    )
                 py_res = pyomo_adapter(
                     task,
                     vial_c,
@@ -175,9 +213,16 @@ def generate(args: argparse.Namespace) -> int:
                     effective_nfe=(not args.raw_colloc),
                     tsh_ramp_rate=args.tsh_ramp,
                     pch_ramp_rate=args.pch_ramp,
+                    use_secant_ramp_constraints=(not args.no_secant_constraints),
                 )
-                sc_metrics = compute_residuals(scipy_res["trajectory"]) if scipy_res["success"] else {}
-                py_metrics = compute_residuals(py_res["trajectory"]) if py_res["success"] else {}
+                sc_metrics = (
+                    compute_residuals(scipy_res["trajectory"])
+                    if scipy_res["success"]
+                    else {}
+                )
+                py_metrics = (
+                    compute_residuals(py_res["trajectory"]) if py_res["success"] else {}
+                )
                 rec = base_record()
                 scipy_block = {
                     "success": scipy_res["success"],
@@ -197,60 +242,135 @@ def generate(args: argparse.Namespace) -> int:
                     "ramp_constraints": {
                         "tsh_ramp_rate": args.tsh_ramp,
                         "pch_ramp_rate": args.pch_ramp,
-                    } if args.tsh_ramp or args.pch_ramp else None,
+                        "secant_constraints": not args.no_secant_constraints,
+                    }
+                    if args.tsh_ramp or args.pch_ramp
+                    else None,
                 }
                 if args.save_trajectories:
                     if scipy_res["success"]:
                         scipy_block["trajectory"] = scipy_res["trajectory"]
                     if py_res["success"]:
                         pyomo_block["trajectory"] = py_res["trajectory"]
-                rec.update({
-                    "task": task,
-                    "scenario": scenario_name,
-                    "grid": {**{f"param{i+1}": {"path": p, "value": v} for i, (p, v) in enumerate(zip(vary_paths, combo))}},
-                    "scipy": scipy_block,
-                    "pyomo": pyomo_block,
-                })
+                rec.update(
+                    {
+                        "task": task,
+                        "scenario": scenario_name,
+                        "grid": {
+                            **{
+                                f"param{i + 1}": {"path": p, "value": v}
+                                for i, (p, v) in enumerate(zip(vary_paths, combo))
+                            }
+                        },
+                        "scipy": scipy_block,
+                        "pyomo": pyomo_block,
+                    }
+                )
                 rec["failed"] = (
-                    (not rec["scipy"]["success"]) or
-                    (not rec["pyomo"]["success"]) or
-                    (not rec["scipy"]["metrics"].get("dryness_target_met", True)) or
-                    (not rec["pyomo"]["metrics"].get("dryness_target_met", True))
+                    (not rec["scipy"]["success"])
+                    or (not rec["pyomo"]["success"])
+                    or (not rec["scipy"]["metrics"].get("dryness_target_met", True))
+                    or (not rec["pyomo"]["metrics"].get("dryness_target_met", True))
                 )
                 f.write(serialize(rec) + "\n")
                 f.flush()
                 status = "FAIL" if rec["failed"] else "OK"
-                disc = rec["pyomo"].get("discretization", {}) if rec.get("pyomo") else {}
-                disc_tag = f"{disc.get('method')} n={disc.get('n_elements_requested')}" + (f" ncp={disc.get('n_collocation')}" if disc.get('method')=='colloc' else '')
-                print(f"[{k}/{total * len(methods)}] {status} {method} combo={combo} {disc_tag}")
+                disc = (
+                    rec["pyomo"].get("discretization", {}) if rec.get("pyomo") else {}
+                )
+                disc_tag = (
+                    f"{disc.get('method')} n={disc.get('n_elements_requested')}"
+                    + (
+                        f" ncp={disc.get('n_collocation')}"
+                        if disc.get("method") == "colloc"
+                        else ""
+                    )
+                )
+                print(
+                    f"[{k}/{total * len(methods)}] {status} {method} combo={combo} {disc_tag}"
+                )
     print(f"Done → {out_path}")
     return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="grid_cli", description="Benchmark generation CLI (Pyomo vs Scipy)")
+    p = argparse.ArgumentParser(
+        prog="grid_cli", description="Benchmark generation CLI (Pyomo vs Scipy)"
+    )
     sub = p.add_subparsers(dest="command", required=True)
 
     g = sub.add_parser("generate", help="Generate JSONL records for parameter grid")
-    g.add_argument("--task", required=True, choices=["Tsh", "Pch", "both"], help="Optimization task variant")
-    g.add_argument("--scenario", required=True, help="Scenario name from benchmarks.scenarios")
-    g.add_argument("--vary", action="append", required=True, help="Parameter path=value1,value2,... (repeatable)")
-    g.add_argument("--methods", default="scipy,fd,colloc", help="Comma-separated methods to run")
-    g.add_argument("--n-elements", type=int, default=24, help="Number of finite elements")
-    g.add_argument("--n-collocation", type=int, default=3, help="Collocation points per element (colloc only)")
-    g.add_argument("--raw-colloc", action="store_true", help="Disable effective-nfe parity reporting for collocation")
-    g.add_argument("--warmstart", action="store_true", help="Enable scipy warmstart (default off)")
-    g.add_argument("--dt", type=float, default=0.01, help="Time step for scipy baseline trajectory")
-    g.add_argument("--tsh-ramp", type=float, default=None, help="Max shelf temperature ramp rate [°C/hr] (Pyomo only)")
-    g.add_argument("--pch-ramp", type=float, default=None, help="Max chamber pressure ramp rate [Torr/hr] (Pyomo only)")
+    g.add_argument(
+        "--task",
+        required=True,
+        choices=["Tsh", "Pch", "both"],
+        help="Optimization task variant",
+    )
+    g.add_argument(
+        "--scenario", required=True, help="Scenario name from benchmarks.scenarios"
+    )
+    g.add_argument(
+        "--vary",
+        action="append",
+        required=True,
+        help="Parameter path=value1,value2,... (repeatable)",
+    )
+    g.add_argument(
+        "--methods", default="scipy,fd,colloc", help="Comma-separated methods to run"
+    )
+    g.add_argument(
+        "--n-elements", type=int, default=24, help="Number of finite elements"
+    )
+    g.add_argument(
+        "--n-collocation",
+        type=int,
+        default=3,
+        help="Collocation points per element (colloc only)",
+    )
+    g.add_argument(
+        "--raw-colloc",
+        action="store_true",
+        help="Disable effective-nfe parity reporting for collocation",
+    )
+    g.add_argument(
+        "--warmstart", action="store_true", help="Enable scipy warmstart (default off)"
+    )
+    g.add_argument(
+        "--dt", type=float, default=0.01, help="Time step for scipy baseline trajectory"
+    )
+    g.add_argument(
+        "--tsh-ramp",
+        type=float,
+        default=None,
+        help="Max shelf temperature ramp rate [°C/hr] (Pyomo only)",
+    )
+    g.add_argument(
+        "--pch-ramp",
+        type=float,
+        default=None,
+        help="Max chamber pressure ramp rate [Torr/hr] (Pyomo only)",
+    )
+    g.add_argument(
+        "--no-secant-constraints",
+        action="store_true",
+        help="Disable explicit secant slope constraints for collocation ramp rates. "
+        "When disabled, only polynomial derivative constraints are used, which may "
+        "allow numerical derivatives to exceed ramp limit by ~15%%. Default: enabled.",
+    )
     g.add_argument("--out", required=True, help="Output JSONL path")
-    g.add_argument("--force", action="store_true", help="Force regeneration even if file exists")
-    g.add_argument("--save-trajectories", action="store_true", help="Store full trajectories in JSONL (larger files)")
+    g.add_argument(
+        "--force", action="store_true", help="Force regeneration even if file exists"
+    )
+    g.add_argument(
+        "--save-trajectories",
+        action="store_true",
+        help="Store full trajectories in JSONL (larger files)",
+    )
 
     return p
 
 
-def main(argv: List[str] | None = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     if args.command == "generate":
