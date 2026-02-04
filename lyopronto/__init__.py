@@ -5,22 +5,24 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-  
+
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-  
+
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from . import constant
-from . import freezing
-from . import calc_knownRp
-from . import calc_unknownRp
-from . import design_space
-from . import opt_Pch_Tsh
-from . import opt_Pch
-from . import opt_Tsh
-from . import functions
-from . import plot_styling
+from . import (
+    calc_knownRp,
+    calc_unknownRp,
+    constant,
+    design_space,
+    freezing,
+    functions,
+    opt_Pch,
+    opt_Pch_Tsh,
+    opt_Tsh,
+    plot_styling,
+)

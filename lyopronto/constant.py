@@ -5,12 +5,12 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-  
+
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-  
+
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
@@ -25,15 +25,15 @@ min_To_s = 60.0
 Torr_to_mTorr = 1000.0
 cal_To_J = 4.184
 
-rho_ice = 0.918 # [g/mL]
-rho_solute = 1.5 # [g/mL]
+rho_ice = 0.918  # [g/mL]
+rho_solute = 1.5  # [g/mL]
 rho_solution = 1.0  # [g/mL]
 
-dHs = 678.0 # Heat of sublimation [cal/g]
-k_ice = 0.0059 # Thermal conductivity of ice [cal/cm/s/K]
-dHf = 79.7 # Heat of fusion [cal/g]
+dHs = 678.0  # Heat of sublimation [cal/g]
+k_ice = 0.0059  # Thermal conductivity of ice [cal/cm/s/K]
+dHf = 79.7  # Heat of fusion [cal/g]
 
-Cp_ice = 2030.0 # Constant pressure specific heat of ice [J/kg/K]
-Cp_solution = 4000.0 # Constant pressure specific heat of water [J/kg/K]
+Cp_ice = 2030.0  # Constant pressure specific heat of ice [J/kg/K]
+Cp_solution = 4000.0  # Constant pressure specific heat of water [J/kg/K]
 
 ##################################################
