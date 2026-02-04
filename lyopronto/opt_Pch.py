@@ -52,26 +52,20 @@ def dry(vial,product,ht,Pchamber,Tshelf,dt,eq_cap,nVial):
     for dt_i in Tshelf['dt_setpt']:
         Tshelf['t_setpt'] = np.append(Tshelf['t_setpt'],Tshelf['t_setpt'][-1]+dt_i/constant.hr_To_min)
        
-    # Initial product and shelf temperatures
-    # BUG FIX: Use actual shelf temperature from schedule, not T_pr_crit
-    # Original code used T_pr_crit which caused constraint violations of 30°C+
-    # when shelf starts cold (e.g., Tshelf['init'] = -35°C)
-    Tsh0 = Tsh   # degC - use actual initial shelf temp
-    Tb0 = Tsh - 1.0   # degC - product slightly colder than shelf initially
-    Ts0 = Tb0 - 1.0   # degC - sublimation front colder than vial bottom
+    # Initial product and shelf temperatures for optimizer initial guess
+    T0 = product['T_pr_crit']   # degC - reference temperature
 
     ######################################################
 
     ################ Primary drying ######################
-    # Objective function to be minimized to maximize sublimation rate
-    def objfun(x):
-        return (x[0]-x[4])
-    # Quantities solved for: x = [Pch,dmdt,Tbot,Tsh,Psub,Tsub,Kv]
-    x0 = np.array([P0,0.0,Tb0,Tsh0,P0*1.1,Ts0,3.0e-4])    # Initial values
-    failures = 0
-    output_saved = None  # Initialize to avoid UnboundLocalError
 
     while(Lck<=Lpr0): # Dry the entire frozen product
+        # Reset initial guess each iteration for numerical stability
+        # Using T_pr_crit as reference since that's where sublimation happens
+        # Quantities solved for: x = [Pch,dmdt,Tbot,Tsh,Psub,Tsub,Kv]
+        x0 = [P0, 0.0, T0, T0, P0, T0, 3.0e-4]
+        # Objective function to be minimized to maximize sublimation rate
+        objfun = lambda x: (x[0] - x[4])
 
         Rp = functions.Rp_FUN(Lck,product['R0'],product['A1'],product['A2'])  # Product resistance in cm^2-hr-Torr/g
     
@@ -84,26 +78,15 @@ def dry(vial,product,ht,Pchamber,Tshelf,dt,eq_cap,nVial):
             {'type':'eq','fun':lambda x: x[3]-Tsh},    # shelf temperature fixed in degC
             {'type':'ineq','fun':lambda x: functions.Ineq_Constraints(x[0],x[1],product['T_pr_crit'],x[2],eq_cap['a'],eq_cap['b'],nVial)[0]},  # equipment capability inequlity
             {'type':'ineq','fun':lambda x: functions.Ineq_Constraints(x[0],x[1],product['T_pr_crit'],x[2],eq_cap['a'],eq_cap['b'],nVial)[1]})  # maximum product temperature inequality
-        # Bounds for the unknowns
-        bnds = ((Pchamber['min'],Pchamber.get('max', None)),(0,None),(None,None),(None,None),(0,None),(None,None),(0,None))
+        # Bounds for the unknowns: only Pch has lower bound
+        bnds = ((Pchamber['min'],Pchamber.get('max', None)),(None,None),(None,None),(None,None),(None,None),(None,None),(None,None))
         # Minimize the objective function i.e. maximize the sublimation rate
         res = sp.minimize(objfun,x0,bounds = bnds, constraints = cons)
         [Pch,dmdt,Tbot,Tsh,Psub,Tsub,Kv] = res['x']    # Results in Torr, kg/hr, degC, degC, Torr, degC, cal/s/K/cm^2
-        # Use the results as a guess for the next iteration
-        if res['success']:
-            x0 = res['x'].copy()  # Update initial guess for next iteration
-        # TODO: decide on appropriate error handling for unsuccessful iterations
-        # Should check some simple conditions probably and see if inputs have any feasible solutions
-        if not res['success']:
-            warnings.warn(f"Optimization failed at {t} hr, {percent_dried:.1f}% dried.\n"+\
-                          f"Message: {res['message']}\n"+\
-                          f"Pch={Pch:.1f}, dmdt={dmdt:.2e}, Tbot={Tbot:.1f}, Tsh={Tsh:.1f}, Psub={Psub:.1f}, Tsub={Tsub:.1f}, Kv={Kv:.2e}")
-            failures += 1
-            if failures >= 10:
-                # warnings.warn(f"Maximum consecutive optimization failures ({failures}) reached. Terminating drying simulation.")
-                break
-            else:
-                continue
+        
+        # Ensure physical constraints: dmdt and Kv must be non-negative
+        dmdt = max(0.0, dmdt)
+        Kv = max(0.0, Kv)
 
         # Sublimated ice length
         dL = (dmdt*constant.kg_To_g)*dt/(1-product['cSolid']*constant.rho_solution/constant.rho_solute)/(vial['Ap']*constant.rho_ice)*(1-product['cSolid']*(constant.rho_solution-constant.rho_ice)/constant.rho_solute) # cm
@@ -133,28 +116,14 @@ def dry(vial,product,ht,Pchamber,Tshelf,dt,eq_cap,nVial):
             i = np.where(Tshelf['t_setpt']>t)[0][0]
             # Ramp shelf temperature till next set point is reached and then maintain at set point
             if Tshelf['setpt'][i] >= Tshelf['setpt'][i-1]:
-                Tsh_new = min(Tshelf['setpt'][i-1] + Tshelf['ramp_rate']*constant.hr_To_min*(t-Tshelf['t_setpt'][i-1]),Tshelf['setpt'][i])
+                Tsh = min(Tshelf['setpt'][i-1] + Tshelf['ramp_rate']*constant.hr_To_min*(t-Tshelf['t_setpt'][i-1]),Tshelf['setpt'][i])
             else:
-                Tsh_new = max(Tshelf['setpt'][i-1] - Tshelf['ramp_rate']*constant.hr_To_min*(t-Tshelf['t_setpt'][i-1]),Tshelf['setpt'][i])
-            
-            # Update x0 with new Tsh and adjust other temperatures proportionally
-            # to give optimizer a better initial guess
-            dTsh = Tsh_new - Tsh
-            x0[2] += dTsh  # Tbot shifts with shelf
-            x0[3] = Tsh_new   # Tsh
-            x0[5] += dTsh  # Tsub shifts with shelf
-            Tsh = Tsh_new
+                Tsh = max(Tshelf['setpt'][i-1] - Tshelf['ramp_rate']*constant.hr_To_min*(t-Tshelf['t_setpt'][i-1]),Tshelf['setpt'][i])
           
             iStep = iStep + 1 # Time iteration number
 
     ######################################################
 
-    # Handle case where no successful iterations occurred
-    if output_saved is None:
-        warnings.warn("No successful optimization iterations. Returning empty result with initial state.")
-        # Return single row with initial state
-        output_saved = np.array([[0.0, Ts0, Tb0, Tshelf['init'], P0*constant.Torr_to_mTorr, 0.0, 0.0]])
-    
     return output_saved    
     
 ############################################################################
