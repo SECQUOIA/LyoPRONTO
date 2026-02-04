@@ -12,7 +12,26 @@ def test_pyomo_available_is_bool():
 
 
 def test_pyomo_available_exported():
-    assert pyomo_models.__all__ == ["PYOMO_AVAILABLE"]
+    assert "PYOMO_AVAILABLE" in pyomo_models.__all__
+
+
+def test_pyomo_exports_optimizers_when_pyomo_available():
+    expected_exports = {
+        "create_single_step_model",
+        "solve_single_step",
+        "optimize_single_step",
+        "create_multi_period_model",
+        "optimize_multi_period",
+        "warmstart_from_scipy_trajectory",
+        "optimize_Tsh_pyomo",
+        "optimize_Pch_pyomo",
+        "optimize_Pch_Tsh_pyomo",
+    }
+
+    if pyomo_models.PYOMO_AVAILABLE:
+        assert expected_exports.issubset(pyomo_models.__all__)
+    else:
+        assert expected_exports.isdisjoint(pyomo_models.__all__)
 
 
 def test_pyomo_available_false_when_pyomo_missing(monkeypatch):
