@@ -1,0 +1,76 @@
+{
+  "groups": {
+    "Tsh:baseline": {
+      "n": 1,
+      "scipy_success_rate": 1.0,
+      "pyomo_success_rate": 1.0,
+      "avg_scipy_time_s": 9.981292825192213,
+      "avg_pyomo_time_s": 0.9578948360867798,
+      "avg_scipy_objective_hr": 12.193457634758468,
+      "avg_pyomo_objective_hr": 12.296330056610033,
+      "avg_time_ratio_pyomo_over_scipy": 0.09596901452175693,
+      "scipy_dryness_rate": 1.0,
+      "pyomo_dryness_rate": 1.0
+    },
+    "Tsh:high_resistance": {
+      "n": 1,
+      "scipy_success_rate": 1.0,
+      "pyomo_success_rate": 1.0,
+      "avg_scipy_time_s": 14.263688685838133,
+      "avg_pyomo_time_s": 0.026659113820642233,
+      "avg_scipy_objective_hr": 18.732097262168242,
+      "avg_pyomo_objective_hr": 19.501428255526214,
+      "avg_time_ratio_pyomo_over_scipy": 0.0018690196069065248,
+      "scipy_dryness_rate": 1.0,
+      "pyomo_dryness_rate": 1.0
+    },
+    "Pch:baseline": {
+      "n": 1,
+      "scipy_success_rate": 1.0,
+      "pyomo_success_rate": 1.0,
+      "avg_scipy_time_s": 24.274596365634352,
+      "avg_pyomo_time_s": 0.023866656702011824,
+      "avg_scipy_objective_hr": 34.99,
+      "avg_pyomo_objective_hr": 10.849242419442364,
+      "avg_time_ratio_pyomo_over_scipy": 0.000983194791069727,
+      "scipy_dryness_rate": 1.0,
+      "pyomo_dryness_rate": 1.0
+    },
+    "Pch:high_resistance": {
+      "n": 1,
+      "scipy_success_rate": 1.0,
+      "pyomo_success_rate": 1.0,
+      "avg_scipy_time_s": 23.584140249993652,
+      "avg_pyomo_time_s": 0.0247483323328197,
+      "avg_scipy_objective_hr": 34.99,
+      "avg_pyomo_objective_hr": 17.206412132308042,
+      "avg_time_ratio_pyomo_over_scipy": 0.0010493633463202613,
+      "scipy_dryness_rate": 1.0,
+      "pyomo_dryness_rate": 1.0
+    },
+    "both:baseline": {
+      "n": 1,
+      "scipy_success_rate": 1.0,
+      "pyomo_success_rate": 1.0,
+      "avg_scipy_time_s": 11.588543647900224,
+      "avg_pyomo_time_s": 0.025803061202168465,
+      "avg_scipy_objective_hr": 10.751847248298995,
+      "avg_pyomo_objective_hr": 10.639329271314493,
+      "avg_time_ratio_pyomo_over_scipy": 0.00222660085565142,
+      "scipy_dryness_rate": 1.0,
+      "pyomo_dryness_rate": 1.0
+    },
+    "both:high_resistance": {
+      "n": 1,
+      "scipy_success_rate": 1.0,
+      "pyomo_success_rate": 1.0,
+      "avg_scipy_time_s": 16.232334604952484,
+      "avg_pyomo_time_s": 0.02223166823387146,
+      "avg_scipy_objective_hr": 16.52197272811752,
+      "avg_pyomo_objective_hr": 16.86092996637172,
+      "avg_time_ratio_pyomo_over_scipy": 0.0013695915452043835,
+      "scipy_dryness_rate": 1.0,
+      "pyomo_dryness_rate": 1.0
+    }
+  }
+}
