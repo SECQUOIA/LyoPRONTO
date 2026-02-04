@@ -53,9 +53,12 @@ def dry(vial,product,ht,Pchamber,Tshelf,dt,eq_cap,nVial):
         Tshelf['t_setpt'] = np.append(Tshelf['t_setpt'],Tshelf['t_setpt'][-1]+dt_i/constant.hr_To_min)
        
     # Initial product and shelf temperatures
-    Tb0 = product['T_pr_crit'] -0.1   # degC
-    Ts0 = Tb0 - 0.1   # degC
-    Tsh0 = Tb0 +0.1   # degC
+    # BUG FIX: Use actual shelf temperature from schedule, not T_pr_crit
+    # Original code used T_pr_crit which caused constraint violations of 30°C+
+    # when shelf starts cold (e.g., Tshelf['init'] = -35°C)
+    Tsh0 = Tsh   # degC - use actual initial shelf temp
+    Tb0 = Tsh - 1.0   # degC - product slightly colder than shelf initially
+    Ts0 = Tb0 - 1.0   # degC - sublimation front colder than vial bottom
 
     ######################################################
 
@@ -66,6 +69,7 @@ def dry(vial,product,ht,Pchamber,Tshelf,dt,eq_cap,nVial):
     # Quantities solved for: x = [Pch,dmdt,Tbot,Tsh,Psub,Tsub,Kv]
     x0 = np.array([P0,0.0,Tb0,Tsh0,P0*1.1,Ts0,3.0e-4])    # Initial values
     failures = 0
+    output_saved = None  # Initialize to avoid UnboundLocalError
 
     while(Lck<=Lpr0): # Dry the entire frozen product
 
@@ -85,7 +89,9 @@ def dry(vial,product,ht,Pchamber,Tshelf,dt,eq_cap,nVial):
         # Minimize the objective function i.e. maximize the sublimation rate
         res = sp.minimize(objfun,x0,bounds = bnds, constraints = cons)
         [Pch,dmdt,Tbot,Tsh,Psub,Tsub,Kv] = res['x']    # Results in Torr, kg/hr, degC, degC, Torr, degC, cal/s/K/cm^2
-        # # Use the results as a guess for the next iteration
+        # Use the results as a guess for the next iteration
+        if res['success']:
+            x0 = res['x'].copy()  # Update initial guess for next iteration
         # TODO: decide on appropriate error handling for unsuccessful iterations
         # Should check some simple conditions probably and see if inputs have any feasible solutions
         if not res['success']:
@@ -127,14 +133,28 @@ def dry(vial,product,ht,Pchamber,Tshelf,dt,eq_cap,nVial):
             i = np.where(Tshelf['t_setpt']>t)[0][0]
             # Ramp shelf temperature till next set point is reached and then maintain at set point
             if Tshelf['setpt'][i] >= Tshelf['setpt'][i-1]:
-                Tsh = min(Tshelf['setpt'][i-1] + Tshelf['ramp_rate']*constant.hr_To_min*(t-Tshelf['t_setpt'][i-1]),Tshelf['setpt'][i])
+                Tsh_new = min(Tshelf['setpt'][i-1] + Tshelf['ramp_rate']*constant.hr_To_min*(t-Tshelf['t_setpt'][i-1]),Tshelf['setpt'][i])
             else:
-                Tsh = max(Tshelf['setpt'][i-1] - Tshelf['ramp_rate']*constant.hr_To_min*(t-Tshelf['t_setpt'][i-1]),Tshelf['setpt'][i])
+                Tsh_new = max(Tshelf['setpt'][i-1] - Tshelf['ramp_rate']*constant.hr_To_min*(t-Tshelf['t_setpt'][i-1]),Tshelf['setpt'][i])
+            
+            # Update x0 with new Tsh and adjust other temperatures proportionally
+            # to give optimizer a better initial guess
+            dTsh = Tsh_new - Tsh
+            x0[2] += dTsh  # Tbot shifts with shelf
+            x0[3] = Tsh_new   # Tsh
+            x0[5] += dTsh  # Tsub shifts with shelf
+            Tsh = Tsh_new
           
             iStep = iStep + 1 # Time iteration number
 
     ######################################################
 
+    # Handle case where no successful iterations occurred
+    if output_saved is None:
+        warnings.warn("No successful optimization iterations. Returning empty result with initial state.")
+        # Return single row with initial state
+        output_saved = np.array([[0.0, Ts0, Tb0, Tshelf['init'], P0*constant.Torr_to_mTorr, 0.0, 0.0]])
+    
     return output_saved    
     
 ############################################################################
