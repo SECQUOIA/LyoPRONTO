@@ -12,7 +12,8 @@ from .utils import (
     assert_physically_reasonable_output,
     assert_complete_drying,
     assert_incomplete_drying,
-    TEMP_RTOL,
+    RTOL,
+    TEMP_ATOL,
 )
 
 
@@ -53,8 +54,9 @@ def opt_pch_consistency(output, setup):
         )
 
     # Tbot (column 2) should stay at or below T_pr_crit
+    # Note: For temperatures (which can be negative), use absolute tolerance
     T_crit = product["T_pr_crit"]
-    assert np.all(output[:, 2] <= T_crit + TEMP_RTOL), (
+    assert np.all(output[:, 2] <= T_crit + TEMP_ATOL), (
         f"Product temperature should be <= {T_crit}°C (critical)"
     )
 
@@ -362,10 +364,9 @@ class TestOptPchReference:
         drying_time_ref = output_ref[-1, 0]
         drying_time = output[-1, 0]
         # Use proportional tolerance from utils.py for numerical differences
-        tolerance = drying_time_ref * TIME_RTOL
-        assert drying_time <= drying_time_ref + tolerance, (
+        assert drying_time <= drying_time_ref * (1 + RTOL), (
             f"Drying time {drying_time:.2f} hr should be <= reference "
-            + f"{drying_time_ref:.2f} hr (tolerance: {TIME_RTOL*100:.1f}% = {tolerance:.4f} hr)"
+            + f"{drying_time_ref:.2f} hr (tolerance: {RTOL*100:.1f}% = {drying_time_ref*RTOL:.4f} hr)"
         )
         # array_compare = np.isclose(output, output_ref, atol=1e-3)
         # assert array_compare.all(), (
@@ -379,7 +380,7 @@ class TestOptPchReference:
 # Coverage tests (migrated from test_opt_Pch_coverage.py)
 # ==============================================================================
 
-from .utils import PERCENT_MAX, TEMP_ATOL, TIME_RTOL
+from .utils import PERCENT_MAX, TEMP_ATOL, RTOL
 
 
 class TestOptPchCoverageOnly:
@@ -534,7 +535,7 @@ class TestOptPchCoverageOnly:
         # Should not exceed equipment capability (with small tolerance)
         violations = dmdt - eq_cap_max
         max_violation = np.max(violations)
-        assert max_violation <= TEMP_RTOL, \
+        assert max_violation <= RTOL, \
             f"Equipment capability exceeded by {max_violation:.4f} kg/hr"
 
     def test_opt_pch_physically_reasonable(self, opt_pch_setup):
