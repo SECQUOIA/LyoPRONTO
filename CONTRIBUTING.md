@@ -106,14 +106,23 @@ pytest tests/ -v --pdb
 ### 4. Code Quality Checks
 
 ```bash
-# Format code
-black lyopronto/ tests/
+# Lint and auto-fix issues
+ruff check --fix lyopronto/ tests/ benchmarks/
 
-# Check linting
-flake8 lyopronto/ tests/
+# Format code
+ruff format lyopronto/ tests/ benchmarks/
 
 # Type checking (optional but recommended)
 mypy lyopronto/
+
+# Full quality check
+ruff check lyopronto/ tests/ && ruff format --check lyopronto/ tests/ && pytest tests/ -v
+```
+
+**Pre-commit hooks** (recommended): Install once to auto-run checks on every commit:
+```bash
+pip install pre-commit
+pre-commit install
 ```
 
 ### 5. Commit Changes
@@ -252,7 +261,8 @@ def test_with_fixtures(self, standard_vial, standard_product):
 Before submitting a PR, ensure:
 
 - [ ] All tests pass (`pytest tests/ -v`)
-- [ ] Code is formatted (`black lyopronto/ tests/`)
+- [ ] Code is linted (`ruff check lyopronto/ tests/`)
+- [ ] Code is formatted (`ruff format --check lyopronto/ tests/`)
 - [ ] Documentation is updated
 - [ ] Docstrings are complete
 - [ ] CHANGELOG.md is updated (if applicable)
