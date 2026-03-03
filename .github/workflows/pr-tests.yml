@@ -71,6 +71,7 @@ jobs:
 
   test-pyomo:
     name: Pyomo Tests (Optional)
+    if: ${{ github.event.pull_request.draft == false }}
     runs-on: ubuntu-latest
     continue-on-error: true  # Pyomo tests are brittle, don't block PRs
     
