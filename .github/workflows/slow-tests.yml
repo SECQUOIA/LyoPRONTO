@@ -66,21 +66,23 @@ jobs:
       env:
         RUN_SLOW_TESTS: "1"
       run: |
+        # Helper: allow exit code 5 (no tests collected) to pass gracefully
+        run_pytest() { "$@" || { rc=$?; [ $rc -eq 5 ] && echo "No matching tests found (exit 5 is OK)" && return 0; return $rc; }; }
         if [ "${{ inputs.run_all }}" == "true" ]; then
           echo "Running ALL tests (including slow optimization tests)"
           echo "This may take 30-40 minutes on CI"
           if [ "${{ inputs.include_pyomo }}" == "true" ]; then
-            pytest tests/ -n auto -v --cov=lyopronto --cov-report=xml --cov-report=term-missing
+            run_pytest pytest tests/ -n auto -v --cov=lyopronto --cov-report=xml --cov-report=term-missing
           else
-            pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml --cov-report=term-missing
+            run_pytest pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml --cov-report=term-missing
           fi
         else
           echo "Running ONLY slow tests (marked with @pytest.mark.slow)"
           echo "This focuses on optimization tests that take minutes"
           if [ "${{ inputs.include_pyomo }}" == "true" ]; then
-            pytest tests/ -n auto -v -m "slow" --cov=lyopronto --cov-report=xml --cov-report=term-missing
+            run_pytest pytest tests/ -n auto -v -m "slow" --cov=lyopronto --cov-report=xml --cov-report=term-missing
           else
-            pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml --cov-report=term-missing
+            run_pytest pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml --cov-report=term-missing
           fi
         fi
     

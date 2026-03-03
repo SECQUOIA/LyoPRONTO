@@ -91,7 +91,8 @@ jobs:
       run: |
         echo "Running Pyomo test suite"
         echo "These tests require IPOPT solver and may be slower"
-        pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml --cov-report=term-missing
+        # Exit code 5 = no tests collected (pyomo tests added in later PRs)
+        pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml --cov-report=term-missing || { rc=$?; [ $rc -eq 5 ] && echo "No pyomo-marked tests found yet (expected until PR #8)" && exit 0; exit $rc; }
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4

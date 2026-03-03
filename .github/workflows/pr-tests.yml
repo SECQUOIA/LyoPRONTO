@@ -107,7 +107,8 @@ jobs:
     - name: Run Pyomo tests
       run: |
         echo "Running Pyomo test suite (continue-on-error enabled)"
-        pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=term-missing
+        # Exit code 5 = no tests collected (pyomo tests added in later PRs)
+        pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=term-missing || { rc=$?; [ $rc -eq 5 ] && echo "No pyomo-marked tests found yet (expected until PR #8)" && exit 0; exit $rc; }
     
     - name: Pyomo Test Summary
       if: always()
