@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
     
     
       
@@ -23,7 +23,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.618322db.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
       
 
@@ -238,6 +238,116 @@
   
   
   
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Examples
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/knownRp_PD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulate primary drying with known Kv and Rp
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/unknownRp_PD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fitting Unknown Rp to Process Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     <li class="md-nav__item">
       <a href="../explanation/" class="md-nav__link">
         
@@ -274,6 +384,33 @@
     
   
     Full listing of all docstrings by module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dev/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributor Documentation
   
 
     
@@ -894,15 +1031,15 @@
 </ol>
 <h2 id="expected-performance">Expected Performance</h2>
 <h3 id="before-sequential">Before (Sequential)</h3>
-<pre><code class="language-bash">$ pytest tests/ -q --tb=no
-128 passed in 513.67s (8 minutes 33 seconds)
-</code></pre>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>$<span class="w"> </span>pytest<span class="w"> </span>tests/<span class="w"> </span>-q<span class="w"> </span>--tb<span class="o">=</span>no
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="m">128</span><span class="w"> </span>passed<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">513</span>.67s<span class="w"> </span><span class="o">(</span><span class="m">8</span><span class="w"> </span>minutes<span class="w"> </span><span class="m">33</span><span class="w"> </span>seconds<span class="o">)</span>
+</span></code></pre></div>
 <h3 id="after-parallel-8-workers">After (Parallel - 8 workers)</h3>
-<pre><code class="language-bash">$ pytest tests/ -n 8 -q --tb=no
-128 passed in ~120-180s (2-3 minutes)
-
-Speedup: 2.8-4.3x faster
-</code></pre>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>$<span class="w"> </span>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span><span class="m">8</span><span class="w"> </span>-q<span class="w"> </span>--tb<span class="o">=</span>no
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="m">128</span><span class="w"> </span>passed<span class="w"> </span><span class="k">in</span><span class="w"> </span>~120-180s<span class="w"> </span><span class="o">(</span><span class="m">2</span>-3<span class="w"> </span>minutes<span class="o">)</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Speedup:<span class="w"> </span><span class="m">2</span>.8-4.3x<span class="w"> </span>faster
+</span></code></pre></div>
 <h3 id="performance-by-test-category">Performance by Test Category</h3>
 <table>
 <thead>
@@ -943,25 +1080,25 @@ Speedup: 2.8-4.3x faster
 <p><strong>Note</strong>: Optimization tests dominate execution time (78% of total), so they provide most of the speedup benefit.</p>
 <h2 id="implementation-details">Implementation Details</h2>
 <h3 id="pytest-xdist-configuration">pytest-xdist Configuration</h3>
-<p>Already present in <code>requirements-dev.txt</code>:</p>
-<pre><code class="language-txt">pytest-xdist&gt;=3.3.0
-</code></pre>
+<p>Already present in <code>requirements-dev.txt</code>:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pytest-xdist&gt;=3.3.0
+</span></code></pre></div></p>
 <p>No additional configuration needed in <code>pytest.ini</code> - works out of the box!</p>
 <h3 id="worker-distribution">Worker Distribution</h3>
 <p>How pytest-xdist distributes tests with <code>-n 8</code>:</p>
-<pre><code>8 CPU Workers Created:
-
-Worker 1: test_functions.py (subset of 30 tests)
-Worker 2: test_calculators.py (14 tests)  
-Worker 3: test_opt_Pch.py (14 tests)
-Worker 4: test_opt_Pch_Tsh.py (15 tests)
-Worker 5: test_opt_Tsh.py (14 tests)
-Worker 6: test_design_space.py (7 tests)
-Worker 7: test_regression.py (9 tests)
-Worker 8: test_example_scripts.py (3 tests)
-
-All run simultaneously → 3-4x faster
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>8 CPU Workers Created:
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>Worker 1: test_functions.py (subset of 30 tests)
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>Worker 2: test_calculators.py (14 tests)  
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>Worker 3: test_opt_Pch.py (14 tests)
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>Worker 4: test_opt_Pch_Tsh.py (15 tests)
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>Worker 5: test_opt_Tsh.py (14 tests)
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>Worker 6: test_design_space.py (7 tests)
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>Worker 7: test_regression.py (9 tests)
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>Worker 8: test_example_scripts.py (3 tests)
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>All run simultaneously → 3-4x faster
+</span></code></pre></div>
 <h3 id="load-balancing">Load Balancing</h3>
 <p>pytest-xdist uses intelligent scheduling:
 - Distributes tests dynamically to workers
@@ -994,15 +1131,15 @@ All run simultaneously → 3-4x faster
 </ul>
 <h2 id="usage-guide">Usage Guide</h2>
 <h3 id="development-workflow">Development Workflow</h3>
-<p><strong>Quick iteration</strong> (single test file):</p>
-<pre><code class="language-bash">pytest tests/test_functions.py -n 8 -v
-</code></pre>
-<p><strong>Full validation</strong> (all tests with coverage):</p>
-<pre><code class="language-bash">./run_local_ci.sh  # Uses -n 8 automatically
-</code></pre>
-<p><strong>Debugging</strong> (sequential for clarity):</p>
-<pre><code class="language-bash">pytest tests/test_specific.py -v --tb=short
-</code></pre>
+<p><strong>Quick iteration</strong> (single test file):
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pytest<span class="w"> </span>tests/test_functions.py<span class="w"> </span>-n<span class="w"> </span><span class="m">8</span><span class="w"> </span>-v
+</span></code></pre></div></p>
+<p><strong>Full validation</strong> (all tests with coverage):
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>./run_local_ci.sh<span class="w">  </span><span class="c1"># Uses -n 8 automatically</span>
+</span></code></pre></div></p>
+<p><strong>Debugging</strong> (sequential for clarity):
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>pytest<span class="w"> </span>tests/test_specific.py<span class="w"> </span>-v<span class="w"> </span>--tb<span class="o">=</span>short
+</span></code></pre></div></p>
 <h3 id="ci-integration">CI Integration</h3>
 <p>Automatically enabled in:
 - ✅ <code>.github/workflows/tests.yml</code> - Uses <code>-n auto</code>
@@ -1011,19 +1148,19 @@ All run simultaneously → 3-4x faster
 <h2 id="troubleshooting">Troubleshooting</h2>
 <h3 id="issue-tests-slower-in-parallel-than-sequential">Issue: Tests slower in parallel than sequential</h3>
 <p><strong>Cause</strong>: Too many workers for test suite size</p>
-<p><strong>Solution</strong>: Reduce worker count</p>
-<pre><code class="language-bash">pytest tests/ -n 4  # Try fewer workers
-</code></pre>
+<p><strong>Solution</strong>: Reduce worker count
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span><span class="m">4</span><span class="w">  </span><span class="c1"># Try fewer workers</span>
+</span></code></pre></div></p>
 <h3 id="issue-memory-pressure-on-system">Issue: Memory pressure on system</h3>
 <p><strong>Cause</strong>: Each worker runs independent Python interpreter</p>
-<p><strong>Solution</strong>: Reduce workers or run subsets</p>
-<pre><code class="language-bash">pytest tests/ -n 2  # Fewer workers
-pytest tests/test_opt_*.py -n 8  # Just slow tests
-</code></pre>
+<p><strong>Solution</strong>: Reduce workers or run subsets
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span><span class="m">2</span><span class="w">  </span><span class="c1"># Fewer workers</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>pytest<span class="w"> </span>tests/test_opt_*.py<span class="w"> </span>-n<span class="w"> </span><span class="m">8</span><span class="w">  </span><span class="c1"># Just slow tests</span>
+</span></code></pre></div></p>
 <h3 id="issue-debugging-parallel-failures">Issue: Debugging parallel failures</h3>
-<p><strong>Solution</strong>: Run failing test sequentially</p>
-<pre><code class="language-bash">pytest tests/test_failing.py -v --tb=long
-</code></pre>
+<p><strong>Solution</strong>: Run failing test sequentially
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>pytest<span class="w"> </span>tests/test_failing.py<span class="w"> </span>-v<span class="w"> </span>--tb<span class="o">=</span>long
+</span></code></pre></div></p>
 <h2 id="best-practices">Best Practices</h2>
 <h3 id="do">✅ Do:</h3>
 <ul>
@@ -1133,10 +1270,14 @@ pytest tests/test_opt_*.py -n 8  # Just slow tests
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>

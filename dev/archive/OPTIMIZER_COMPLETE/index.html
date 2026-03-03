@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
     
     
       
@@ -23,7 +23,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
       
 
@@ -238,6 +238,116 @@
   
   
   
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Examples
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/knownRp_PD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulate primary drying with known Kv and Rp
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/unknownRp_PD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fitting Unknown Rp to Process Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     <li class="md-nav__item">
       <a href="../../explanation/" class="md-nav__link">
         
@@ -274,6 +384,33 @@
     
   
     Full listing of all docstrings by module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributor Documentation
   
 
     
@@ -578,15 +715,15 @@
 <li>Parameters and expected results</li>
 </ol>
 <h3 id="test-results">Test Results</h3>
-<pre><code>Total Tests: 75 (all passing) ✅
-├── Calculators: 26 tests
-├── Functions: 27 tests  
-├── Web Interface: 8 tests
-├── Optimizer: 14 tests ← NEW
-└── Regression: 10 tests
-
-Test Execution Time: ~47 seconds
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Total Tests: 75 (all passing) ✅
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── Calculators: 26 tests
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>├── Functions: 27 tests  
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>├── Web Interface: 8 tests
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>├── Optimizer: 14 tests ← NEW
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>└── Regression: 10 tests
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>Test Execution Time: ~47 seconds
+</span></code></pre></div>
 <h3 id="optimizer-test-coverage">Optimizer Test Coverage</h3>
 <p><strong>TestOptimizerWebInterface</strong> (12 tests):
 - ✅ Optimizer completes to 100% drying
@@ -656,37 +793,37 @@ Test Execution Time: ~47 seconds
 - Product temperature maintained exactly at critical limit
 - All constraints satisfied throughout cycle
 - Optimization converges at every time step</p>
-<p><strong>Comparison:</strong></p>
-<pre><code>Primary Drying Calculator:  6.66 hr, product at -14.77°C
-Optimizer:                  2.123 hr, product at -5.00°C (limit)
-
-Speedup: 3.14x ✅
-</code></pre>
+<p><strong>Comparison:</strong>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Primary Drying Calculator:  6.66 hr, product at -14.77°C
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>Optimizer:                  2.123 hr, product at -5.00°C (limit)
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Speedup: 3.14x ✅
+</span></code></pre></div></p>
 <h2 id="repository-status">Repository Status</h2>
 <p>All files organized and documented:</p>
-<pre><code>LyoPRONTO/
-├── test_data/                      ← Organized test inputs/references
-│   ├── temperature.txt
-│   ├── lyopronto_primary_drying_Oct_01_2025_18_48_08.csv
-│   └── lyopronto_optimizer_Oct_01_2025_20_03_23.csv ← NEW
-├── examples/
-│   ├── example_web_interface.py
-│   ├── example_optimizer.py        ← NEW
-│   └── outputs/
-│       ├── lyopronto_primary_drying_*.csv
-│       └── lyopronto_optimizer_*.csv ← NEW
-├── tests/
-│   ├── test_calculators.py         (26 tests)
-│   ├── test_functions.py           (27 tests)
-│   ├── test_web_interface.py       (8 tests)
-│   ├── test_optimizer.py           (14 tests) ← NEW
-│   └── test_regression.py          (10 tests)
-└── Documentation:
-    ├── OPTIMIZER_TESTING_SUMMARY.md ← NEW (comprehensive)
-    ├── TESTING_AND_EXAMPLES_SUMMARY.md
-    ├── REPOSITORY_ORGANIZATION.md
-    └── [15+ other documentation files]
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>LyoPRONTO/
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>├── test_data/                      ← Organized test inputs/references
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>│   ├── temperature.txt
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>│   ├── lyopronto_primary_drying_Oct_01_2025_18_48_08.csv
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>│   └── lyopronto_optimizer_Oct_01_2025_20_03_23.csv ← NEW
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>├── examples/
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>│   ├── example_web_interface.py
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>│   ├── example_optimizer.py        ← NEW
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>│   └── outputs/
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>│       ├── lyopronto_primary_drying_*.csv
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>│       └── lyopronto_optimizer_*.csv ← NEW
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>├── tests/
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>│   ├── test_calculators.py         (26 tests)
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>│   ├── test_functions.py           (27 tests)
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>│   ├── test_web_interface.py       (8 tests)
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>│   ├── test_optimizer.py           (14 tests) ← NEW
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>│   └── test_regression.py          (10 tests)
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>└── Documentation:
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>    ├── OPTIMIZER_TESTING_SUMMARY.md ← NEW (comprehensive)
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>    ├── TESTING_AND_EXAMPLES_SUMMARY.md
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>    ├── REPOSITORY_ORGANIZATION.md
+</span><span id="__span-2-22"><a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>    └── [15+ other documentation files]
+</span></code></pre></div>
 <h2 id="what-this-enables">What This Enables</h2>
 <h3 id="immediate-benefits">Immediate Benefits</h3>
 <ol>
@@ -716,32 +853,32 @@ Speedup: 3.14x ✅
 </ol>
 <h2 id="running-the-optimizer">Running the Optimizer</h2>
 <h3 id="quick-start">Quick Start</h3>
-<pre><code class="language-bash"># Run optimizer example
-python examples/example_optimizer.py
-
-# Run optimizer tests
-pytest tests/test_optimizer.py -v
-
-# Run all tests
-pytest tests/ -v
-</code></pre>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Run optimizer example</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>python<span class="w"> </span>examples/example_optimizer.py
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Run optimizer tests</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>pytest<span class="w"> </span>tests/test_optimizer.py<span class="w"> </span>-v
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="c1"># Run all tests</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-v
+</span></code></pre></div>
 <h3 id="expected-output">Expected Output</h3>
-<pre><code>Running optimizer example...
-Vial area: 3.8 cm², Product area: 3.14 cm²
-Fill volume: 2.0 mL
-Critical temperature: -5.0 °C
-Fixed chamber pressure: 0.15 Torr (150.0 mTorr)
-Shelf temperature range: -45.0 to 120.0 °C
-Number of vials: 398
-
-Optimization complete!
-Total drying time: 2.123 hr
-Final shelf temperature: 84.18 °C
-Maximum product temperature: -5.00 °C
-Final percent dried: 100.0%
-
-Results saved to: examples/outputs/lyopronto_optimizer_*.csv
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>Running optimizer example...
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>Vial area: 3.8 cm², Product area: 3.14 cm²
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>Fill volume: 2.0 mL
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>Critical temperature: -5.0 °C
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>Fixed chamber pressure: 0.15 Torr (150.0 mTorr)
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>Shelf temperature range: -45.0 to 120.0 °C
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>Number of vials: 398
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>Optimization complete!
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>Total drying time: 2.123 hr
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>Final shelf temperature: 84.18 °C
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>Maximum product temperature: -5.00 °C
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>Final percent dried: 100.0%
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>Results saved to: examples/outputs/lyopronto_optimizer_*.csv
+</span></code></pre></div>
 <h2 id="summary">Summary</h2>
 <p>✅ <strong>Optimizer fully tested and validated</strong> (14 tests, all passing)<br />
 ✅ <strong>Perfect match with web interface</strong> (2.123 hr drying time)<br />
@@ -800,10 +937,14 @@ Results saved to: examples/outputs/lyopronto_optimizer_*.csv
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>

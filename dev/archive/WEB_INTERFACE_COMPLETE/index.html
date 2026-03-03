@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
     
     
       
@@ -23,7 +23,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
       
 
@@ -238,6 +238,116 @@
   
   
   
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Examples
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/knownRp_PD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulate primary drying with known Kv and Rp
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/unknownRp_PD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fitting Unknown Rp to Process Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     <li class="md-nav__item">
       <a href="../../explanation/" class="md-nav__link">
         
@@ -274,6 +384,33 @@
     
   
     Full listing of all docstrings by module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributor Documentation
   
 
     
@@ -829,13 +966,13 @@
 <h2 id="executive-summary">Executive Summary</h2>
 <p>Successfully implemented and validated all four major modes of the LyoPRONTO web interface with comprehensive testing, bug fixes, and documentation.</p>
 <h3 id="final-statistics">Final Statistics</h3>
-<pre><code>✅ Examples:       4 complete (web interface parity achieved)
-✅ Tests:          85 passing (100% pass rate)
-✅ Test Coverage:  ~32% (focused on physics/optimization)
-✅ Documentation:  17+ comprehensive markdown files
-✅ Bug Fixes:      1 critical edge case in design_space.py
-✅ Test Runtime:   ~43 seconds for full suite
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>✅ Examples:       4 complete (web interface parity achieved)
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>✅ Tests:          85 passing (100% pass rate)
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>✅ Test Coverage:  ~32% (focused on physics/optimization)
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>✅ Documentation:  17+ comprehensive markdown files
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>✅ Bug Fixes:      1 critical edge case in design_space.py
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>✅ Test Runtime:   ~43 seconds for full suite
+</span></code></pre></div>
 <h2 id="implementation-timeline">Implementation Timeline</h2>
 <h3 id="phase-1-primary-drying-calculator">Phase 1: Primary Drying Calculator ✅</h3>
 <p><strong>Date</strong>: October 1, 2025<br />
@@ -911,21 +1048,21 @@
 <p>Additional tests: 53 (calculators, functions, regression) = <strong>85 total tests</strong></p>
 <h2 id="critical-bug-fix-design-space">Critical Bug Fix (Design Space)</h2>
 <h3 id="problem">Problem</h3>
-<p><code>lyopronto/design_space.py</code> crashed when drying completed in one timestep:</p>
-<pre><code class="language-python"># Line 114 (before fix):
-del_t = output_saved[1:,0]-output_saved[:-1,0]  # Empty array if shape[0]==1
-del_t = np.append(del_t,del_t[-1])              # IndexError on del_t[-1]
-</code></pre>
+<p><code>lyopronto/design_space.py</code> crashed when drying completed in one timestep:
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Line 114 (before fix):</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">del_t</span> <span class="o">=</span> <span class="n">output_saved</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">output_saved</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># Empty array if shape[0]==1</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">del_t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">del_t</span><span class="p">,</span><span class="n">del_t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>              <span class="c1"># IndexError on del_t[-1]</span>
+</span></code></pre></div></p>
 <h3 id="solution">Solution</h3>
-<p>Added edge case handling:</p>
-<pre><code class="language-python"># Lines 113-119 (after fix):
-if output_saved.shape[0] &gt; 1:
-    del_t = output_saved[1:,0]-output_saved[:-1,0]
-    del_t = np.append(del_t,del_t[-1])
-    sub_flux_avg[i_Tsh,i_Pch] = np.sum(output_saved[:,2]*del_t)/np.sum(del_t)
-else:
-    sub_flux_avg[i_Tsh,i_Pch] = output_saved[0,2]
-</code></pre>
+<p>Added edge case handling:
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Lines 113-119 (after fix):</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="k">if</span> <span class="n">output_saved</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">del_t</span> <span class="o">=</span> <span class="n">output_saved</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">output_saved</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">del_t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">del_t</span><span class="p">,</span><span class="n">del_t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">sub_flux_avg</span><span class="p">[</span><span class="n">i_Tsh</span><span class="p">,</span><span class="n">i_Pch</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">output_saved</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">del_t</span><span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">del_t</span><span class="p">)</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="k">else</span><span class="p">:</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">sub_flux_avg</span><span class="p">[</span><span class="n">i_Tsh</span><span class="p">,</span><span class="n">i_Pch</span><span class="p">]</span> <span class="o">=</span> <span class="n">output_saved</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span>
+</span></code></pre></div></p>
 <p>Similar fix applied to product temperature calculation (lines 181-187).</p>
 <h3 id="impact">Impact</h3>
 <ul>
@@ -935,15 +1072,15 @@ else:
 <li><strong>Backward Compatible</strong>: No impact on normal operation</li>
 </ul>
 <h2 id="test-coverage-breakdown">Test Coverage Breakdown</h2>
-<pre><code>Total Tests: 85 ✅
-├── test_calculators.py:      26 tests  (calc_knownRp, calc_unknownRp)
-├── test_functions.py:        27 tests  (physics, thermodynamics)
-├── test_web_interface.py:     8 tests  (primary drying calculator)
-├── test_optimizer.py:        14 tests  (optimization)
-├── test_freezing.py:          3 tests  (freezing simulation)
-├── test_design_space.py:      7 tests  (design space modes) ← NEW
-└── test_regression.py:       10 tests  (numerical stability)
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Total Tests: 85 ✅
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>├── test_calculators.py:      26 tests  (calc_knownRp, calc_unknownRp)
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>├── test_functions.py:        27 tests  (physics, thermodynamics)
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>├── test_web_interface.py:     8 tests  (primary drying calculator)
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>├── test_optimizer.py:        14 tests  (optimization)
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>├── test_freezing.py:          3 tests  (freezing simulation)
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>├── test_design_space.py:      7 tests  (design space modes) ← NEW
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>└── test_regression.py:       10 tests  (numerical stability)
+</span></code></pre></div>
 <h3 id="test-quality">Test Quality</h3>
 <ul>
 <li><strong>100% Pass Rate</strong>: All 85 tests passing</li>
@@ -953,57 +1090,57 @@ else:
 <li><strong>Maintainable</strong>: Clear test names and organization</li>
 </ul>
 <h2 id="repository-structure">Repository Structure</h2>
-<pre><code>LyoPRONTO/
-├── lyopronto/                   # Core library
-│   ├── __init__.py
-│   ├── calc_knownRp.py          # Primary drying (known Rp)
-│   ├── calc_unknownRp.py        # Primary drying (unknown Rp)
-│   ├── constant.py              # Physical constants
-│   ├── design_space.py          # Design space generation (FIXED)
-│   ├── freezing.py              # Freezing simulation
-│   ├── functions.py             # Physics functions
-│   ├── opt_Pch.py               # Optimize chamber pressure
-│   ├── opt_Pch_Tsh.py           # Optimize both P and T
-│   └── opt_Tsh.py               # Optimize shelf temperature
-│
-├── examples/                    # Web interface examples
-│   ├── README.md                # Updated with all 4 modes
-│   ├── example_web_interface.py # Primary drying (6.66 hr)
-│   ├── example_optimizer.py     # Optimization (2.123 hr)
-│   ├── example_freezing.py      # Freezing (~30 hr)
-│   ├── example_design_space.py  # Design space (3 modes) ← NEW
-│   └── outputs/                 # Generated outputs
-│       ├── README.md
-│       └── *.csv, *.png
-│
-├── tests/                       # Test suite (85 tests)
-│   ├── conftest.py              # Shared fixtures
-│   ├── test_calculators.py      # 26 tests
-│   ├── test_functions.py        # 27 tests
-│   ├── test_web_interface.py    # 8 tests
-│   ├── test_optimizer.py        # 14 tests
-│   ├── test_freezing.py         # 3 tests
-│   ├── test_design_space.py     # 7 tests ← NEW
-│   └── test_regression.py       # 10 tests
-│
-├── test_data/                   # Reference data
-│   ├── README.md
-│   ├── temperature.txt
-│   ├── lyopronto_primary_drying_Oct_01_2025_18_48_08.csv
-│   ├── lyopronto_optimizer_Oct_01_2025_20_03_23.csv
-│   ├── lyopronto_freezing_Oct_01_2025_20_28_12.csv
-│   └── lyopronto_design_space_Oct_02_2025_12_13_08.csv ← NEW
-│
-└── docs/                        # Documentation (17+ files)
-    ├── TESTING_AND_EXAMPLES_COMPLETE.md  # Master summary
-    ├── DESIGN_SPACE_COMPLETE.md          # This implementation ← NEW
-    ├── OPTIMIZER_COMPLETE.md
-    ├── OPTIMIZER_TESTING_SUMMARY.md
-    ├── COEXISTENCE_PHILOSOPHY.md
-    ├── PYOMO_ROADMAP.md
-    ├── PHYSICS_REFERENCE.md
-    └── ... (10+ more files)
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>LyoPRONTO/
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>├── lyopronto/                   # Core library
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>│   ├── __init__.py
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>│   ├── calc_knownRp.py          # Primary drying (known Rp)
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>│   ├── calc_unknownRp.py        # Primary drying (unknown Rp)
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>│   ├── constant.py              # Physical constants
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>│   ├── design_space.py          # Design space generation (FIXED)
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>│   ├── freezing.py              # Freezing simulation
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>│   ├── functions.py             # Physics functions
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>│   ├── opt_Pch.py               # Optimize chamber pressure
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>│   ├── opt_Pch_Tsh.py           # Optimize both P and T
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>│   └── opt_Tsh.py               # Optimize shelf temperature
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>│
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>├── examples/                    # Web interface examples
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>│   ├── README.md                # Updated with all 4 modes
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>│   ├── example_web_interface.py # Primary drying (6.66 hr)
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>│   ├── example_optimizer.py     # Optimization (2.123 hr)
+</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>│   ├── example_freezing.py      # Freezing (~30 hr)
+</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>│   ├── example_design_space.py  # Design space (3 modes) ← NEW
+</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>│   └── outputs/                 # Generated outputs
+</span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>│       ├── README.md
+</span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>│       └── *.csv, *.png
+</span><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>│
+</span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>├── tests/                       # Test suite (85 tests)
+</span><span id="__span-4-25"><a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>│   ├── conftest.py              # Shared fixtures
+</span><span id="__span-4-26"><a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>│   ├── test_calculators.py      # 26 tests
+</span><span id="__span-4-27"><a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>│   ├── test_functions.py        # 27 tests
+</span><span id="__span-4-28"><a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>│   ├── test_web_interface.py    # 8 tests
+</span><span id="__span-4-29"><a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>│   ├── test_optimizer.py        # 14 tests
+</span><span id="__span-4-30"><a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>│   ├── test_freezing.py         # 3 tests
+</span><span id="__span-4-31"><a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a>│   ├── test_design_space.py     # 7 tests ← NEW
+</span><span id="__span-4-32"><a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>│   └── test_regression.py       # 10 tests
+</span><span id="__span-4-33"><a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>│
+</span><span id="__span-4-34"><a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a>├── test_data/                   # Reference data
+</span><span id="__span-4-35"><a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a>│   ├── README.md
+</span><span id="__span-4-36"><a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a>│   ├── temperature.txt
+</span><span id="__span-4-37"><a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a>│   ├── lyopronto_primary_drying_Oct_01_2025_18_48_08.csv
+</span><span id="__span-4-38"><a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a>│   ├── lyopronto_optimizer_Oct_01_2025_20_03_23.csv
+</span><span id="__span-4-39"><a id="__codelineno-4-39" name="__codelineno-4-39" href="#__codelineno-4-39"></a>│   ├── lyopronto_freezing_Oct_01_2025_20_28_12.csv
+</span><span id="__span-4-40"><a id="__codelineno-4-40" name="__codelineno-4-40" href="#__codelineno-4-40"></a>│   └── lyopronto_design_space_Oct_02_2025_12_13_08.csv ← NEW
+</span><span id="__span-4-41"><a id="__codelineno-4-41" name="__codelineno-4-41" href="#__codelineno-4-41"></a>│
+</span><span id="__span-4-42"><a id="__codelineno-4-42" name="__codelineno-4-42" href="#__codelineno-4-42"></a>└── docs/                        # Documentation (17+ files)
+</span><span id="__span-4-43"><a id="__codelineno-4-43" name="__codelineno-4-43" href="#__codelineno-4-43"></a>    ├── TESTING_AND_EXAMPLES_COMPLETE.md  # Master summary
+</span><span id="__span-4-44"><a id="__codelineno-4-44" name="__codelineno-4-44" href="#__codelineno-4-44"></a>    ├── DESIGN_SPACE_COMPLETE.md          # This implementation ← NEW
+</span><span id="__span-4-45"><a id="__codelineno-4-45" name="__codelineno-4-45" href="#__codelineno-4-45"></a>    ├── OPTIMIZER_COMPLETE.md
+</span><span id="__span-4-46"><a id="__codelineno-4-46" name="__codelineno-4-46" href="#__codelineno-4-46"></a>    ├── OPTIMIZER_TESTING_SUMMARY.md
+</span><span id="__span-4-47"><a id="__codelineno-4-47" name="__codelineno-4-47" href="#__codelineno-4-47"></a>    ├── COEXISTENCE_PHILOSOPHY.md
+</span><span id="__span-4-48"><a id="__codelineno-4-48" name="__codelineno-4-48" href="#__codelineno-4-48"></a>    ├── PYOMO_ROADMAP.md
+</span><span id="__span-4-49"><a id="__codelineno-4-49" name="__codelineno-4-49" href="#__codelineno-4-49"></a>    ├── PHYSICS_REFERENCE.md
+</span><span id="__span-4-50"><a id="__codelineno-4-50" name="__codelineno-4-50" href="#__codelineno-4-50"></a>    └── ... (10+ more files)
+</span></code></pre></div>
 <h2 id="design-space-results-summary">Design Space Results Summary</h2>
 <h3 id="input-from-web-interface">Input (from Web Interface)</h3>
 <ul>
@@ -1048,36 +1185,36 @@ else:
 </tbody>
 </table>
 <h2 id="running-all-examples">Running All Examples</h2>
-<pre><code class="language-bash"># 1. Primary Drying Calculator (6.66 hr)
-python examples/example_web_interface.py
-# Output: CSV + PNG, matches web interface
-
-# 2. Optimizer (2.123 hr - 3.14x faster)
-python examples/example_optimizer.py
-# Output: CSV with optimal temperature profile
-
-# 3. Freezing Calculator (~30 hr)
-python examples/example_freezing.py
-# Output: CSV with freezing phases
-
-# 4. Design Space Generator (3 modes)
-python examples/example_design_space.py
-# Output: CSV with design space evaluation
-# Result: ✓ All values match web interface within tolerances!
-</code></pre>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># 1. Primary Drying Calculator (6.66 hr)</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>python<span class="w"> </span>examples/example_web_interface.py
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="c1"># Output: CSV + PNG, matches web interface</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="c1"># 2. Optimizer (2.123 hr - 3.14x faster)</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>python<span class="w"> </span>examples/example_optimizer.py
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1"># Output: CSV with optimal temperature profile</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="c1"># 3. Freezing Calculator (~30 hr)</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>python<span class="w"> </span>examples/example_freezing.py
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="c1"># Output: CSV with freezing phases</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="c1"># 4. Design Space Generator (3 modes)</span>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>python<span class="w"> </span>examples/example_design_space.py
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="c1"># Output: CSV with design space evaluation</span>
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="c1"># Result: ✓ All values match web interface within tolerances!</span>
+</span></code></pre></div>
 <h2 id="running-all-tests">Running All Tests</h2>
-<pre><code class="language-bash"># Run all 85 tests
-pytest tests/ -v
-
-# Expected output:
-# =================== 85 passed, ~188k warnings in ~43s ===================
-
-# Run specific test suites
-pytest tests/test_design_space.py -v     # 7 tests
-pytest tests/test_optimizer.py -v        # 14 tests
-pytest tests/test_web_interface.py -v    # 8 tests
-pytest tests/test_freezing.py -v         # 3 tests
-</code></pre>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Run all 85 tests</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-v
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># Expected output:</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="c1"># =================== 85 passed, ~188k warnings in ~43s ===================</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="c1"># Run specific test suites</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>pytest<span class="w"> </span>tests/test_design_space.py<span class="w"> </span>-v<span class="w">     </span><span class="c1"># 7 tests</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>pytest<span class="w"> </span>tests/test_optimizer.py<span class="w"> </span>-v<span class="w">        </span><span class="c1"># 14 tests</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>pytest<span class="w"> </span>tests/test_web_interface.py<span class="w"> </span>-v<span class="w">    </span><span class="c1"># 8 tests</span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>pytest<span class="w"> </span>tests/test_freezing.py<span class="w"> </span>-v<span class="w">         </span><span class="c1"># 3 tests</span>
+</span></code></pre></div>
 <h2 id="key-achievements">Key Achievements</h2>
 <h3 id="1-complete-web-interface-parity">1. Complete Web Interface Parity ✅</h3>
 <p>All four modes of the LyoPRONTO web interface are now available as standalone Python examples with identical functionality and output.</p>
@@ -1225,10 +1362,14 @@ pytest tests/test_freezing.py -v         # 3 tests
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>

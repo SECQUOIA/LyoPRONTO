@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
     
     
       
@@ -23,7 +23,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.618322db.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
       
 
@@ -238,6 +238,116 @@
   
   
   
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Examples
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/knownRp_PD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulate primary drying with known Kv and Rp
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/unknownRp_PD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fitting Unknown Rp to Process Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     <li class="md-nav__item">
       <a href="../explanation/" class="md-nav__link">
         
@@ -274,6 +384,33 @@
     
   
     Full listing of all docstrings by module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dev/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributor Documentation
   
 
     
@@ -693,23 +830,23 @@
 <hr />
 <h2 id="coverage-breakdown">Coverage Breakdown</h2>
 <h3 id="current-state">Current State</h3>
-<pre><code>Module                    Coverage   Lines   Uncovered   Status
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-calc_unknownRp.py         11%        62      55         Experimental
-opt_Pch.py                14%        49      42         Alternative
-opt_Pch_Tsh.py            19%        36      29         Alternative
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Combined                  14%        147     126        Not Production
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Module                    Coverage   Lines   Uncovered   Status
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>calc_unknownRp.py         11%        62      55         Experimental
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>opt_Pch.py                14%        49      42         Alternative
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>opt_Pch_Tsh.py            19%        36      29         Alternative
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>Combined                  14%        147     126        Not Production
+</span></code></pre></div>
 <h3 id="production-modules-for-comparison">Production Modules (For Comparison)</h3>
-<pre><code>calc_knownRp.py           100%       32      0          ✓ Production
-opt_Tsh.py                94%        48      3          ✓ Production
-design_space.py           90%        98      10         ✓ Production
-functions.py              95%        86      4          ✓ Production
-freezing.py               80%        70      14         ✓ Production
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Production Average        ~88%                          ✓ Excellent
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>calc_knownRp.py           100%       32      0          ✓ Production
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>opt_Tsh.py                94%        48      3          ✓ Production
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>design_space.py           90%        98      10         ✓ Production
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>functions.py              95%        86      4          ✓ Production
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>freezing.py               80%        70      14         ✓ Production
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>Production Average        ~88%                          ✓ Excellent
+</span></code></pre></div>
 <hr />
 <h2 id="why-coverage-is-low-module-by-module">Why Coverage is Low (Module-by-Module)</h2>
 <h3 id="1-calc_unknownrppy-11-coverage">1. <code>calc_unknownRp.py</code> (11% coverage)</h3>
@@ -808,73 +945,73 @@ We <strong>tried</strong> to add tests:
 <hr />
 <h3 id="option-2-add-module-usage-documentation">Option 2: Add Module Usage Documentation ⚠️</h3>
 <p><strong>Create</strong>: <code>docs/EXPERIMENTAL_MODULES.md</code></p>
-<p><strong>Content</strong>:</p>
-<pre><code class="language-markdown"># Experimental Modules
-
-## calc_unknownRp.py
-- **Status**: Experimental, smoke tested
-- **Use case**: Parameter estimation from experimental data
-- **Example**: See examples/example_parameter_estimation.py
-- **Coverage**: 11% (acceptable for experimental feature)
-
-## opt_Pch.py
-- **Status**: Alternative implementation, not production
-- **Use case**: Pressure-only optimization
-- **Alternative**: Use opt_Tsh.py instead (94% coverage)
-- **Coverage**: 14% (acceptable for alternative feature)
-
-## opt_Pch_Tsh.py
-- **Status**: Research feature, experimental
-- **Use case**: Joint Pch+Tsh optimization
-- **Complexity**: High (two-dimensional optimization)
-- **Coverage**: 19% (acceptable for research feature)
-</code></pre>
+<p><strong>Content</strong>:
+<div class="language-markdown highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="gh"># Experimental Modules</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="gu">## calc_unknownRp.py</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Status**</span>: Experimental, smoke tested
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Use case**</span>: Parameter estimation from experimental data
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Example**</span>: See examples/example_parameter_estimation.py
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Coverage**</span>: 11% (acceptable for experimental feature)
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="gu">## opt_Pch.py</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Status**</span>: Alternative implementation, not production
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Use case**</span>: Pressure-only optimization
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Alternative**</span>: Use opt_Tsh.py instead (94% coverage)
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Coverage**</span>: 14% (acceptable for alternative feature)
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="gu">## opt_Pch_Tsh.py</span>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Status**</span>: Research feature, experimental
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Use case**</span>: Joint Pch+Tsh optimization
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Complexity**</span>: High (two-dimensional optimization)
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Coverage**</span>: 19% (acceptable for research feature)
+</span></code></pre></div></p>
 <p><strong>Effort</strong>: Low (1 hour documentation)<br />
 <strong>Value</strong>: Medium (clarifies status)</p>
 <hr />
 <h3 id="option-3-mark-modules-as-experimental">Option 3: Mark Modules as Experimental 🔧</h3>
 <p><strong>Add deprecation/status decorators</strong>:</p>
-<pre><code class="language-python"># In calc_unknownRp.py
-def dry(vial, product, ht, Pchamber, Tshelf, time, Tbot_exp):
-    &quot;&quot;&quot;
-    Primary drying with unknown product resistance (parameter estimation).
-
-    .. warning::
-        This is an EXPERIMENTAL feature. Use examples/example_parameter_estimation.py
-        for proper usage. Coverage is low because this requires experimental data
-        and is not used in the production web interface.
-
-    Status: Experimental (11% test coverage)
-    Alternative: Use calc_knownRp.py with known resistance parameters
-    &quot;&quot;&quot;
-</code></pre>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># In calc_unknownRp.py</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">def</span> <span class="nf">dry</span><span class="p">(</span><span class="n">vial</span><span class="p">,</span> <span class="n">product</span><span class="p">,</span> <span class="n">ht</span><span class="p">,</span> <span class="n">Pchamber</span><span class="p">,</span> <span class="n">Tshelf</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">Tbot_exp</span><span class="p">):</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="sd">    Primary drying with unknown product resistance (parameter estimation).</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="sd">    .. warning::</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="sd">        This is an EXPERIMENTAL feature. Use examples/example_parameter_estimation.py</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="sd">        for proper usage. Coverage is low because this requires experimental data</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="sd">        and is not used in the production web interface.</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="sd">    Status: Experimental (11% test coverage)</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="sd">    Alternative: Use calc_knownRp.py with known resistance parameters</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span></code></pre></div>
 <p><strong>Effort</strong>: Low (30 min per module)<br />
 <strong>Value</strong>: High (sets expectations)</p>
 <hr />
 <h3 id="option-4-integration-tests-only">Option 4: Integration Tests Only 🎯</h3>
 <p><strong>Instead of comprehensive unit tests</strong>, add simple integration tests:</p>
-<pre><code class="language-python"># tests/test_experimental_modules.py
-
-def test_calc_unknownRp_runs_with_minimal_data():
-    &quot;&quot;&quot;Verify calc_unknownRp can execute with simple synthetic data.&quot;&quot;&quot;
-    # Create minimal synthetic temperature data
-    time = np.array([0, 1, 2, 3])
-    Tbot = np.array([-35, -30, -25, -20])
-
-    # Run with standard parameters
-    output, product_res = calc_unknownRp.dry(vial, product, ht, Pchamber, Tshelf, time, Tbot)
-
-    # Just verify it runs without crashing
-    assert output is not None
-    assert product_res is not None
-    assert len(output) &gt; 0
-
-def test_opt_Pch_runs_basic():
-    &quot;&quot;&quot;Verify opt_Pch can execute basic optimization.&quot;&quot;&quot;
-    # Just verify it doesn't crash
-    output = opt_Pch.dry(vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial)
-    assert output is not None
-</code></pre>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># tests/test_experimental_modules.py</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="k">def</span> <span class="nf">test_calc_unknownRp_runs_with_minimal_data</span><span class="p">():</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify calc_unknownRp can execute with simple synthetic data.&quot;&quot;&quot;</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="c1"># Create minimal synthetic temperature data</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="n">Tbot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mi">35</span><span class="p">,</span> <span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="o">-</span><span class="mi">25</span><span class="p">,</span> <span class="o">-</span><span class="mi">20</span><span class="p">])</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="c1"># Run with standard parameters</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    <span class="n">output</span><span class="p">,</span> <span class="n">product_res</span> <span class="o">=</span> <span class="n">calc_unknownRp</span><span class="o">.</span><span class="n">dry</span><span class="p">(</span><span class="n">vial</span><span class="p">,</span> <span class="n">product</span><span class="p">,</span> <span class="n">ht</span><span class="p">,</span> <span class="n">Pchamber</span><span class="p">,</span> <span class="n">Tshelf</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">Tbot</span><span class="p">)</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    <span class="c1"># Just verify it runs without crashing</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    <span class="k">assert</span> <span class="n">output</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>    <span class="k">assert</span> <span class="n">product_res</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">output</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="k">def</span> <span class="nf">test_opt_Pch_runs_basic</span><span class="p">():</span>
+</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify opt_Pch can execute basic optimization.&quot;&quot;&quot;</span>
+</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>    <span class="c1"># Just verify it doesn&#39;t crash</span>
+</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>    <span class="n">output</span> <span class="o">=</span> <span class="n">opt_Pch</span><span class="o">.</span><span class="n">dry</span><span class="p">(</span><span class="n">vial</span><span class="p">,</span> <span class="n">product</span><span class="p">,</span> <span class="n">ht</span><span class="p">,</span> <span class="n">Pchamber</span><span class="p">,</span> <span class="n">Tshelf</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">eq_cap</span><span class="p">,</span> <span class="n">nVial</span><span class="p">)</span>
+</span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>    <span class="k">assert</span> <span class="n">output</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+</span></code></pre></div>
 <p><strong>Effort</strong>: Medium (2-3 hours)<br />
 <strong>Value</strong>: Medium (basic validation)<br />
 <strong>Risk</strong>: Tests might still fail due to convergence issues</p>
@@ -1052,10 +1189,14 @@ def test_opt_Pch_runs_basic():
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>

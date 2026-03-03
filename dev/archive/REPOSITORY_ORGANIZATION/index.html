@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
     
     
       
@@ -23,7 +23,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
       
 
@@ -238,6 +238,116 @@
   
   
   
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Examples
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/knownRp_PD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulate primary drying with known Kv and Rp
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/unknownRp_PD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fitting Unknown Rp to Process Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     <li class="md-nav__item">
       <a href="../../explanation/" class="md-nav__link">
         
@@ -274,6 +384,33 @@
     
   
     Full listing of all docstrings by module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributor Documentation
   
 
     
@@ -765,83 +902,83 @@
 <h1 id="repository-organization-guide">Repository Organization Guide</h1>
 <p>This document describes the organizational structure of the LyoPRONTO repository after the cleanup and reorganization completed on October 1, 2025.</p>
 <h2 id="directory-structure">Directory Structure</h2>
-<pre><code>LyoPRONTO/
-├── .github/                          # GitHub-specific files
-│   ├── workflows/                    # CI/CD workflows
-│   │   └── tests.yml                # Automated testing pipeline
-│   ├── copilot-instructions.md       # Instructions for GitHub Copilot
-│   └── copilot-examples.md          # Code examples for AI assistants
-│
-├── lyopronto/                        # Main package (scipy-based)
-│   ├── __init__.py
-│   ├── functions.py                  # Core physics equations
-│   ├── constant.py                   # Physical constants
-│   ├── calc_knownRp.py              # Primary drying (known Rp)
-│   ├── calc_unknownRp.py            # Primary drying (unknown Rp)
-│   ├── opt_Pch_Tsh.py               # Optimize both Pch and Tsh
-│   ├── opt_Pch.py                   # Optimize Pch only
-│   ├── opt_Tsh.py                   # Optimize Tsh only
-│   ├── design_space.py              # Design space generator
-│   ├── freezing.py                   # Freezing phase
-│   └── pyomo_models/                 # Future: Pyomo optimization
-│
-├── tests/                            # Test suite
-│   ├── __init__.py
-│   ├── conftest.py                   # Shared fixtures
-│   ├── test_functions.py             # Unit tests (44 tests)
-│   ├── test_calculators.py           # Integration tests (14 tests)
-│   ├── test_regression.py            # Regression tests (9 tests)
-│   └── test_web_interface.py         # Web interface validation (8 tests)
-│
-├── test_data/                        # Reference data for tests
-│   ├── README.md                     # Documentation of test data
-│   ├── temperature.txt               # Temperature profile input
-│   └── lyopronto_primary_drying_Oct_01_2025_18_48_08.csv  # Reference output
-│
-├── examples/                         # Example scripts
-│   ├── README.md                     # Documentation of examples
-│   ├── example_web_interface.py      # Web interface replication
-│   └── outputs/                      # Generated output files
-│       ├── README.md                 # Documentation of outputs
-│       ├── *.csv                     # Generated CSV files
-│       └── *.png                     # Generated plots
-│
-├── docs/                             # Documentation
-│   ├── index.md                      # Main documentation index
-│   ├── explanation.md
-│   ├── how-to-guides.md
-│   ├── reference.md
-│   └── tutorials.md
-│
-├── htmlcov/                          # Coverage reports (generated, gitignored)
-│
-├── Documentation Files (Root)
-│   ├── README.md                     # Main project README
-│   ├── GETTING_STARTED.md           # Quick start guide
-│   ├── README_TESTING.md            # Testing guide
-│   ├── ARCHITECTURE.md              # System architecture
-│   ├── COEXISTENCE_PHILOSOPHY.md   # Scipy/Pyomo coexistence
-│   ├── PYOMO_ROADMAP.md            # Pyomo integration plan
-│   ├── PHYSICS_REFERENCE.md         # Physics background
-│   ├── CODE_STRUCTURE.md            # Code organization
-│   ├── CONTRIBUTING.md              # Contribution guidelines
-│   ├── TESTING_SUMMARY.md           # Test analysis
-│   ├── TEST_FIXES_SUMMARY.md        # Debugging history
-│   └── TESTING_AND_EXAMPLES_SUMMARY.md  # Complete testing status
-│
-├── Configuration Files (Root)
-│   ├── .gitignore                    # Git ignore patterns
-│   ├── pytest.ini                    # Pytest configuration
-│   ├── mkdocs.yml                    # MkDocs configuration
-│   ├── requirements.txt              # Production dependencies
-│   ├── requirements-dev.txt          # Development dependencies
-│   └── LICENSE.txt                   # GPL v3 license
-│
-└── Legacy Examples (Root)            # To be migrated
-    ├── ex_knownRp_PD.py
-    ├── ex_unknownRp_PD.py
-    └── main.py
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>LyoPRONTO/
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── .github/                          # GitHub-specific files
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│   ├── workflows/                    # CI/CD workflows
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│   │   └── tests.yml                # Automated testing pipeline
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│   ├── copilot-instructions.md       # Instructions for GitHub Copilot
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│   └── copilot-examples.md          # Code examples for AI assistants
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>├── lyopronto/                        # Main package (scipy-based)
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>│   ├── __init__.py
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│   ├── functions.py                  # Core physics equations
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>│   ├── constant.py                   # Physical constants
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>│   ├── calc_knownRp.py              # Primary drying (known Rp)
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>│   ├── calc_unknownRp.py            # Primary drying (unknown Rp)
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>│   ├── opt_Pch_Tsh.py               # Optimize both Pch and Tsh
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>│   ├── opt_Pch.py                   # Optimize Pch only
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>│   ├── opt_Tsh.py                   # Optimize Tsh only
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>│   ├── design_space.py              # Design space generator
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>│   ├── freezing.py                   # Freezing phase
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>│   └── pyomo_models/                 # Future: Pyomo optimization
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>│
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>├── tests/                            # Test suite
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>│   ├── __init__.py
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>│   ├── conftest.py                   # Shared fixtures
+</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>│   ├── test_functions.py             # Unit tests (44 tests)
+</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>│   ├── test_calculators.py           # Integration tests (14 tests)
+</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>│   ├── test_regression.py            # Regression tests (9 tests)
+</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>│   └── test_web_interface.py         # Web interface validation (8 tests)
+</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>│
+</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>├── test_data/                        # Reference data for tests
+</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>│   ├── README.md                     # Documentation of test data
+</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>│   ├── temperature.txt               # Temperature profile input
+</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>│   └── lyopronto_primary_drying_Oct_01_2025_18_48_08.csv  # Reference output
+</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>│
+</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>├── examples/                         # Example scripts
+</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>│   ├── README.md                     # Documentation of examples
+</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>│   ├── example_web_interface.py      # Web interface replication
+</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>│   └── outputs/                      # Generated output files
+</span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>│       ├── README.md                 # Documentation of outputs
+</span><span id="__span-0-39"><a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>│       ├── *.csv                     # Generated CSV files
+</span><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>│       └── *.png                     # Generated plots
+</span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>│
+</span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>├── docs/                             # Documentation
+</span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>│   ├── index.md                      # Main documentation index
+</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>│   ├── explanation.md
+</span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>│   ├── how-to-guides.md
+</span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>│   ├── reference.md
+</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>│   └── tutorials.md
+</span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>│
+</span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>├── htmlcov/                          # Coverage reports (generated, gitignored)
+</span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>│
+</span><span id="__span-0-51"><a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>├── Documentation Files (Root)
+</span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>│   ├── README.md                     # Main project README
+</span><span id="__span-0-53"><a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>│   ├── GETTING_STARTED.md           # Quick start guide
+</span><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>│   ├── README_TESTING.md            # Testing guide
+</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>│   ├── ARCHITECTURE.md              # System architecture
+</span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>│   ├── COEXISTENCE_PHILOSOPHY.md   # Scipy/Pyomo coexistence
+</span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>│   ├── PYOMO_ROADMAP.md            # Pyomo integration plan
+</span><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>│   ├── PHYSICS_REFERENCE.md         # Physics background
+</span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>│   ├── CODE_STRUCTURE.md            # Code organization
+</span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>│   ├── CONTRIBUTING.md              # Contribution guidelines
+</span><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>│   ├── TESTING_SUMMARY.md           # Test analysis
+</span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>│   ├── TEST_FIXES_SUMMARY.md        # Debugging history
+</span><span id="__span-0-63"><a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>│   └── TESTING_AND_EXAMPLES_SUMMARY.md  # Complete testing status
+</span><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>│
+</span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>├── Configuration Files (Root)
+</span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>│   ├── .gitignore                    # Git ignore patterns
+</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>│   ├── pytest.ini                    # Pytest configuration
+</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>│   ├── mkdocs.yml                    # MkDocs configuration
+</span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>│   ├── requirements.txt              # Production dependencies
+</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>│   ├── requirements-dev.txt          # Development dependencies
+</span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>│   └── LICENSE.txt                   # GPL v3 license
+</span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>│
+</span><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>└── Legacy Examples (Root)            # To be migrated
+</span><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>    ├── ex_knownRp_PD.py
+</span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>    ├── ex_unknownRp_PD.py
+</span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>    └── main.py
+</span></code></pre></div>
 <h2 id="file-organization-rules">File Organization Rules</h2>
 <h3 id="1-source-code-lyopronto">1. Source Code (<code>lyopronto/</code>)</h3>
 <p><strong>What goes here</strong>: All production Python code
@@ -887,53 +1024,53 @@
 <hr />
 <h2 id="gitignore-strategy">.gitignore Strategy</h2>
 <h3 id="always-ignored-never-commit">Always Ignored (Never Commit)</h3>
-<pre><code># Python compiled files
-__pycache__/
-*.pyc
-*.pyo
-
-# Virtual environments
-venv/
-env/
-.venv/
-
-# IDE files
-.vscode/
-.idea/
-*.swp
-
-# Coverage reports
-.coverage
-htmlcov/
-
-# Generated outputs (temporarily)
-lyopronto_primary_drying_*.csv  # In root only
-primary_drying_results.png       # In root only
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a># Python compiled files
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>__pycache__/
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>*.pyc
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>*.pyo
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a># Virtual environments
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>venv/
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>env/
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>.venv/
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a># IDE files
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>.vscode/
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>.idea/
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>*.swp
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a># Coverage reports
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>.coverage
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>htmlcov/
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a># Generated outputs (temporarily)
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>lyopronto_primary_drying_*.csv  # In root only
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>primary_drying_results.png       # In root only
+</span></code></pre></div>
 <h3 id="always-tracked-do-commit">Always Tracked (Do Commit)</h3>
-<pre><code># Source code
-lyopronto/**/*.py
-
-# Tests
-tests/**/*.py
-
-# Test data
-test_data/*.csv
-test_data/*.txt
-
-# Example outputs (as reference)
-examples/outputs/*.csv
-examples/outputs/*.png
-
-# Documentation
-*.md
-docs/**/*
-
-# Configuration
-requirements*.txt
-pytest.ini
-.gitignore
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a># Source code
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>lyopronto/**/*.py
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a># Tests
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>tests/**/*.py
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a># Test data
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>test_data/*.csv
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>test_data/*.txt
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a># Example outputs (as reference)
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>examples/outputs/*.csv
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>examples/outputs/*.png
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a># Documentation
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>*.md
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>docs/**/*
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a># Configuration
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>requirements*.txt
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>pytest.ini
+</span><span id="__span-2-22"><a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>.gitignore
+</span></code></pre></div>
 <hr />
 <h2 id="naming-conventions">Naming Conventions</h2>
 <h3 id="python-files">Python Files</h3>
@@ -957,23 +1094,23 @@ pytest.ini
 <hr />
 <h2 id="cleanup-procedures">Cleanup Procedures</h2>
 <h3 id="daily-development-cleanup">Daily Development Cleanup</h3>
-<p>Remove temporary generated files from root:</p>
-<pre><code class="language-bash">rm lyopronto_primary_drying_*.csv
-rm primary_drying_results.png
-rm *.pyc
-</code></pre>
-<p>Or use git clean (careful!):</p>
-<pre><code class="language-bash">git clean -Xn  # Dry run - show what would be deleted
-git clean -Xf  # Actually delete ignored files
-</code></pre>
+<p>Remove temporary generated files from root:
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>rm<span class="w"> </span>lyopronto_primary_drying_*.csv
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>rm<span class="w"> </span>primary_drying_results.png
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>rm<span class="w"> </span>*.pyc
+</span></code></pre></div></p>
+<p>Or use git clean (careful!):
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>git<span class="w"> </span>clean<span class="w"> </span>-Xn<span class="w">  </span><span class="c1"># Dry run - show what would be deleted</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>git<span class="w"> </span>clean<span class="w"> </span>-Xf<span class="w">  </span><span class="c1"># Actually delete ignored files</span>
+</span></code></pre></div></p>
 <h3 id="test-data-cleanup">Test Data Cleanup</h3>
 <p><strong>DON'T</strong> delete files in <code>test_data/</code> - these are reference files needed for tests!</p>
 <h3 id="example-output-cleanup">Example Output Cleanup</h3>
-<p>Keep reference outputs in <code>examples/outputs/</code>, but can remove duplicates:</p>
-<pre><code class="language-bash">cd examples/outputs/
-# Keep only the reference file
-ls lyopronto_primary_drying_*.csv | grep -v &quot;Oct_01_2025_18_48_08&quot; | xargs rm
-</code></pre>
+<p>Keep reference outputs in <code>examples/outputs/</code>, but can remove duplicates:
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nb">cd</span><span class="w"> </span>examples/outputs/
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="c1"># Keep only the reference file</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>ls<span class="w"> </span>lyopronto_primary_drying_*.csv<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;Oct_01_2025_18_48_08&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>rm
+</span></code></pre></div></p>
 <hr />
 <h2 id="adding-new-files">Adding New Files</h2>
 <h3 id="adding-new-example">Adding New Example</h3>
@@ -1008,32 +1145,32 @@ ls lyopronto_primary_drying_*.csv | grep -v &quot;Oct_01_2025_18_48_08&quot; | x
 <hr />
 <h2 id="repository-health-checks">Repository Health Checks</h2>
 <h3 id="check-for-clutter">Check for Clutter</h3>
-<pre><code class="language-bash"># Files that shouldn't be in root
-ls *.csv *.png 2&gt;/dev/null &amp;&amp; echo &quot;⚠️ Clean up root!&quot; || echo &quot;✓ Root is clean&quot;
-
-# Large files
-find . -type f -size +1M ! -path &quot;./.git/*&quot; ! -path &quot;./htmlcov/*&quot;
-</code></pre>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Files that shouldn&#39;t be in root</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>ls<span class="w"> </span>*.csv<span class="w"> </span>*.png<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;⚠️ Clean up root!&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;✓ Root is clean&quot;</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># Large files</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>-size<span class="w"> </span>+1M<span class="w"> </span>!<span class="w"> </span>-path<span class="w"> </span><span class="s2">&quot;./.git/*&quot;</span><span class="w"> </span>!<span class="w"> </span>-path<span class="w"> </span><span class="s2">&quot;./htmlcov/*&quot;</span>
+</span></code></pre></div>
 <h3 id="check-organization">Check Organization</h3>
-<pre><code class="language-bash"># Test data in right place
-ls test_data/*.csv test_data/*.txt
-
-# Examples in right place
-ls examples/*.py
-
-# Example outputs in right place
-ls examples/outputs/*.csv examples/outputs/*.png
-
-# Tests in right place
-ls tests/test_*.py
-</code></pre>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Test data in right place</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>ls<span class="w"> </span>test_data/*.csv<span class="w"> </span>test_data/*.txt
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># Examples in right place</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>ls<span class="w"> </span>examples/*.py
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1"># Example outputs in right place</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>ls<span class="w"> </span>examples/outputs/*.csv<span class="w"> </span>examples/outputs/*.png
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="c1"># Tests in right place</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>ls<span class="w"> </span>tests/test_*.py
+</span></code></pre></div>
 <h3 id="verify-gitignore">Verify .gitignore</h3>
-<pre><code class="language-bash"># Check what git sees
-git status --short
-
-# Check what's ignored
-git status --ignored --short
-</code></pre>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Check what git sees</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>git<span class="w"> </span>status<span class="w"> </span>--short
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="c1"># Check what&#39;s ignored</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>git<span class="w"> </span>status<span class="w"> </span>--ignored<span class="w"> </span>--short
+</span></code></pre></div>
 <hr />
 <h2 id="migration-status">Migration Status</h2>
 <h3 id="completed">✅ Completed</h3>
@@ -1201,10 +1338,14 @@ git status --ignored --short
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>

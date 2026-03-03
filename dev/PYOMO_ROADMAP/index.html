@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
     
     
       
@@ -23,7 +23,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.618322db.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
       
 
@@ -238,6 +238,116 @@
   
   
   
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Examples
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/knownRp_PD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulate primary drying with known Kv and Rp
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/unknownRp_PD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fitting Unknown Rp to Process Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     <li class="md-nav__item">
       <a href="../explanation/" class="md-nav__link">
         
@@ -274,6 +384,33 @@
     
   
     Full listing of all docstrings by module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dev/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributor Documentation
   
 
     
@@ -1094,23 +1231,26 @@
 <ol>
 <li>
 <p><strong>Create Pyomo model structure</strong>
-   ```python
-   # lyopronto/pyomo_models/single_step.py
-   def create_single_step_model(vial, product, ht, Lpr0, Lck, target_Pch=None, target_Tsh=None):
-       model = pyo.ConcreteModel()</p>
-<p># Variables
-   model.Pch = pyo.Var(domain=pyo.NonNegativeReals, bounds=(0.05, 0.5))
-   model.Tsh = pyo.Var(domain=pyo.Reals, bounds=(-50, 50))
-   model.Tsub = pyo.Var(domain=pyo.Reals, bounds=(-60, 0))
-   model.Tbot = pyo.Var(domain=pyo.Reals, bounds=(-60, 50))
-   model.Psub = pyo.Var(domain=pyo.NonNegativeReals)
-   model.dmdt = pyo.Var(domain=pyo.NonNegativeReals)</p>
-<p># Constraints
-   # ... (heat balance, mass balance, etc.)</p>
-<p># Objective
-   model.obj = pyo.Objective(expr=model.Psub - model.Pch, sense=pyo.maximize)</p>
-<p>return model
-   ```</p>
+   <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># lyopronto/pyomo_models/single_step.py</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">def</span> <span class="nf">create_single_step_model</span><span class="p">(</span><span class="n">vial</span><span class="p">,</span> <span class="n">product</span><span class="p">,</span> <span class="n">ht</span><span class="p">,</span> <span class="n">Lpr0</span><span class="p">,</span> <span class="n">Lck</span><span class="p">,</span> <span class="n">target_Pch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">target_Tsh</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">model</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">ConcreteModel</span><span class="p">()</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="c1"># Variables</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">model</span><span class="o">.</span><span class="n">Pch</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Var</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="n">pyo</span><span class="o">.</span><span class="n">NonNegativeReals</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">))</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">model</span><span class="o">.</span><span class="n">Tsh</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Var</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="n">pyo</span><span class="o">.</span><span class="n">Reals</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">))</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">model</span><span class="o">.</span><span class="n">Tsub</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Var</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="n">pyo</span><span class="o">.</span><span class="n">Reals</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">60</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">model</span><span class="o">.</span><span class="n">Tbot</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Var</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="n">pyo</span><span class="o">.</span><span class="n">Reals</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">60</span><span class="p">,</span> <span class="mi">50</span><span class="p">))</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">model</span><span class="o">.</span><span class="n">Psub</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Var</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="n">pyo</span><span class="o">.</span><span class="n">NonNegativeReals</span><span class="p">)</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">model</span><span class="o">.</span><span class="n">dmdt</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Var</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="n">pyo</span><span class="o">.</span><span class="n">NonNegativeReals</span><span class="p">)</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="c1"># Constraints</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="c1"># ... (heat balance, mass balance, etc.)</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    <span class="c1"># Objective</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    <span class="n">model</span><span class="o">.</span><span class="n">obj</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Objective</span><span class="p">(</span><span class="n">expr</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">Psub</span> <span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">Pch</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">pyo</span><span class="o">.</span><span class="n">maximize</span><span class="p">)</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    <span class="k">return</span> <span class="n">model</span>
+</span></code></pre></div></p>
 </li>
 <li>
 <p><strong>Implement constraint functions</strong></p>
@@ -1123,15 +1263,16 @@
 </li>
 <li>
 <p><strong>Add comparison tests</strong>
-   ```python
-   def test_pyomo_single_step_matches_scipy():
-       # Run scipy version
-       scipy_result = opt_Pch_Tsh.optimize(...)</p>
-<p># Run Pyomo version
-   pyomo_result = pyomo_single_step.optimize(...)</p>
-<p># Compare
-   assert np.isclose(scipy_result, pyomo_result, rtol=1e-3)
-   ```</p>
+   <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">def</span> <span class="nf">test_pyomo_single_step_matches_scipy</span><span class="p">():</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="c1"># Run scipy version</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="n">scipy_result</span> <span class="o">=</span> <span class="n">opt_Pch_Tsh</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="c1"># Run Pyomo version</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">pyomo_result</span> <span class="o">=</span> <span class="n">pyomo_single_step</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="c1"># Compare</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">scipy_result</span><span class="p">,</span> <span class="n">pyomo_result</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+</span></code></pre></div></p>
 </li>
 <li>
 <p><strong>Benchmark performance</strong></p>
@@ -1150,25 +1291,25 @@
 <h3 id="goal_1">Goal</h3>
 <p>Create a time-discretized optimization over the entire drying process</p>
 <h3 id="approach-collocation-on-finite-elements">Approach: Collocation on Finite Elements</h3>
-<pre><code class="language-python">model.TIME = pyo.Set(initialize=np.linspace(0, t_final, n_points))
-
-# Time-indexed variables
-model.Lck = pyo.Var(model.TIME, domain=pyo.NonNegativeReals)
-model.Tsub = pyo.Var(model.TIME, domain=pyo.Reals)
-model.Tbot = pyo.Var(model.TIME, domain=pyo.Reals)
-# ...
-
-# ODE discretization
-def dLck_dt_rule(model, t):
-    if t == 0:
-        return pyo.Constraint.Skip
-    dt = model.TIME.ord(t) - model.TIME.ord(t-1)
-    dLck_dt = (model.Lck[t] - model.Lck[t-1]) / dt
-    # ... (sublimation rate calculation)
-    return dLck_dt == sublimation_rate
-
-model.ode_constraint = pyo.Constraint(model.TIME, rule=dLck_dt_rule)
-</code></pre>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">model</span><span class="o">.</span><span class="n">TIME</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="n">initialize</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t_final</span><span class="p">,</span> <span class="n">n_points</span><span class="p">))</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># Time-indexed variables</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">model</span><span class="o">.</span><span class="n">Lck</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Var</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">TIME</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="n">pyo</span><span class="o">.</span><span class="n">NonNegativeReals</span><span class="p">)</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">model</span><span class="o">.</span><span class="n">Tsub</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Var</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">TIME</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="n">pyo</span><span class="o">.</span><span class="n">Reals</span><span class="p">)</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="n">model</span><span class="o">.</span><span class="n">Tbot</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Var</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">TIME</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="n">pyo</span><span class="o">.</span><span class="n">Reals</span><span class="p">)</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1"># ...</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="c1"># ODE discretization</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="k">def</span> <span class="nf">dLck_dt_rule</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    <span class="k">if</span> <span class="n">t</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>        <span class="k">return</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Constraint</span><span class="o">.</span><span class="n">Skip</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    <span class="n">dt</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">ord</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">ord</span><span class="p">(</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    <span class="n">dLck_dt</span> <span class="o">=</span> <span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">Lck</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">Lck</span><span class="p">[</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">dt</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>    <span class="c1"># ... (sublimation rate calculation)</span>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>    <span class="k">return</span> <span class="n">dLck_dt</span> <span class="o">==</span> <span class="n">sublimation_rate</span>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="n">model</span><span class="o">.</span><span class="n">ode_constraint</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Constraint</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">TIME</span><span class="p">,</span> <span class="n">rule</span><span class="o">=</span><span class="n">dLck_dt_rule</span><span class="p">)</span>
+</span></code></pre></div>
 <h3 id="tasks_1">Tasks</h3>
 <ol>
 <li><strong>Choose discretization method</strong></li>
@@ -1211,31 +1352,31 @@ model.ode_constraint = pyo.Constraint(model.TIME, rule=dLck_dt_rule)
 <p>Replicate all three optimization modes with Pyomo</p>
 <h3 id="modes-to-implement">Modes to Implement</h3>
 <h4 id="3a-variable-pch-fixed-tsh">3A: Variable Pch (Fixed Tsh)</h4>
-<pre><code class="language-python"># Fix shelf temperature, optimize chamber pressure
-model.Tsh.fix(Tsh_setpoint)
-model.Pch.unfix()
-
-# Objective: Maximize sublimation rate
-model.obj = pyo.Objective(
-    expr=sum(model.dmdt[t] for t in model.TIME),
-    sense=pyo.maximize
-)
-</code></pre>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Fix shelf temperature, optimize chamber pressure</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">model</span><span class="o">.</span><span class="n">Tsh</span><span class="o">.</span><span class="n">fix</span><span class="p">(</span><span class="n">Tsh_setpoint</span><span class="p">)</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">model</span><span class="o">.</span><span class="n">Pch</span><span class="o">.</span><span class="n">unfix</span><span class="p">()</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="c1"># Objective: Maximize sublimation rate</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="n">model</span><span class="o">.</span><span class="n">obj</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Objective</span><span class="p">(</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">expr</span><span class="o">=</span><span class="nb">sum</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">dmdt</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">TIME</span><span class="p">),</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="n">sense</span><span class="o">=</span><span class="n">pyo</span><span class="o">.</span><span class="n">maximize</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="p">)</span>
+</span></code></pre></div>
 <h4 id="3b-variable-tsh-fixed-pch">3B: Variable Tsh (Fixed Pch)</h4>
-<pre><code class="language-python"># Fix chamber pressure, optimize shelf temperature
-model.Pch.fix(Pch_setpoint)
-model.Tsh.unfix()
-
-# Objective: Minimize drying time subject to Tpr &lt; Tpr_crit
-model.Tbot &lt;= Tpr_crit  # Add constraint
-</code></pre>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Fix chamber pressure, optimize shelf temperature</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">model</span><span class="o">.</span><span class="n">Pch</span><span class="o">.</span><span class="n">fix</span><span class="p">(</span><span class="n">Pch_setpoint</span><span class="p">)</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">model</span><span class="o">.</span><span class="n">Tsh</span><span class="o">.</span><span class="n">unfix</span><span class="p">()</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="c1"># Objective: Minimize drying time subject to Tpr &lt; Tpr_crit</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="n">model</span><span class="o">.</span><span class="n">Tbot</span> <span class="o">&lt;=</span> <span class="n">Tpr_crit</span>  <span class="c1"># Add constraint</span>
+</span></code></pre></div>
 <h4 id="3c-variable-pch-and-tsh">3C: Variable Pch and Tsh</h4>
-<pre><code class="language-python"># Optimize both
-model.Pch.unfix()
-model.Tsh.unfix()
-
-# Multi-objective or weighted objective
-</code></pre>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Optimize both</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">model</span><span class="o">.</span><span class="n">Pch</span><span class="o">.</span><span class="n">unfix</span><span class="p">()</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">model</span><span class="o">.</span><span class="n">Tsh</span><span class="o">.</span><span class="n">unfix</span><span class="p">()</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="c1"># Multi-objective or weighted objective</span>
+</span></code></pre></div>
 <h3 id="tasks_2">Tasks</h3>
 <ol>
 <li>Implement all three modes</li>
@@ -1252,40 +1393,40 @@ model.Tsh.unfix()
 <h2 id="phase-4-advanced-features-week-7-8">Phase 4: Advanced Features (Week 7-8)</h2>
 <h3 id="4a-parameter-estimation">4A: Parameter Estimation</h3>
 <p>Enable estimation of unknown parameters (R0, A1, A2, Kv parameters)</p>
-<pre><code class="language-python"># Add parameter variables
-model.R0 = pyo.Var(domain=pyo.PositiveReals)
-model.A1 = pyo.Var(domain=pyo.PositiveReals)
-
-# Least squares objective
-model.obj = pyo.Objective(
-    expr=sum((model.Tbot[t] - measured_Tbot[t])**2 for t in model.TIME)
-)
-</code></pre>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Add parameter variables</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">model</span><span class="o">.</span><span class="n">R0</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Var</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="n">pyo</span><span class="o">.</span><span class="n">PositiveReals</span><span class="p">)</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">model</span><span class="o">.</span><span class="n">A1</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Var</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="n">pyo</span><span class="o">.</span><span class="n">PositiveReals</span><span class="p">)</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="c1"># Least squares objective</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="n">model</span><span class="o">.</span><span class="n">obj</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Objective</span><span class="p">(</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    <span class="n">expr</span><span class="o">=</span><span class="nb">sum</span><span class="p">((</span><span class="n">model</span><span class="o">.</span><span class="n">Tbot</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">-</span> <span class="n">measured_Tbot</span><span class="p">[</span><span class="n">t</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">TIME</span><span class="p">)</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="p">)</span>
+</span></code></pre></div>
 <h3 id="4b-design-space-generation">4B: Design Space Generation</h3>
 <p>Systematic exploration of Pch-Tsh parameter space</p>
-<pre><code class="language-python">for Pch in np.linspace(0.06, 0.30, 20):
-    for Tsh in np.linspace(-40, 40, 20):
-        model.Pch.fix(Pch)
-        model.Tsh.fix(Tsh)
-        solver.solve(model)
-        # Check if Tbot &lt; Tpr_crit
-        if feasible:
-            design_space.append((Pch, Tsh))
-</code></pre>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">for</span> <span class="n">Pch</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.06</span><span class="p">,</span> <span class="mf">0.30</span><span class="p">,</span> <span class="mi">20</span><span class="p">):</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    <span class="k">for</span> <span class="n">Tsh</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">40</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">20</span><span class="p">):</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>        <span class="n">model</span><span class="o">.</span><span class="n">Pch</span><span class="o">.</span><span class="n">fix</span><span class="p">(</span><span class="n">Pch</span><span class="p">)</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>        <span class="n">model</span><span class="o">.</span><span class="n">Tsh</span><span class="o">.</span><span class="n">fix</span><span class="p">(</span><span class="n">Tsh</span><span class="p">)</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>        <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>        <span class="c1"># Check if Tbot &lt; Tpr_crit</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>        <span class="k">if</span> <span class="n">feasible</span><span class="p">:</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>            <span class="n">design_space</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">Pch</span><span class="p">,</span> <span class="n">Tsh</span><span class="p">))</span>
+</span></code></pre></div>
 <h3 id="4c-multi-vial-optimization">4C: Multi-Vial Optimization</h3>
 <p>Optimize for batch heterogeneity</p>
-<pre><code class="language-python">model.VIALS = pyo.Set(initialize=range(n_vials))
-
-# Variables indexed by vial and time
-model.Tsub = pyo.Var(model.VIALS, model.TIME)
-
-# Equipment constraint (total sublimation capacity)
-def equipment_capacity_rule(model, t):
-    total_sublimation = sum(model.dmdt[v,t] for v in model.VIALS)
-    return total_sublimation &lt;= equipment_capability(model.Pch[t])
-
-model.equipment_constraint = pyo.Constraint(model.TIME, rule=equipment_capacity_rule)
-</code></pre>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">model</span><span class="o">.</span><span class="n">VIALS</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="n">initialize</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="n">n_vials</span><span class="p">))</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="c1"># Variables indexed by vial and time</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="n">model</span><span class="o">.</span><span class="n">Tsub</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Var</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">VIALS</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">TIME</span><span class="p">)</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="c1"># Equipment constraint (total sublimation capacity)</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="k">def</span> <span class="nf">equipment_capacity_rule</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>    <span class="n">total_sublimation</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">dmdt</span><span class="p">[</span><span class="n">v</span><span class="p">,</span><span class="n">t</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">VIALS</span><span class="p">)</span>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>    <span class="k">return</span> <span class="n">total_sublimation</span> <span class="o">&lt;=</span> <span class="n">equipment_capability</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">Pch</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="n">model</span><span class="o">.</span><span class="n">equipment_constraint</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Constraint</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">TIME</span><span class="p">,</span> <span class="n">rule</span><span class="o">=</span><span class="n">equipment_capacity_rule</span><span class="p">)</span>
+</span></code></pre></div>
 <h3 id="success-criteria_3">Success Criteria</h3>
 <ul>
 <li>✅ Parameter estimation works on synthetic data</li>
@@ -1297,15 +1438,15 @@ model.equipment_constraint = pyo.Constraint(model.TIME, rule=equipment_capacity_
 <ol>
 <li>
 <p><strong>API Design</strong>
-   <code>python
-   # High-level API
-   result = lyopronto.optimize(
-       vial=vial_config,
-       product=product_config,
-       process={'Pch': 'variable', 'Tsh': 20.0},
-       solver='ipopt',
-       backend='pyomo'  # or 'scipy' for legacy
-   )</code></p>
+   <div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># High-level API</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">result</span> <span class="o">=</span> <span class="n">lyopronto</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>    <span class="n">vial</span><span class="o">=</span><span class="n">vial_config</span><span class="p">,</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="n">product</span><span class="o">=</span><span class="n">product_config</span><span class="p">,</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>    <span class="n">process</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Pch&#39;</span><span class="p">:</span> <span class="s1">&#39;variable&#39;</span><span class="p">,</span> <span class="s1">&#39;Tsh&#39;</span><span class="p">:</span> <span class="mf">20.0</span><span class="p">},</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>    <span class="n">solver</span><span class="o">=</span><span class="s1">&#39;ipopt&#39;</span><span class="p">,</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>    <span class="n">backend</span><span class="o">=</span><span class="s1">&#39;pyomo&#39;</span>  <span class="c1"># or &#39;scipy&#39; for legacy</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="p">)</span>
+</span></code></pre></div></p>
 </li>
 <li>
 <p><strong>Documentation</strong></p>
@@ -1341,47 +1482,47 @@ model.equipment_constraint = pyo.Constraint(model.TIME, rule=equipment_capacity_
 <h2 id="technical-challenges-and-solutions">Technical Challenges and Solutions</h2>
 <h3 id="challenge-1-exponential-vapor-pressure">Challenge 1: Exponential Vapor Pressure</h3>
 <p><strong>Problem</strong>: <code>P = 2.698e10 * exp(-6144.96/(T+273.15))</code> has numerical issues</p>
-<p><strong>Solution</strong>: Use log-transform</p>
-<pre><code class="language-python">model.log_Psub = pyo.Var()
-model.log_Psub_constraint = pyo.Constraint(
-    expr=model.log_Psub == log(2.698e10) - 6144.96/(model.Tsub + 273.15)
-)
-model.Psub = pyo.Expression(expr=pyo.exp(model.log_Psub))
-</code></pre>
+<p><strong>Solution</strong>: Use log-transform
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">model</span><span class="o">.</span><span class="n">log_Psub</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Var</span><span class="p">()</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">model</span><span class="o">.</span><span class="n">log_Psub_constraint</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Constraint</span><span class="p">(</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>    <span class="n">expr</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">log_Psub</span> <span class="o">==</span> <span class="n">log</span><span class="p">(</span><span class="mf">2.698e10</span><span class="p">)</span> <span class="o">-</span> <span class="mf">6144.96</span><span class="o">/</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">Tsub</span> <span class="o">+</span> <span class="mf">273.15</span><span class="p">)</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="p">)</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="n">model</span><span class="o">.</span><span class="n">Psub</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Expression</span><span class="p">(</span><span class="n">expr</span><span class="o">=</span><span class="n">pyo</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">log_Psub</span><span class="p">))</span>
+</span></code></pre></div></p>
 <h3 id="challenge-2-conditional-if-dmdt-0">Challenge 2: Conditional (if dmdt &lt; 0)</h3>
 <p><strong>Problem</strong>: Discrete logic breaks NLP solvers</p>
-<p><strong>Solution</strong>: Use complementarity or smooth approximation</p>
-<pre><code class="language-python"># Option A: Smooth max
-model.dmdt = pyo.Expression(
-    expr=pyo.sqrt(dmdt_raw**2 + epsilon**2) / 2 + dmdt_raw / 2
-)
-
-# Option B: Complementarity constraint (with MPEC solver)
-model.dmdt_geq_0 = pyo.Constraint(expr=model.dmdt &gt;= 0)
-model.complementarity = pyo.Complementarity(...)
-</code></pre>
+<p><strong>Solution</strong>: Use complementarity or smooth approximation
+<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Option A: Smooth max</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">model</span><span class="o">.</span><span class="n">dmdt</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Expression</span><span class="p">(</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>    <span class="n">expr</span><span class="o">=</span><span class="n">pyo</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dmdt_raw</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">epsilon</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">dmdt_raw</span> <span class="o">/</span> <span class="mi">2</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="p">)</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="c1"># Option B: Complementarity constraint (with MPEC solver)</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="n">model</span><span class="o">.</span><span class="n">dmdt_geq_0</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Constraint</span><span class="p">(</span><span class="n">expr</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">dmdt</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="n">model</span><span class="o">.</span><span class="n">complementarity</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Complementarity</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</span></code></pre></div></p>
 <h3 id="challenge-3-nested-equations-fsolve">Challenge 3: Nested Equations (fsolve)</h3>
 <p><strong>Problem</strong>: <code>Tsub = fsolve(energy_balance, guess)</code></p>
-<p><strong>Solution</strong>: Make it an equality constraint</p>
-<pre><code class="language-python"># Instead of solving for Tsub, make it a variable with constraint
-model.Tsub = pyo.Var()
-model.energy_balance = pyo.Constraint(
-    expr=heat_from_shelf(model.Tsh, model.Tbot) == 
-         heat_for_sublimation(model.Tsub, model.Pch)
-)
-</code></pre>
+<p><strong>Solution</strong>: Make it an equality constraint
+<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1"># Instead of solving for Tsub, make it a variable with constraint</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="n">model</span><span class="o">.</span><span class="n">Tsub</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Var</span><span class="p">()</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="n">model</span><span class="o">.</span><span class="n">energy_balance</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Constraint</span><span class="p">(</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>    <span class="n">expr</span><span class="o">=</span><span class="n">heat_from_shelf</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">Tsh</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">Tbot</span><span class="p">)</span> <span class="o">==</span> 
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>         <span class="n">heat_for_sublimation</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">Tsub</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">Pch</span><span class="p">)</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="p">)</span>
+</span></code></pre></div></p>
 <h3 id="challenge-4-initialization">Challenge 4: Initialization</h3>
 <p><strong>Problem</strong>: Poor initial guess causes solver failure</p>
-<p><strong>Solution</strong>: Use scipy solution for warmstart</p>
-<pre><code class="language-python"># Run scipy first for initial guess
-scipy_solution = calc_knownRp.dry(...)
-
-# Initialize Pyomo variables
-for t_idx, t in enumerate(model.TIME):
-    model.Tsub[t].set_value(scipy_solution[t_idx, 1])
-    model.Tbot[t].set_value(scipy_solution[t_idx, 2])
-    # ...
-</code></pre>
+<p><strong>Solution</strong>: Use scipy solution for warmstart
+<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1"># Run scipy first for initial guess</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="n">scipy_solution</span> <span class="o">=</span> <span class="n">calc_knownRp</span><span class="o">.</span><span class="n">dry</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="c1"># Initialize Pyomo variables</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="k">for</span> <span class="n">t_idx</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">TIME</span><span class="p">):</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>    <span class="n">model</span><span class="o">.</span><span class="n">Tsub</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="o">.</span><span class="n">set_value</span><span class="p">(</span><span class="n">scipy_solution</span><span class="p">[</span><span class="n">t_idx</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>    <span class="n">model</span><span class="o">.</span><span class="n">Tbot</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="o">.</span><span class="n">set_value</span><span class="p">(</span><span class="n">scipy_solution</span><span class="p">[</span><span class="n">t_idx</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>    <span class="c1"># ...</span>
+</span></code></pre></div></p>
 <h2 id="development-workflow">Development Workflow</h2>
 <h3 id="step-by-step-process">Step-by-Step Process</h3>
 <ol>
@@ -1392,50 +1533,50 @@ for t_idx, t in enumerate(model.TIME):
 <li><strong>Document and commit</strong></li>
 </ol>
 <h3 id="example-workflow">Example Workflow</h3>
-<pre><code class="language-bash"># 1. Create feature branch
-git checkout -b feature/pyomo-single-step
-
-# 2. Write test
-# tests/test_pyomo_single_step.py
-
-# 3. Run test (should fail)
-pytest tests/test_pyomo_single_step.py -v
-
-# 4. Implement feature
-# lyopronto/pyomo_models/single_step.py
-
-# 5. Run test (should pass)
-pytest tests/test_pyomo_single_step.py -v
-
-# 6. Run all tests
-pytest tests/ -v
-
-# 7. Commit and push
-git add .
-git commit -m &quot;Add Pyomo single-step optimization&quot;
-git push origin feature/pyomo-single-step
-
-# 8. Create pull request
-gh pr create
-</code></pre>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># 1. Create feature branch</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>feature/pyomo-single-step
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="c1"># 2. Write test</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="c1"># tests/test_pyomo_single_step.py</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="c1"># 3. Run test (should fail)</span>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>pytest<span class="w"> </span>tests/test_pyomo_single_step.py<span class="w"> </span>-v
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="c1"># 4. Implement feature</span>
+</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="c1"># lyopronto/pyomo_models/single_step.py</span>
+</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>
+</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a><span class="c1"># 5. Run test (should pass)</span>
+</span><span id="__span-14-14"><a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a>pytest<span class="w"> </span>tests/test_pyomo_single_step.py<span class="w"> </span>-v
+</span><span id="__span-14-15"><a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a>
+</span><span id="__span-14-16"><a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a><span class="c1"># 6. Run all tests</span>
+</span><span id="__span-14-17"><a id="__codelineno-14-17" name="__codelineno-14-17" href="#__codelineno-14-17"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-v
+</span><span id="__span-14-18"><a id="__codelineno-14-18" name="__codelineno-14-18" href="#__codelineno-14-18"></a>
+</span><span id="__span-14-19"><a id="__codelineno-14-19" name="__codelineno-14-19" href="#__codelineno-14-19"></a><span class="c1"># 7. Commit and push</span>
+</span><span id="__span-14-20"><a id="__codelineno-14-20" name="__codelineno-14-20" href="#__codelineno-14-20"></a>git<span class="w"> </span>add<span class="w"> </span>.
+</span><span id="__span-14-21"><a id="__codelineno-14-21" name="__codelineno-14-21" href="#__codelineno-14-21"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Add Pyomo single-step optimization&quot;</span>
+</span><span id="__span-14-22"><a id="__codelineno-14-22" name="__codelineno-14-22" href="#__codelineno-14-22"></a>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>feature/pyomo-single-step
+</span><span id="__span-14-23"><a id="__codelineno-14-23" name="__codelineno-14-23" href="#__codelineno-14-23"></a>
+</span><span id="__span-14-24"><a id="__codelineno-14-24" name="__codelineno-14-24" href="#__codelineno-14-24"></a><span class="c1"># 8. Create pull request</span>
+</span><span id="__span-14-25"><a id="__codelineno-14-25" name="__codelineno-14-25" href="#__codelineno-14-25"></a>gh<span class="w"> </span>pr<span class="w"> </span>create
+</span></code></pre></div>
 <h2 id="required-dependencies">Required Dependencies</h2>
 <h3 id="new-packages">New Packages</h3>
-<pre><code class="language-txt"># requirements-pyomo.txt
-pyomo&gt;=6.6.0
-ipopt  # or install via conda
-pandas&gt;=2.0.0  # for results analysis
-matplotlib&gt;=3.5.0  # for visualization
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a># requirements-pyomo.txt
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>pyomo&gt;=6.6.0
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>ipopt  # or install via conda
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>pandas&gt;=2.0.0  # for results analysis
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>matplotlib&gt;=3.5.0  # for visualization
+</span></code></pre></div>
 <h3 id="installation">Installation</h3>
-<pre><code class="language-bash"># Install Pyomo
-pip install pyomo
-
-# Install IPOPT solver (Linux)
-conda install -c conda-forge ipopt
-
-# Or compile from source
-# https://coin-or.github.io/Ipopt/INSTALL.html
-</code></pre>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># Install Pyomo</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>pip<span class="w"> </span>install<span class="w"> </span>pyomo
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="c1"># Install IPOPT solver (Linux)</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>ipopt
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="c1"># Or compile from source</span>
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="c1"># https://coin-or.github.io/Ipopt/INSTALL.html</span>
+</span></code></pre></div>
 <h2 id="expected-outcomes">Expected Outcomes</h2>
 <h3 id="quantitative-goals">Quantitative Goals</h3>
 <ul>
@@ -1602,10 +1743,14 @@ conda install -c conda-forge ipopt
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>

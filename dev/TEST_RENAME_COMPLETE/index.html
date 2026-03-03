@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
     
     
       
@@ -23,7 +23,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.618322db.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
       
 
@@ -238,6 +238,116 @@
   
   
   
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Examples
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/knownRp_PD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulate primary drying with known Kv and Rp
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/unknownRp_PD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fitting Unknown Rp to Process Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     <li class="md-nav__item">
       <a href="../explanation/" class="md-nav__link">
         
@@ -274,6 +384,33 @@
     
   
     Full listing of all docstrings by module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dev/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributor Documentation
   
 
     
@@ -689,15 +826,15 @@
 <p>Successfully renamed <code>tests/test_optimizer.py</code> to <code>tests/test_opt_Tsh.py</code> to match naming convention.</p>
 <h2 id="actions-completed">Actions Completed</h2>
 <h3 id="1-file-renamed">1. ✅ File Renamed</h3>
-<pre><code class="language-bash">mv tests/test_optimizer.py tests/test_opt_Tsh.py
-</code></pre>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>mv<span class="w"> </span>tests/test_optimizer.py<span class="w"> </span>tests/test_opt_Tsh.py
+</span></code></pre></div>
 <p><strong>Result</strong>: File successfully renamed with no loss of functionality</p>
 <h3 id="2-tests-verified">2. ✅ Tests Verified</h3>
-<pre><code class="language-bash">pytest tests/test_opt_Tsh.py -v
-</code></pre>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pytest<span class="w"> </span>tests/test_opt_Tsh.py<span class="w"> </span>-v
+</span></code></pre></div>
 <p><strong>Result</strong>: All 14 tests passing (100% pass rate)</p>
-<pre><code class="language-bash">pytest tests/ -q
-</code></pre>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-q
+</span></code></pre></div>
 <p><strong>Result</strong>: All 128 tests passing (100% pass rate)</p>
 <h3 id="3-documentation-updated">3. ✅ Documentation Updated</h3>
 <p><strong>Files updated</strong>:
@@ -711,16 +848,16 @@
 - <code>docs/archive/*.md</code> files (historical, intentionally kept as-is)</p>
 <h2 id="rationale">Rationale</h2>
 <h3 id="why-rename">Why Rename?</h3>
-<p><strong>Before (Inconsistent)</strong>:</p>
-<pre><code>lyopronto/opt_Tsh.py  →  tests/test_optimizer.py  ❌ Name doesn't match
-</code></pre>
-<p><strong>After (Consistent)</strong>:</p>
-<pre><code>lyopronto/opt_Tsh.py  →  tests/test_opt_Tsh.py  ✅ Name matches module
-</code></pre>
+<p><strong>Before (Inconsistent)</strong>:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>lyopronto/opt_Tsh.py  →  tests/test_optimizer.py  ❌ Name doesn&#39;t match
+</span></code></pre></div></p>
+<p><strong>After (Consistent)</strong>:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>lyopronto/opt_Tsh.py  →  tests/test_opt_Tsh.py  ✅ Name matches module
+</span></code></pre></div></p>
 <h3 id="naming-convention">Naming Convention</h3>
-<p>All modules now follow the pattern:</p>
-<pre><code>lyopronto/MODULE_NAME.py  →  tests/test_MODULE_NAME.py
-</code></pre>
+<p>All modules now follow the pattern:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>lyopronto/MODULE_NAME.py  →  tests/test_MODULE_NAME.py
+</span></code></pre></div></p>
 <p><strong>Examples</strong>:
 - <code>calc_unknownRp.py</code> → <code>test_calc_unknownRp.py</code> ✅
 - <code>opt_Pch.py</code> → <code>test_opt_Pch.py</code> ✅
@@ -785,24 +922,24 @@
 </table>
 <p><strong>Result</strong>: 9/9 modules have appropriate test coverage ✅</p>
 <h2 id="test-directory-structure-final">Test Directory Structure (Final)</h2>
-<pre><code>tests/
-├── __init__.py                    # Package marker
-├── conftest.py                    # Shared fixtures
-├── README.md                      # Documentation (updated)
-│
-├── test_calc_unknownRp.py        # Unit tests (11 tests)
-├── test_calculators.py           # Integration tests (14 tests)
-├── test_design_space.py          # Unit tests (7 tests)
-├── test_freezing.py              # Unit tests (3 tests)
-├── test_functions.py             # Unit tests (30 tests)
-├── test_opt_Pch.py               # Unit tests (14 tests)
-├── test_opt_Pch_Tsh.py           # Unit tests (15 tests)
-├── test_opt_Tsh.py               # Unit tests (14 tests) ⭐ RENAMED
-│
-├── test_example_scripts.py       # Example smoke tests (3 tests)
-├── test_regression.py            # Regression tests (9 tests)
-└── test_web_interface.py         # Integration tests (8 tests)
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>tests/
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>├── __init__.py                    # Package marker
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>├── conftest.py                    # Shared fixtures
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>├── README.md                      # Documentation (updated)
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>│
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>├── test_calc_unknownRp.py        # Unit tests (11 tests)
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>├── test_calculators.py           # Integration tests (14 tests)
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>├── test_design_space.py          # Unit tests (7 tests)
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>├── test_freezing.py              # Unit tests (3 tests)
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>├── test_functions.py             # Unit tests (30 tests)
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>├── test_opt_Pch.py               # Unit tests (14 tests)
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>├── test_opt_Pch_Tsh.py           # Unit tests (15 tests)
+</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>├── test_opt_Tsh.py               # Unit tests (14 tests) ⭐ RENAMED
+</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>│
+</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>├── test_example_scripts.py       # Example smoke tests (3 tests)
+</span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>├── test_regression.py            # Regression tests (9 tests)
+</span><span id="__span-6-17"><a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>└── test_web_interface.py         # Integration tests (8 tests)
+</span></code></pre></div>
 <p><strong>Total</strong>: 11 test files, 128 tests, 100% passing</p>
 <h2 id="test-coverage-summary">Test Coverage Summary</h2>
 <table>
@@ -859,32 +996,32 @@
 <p><strong>Result</strong>: Rename had no impact on coverage ✅</p>
 <h2 id="verification">Verification</h2>
 <h3 id="1-all-tests-pass">1. All Tests Pass</h3>
-<pre><code class="language-bash">$ pytest tests/test_opt_Tsh.py -v
-==================== 14 passed in 42.79s ====================
-
-$ pytest tests/ -q
-==================== 128 passed in 323.19s ====================
-</code></pre>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>$<span class="w"> </span>pytest<span class="w"> </span>tests/test_opt_Tsh.py<span class="w"> </span>-v
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="o">====================</span><span class="w"> </span><span class="m">14</span><span class="w"> </span>passed<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">42</span>.79s<span class="w"> </span><span class="o">====================</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>$<span class="w"> </span>pytest<span class="w"> </span>tests/<span class="w"> </span>-q
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="o">====================</span><span class="w"> </span><span class="m">128</span><span class="w"> </span>passed<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">323</span>.19s<span class="w"> </span><span class="o">====================</span>
+</span></code></pre></div>
 <h3 id="2-file-structure-clean">2. File Structure Clean</h3>
-<pre><code class="language-bash">$ ls -1 tests/test_opt*.py
-tests/test_opt_Pch.py
-tests/test_opt_Pch_Tsh.py
-tests/test_opt_Tsh.py
-</code></pre>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>$<span class="w"> </span>ls<span class="w"> </span>-1<span class="w"> </span>tests/test_opt*.py
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>tests/test_opt_Pch.py
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>tests/test_opt_Pch_Tsh.py
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>tests/test_opt_Tsh.py
+</span></code></pre></div>
 <h3 id="3-no-duplicates">3. No Duplicates</h3>
-<pre><code class="language-bash">$ find tests/ -name &quot;*optimizer*&quot;
-(no results)
-</code></pre>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>$<span class="w"> </span>find<span class="w"> </span>tests/<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;*optimizer*&quot;</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="o">(</span>no<span class="w"> </span>results<span class="o">)</span>
+</span></code></pre></div>
 <h3 id="4-module-mapping-complete">4. Module Mapping Complete</h3>
-<pre><code class="language-bash">$ for module in lyopronto/opt*.py; do 
-    name=$(basename &quot;$module&quot; .py)
-    test_file=&quot;tests/test_${name}.py&quot;
-    [ -f &quot;$test_file&quot; ] &amp;&amp; echo &quot;✅ $name → test_${name}.py&quot;
-done
-✅ opt_Pch → test_opt_Pch.py
-✅ opt_Pch_Tsh → test_opt_Pch_Tsh.py
-✅ opt_Tsh → test_opt_Tsh.py
-</code></pre>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>$<span class="w"> </span><span class="k">for</span><span class="w"> </span>module<span class="w"> </span><span class="k">in</span><span class="w"> </span>lyopronto/opt*.py<span class="p">;</span><span class="w"> </span><span class="k">do</span><span class="w"> </span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">    </span><span class="nv">name</span><span class="o">=</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$module</span><span class="s2">&quot;</span><span class="w"> </span>.py<span class="k">)</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">    </span><span class="nv">test_file</span><span class="o">=</span><span class="s2">&quot;tests/test_</span><span class="si">${</span><span class="nv">name</span><span class="si">}</span><span class="s2">.py&quot;</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span><span class="o">[</span><span class="w"> </span>-f<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$test_file</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;✅ </span><span class="nv">$name</span><span class="s2"> → test_</span><span class="si">${</span><span class="nv">name</span><span class="si">}</span><span class="s2">.py&quot;</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="k">done</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>✅<span class="w"> </span>opt_Pch<span class="w"> </span>→<span class="w"> </span>test_opt_Pch.py
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>✅<span class="w"> </span>opt_Pch_Tsh<span class="w"> </span>→<span class="w"> </span>test_opt_Pch_Tsh.py
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>✅<span class="w"> </span>opt_Tsh<span class="w"> </span>→<span class="w"> </span>test_opt_Tsh.py
+</span></code></pre></div>
 <h2 id="benefits">Benefits</h2>
 <h3 id="1-improved-discoverability">1. Improved Discoverability</h3>
 <ul>
@@ -911,30 +1048,30 @@ done
 <h2 id="related-files">Related Files</h2>
 <h3 id="obsolete-root-level-documentation">Obsolete Root-Level Documentation</h3>
 <p>The following files in root contain references to <code>test_optimizer.py</code> but are obsolete:</p>
-<pre><code>OPTIMIZER_TESTING_SUMMARY.md
-OPTIMIZER_COMPLETE.md
-TESTING_AND_EXAMPLES_COMPLETE.md
-DESIGN_SPACE_COMPLETE.md
-WEB_INTERFACE_COMPLETE.md
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>OPTIMIZER_TESTING_SUMMARY.md
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>OPTIMIZER_COMPLETE.md
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>TESTING_AND_EXAMPLES_COMPLETE.md
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>DESIGN_SPACE_COMPLETE.md
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>WEB_INTERFACE_COMPLETE.md
+</span></code></pre></div>
 <p><strong>Recommendation</strong>: Move these to <code>docs/archive/</code> during next cleanup session</p>
 <h3 id="archive-documentation">Archive Documentation</h3>
-<p>The following archived files intentionally retain old references:</p>
-<pre><code>docs/archive/OPTIMIZER_COMPLETE.md
-docs/archive/OPTIMIZER_TESTING_SUMMARY.md
-docs/archive/DESIGN_SPACE_COMPLETE.md
-</code></pre>
+<p>The following archived files intentionally retain old references:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>docs/archive/OPTIMIZER_COMPLETE.md
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>docs/archive/OPTIMIZER_TESTING_SUMMARY.md
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>docs/archive/DESIGN_SPACE_COMPLETE.md
+</span></code></pre></div></p>
 <p><strong>Status</strong>: ✅ Correct - archives should not be modified</p>
 <h2 id="commands-for-future-reference">Commands for Future Reference</h2>
 <h3 id="run-renamed-test-file">Run renamed test file</h3>
-<pre><code class="language-bash">pytest tests/test_opt_Tsh.py -v
-</code></pre>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>pytest<span class="w"> </span>tests/test_opt_Tsh.py<span class="w"> </span>-v
+</span></code></pre></div>
 <h3 id="run-all-optimizer-tests">Run all optimizer tests</h3>
-<pre><code class="language-bash">pytest tests/test_opt_*.py -v
-</code></pre>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>pytest<span class="w"> </span>tests/test_opt_*.py<span class="w"> </span>-v
+</span></code></pre></div>
 <h3 id="check-coverage-for-opt_tsh-module">Check coverage for opt_Tsh module</h3>
-<pre><code class="language-bash">pytest tests/test_opt_Tsh.py --cov=lyopronto.opt_Tsh --cov-report=term
-</code></pre>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>pytest<span class="w"> </span>tests/test_opt_Tsh.py<span class="w"> </span>--cov<span class="o">=</span>lyopronto.opt_Tsh<span class="w"> </span>--cov-report<span class="o">=</span>term
+</span></code></pre></div>
 <h2 id="checklist">Checklist</h2>
 <ul>
 <li>[x] Rename file: <code>test_optimizer.py</code> → <code>test_opt_Tsh.py</code></li>
@@ -1003,10 +1140,14 @@ docs/archive/DESIGN_SPACE_COMPLETE.md
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>

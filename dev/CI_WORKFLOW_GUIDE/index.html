@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
     
     
       
@@ -23,7 +23,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.618322db.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
       
 
@@ -238,6 +238,116 @@
   
   
   
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Examples
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/knownRp_PD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulate primary drying with known Kv and Rp
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/unknownRp_PD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fitting Unknown Rp to Process Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     <li class="md-nav__item">
       <a href="../explanation/" class="md-nav__link">
         
@@ -274,6 +384,33 @@
     
   
     Full listing of all docstrings by module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dev/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributor Documentation
   
 
     
@@ -739,90 +876,90 @@
 - PR opened
 - New commits pushed (synchronize)
 - PR reopened</p>
-<p><strong>What runs</strong>:</p>
-<pre><code class="language-bash">pytest tests/ -n auto -v  # No coverage
-</code></pre>
+<p><strong>What runs</strong>:
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w">  </span><span class="c1"># No coverage</span>
+</span></code></pre></div></p>
 <p><strong>Duration</strong>: ~3-5 minutes</p>
 <p><strong>Purpose</strong>:
 - ✅ Quick feedback for developers
 - ✅ Catch breaking changes immediately
 - ✅ Allow rapid iteration
 - ❌ No coverage analysis (saves ~2 minutes)</p>
-<p><strong>When it runs</strong>:</p>
-<pre><code>Developer pushes code → Fast tests run automatically
-↓
-Tests pass → Ready for review
-Tests fail → Developer fixes and pushes again → Fast tests re-run
-</code></pre>
+<p><strong>When it runs</strong>:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Developer pushes code → Fast tests run automatically
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>↓
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>Tests pass → Ready for review
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Tests fail → Developer fixes and pushes again → Fast tests re-run
+</span></code></pre></div></p>
 <h3 id="stage-2-pre-merge-verification-full-coverage">Stage 2: Pre-Merge Verification (Full Coverage)</h3>
 <p><strong>Workflow</strong>: <code>.github/workflows/tests.yml</code></p>
 <p><strong>Triggers</strong>: 
 1. PR approved by reviewer
 2. Direct pushes to <code>main</code> or <code>dev-pyomo</code> branches</p>
-<p><strong>What runs</strong>:</p>
-<pre><code class="language-bash">pytest tests/ -n auto -v --cov=lyopronto --cov-report=xml
-# + Upload to Codecov
-</code></pre>
+<p><strong>What runs</strong>:
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-report<span class="o">=</span>xml
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1"># + Upload to Codecov</span>
+</span></code></pre></div></p>
 <p><strong>Duration</strong>: ~5-7 minutes</p>
 <p><strong>Purpose</strong>:
 - ✅ Full quality verification before merge
 - ✅ Coverage analysis and reporting
 - ✅ Final confirmation PR is merge-ready
 - ✅ Maintain quality metrics on main branch</p>
-<p><strong>When it runs</strong>:</p>
-<pre><code>Developer pushes code → Fast tests pass → Reviewer approves PR
-↓
-Full coverage tests run automatically
-↓
-Coverage tests pass → Safe to merge
-Coverage tests fail → Address issues before merge
-</code></pre>
+<p><strong>When it runs</strong>:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Developer pushes code → Fast tests pass → Reviewer approves PR
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>↓
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>Full coverage tests run automatically
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>↓
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>Coverage tests pass → Safe to merge
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>Coverage tests fail → Address issues before merge
+</span></code></pre></div></p>
 <h2 id="visual-flow">Visual Flow</h2>
-<pre><code>┌─────────────────────────────────────────────────────────────┐
-│                    Pull Request Lifecycle                    │
-└─────────────────────────────────────────────────────────────┘
-
-1. Developer Creates PR
-   └─&gt; Fast Tests Run (pr-tests.yml)
-       ├─ Duration: ~3-5 min
-       ├─ No coverage
-       └─ Result: ✅ or ❌
-
-2. Developer Pushes More Commits
-   └─&gt; Fast Tests Re-run (pr-tests.yml)
-       └─ Every commit triggers new run
-
-3. Reviewer Approves PR
-   └─&gt; Full Coverage Tests Run (tests.yml)
-       ├─ Duration: ~5-7 min
-       ├─ With coverage
-       ├─ Upload to Codecov
-       └─ Result: ✅ or ❌
-
-4. Merge to Main
-   └─&gt; Full Coverage Tests Run Again (tests.yml)
-       └─&gt; Updates coverage metrics for main branch
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>┌─────────────────────────────────────────────────────────────┐
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>│                    Pull Request Lifecycle                    │
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>└─────────────────────────────────────────────────────────────┘
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>1. Developer Creates PR
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>   └─&gt; Fast Tests Run (pr-tests.yml)
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>       ├─ Duration: ~3-5 min
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>       ├─ No coverage
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>       └─ Result: ✅ or ❌
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>2. Developer Pushes More Commits
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>   └─&gt; Fast Tests Re-run (pr-tests.yml)
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>       └─ Every commit triggers new run
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>3. Reviewer Approves PR
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>   └─&gt; Full Coverage Tests Run (tests.yml)
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>       ├─ Duration: ~5-7 min
+</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>       ├─ With coverage
+</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>       ├─ Upload to Codecov
+</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>       └─ Result: ✅ or ❌
+</span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>
+</span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>4. Merge to Main
+</span><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>   └─&gt; Full Coverage Tests Run Again (tests.yml)
+</span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>       └─&gt; Updates coverage metrics for main branch
+</span></code></pre></div>
 <h2 id="github-actions-triggers">GitHub Actions Triggers</h2>
 <h3 id="pr-tests-fast">PR Tests (Fast)</h3>
-<pre><code class="language-yaml">on:
-  pull_request:
-    branches: [ main, dev-pyomo ]
-    types: [ opened, synchronize, reopened ]
-</code></pre>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">on</span><span class="p">:</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">pull_request</span><span class="p">:</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="nt">branches</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">main</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">dev-pyomo</span><span class="w"> </span><span class="p p-Indicator">]</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="nt">types</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">opened</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">synchronize</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">reopened</span><span class="w"> </span><span class="p p-Indicator">]</span>
+</span></code></pre></div>
 <h3 id="coverage-tests-full">Coverage Tests (Full)</h3>
-<pre><code class="language-yaml">on:
-  push:
-    branches: [ main, dev-pyomo ]
-  pull_request_review:
-    types: [ submitted ]
-
-jobs:
-  test:
-    if: |
-      github.event_name == 'push' || 
-      (github.event_name == 'pull_request_review' &amp;&amp; github.event.review.state == 'approved')
-</code></pre>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">on</span><span class="p">:</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">push</span><span class="p">:</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="nt">branches</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">main</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">dev-pyomo</span><span class="w"> </span><span class="p p-Indicator">]</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span><span class="nt">pull_request_review</span><span class="p">:</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">    </span><span class="nt">types</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">submitted</span><span class="w"> </span><span class="p p-Indicator">]</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="nt">jobs</span><span class="p">:</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">  </span><span class="nt">test</span><span class="p">:</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">      </span><span class="no">github.event_name == &#39;push&#39; || </span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">      </span><span class="no">(github.event_name == &#39;pull_request_review&#39; &amp;&amp; github.event.review.state == &#39;approved&#39;)</span>
+</span></code></pre></div>
 <h2 id="benefits-of-this-approach">Benefits of This Approach</h2>
 <h3 id="for-developers">For Developers</h3>
 <ul>
@@ -894,24 +1031,24 @@ jobs:
 </table>
 <h2 id="example-timeline">Example Timeline</h2>
 <h3 id="scenario-pr-with-3-commits-before-approval">Scenario: PR with 3 commits before approval</h3>
-<p><strong>Before optimization</strong> (coverage on every commit):</p>
-<pre><code>Commit 1: 11 min
-Commit 2: 11 min  
-Commit 3: 11 min
-Approval: -
-Merge:    11 min
-────────────────
-Total:    44 minutes
-</code></pre>
-<p><strong>After optimization</strong> (our approach):</p>
-<pre><code>Commit 1: 3 min (fast)
-Commit 2: 3 min (fast)
-Commit 3: 3 min (fast)
-Approval: 7 min (full coverage)
-Merge:    7 min (full coverage)
-────────────────
-Total:    23 minutes (47% reduction! 🎉)
-</code></pre>
+<p><strong>Before optimization</strong> (coverage on every commit):
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Commit 1: 11 min
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>Commit 2: 11 min  
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>Commit 3: 11 min
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>Approval: -
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>Merge:    11 min
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>────────────────
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>Total:    44 minutes
+</span></code></pre></div></p>
+<p><strong>After optimization</strong> (our approach):
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>Commit 1: 3 min (fast)
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>Commit 2: 3 min (fast)
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>Commit 3: 3 min (fast)
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>Approval: 7 min (full coverage)
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>Merge:    7 min (full coverage)
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>────────────────
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>Total:    23 minutes (47% reduction! 🎉)
+</span></code></pre></div></p>
 <h2 id="monitoring-troubleshooting">Monitoring &amp; Troubleshooting</h2>
 <h3 id="check-workflow-status">Check Workflow Status</h3>
 <p>In GitHub UI:
@@ -978,9 +1115,9 @@ Total:    23 minutes (47% reduction! 🎉)
 <li>Click "Run workflow"</li>
 <li>Select branch</li>
 </ol>
-<p>Or add a comment to trigger (if you set up comment triggers):</p>
-<pre><code>/run-coverage
-</code></pre>
+<p>Or add a comment to trigger (if you set up comment triggers):
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>/run-coverage
+</span></code></pre></div></p>
 <h2 id="configuration-files">Configuration Files</h2>
 <ul>
 <li><code>.github/workflows/pr-tests.yml</code> - Fast tests for PRs</li>
@@ -1102,10 +1239,14 @@ Total:    23 minutes (47% reduction! 🎉)
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>

@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
     
     
       
@@ -23,7 +23,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.618322db.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
       
 
@@ -238,6 +238,116 @@
   
   
   
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Examples
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/knownRp_PD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulate primary drying with known Kv and Rp
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/unknownRp_PD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fitting Unknown Rp to Process Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     <li class="md-nav__item">
       <a href="../explanation/" class="md-nav__link">
         
@@ -274,6 +384,33 @@
     
   
     Full listing of all docstrings by module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dev/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributor Documentation
   
 
     
@@ -896,41 +1033,41 @@
 </ul>
 <hr />
 <h2 id="module-structure">Module Structure</h2>
-<pre><code>lyopronto/
-├── functions.py          # Core physics equations (no dependencies)
-├── constant.py           # Physical constants and conversions
-├── calc_knownRp.py       # Primary drying simulator (known Rp, scipy)
-├── calc_unknownRp.py     # Primary drying simulator (unknown Rp, scipy)
-├── opt_Pch_Tsh.py        # Optimize both Pch and Tsh (scipy)
-├── opt_Pch.py            # Optimize Pch only (scipy)
-├── opt_Tsh.py            # Optimize Tsh only (scipy)
-├── design_space.py       # Design space generator (scipy)
-├── freezing.py           # Freezing phase calculations
-└── pyomo_models/         # Pyomo-based optimization (PLANNED)
-    ├── __init__.py
-    ├── single_step.py    # Single time-step optimization
-    ├── multi_period.py   # Full trajectory optimization
-    └── utils.py          # Pyomo helper functions
-
-tests/
-├── conftest.py           # Shared test fixtures and helpers
-├── test_functions.py     # Unit tests for functions.py
-├── test_calculators.py   # Integration tests for calculators (scipy)
-├── test_pyomo_models.py  # Tests for Pyomo models (PLANNED)
-└── test_regression.py    # Regression and consistency tests
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>lyopronto/
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── functions.py          # Core physics equations (no dependencies)
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>├── constant.py           # Physical constants and conversions
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>├── calc_knownRp.py       # Primary drying simulator (known Rp, scipy)
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>├── calc_unknownRp.py     # Primary drying simulator (unknown Rp, scipy)
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>├── opt_Pch_Tsh.py        # Optimize both Pch and Tsh (scipy)
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>├── opt_Pch.py            # Optimize Pch only (scipy)
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>├── opt_Tsh.py            # Optimize Tsh only (scipy)
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>├── design_space.py       # Design space generator (scipy)
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>├── freezing.py           # Freezing phase calculations
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>└── pyomo_models/         # Pyomo-based optimization (PLANNED)
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    ├── __init__.py
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    ├── single_step.py    # Single time-step optimization
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    ├── multi_period.py   # Full trajectory optimization
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    └── utils.py          # Pyomo helper functions
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>tests/
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>├── conftest.py           # Shared test fixtures and helpers
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>├── test_functions.py     # Unit tests for functions.py
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>├── test_calculators.py   # Integration tests for calculators (scipy)
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>├── test_pyomo_models.py  # Tests for Pyomo models (PLANNED)
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>└── test_regression.py    # Regression and consistency tests
+</span></code></pre></div>
 <h3 id="dependency-graph">Dependency Graph</h3>
-<pre><code>constant.py (no dependencies)
-    ↓
-functions.py (depends on: constant)
-    ↓
-    ├─→ calc_knownRp.py (depends on: functions, constant)
-    ├─→ calc_unknownRp.py (depends on: functions, constant)
-    ├─→ freezing.py (depends on: functions, constant)
-    └─→ opt_*.py (depends on: functions, constant, calc_knownRp)
-            ↓
-        design_space.py (depends on: opt_*)
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>constant.py (no dependencies)
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    ↓
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>functions.py (depends on: constant)
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    ↓
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    ├─→ calc_knownRp.py (depends on: functions, constant)
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    ├─→ calc_unknownRp.py (depends on: functions, constant)
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    ├─→ freezing.py (depends on: functions, constant)
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    └─→ opt_*.py (depends on: functions, constant, calc_knownRp)
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>            ↓
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>        design_space.py (depends on: opt_*)
+</span></code></pre></div>
 <h3 id="module-descriptions">Module Descriptions</h3>
 <h4 id="constantpy"><code>constant.py</code></h4>
 <p><strong>Purpose</strong>: Define physical constants and unit conversions</p>
@@ -972,9 +1109,9 @@ functions.py (depends on: constant)
 5. Pch (mTorr)
 6. flux (kg/hr/m²)
 7. frac_dried (0-1)</p>
-<p><strong>Method</strong>: Uses <code>scipy.integrate.solve_ivp</code> with BDF method to integrate the ODE:</p>
-<pre><code>dL/dt = f(L, t)  where L is ice layer thickness
-</code></pre>
+<p><strong>Method</strong>: Uses <code>scipy.integrate.solve_ivp</code> with BDF method to integrate the ODE:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>dL/dt = f(L, t)  where L is ice layer thickness
+</span></code></pre></div></p>
 <p><strong>Dependencies</strong>: <code>functions</code>, <code>constant</code>, <code>scipy.integrate</code>, <code>numpy</code></p>
 <hr />
 <h4 id="calc_unknownrppy"><code>calc_unknownRp.py</code></h4>
@@ -1011,80 +1148,80 @@ functions.py (depends on: constant)
 <hr />
 <h2 id="data-flow">Data Flow</h2>
 <h3 id="typical-simulation-flow">Typical Simulation Flow</h3>
-<pre><code>User Input
-  ├─ Vial geometry (Av, Ap, Vfill)
-  ├─ Product properties (R0, A1, A2, rho_solid)
-  └─ Process conditions (Pch, Tsh)
-    ↓
-  [calc_knownRp.dry()]
-    ↓
-  Initialize: L0 = Lpr0 (full ice layer)
-    ↓
-  ┌─────────────────────────┐
-  │  Integration Loop       │
-  │  (scipy.integrate)      │
-  │                         │
-  │  At each time point:    │
-  │  1. Calculate state     │ ← [calc_step()]
-  │     - Rp from Lck       │ ← [Rp_FUN()]
-  │     - Kv from Pch, Lck  │ ← [Kv_FUN()]
-  │     - Solve for Tsub    │ ← [T_sub_solver_FUN()]
-  │     - Calculate dmdt    │ ← [sub_rate()]
-  │  2. Compute dL/dt       │
-  │  3. Check if done       │
-  │     (L ≤ 0?)            │
-  └─────────────────────────┘
-    ↓
-  Format output with unit conversions
-    ↓
-  Return: numpy array (n, 7)
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>User Input
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>  ├─ Vial geometry (Av, Ap, Vfill)
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>  ├─ Product properties (R0, A1, A2, rho_solid)
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>  └─ Process conditions (Pch, Tsh)
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    ↓
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>  [calc_knownRp.dry()]
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    ↓
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>  Initialize: L0 = Lpr0 (full ice layer)
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    ↓
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>  ┌─────────────────────────┐
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>  │  Integration Loop       │
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>  │  (scipy.integrate)      │
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>  │                         │
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>  │  At each time point:    │
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>  │  1. Calculate state     │ ← [calc_step()]
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>  │     - Rp from Lck       │ ← [Rp_FUN()]
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>  │     - Kv from Pch, Lck  │ ← [Kv_FUN()]
+</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>  │     - Solve for Tsub    │ ← [T_sub_solver_FUN()]
+</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>  │     - Calculate dmdt    │ ← [sub_rate()]
+</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>  │  2. Compute dL/dt       │
+</span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>  │  3. Check if done       │
+</span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>  │     (L ≤ 0?)            │
+</span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>  └─────────────────────────┘
+</span><span id="__span-3-24"><a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>    ↓
+</span><span id="__span-3-25"><a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>  Format output with unit conversions
+</span><span id="__span-3-26"><a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a>    ↓
+</span><span id="__span-3-27"><a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>  Return: numpy array (n, 7)
+</span></code></pre></div>
 <h3 id="physics-at-each-time-step">Physics at Each Time Step</h3>
-<pre><code>Given: Pch, Tsh, L (ice thickness)
-
-1. Product Resistance
-   Lck = Lpr0 - L              [dried cake thickness]
-   Rp = R0 + A1*Lck/(1+A2*Lck) [mass transfer resistance]
-
-2. Heat Transfer Coefficient
-   Kv = KC + KP*Pch + KD*Lck   [heat transfer to vial]
-
-3. Energy Balance (implicit in Tsub)
-   Q_in = Kv * Av * (Tsh - Tbot)     [heat from shelf]
-   Q_out = dmdt * dHs                [heat for sublimation]
-   Q_in = Q_out                      [steady state]
-
-4. Mass Transfer
-   Psub = f(Tsub)                    [vapor pressure at sublimation front]
-   dmdt = Ap/Rp * (Psub - Pch)       [sublimation rate]
-
-5. Integration
-   dL/dt = -dmdt / (rho_ice * Ap)    [ice layer shrinks]
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>Given: Pch, Tsh, L (ice thickness)
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>1. Product Resistance
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>   Lck = Lpr0 - L              [dried cake thickness]
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>   Rp = R0 + A1*Lck/(1+A2*Lck) [mass transfer resistance]
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>2. Heat Transfer Coefficient
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>   Kv = KC + KP*Pch + KD*Lck   [heat transfer to vial]
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>3. Energy Balance (implicit in Tsub)
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>   Q_in = Kv * Av * (Tsh - Tbot)     [heat from shelf]
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>   Q_out = dmdt * dHs                [heat for sublimation]
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>   Q_in = Q_out                      [steady state]
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>4. Mass Transfer
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>   Psub = f(Tsub)                    [vapor pressure at sublimation front]
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>   dmdt = Ap/Rp * (Psub - Pch)       [sublimation rate]
+</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>
+</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>5. Integration
+</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>   dL/dt = -dmdt / (rho_ice * Ap)    [ice layer shrinks]
+</span></code></pre></div>
 <h3 id="optimization-flow-current-scipy">Optimization Flow (Current - scipy)</h3>
-<pre><code>User Input
-  ├─ Vial and product specs
-  └─ Constraints (T_max, Pch_min, Pch_max, etc.)
-    ↓
-  [opt_Pch_Tsh.optimize()]
-    ↓
-  Initial guess: (Pch_0, Tsh_0)
-    ↓
-  ┌─────────────────────────────────┐
-  │  Optimization Loop              │
-  │  (scipy.optimize.minimize)      │
-  │                                 │
-  │  At each iteration:             │
-  │  1. Current guess: (Pch, Tsh)   │
-  │  2. Run full simulation         │ ← [calc_knownRp.dry()]
-  │  3. Extract drying time         │
-  │  4. Check constraints           │
-  │     (T_max, bounds, etc.)       │
-  │  5. Update guess                │
-  └─────────────────────────────────┘
-    ↓
-  Return: optimal (Pch, Tsh, time)
-</code></pre>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>User Input
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>  ├─ Vial and product specs
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>  └─ Constraints (T_max, Pch_min, Pch_max, etc.)
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    ↓
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>  [opt_Pch_Tsh.optimize()]
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    ↓
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>  Initial guess: (Pch_0, Tsh_0)
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    ↓
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>  ┌─────────────────────────────────┐
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>  │  Optimization Loop              │
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>  │  (scipy.optimize.minimize)      │
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>  │                                 │
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>  │  At each iteration:             │
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>  │  1. Current guess: (Pch, Tsh)   │
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>  │  2. Run full simulation         │ ← [calc_knownRp.dry()]
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>  │  3. Extract drying time         │
+</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>  │  4. Check constraints           │
+</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>  │     (T_max, bounds, etc.)       │
+</span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>  │  5. Update guess                │
+</span><span id="__span-5-20"><a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>  └─────────────────────────────────┘
+</span><span id="__span-5-21"><a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>    ↓
+</span><span id="__span-5-22"><a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>  Return: optimal (Pch, Tsh, time)
+</span></code></pre></div>
 <p><strong>Problem</strong>: Simulates entire drying cycle at each optimization iteration (expensive!)</p>
 <hr />
 <h2 id="scipy-vs-pyomo-two-complementary-approaches">Scipy vs Pyomo: Two Complementary Approaches</h2>
@@ -1162,13 +1299,13 @@ functions.py (depends on: constant)
 - Composability: Functions can be combined freely
 - Reusability: Can use in scipy, Pyomo, or other frameworks
 - Debugging: No hidden state to track</p>
-<p><strong>Example</strong>:</p>
-<pre><code class="language-python"># Pure function - always same output for same input
-Psub = Vapor_pressure(Tsub)
-
-# Not: class with state that must be managed
-# self.Psub = self.calculate_vapor_pressure()
-</code></pre>
+<p><strong>Example</strong>:
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Pure function - always same output for same input</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">Psub</span> <span class="o">=</span> <span class="n">Vapor_pressure</span><span class="p">(</span><span class="n">Tsub</span><span class="p">)</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># Not: class with state that must be managed</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="c1"># self.Psub = self.calculate_vapor_pressure()</span>
+</span></code></pre></div></p>
 <h3 id="2-output-format-with-unit-conversions">2. Output Format with Unit Conversions</h3>
 <p><strong>Decision</strong>: Convert units in output (Pch → mTorr, dried → fraction)</p>
 <p><strong>Rationale</strong>:
@@ -1215,13 +1352,13 @@ Psub = Vapor_pressure(Tsub)
 - Self-documenting (keys are parameter names)
 - Easy to serialize (JSON, YAML)
 - Python idiomatic</p>
-<p><strong>Example</strong>:</p>
-<pre><code class="language-python">vial = {
-    'Av': 3.14,      # cm²
-    'Ap': 2.86,      # cm²
-    'Vfill': 3.0,    # mL
-}
-</code></pre>
+<p><strong>Example</strong>:
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">vial</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    <span class="s1">&#39;Av&#39;</span><span class="p">:</span> <span class="mf">3.14</span><span class="p">,</span>      <span class="c1"># cm²</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>    <span class="s1">&#39;Ap&#39;</span><span class="p">:</span> <span class="mf">2.86</span><span class="p">,</span>      <span class="c1"># cm²</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="s1">&#39;Vfill&#39;</span><span class="p">:</span> <span class="mf">3.0</span><span class="p">,</span>    <span class="c1"># mL</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="p">}</span>
+</span></code></pre></div></p>
 <p><strong>Alternative considered</strong>: Classes or namedtuples (more structured but less flexible)</p>
 <hr />
 <h2 id="system-boundaries-and-assumptions">System Boundaries and Assumptions</h2>
@@ -1408,10 +1545,14 @@ Psub = Vapor_pressure(Tsub)
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>
