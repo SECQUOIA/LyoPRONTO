@@ -52,7 +52,7 @@ jobs:
         pip install .
         pip install .[dev]
         if [ "${{ inputs.include_pyomo }}" == "true" ]; then
-          pip install .[optimization]
+          pip install pyomo idaes-pse
         fi
         pip install -e . --no-build-isolation
     

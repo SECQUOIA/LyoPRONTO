@@ -74,11 +74,12 @@ jobs:
         cache-dependency-path: |
           pyproject.toml
     
-    - name: Install dependencies with optimization extras
+    - name: Install dependencies with optimization stack
       run: |
         python -m pip install --upgrade pip setuptools wheel
         pip install .
-        pip install .[dev,optimization]
+        pip install .[dev]
+        pip install pyomo idaes-pse
         pip install -e . --no-build-isolation
     
     - name: Install IPOPT solver via IDAES
