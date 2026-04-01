@@ -44,8 +44,8 @@ class TestLpr0Function:
 
     def test_lpr0_standard_case(self):
         """Test initial fill height for standard 2 mL fill."""
-        Vfill = 2.0  # mL
-        Ap = 3.14  # cm^2
+        Vfill = 2.0  # [mL]
+        Ap = 3.14  # [cm^2]
         cSolid = 0.05
 
         Lpr0 = functions.Lpr0_FUN(Vfill, Ap, cSolid)
@@ -159,10 +159,10 @@ class TestSubRate:
 
     def test_sub_rate_positive_driving_force(self):
         """Sublimation rate should be positive when Psub > Pch."""
-        Ap = 3.14  # cm^2
-        Rp = 1.4  # cm^2-hr-Torr/g
-        T_sub = -20.0  # degC
-        Pch = 0.1  # Torr
+        Ap = 3.14  # [cm^2]
+        Rp = 1.4  # [cm^2-hr-Torr/g]
+        T_sub = -20.0  # [degC]
+        Pch = 0.1  # [Torr]
 
         dmdt = functions.sub_rate(Ap, Rp, T_sub, Pch)
 
@@ -218,10 +218,10 @@ class TestTBotFunction:
     def test_tbot_greater_than_tsub(self):
         """Bottom temperature should be greater than sublimation temperature."""
         T_sub = -20.0
-        Lpr0 = 0.7  # cm
-        Lck = 0.3  # cm
-        Pch = 0.1  # Torr
-        Rp = 1.4  # cm^2-hr-Torr/g
+        Lpr0 = 0.7  # [cm]
+        Lck = 0.3  # [cm]
+        Pch = 0.1  # [Torr]
+        Rp = 1.4  # [cm^2-hr-Torr/g]
 
         Tbot = functions.T_bot_FUN(T_sub, Lpr0, Lck, Pch, Rp)
 
@@ -320,7 +320,7 @@ class TestIneqConstraints:
 
         Missing coverage: lines 167-172 in functions.py
         """
-        # Test case 1: Normal case
+        # Test case 1: Normal case -- both constraints satisfied
         Pch = 0.080
         dmdt = 0.05
         Tpr_crit = -30.0
@@ -333,30 +333,38 @@ class TestIneqConstraints:
             Pch, dmdt, Tpr_crit, Tbot, eq_cap_a, eq_cap_b, nVial
         )
 
-        # Should return two inequality constraints
+        # C1 = eq_cap_a + eq_cap_b*Pch - nVial*dmdt
+        expected_C1 = eq_cap_a + eq_cap_b * Pch - nVial * dmdt
+        # C2 = Tpr_crit - Tbot
+        expected_C2 = Tpr_crit - Tbot
+
         assert len(result) == 2
-        assert isinstance(result[0], (int, float))
-        assert isinstance(result[1], (int, float))
+        assert result[0] == pytest.approx(expected_C1)
+        assert result[1] == pytest.approx(expected_C2)
+        assert result[0] < 0  # Equipment capability violated (dmdt too high for these params)
+        assert result[1] == pytest.approx(2.0)  # 2 degrees of margin
 
         # Test case 2: Equipment capability constraint active
         dmdt_high = 0.5  # High sublimation rate
         result2 = functions.Ineq_Constraints(
             Pch, dmdt_high, Tpr_crit, Tbot, eq_cap_a, eq_cap_b, nVial
         )
-        assert len(result2) == 2
+        assert result2[0] < 0  # Equipment capability violated
+        assert result2[1] == pytest.approx(2.0)  # Temperature still OK
 
         # Test case 3: Temperature constraint active
         Tbot_high = -25.0  # Higher than critical
         result3 = functions.Ineq_Constraints(
             Pch, dmdt, Tpr_crit, Tbot_high, eq_cap_a, eq_cap_b, nVial
         )
-        assert len(result3) == 2
+        assert result3[1] < 0  # Temperature constraint violated
 
         # Test case 4: Both constraints active
         result4 = functions.Ineq_Constraints(
             Pch, dmdt_high, Tpr_crit, Tbot_high, eq_cap_a, eq_cap_b, nVial
         )
-        assert len(result4) == 2
+        assert result4[0] < 0  # Equipment violated
+        assert result4[1] < 0  # Temperature violated
 
     def test_ineq_constraints_boundary_cases(self):
         """Test Ineq_Constraints at boundary conditions."""
@@ -499,7 +507,6 @@ class TestRampInterpolatorSeparateDt:
         ramp = functions.RampInterpolator(Pchamber, count_ramp_against_dt=False)
 
         assert len(ramp.times) == 2 * len(Pchamber["setpt"])
-        print(ramp.times)
         assert np.isclose(np.diff(ramp.times)[0::2], 1.0).all()
 
         assert ramp(0.0) == Pchamber["setpt"][0]
@@ -642,6 +649,57 @@ class TestRampInterpolatorCombinedDt:
         }
         with pytest.warns(UserWarning, match="Ramp"):
             functions.RampInterpolator(Tshelf, count_ramp_against_dt=True)
+
+    def test_ramp_interpolator_noinit_multisetpt_no_double_count(self):
+        """Test that the no-init path does not double-count dt_setpt[0].
+
+        Regression test for https://github.com/LyoHUB/LyoPRONTO/issues/17.
+        Without the fix, the first call to dt_setpt consumed index 0 during
+        initialization (times starts with [0, dt_setpt[0]]) and in the loop
+        at i=1.
+        """
+        Pchamber = {
+            "setpt": [0.1, 0.2],
+            "dt_setpt": [60, 120],   # 1 hr for first stage, 2 hr for second
+            "ramp_rate": 1.0,
+        }
+        ramp = functions.RampInterpolator(Pchamber, count_ramp_against_dt=True)
+
+        # First stage: hold at 0.1 for 1 hr (from initialization)
+        # Second stage: ramp from 0.1->0.2 (ramptime = 0.1/1.0 / 60 hr),
+        #               then hold for remainder of dt_setpt[1]=120 min = 2 hr
+        ramptime_2 = abs(0.2 - 0.1) / 1.0 / constant.hr_To_min
+        holdtime_2 = 120 / constant.hr_To_min - ramptime_2
+
+        expected_times = np.cumsum([0.0, 60 / constant.hr_To_min, ramptime_2, holdtime_2])
+        np.testing.assert_allclose(ramp.times, expected_times)
+
+        # Times should be monotonically non-decreasing (holdtime can be 0)
+        assert np.all(np.diff(ramp.times) >= 0), "Times must be monotonically non-decreasing"
+
+        # Values at boundaries
+        assert ramp(0.0) == pytest.approx(0.1)
+        assert ramp(ramp.times[-1]) == pytest.approx(0.2)
+        assert ramp(100.0) == pytest.approx(0.2)
+
+    def test_ramp_interpolator_holdtime_clamped_to_zero(self):
+        """Test that negative holdtime is clamped to 0 with a warning.
+
+        Regression test for https://github.com/LyoHUB/LyoPRONTO/issues/17.
+        When ramp time exceeds the total stage time, holdtime goes negative
+        which would produce non-monotonic cumulative times.
+        """
+        Tshelf = {
+            "init": 0.0,
+            "setpt": [100.0],          # Need to ramp 100 deg
+            "dt_setpt": [1],           # Only 1 minute allowed
+            "ramp_rate": 0.1,          # 0.1 deg/min -> takes 1000 min
+        }
+        with pytest.warns(UserWarning, match="Ramp time"):
+            ramp = functions.RampInterpolator(Tshelf, count_ramp_against_dt=True)
+
+        # holdtime should be clamped to 0, not negative
+        assert np.all(np.diff(ramp.times) >= 0), "Times must be monotonically non-decreasing"
 
     def test_ramp_interpolator_out_of_bounds(self):
         """Test RampInterpolator behavior outside defined time range."""

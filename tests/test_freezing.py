@@ -21,7 +21,7 @@ def check_max_time(output, Tshelf, dt):
 def freezing_params():
     vial = {"Av": 3.8, "Ap": 3.14, "Vfill": 2.0}
     product = {"Tpr0": 15.8, "Tf": -1.52, "Tn": -5.84, "cSolid": 0.05}
-    h_freezing = 38.0  # W/m²/K
+    h_freezing = 38.0  # [W/m²/K]
     Tshelf = {
         "init": 10.0,
         "setpt": np.array([-40.0]),
@@ -235,7 +235,7 @@ class TestFreezingReference:
     def freezing_params_ref(self):
         vial = {"Av": 3.8, "Ap": 3.14, "Vfill": 2.0}
         product = {"Tpr0": 15.8, "Tf": -1.54, "Tn": -5.84, "cSolid": 0.05}
-        h_freezing = 38.0  # W/m²/K
+        h_freezing = 38.0  # [W/m²/K]
         Tshelf = {
             "init": 10.0,
             "setpt": np.array([-40.0]),
@@ -257,7 +257,6 @@ class TestFreezingReference:
         output = freeze(*freezing_params_ref)
 
         array_compare = np.isclose(output, output_ref, rtol=1e-2)
-        print(output[~array_compare], output_ref[~array_compare])
         assert array_compare.all(), (
             f"Freezing output does not match reference data, at {np.where(~array_compare)}"
         )

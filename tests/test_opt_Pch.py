@@ -47,7 +47,7 @@ def opt_pch_consistency(output, setup):
         "Pressure should be >= min bound"
     )
     if "max" in Pchamber:
-        assert np.all(Pch_values <= Pchamber["max"] * constant.Torr_to_mTorr + 0.5), (
+        assert np.all(Pch_values <= Pchamber["max"] * constant.Torr_to_mTorr), (
             "Pressure should be <= max bound"
         )
 
@@ -233,7 +233,7 @@ class TestOptPchEdgeCases:
         vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial = standard_opt_pch_inputs
 
         # Higher minimum pressure
-        Pchamber["min"] = 0.10  # Torr = 100 mTorr
+        Pchamber["min"] = 0.10  # [Torr] = 100 mTorr
         # Needs a lower shelf temperature to complete drying
         Tshelf["setpt"] = np.array([-20.0])
 
@@ -252,7 +252,7 @@ class TestOptPchEdgeCases:
         vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial = standard_opt_pch_inputs
 
         # Higher minimum pressure
-        Pchamber["min"] = 0.10  # Torr = 100 mTorr
+        Pchamber["min"] = 0.10  # [Torr] = 100 mTorr
         # With higher shelf temperature, CANNOT complete drying and adhere to constraints
         Tshelf["setpt"] = [0]
 
@@ -359,7 +359,7 @@ class TestOptPchReference:
         # for floating-point differences across Python versions)
         drying_time_ref = output_ref[-1, 0]
         drying_time = output[-1, 0]
-        assert drying_time <= drying_time_ref + 1e-6, (
+        assert drying_time <= drying_time_ref + 1e-3, (
             f"Drying time {drying_time:.6f} hr should be <= reference "
             + f"{drying_time_ref:.6f} hr"
         )

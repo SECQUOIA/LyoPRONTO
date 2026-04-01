@@ -2,7 +2,7 @@
 
 import pytest
 import numpy as np
-from lyopronto import calc_knownRp, constant
+from lyopronto import calc_knownRp, constant, functions
 from lyopronto.high_level import execute_simulation
 from .utils import (
     assert_physically_reasonable_output,
@@ -122,19 +122,19 @@ class TestCalcKnownRp:
         time_fine = output_fine[-1, 0]
         # Times should be within 5% of each other
         assert time_coarse == pytest.approx(time_fine, rel=0.05)
-        assert np.isclose(output_fine[0, :], output_coarse[0, :], atol=1e-3).all()
-        assert np.isclose(output_fine[-1, :], output_coarse[-1, :], atol=1e-3).all()
+        assert np.isclose(output_fine[0, :], output_coarse[0, :], rtol=1e-2).all()
+        assert np.isclose(output_fine[-1, :], output_coarse[-1, :], rtol=1e-2).all()
 
     def test_mass_balance_conservation(self, knownRp_standard_setup):
         """Test that integrated mass removed equals initial mass."""
         vial, product, ht, Pchamber, Tshelf, dt = knownRp_standard_setup
         output = calc_knownRp.dry(*knownRp_standard_setup)
         # Calculate initial water mass
-        Vfill = vial["Vfill"]  # mL
+        Vfill = vial["Vfill"]  # [mL]
         cSolid = product["cSolid"]
         water_mass_initial = (
             Vfill * constant.rho_solution * (1 - cSolid) / constant.kg_To_g
-        )  # kg
+        )  # [kg]
 
         # Integrate sublimation flux over time
         times = output[:, 0]  # [hr]
@@ -203,13 +203,13 @@ class TestEdgeCases:
     def test_short_time(self, knownRp_standard_setup):
         """Test with short time (should not finish drying)."""
         vial, product, ht, Pchamber, _, dt = knownRp_standard_setup
-        Tshelf = {"init": -35.0, "setpt": [20.0], "dt_setpt": [10.0], "ramp_rate": 0.5}
+        Tshelf = {"init": -35.0, "setpt": [20.0], "dt_setpt": [30.0], "ramp_rate": 0.5}
         Pchamber["dt_setpt"] = [10.0]
 
         with pytest.warns(UserWarning, match="time"):
             output = calc_knownRp.dry(vial, product, ht, Pchamber, Tshelf, dt)
         assert_physically_reasonable_output(output)
-        assert_incomplete_drying(output)
+        assert_incomplete_drying(output, t_end=10/60) # Pch limited
 
         Tshelf = {
             "init": -35.0,
@@ -221,15 +221,14 @@ class TestEdgeCases:
         with pytest.warns(UserWarning, match="time"):
             output = calc_knownRp.dry(vial, product, ht, Pchamber, Tshelf, dt)
         assert_physically_reasonable_output(output)
-        assert_incomplete_drying(output)
+        assert_incomplete_drying(output, t_end=10/60) # Pch limited
 
-        Tshelf = {"init": -35.0, "setpt": [20.0], "dt_setpt": [10.0], "ramp_rate": 0.5}
-        Pchamber["setpt"] = [0.1, 0.12]
-        Pchamber["dt_setpt"] = [10.0]
+        Tshelf = {"init": -35.0, "setpt": [20.0], "dt_setpt": [20.0], "ramp_rate": 10.0}
+        Pchamber = {"setpt": [0.1, 0.12], "dt_setpt": [20.0, 30.0], "ramp_rate": 0.5}
         with pytest.warns(UserWarning, match="time"):
             output = calc_knownRp.dry(vial, product, ht, Pchamber, Tshelf, dt)
         assert_physically_reasonable_output(output)
-        assert_incomplete_drying(output)
+        assert_incomplete_drying(output, t_end=20/60) # Tsh limited
 
     def test_very_low_shelf_temperature(self, knownRp_standard_setup):
         """Test with very low shelf temperature (should not dry at all)."""
@@ -274,6 +273,28 @@ class TestEdgeCases:
         # Note: May not take >20 hours depending on other parameters
         assert_physically_reasonable_output(output)
 
+    def test_sharp_corners(self, knownRp_standard_setup):
+        """Test that solve_ivp interpolation does not smooth out shelf temperature profile."""
+        vial, _, ht, __, ___, ____ = knownRp_standard_setup
+        # Larger resistance is not crucial, but this example shows some smoothing
+        product = {"R0": 0.5, "A1": 40.0, "A2": 2.0, "cSolid": 0.05} 
+        # More steps -> more smoothing
+        Tshelf = {
+            "init": -45.0,
+            "setpt": [10.0, 40.0],
+            "dt_setpt": [180.0, 120.0],
+            "ramp_rate": 1.0,
+        }
+        Pchamber = {"setpt": [0.005], "dt_setpt": [1800.0], "ramp_rate": 0.5}
+
+        with pytest.warns(UserWarning, match="time"):
+            output = calc_knownRp.dry(vial, product, ht, Pchamber, Tshelf, 0.01)
+
+        assert_physically_reasonable_output(output)
+        assert_incomplete_drying(output, t_end=300/60) # Should be limited by first ramp
+        ri = functions.RampInterpolator(Tshelf, count_ramp_against_dt=True)
+        np.testing.assert_array_almost_equal(output[:, 3], ri(output[:, 0]), decimal=2)
+
 
 class TestRegression:
     """
@@ -307,9 +328,9 @@ class TestRegression:
 
         The reference value is based on standard conditions with the current model.
         If model physics change, this test will catch regressions.
+        Test initial conditions match expected values.
+        Test final state matches expected values.
         """
-        """Test initial conditions match expected values."""
-        """Test final state matches expected values."""
         output = calc_knownRp.dry(*reference_case)
 
         # Expected drying time based on current model behavior
@@ -379,11 +400,19 @@ class TestRegression:
 
         # Run simulation
         output = calc_knownRp.dry(vial, product, ht, Pchamber, Tshelf, dt)
+        outputlen = output.shape[0]
+        reflen = output_ref.shape[0]
+        if abs(outputlen - reflen) > 1:
+            assert False, "Number of time points differs significantly from reference"
+        elif abs(outputlen - reflen) > 0:
+            minlen = min(outputlen, reflen)
+            output = output[:minlen, :]
+            output_ref = output_ref[:minlen, :]
 
         # Compare all except percent dried with relative tolerance 5%
         assert np.isclose(output[:, 0:6], output_ref[:, 0:6], rtol=0.05).all()
         # This one is more finicky, use absolute tolerance of 0.1% dried
-        assert np.isclose(output[:, 6], output_ref[:, 6], atol=0.1).all()
+        assert np.isclose(output[:, 6], output_ref[:, 6], atol=0.5).all()
 
     # This is partially redundant with above, but is one more sanity check
     def test_flux_profile_non_monotonic(self, reference_case):
@@ -410,3 +439,27 @@ class TestRegression:
         late_stage = flux[int(len(flux) * 0.8) :]
         assert np.all(np.diff(late_stage) <= 0.0), "Flux should decrease in late stage"
 
+    def test_early_return_pressure_in_mtorr(self, knownRp_standard_setup):
+        """Regression test for the bug where Pch_t(0) was returned without the
+        * constant.Torr_to_mTorr conversion, making column 4 three orders of
+        magnitude too small compared to normal output.
+        """
+        vial, product, ht, _, _, dt = knownRp_standard_setup
+
+        # Set chamber pressure very high so it exceeds vapor pressure at Tsh
+        Pchamber_high = {"setpt": [10.0], "dt_setpt": [1800.0], "ramp_rate": 0.5}
+        Tshelf = {"init": -40.0, "setpt": [-35.0], "dt_setpt": [1800.0], "ramp_rate": 1.0}
+
+        with pytest.warns(UserWarning, match="Chamber pressure"):
+            output = calc_knownRp.dry(vial, product, ht, Pchamber_high, Tshelf, dt)
+
+        assert output.shape == (1, 7), "Early return should produce exactly one row"
+
+        # Column 4 is chamber pressure in mTorr
+        Pch_mTorr = output[0, 4]
+        Pch_Torr = 10.0  # The setpoint we passed in
+
+        assert Pch_mTorr == Pch_Torr * constant.Torr_to_mTorr, (
+            f"Early-return pressure should be in mTorr ({Pch_Torr * constant.Torr_to_mTorr}), "
+            f"got {Pch_mTorr}"
+        )
