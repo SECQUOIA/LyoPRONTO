@@ -29,7 +29,11 @@ complementing the existing scipy-based optimizers. The Pyomo models offer:
 Usage:
     # Install optimization dependencies first:
     # pip install .[optimization]
-    
+
+    # If using conda environment, install via:
+    # conda activate [env_name]
+    # python -m pip install ".[optimization]"
+
     from lyopronto.pyomo_models import optimize_Tsh_pyomo
     
     result = optimize_Tsh_pyomo(vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial)
