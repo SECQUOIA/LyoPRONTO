@@ -54,7 +54,11 @@ if PYOMO_AVAILABLE:
         optimize_multi_period,
         warmstart_from_scipy_trajectory,
     )
-    from .optimizers import optimize_Pch_pyomo, optimize_Pch_Tsh_pyomo, optimize_Tsh_pyomo
+    from .optimizers import (
+        optimize_Pch_pyomo,
+        optimize_Pch_Tsh_pyomo,
+        optimize_Tsh_pyomo,
+    )
     from .single_step import (
         create_single_step_model,
         optimize_single_step,
