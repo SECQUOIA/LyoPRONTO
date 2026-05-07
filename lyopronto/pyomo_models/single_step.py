@@ -106,6 +106,9 @@ def create_single_step_model(
         >>> model = create_single_step_model(vial, product, ht, Lpr0, Lck)
         >>> # Now solve with solve_single_step(model)
     """
+    if eq_cap is not None and nVial is None:
+        raise ValueError("nVial is required when eq_cap is provided")
+
     model = pyo.ConcreteModel()
 
     # ==================== Parameters (Fixed for this step) ====================
@@ -335,11 +338,12 @@ def solve_single_step(model, solver="ipopt", tee=False, warmstart_data=None):
     termination = results.solver.termination_condition
     status_str = str(termination)
 
-    if termination not in [
+    valid_terminations = [
         pyo.TerminationCondition.optimal,
         pyo.TerminationCondition.locallyOptimal,
-    ]:
-        print(f"WARNING: Solver status: {termination}")
+    ]
+    if termination not in valid_terminations:
+        raise RuntimeError(f"Solver failed to find an optimal solution: {termination}")
 
     # Extract solution
     solution = {

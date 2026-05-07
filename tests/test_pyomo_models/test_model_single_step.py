@@ -24,20 +24,12 @@ against the scipy baseline to ensure correctness and consistency.
 import numpy as np
 import pytest
 from lyopronto import functions
+
+pyo = pytest.importorskip("pyomo.environ")
+
 from lyopronto.pyomo_models import single_step, utils
 
-# Try to import pyomo - skip tests if not available
-try:
-    import pyomo.environ as pyo
-
-    PYOMO_AVAILABLE = True
-except ImportError:
-    PYOMO_AVAILABLE = False
-
-pytestmark = [
-    pytest.mark.pyomo,
-    pytest.mark.skipif(not PYOMO_AVAILABLE, reason="Pyomo not installed"),
-]
+pytestmark = pytest.mark.pyomo
 
 
 class TestSingleStepModel:
@@ -103,6 +95,24 @@ class TestSingleStepModel:
         assert hasattr(model, "a_eq")
         assert hasattr(model, "b_eq")
         assert hasattr(model, "nVial")
+
+    def test_model_with_equipment_constraint_requires_nvial(
+        self, standard_vial, standard_product, standard_ht
+    ):
+        """Test equipment capability cannot be silently omitted."""
+        Lpr0 = functions.Lpr0_FUN(2.0, standard_vial["Ap"], standard_product["cSolid"])
+        Lck = 0.5
+        eq_cap = {"a": -0.182, "b": 11.7}
+
+        with pytest.raises(ValueError, match="nVial is required"):
+            single_step.create_single_step_model(
+                standard_vial,
+                standard_product,
+                standard_ht,
+                Lpr0,
+                Lck,
+                eq_cap=eq_cap,
+            )
 
     def test_variable_bounds(self, standard_vial, standard_product, standard_ht):
         """Test that variable bounds are correctly set."""
@@ -207,6 +217,23 @@ class TestSingleStepSolver:
         assert "Tsh" in solution
         assert solution["dmdt"] >= 0
 
+    @pytest.mark.slow
+    def test_solve_raises_for_infeasible_model(
+        self, standard_vial, standard_product, standard_ht
+    ):
+        """Test failed solver termination is not returned as a valid solution."""
+        Lpr0 = functions.Lpr0_FUN(2.0, standard_vial["Ap"], standard_product["cSolid"])
+        Lck = 0.5
+        product = dict(standard_product)
+        product["T_pr_crit"] = -100.0
+
+        model = single_step.create_single_step_model(
+            standard_vial, product, standard_ht, Lpr0, Lck
+        )
+
+        with pytest.raises(RuntimeError, match="Solver failed"):
+            single_step.solve_single_step(model, tee=False)
+
 
 class TestSolutionValidity:
     """Tests for solution validation utilities."""
@@ -305,3 +332,33 @@ class TestWarmstartUtilities:
         assert warmstart["Psub"] > 0
         assert warmstart["dmdt"] >= 0
         assert warmstart["Kv"] > 0
+
+
+class TestResultExtraction:
+    """Tests for converting Pyomo results to LyoPRONTO output rows."""
+
+    def test_extract_solution_to_array_standard_format(self, standard_vial):
+        """Test result extraction uses standard units and progress column."""
+        solution = {
+            "Pch": 0.15,
+            "Tsh": -5.0,
+            "Tsub": -25.0,
+            "Tbot": -20.0,
+            "dmdt": 0.5,
+        }
+
+        row = utils.extract_solution_to_array(
+            solution,
+            time=0.5,
+            Ap=standard_vial["Ap"],
+            percent_dried=42.5,
+        )
+
+        assert row.shape == (7,)
+        assert row[0] == 0.5
+        assert row[1] == -25.0
+        assert row[2] == -20.0
+        assert row[3] == -5.0
+        assert row[4] == 150.0
+        assert np.isclose(row[5], 0.5 / (standard_vial["Ap"] * 1e-4))
+        assert row[6] == 42.5

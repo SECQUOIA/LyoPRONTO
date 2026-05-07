@@ -95,7 +95,7 @@ def initialize_from_scipy(scipy_output, time_index, vial, product, Lpr0, ht=None
     return warmstart_data
 
 
-def extract_solution_to_array(solution, time):
+def extract_solution_to_array(solution, time, Ap, percent_dried):
     """Convert Pyomo solution dict to standard output array format.
 
     This function formats a Pyomo solution to match the scipy output format
@@ -105,6 +105,8 @@ def extract_solution_to_array(solution, time):
         solution (dict): Solution from solve_single_step() with keys:
             'Pch', 'Tsh', 'Tsub', 'Tbot', 'dmdt', etc.
         time (float): Time value for this step [hr]
+        Ap (float): Product area [cm²] used to convert dmdt to flux.
+        percent_dried (float): Drying progress for this step [0-100%]
 
     Returns:
         np.ndarray: Array of shape (7,) with columns:
@@ -112,15 +114,13 @@ def extract_solution_to_array(solution, time):
 
     Notes:
         - Pch is converted from Torr to mTorr
-        - flux is dmdt normalized by product area
-        - percent_dried must be computed externally (requires Lck and Lpr0)
+        - flux is dmdt normalized by product area [kg/hr/m²]
+        - percent_dried is computed externally from Lck/Lpr0
 
     Examples:
         >>> solution = solve_single_step(model)
-        >>> output_row = extract_solution_to_array(solution, time=0.5)
+        >>> output_row = extract_solution_to_array(solution, time=0.5, Ap=3.14, percent_dried=50.0)
     """
-    # Note: This is a simplified version
-    # In full implementation, would need vial['Ap'] and Lck/Lpr0 for complete conversion
     output = np.array(
         [
             time,
@@ -128,8 +128,8 @@ def extract_solution_to_array(solution, time):
             solution["Tbot"],
             solution["Tsh"],
             solution["Pch"] * constant.Torr_to_mTorr,  # Torr → mTorr
-            solution["dmdt"],  # Note: needs conversion to flux [kg/hr/m²]
-            0.0,  # percent_dried - needs to be computed externally
+            solution["dmdt"] / (Ap * constant.cm_To_m**2),
+            percent_dried,
         ]
     )
 
