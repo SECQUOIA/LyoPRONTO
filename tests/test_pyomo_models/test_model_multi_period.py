@@ -29,10 +29,11 @@ Tests include:
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
+from importlib.util import find_spec
 
 import numpy as np
 import pytest
-from lyopronto import calc_knownRp
+from lyopronto import calc_knownRp, functions
 from lyopronto.pyomo_models import model as model_module
 
 # Try to import pyomo and analysis tools
@@ -46,6 +47,8 @@ try:
 except ImportError:
     PYOMO_AVAILABLE = False
     INCIDENCE_AVAILABLE = False
+
+NETWORKX_AVAILABLE = find_spec("networkx") is not None
 
 # Check for IPOPT solver
 IPOPT_AVAILABLE = False
@@ -322,6 +325,53 @@ class TestModelWarmstart:
         # Should have reasonable values (not all the same)
         assert len(set(Tsub_vals)) > 1, "Tsub should vary across time"
 
+    def test_warmstart_dmdt_matches_reference(
+        self, standard_vial, standard_product, standard_ht
+    ):
+        """Verify warmstart dmdt uses the same mass-transfer equation as scipy."""
+        Pchamber = {"setpt": [0.1], "dt_setpt": [1800], "ramp_rate": 0.5}
+        Tshelf = {"setpt": [-10.0], "dt_setpt": [1800], "ramp_rate": 1.0, "init": -40.0}
+        scipy_traj = calc_knownRp.dry(
+            standard_vial, standard_product, standard_ht, Pchamber, Tshelf, dt=1.0
+        )
+
+        model = model_module.create_multi_period_model(
+            standard_vial,
+            standard_product,
+            standard_ht,
+            Vfill=standard_vial["Vfill"],
+            n_elements=3,
+            n_collocation=2,
+            apply_scaling=False,
+        )
+
+        model_module.warmstart_from_scipy_trajectory(
+            model, scipy_traj, standard_vial, standard_product, standard_ht
+        )
+
+        t_points = sorted(model.t)
+        sample_points = [t_points[1], t_points[len(t_points) // 2], t_points[-1]]
+
+        for t in sample_points:
+            Lck = pyo.value(model.Lck[t])
+            Rp = functions.Rp_FUN(
+                Lck,
+                standard_product["R0"],
+                standard_product["A1"],
+                standard_product["A2"],
+            )
+            expected = max(
+                0.0,
+                functions.sub_rate(
+                    standard_vial["Ap"],
+                    Rp,
+                    pyo.value(model.Tsub[t]),
+                    pyo.value(model.Pch[t]),
+                ),
+            )
+
+            assert np.isclose(pyo.value(model.dmdt[t]), expected, rtol=1e-10)
+
 
 class TestModelStructuralAnalysis:
     """Advanced structural analysis using Pyomo incidence analysis tools."""
@@ -380,7 +430,8 @@ class TestModelStructuralAnalysis:
         assert dof > 0, "Model should have positive DOF for optimization"
 
     @pytest.mark.skipif(
-        not INCIDENCE_AVAILABLE, reason="Incidence analysis not available"
+        not (INCIDENCE_AVAILABLE and NETWORKX_AVAILABLE),
+        reason="Incidence analysis or NetworkX not available",
     )
     def test_dulmage_mendelsohn_partition(
         self, standard_vial, standard_product, standard_ht
@@ -477,7 +528,8 @@ class TestModelStructuralAnalysis:
         )
 
     @pytest.mark.skipif(
-        not INCIDENCE_AVAILABLE, reason="Incidence analysis not available"
+        not (INCIDENCE_AVAILABLE and NETWORKX_AVAILABLE),
+        reason="Incidence analysis or NetworkX not available",
     )
     @pytest.mark.xfail(
         reason="Multi-period model has additional DOF from initial conditions - needs structural fix"
@@ -697,6 +749,41 @@ class TestModelNumerics:
 
         # Should be exactly zero (equality constraint)
         assert abs(ic_Lck) < 1e-10, "Lck IC should be exact"
+
+    def test_scaled_solution_extraction_returns_physical_units(
+        self, standard_vial, standard_product, standard_ht, monkeypatch
+    ):
+        """Verify scaled solve output is propagated back to physical units."""
+
+        class FakeSolver:
+            def solve(self, model, tee=False):
+                class SolverResults:
+                    termination_condition = pyo.TerminationCondition.optimal
+
+                class Results:
+                    solver = SolverResults()
+
+                return Results()
+
+        monkeypatch.setattr(
+            model_module.pyo, "SolverFactory", lambda solver_name: FakeSolver()
+        )
+
+        solution = model_module.optimize_multi_period(
+            standard_vial,
+            standard_product,
+            standard_ht,
+            Vfill=standard_vial["Vfill"],
+            n_elements=2,
+            n_collocation=2,
+            solver="fake",
+            apply_scaling=True,
+        )
+
+        assert np.isclose(solution["t_final"], 10.0)
+        assert np.isclose(solution["t"][-1], 10.0)
+        assert np.isclose(solution["dmdt"][0], 1.0)
+        assert np.isclose(solution["Kv"][0], 5e-4)
 
 
 @pytest.mark.slow

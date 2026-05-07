@@ -227,6 +227,83 @@ class TestSublimationRateConstraint:
         )
 
 
+class TestCakeLengthOde:
+    """Test dried cake length ODE matches legacy scipy calculators."""
+
+    @pytest.mark.parametrize(
+        "cSolid,dmdt", [(0.01, 0.0002), (0.05, 0.0005), (0.10, 0.001)]
+    )
+    def test_cake_length_ode_matches_scipy_rate(self, cSolid, dmdt):
+        """Verify dLck/dt uses the same mass conversion as calc_knownRp."""
+        vial = {"Av": 3.8, "Ap": 3.14, "Vfill": 2.0}
+        product = {"R0": 1.4, "A1": 16.0, "A2": 0.0, "Tpr_max": -25.0, "cSolid": cSolid}
+        ht = {"KC": 2.75e-4, "KP": 8.93e-4, "KD": 0.46}
+        t_final = 12.0
+
+        model = model_module.create_multi_period_model(
+            vial,
+            product,
+            ht,
+            Vfill=2.0,
+            n_elements=2,
+            n_collocation=2,
+            apply_scaling=False,
+        )
+
+        expected_rate = (
+            (dmdt * constant.kg_To_g)
+            / (1 - cSolid * constant.rho_solution / constant.rho_solute)
+            / (vial["Ap"] * constant.rho_ice)
+            * (
+                1
+                - cSolid
+                * (constant.rho_solution - constant.rho_ice)
+                / constant.rho_solute
+            )
+        )
+
+        t = sorted(model.t)[1]
+        model.dmdt[t].set_value(dmdt)
+        model.t_final.set_value(t_final)
+        model.dLck_dt[t].set_value(expected_rate * t_final)
+
+        residual = pyo.value(
+            model.cake_length_ode[t].body - model.cake_length_ode[t].lower
+        )
+        assert abs(residual) < 1e-12
+
+
+class TestTemperatureLimitConstraint:
+    """Test product temperature path constraint."""
+
+    def test_temp_limit_constrains_tbot_as_upper_bound(self):
+        """Verify critical product temperature applies to Tbot, not Tsub."""
+        vial = {"Av": 3.8, "Ap": 3.14, "Vfill": 2.0}
+        product = {"R0": 1.4, "A1": 16.0, "A2": 0.0, "T_pr_crit": -25.0, "cSolid": 0.05}
+        ht = {"KC": 2.75e-4, "KP": 8.93e-4, "KD": 0.46}
+
+        model = model_module.create_multi_period_model(
+            vial,
+            product,
+            ht,
+            Vfill=2.0,
+            n_elements=2,
+            n_collocation=2,
+            apply_scaling=False,
+        )
+
+        t = sorted(model.t)[1]
+        model.Tsub[t].set_value(-35.0)
+        model.Tbot[t].set_value(-24.0)
+
+        constraint = model.temp_limit[t]
+        assert np.isclose(pyo.value(constraint.upper), product["T_pr_crit"])
+        assert pyo.value(constraint.body) > pyo.value(constraint.upper)
+
+        model.Tbot[t].set_value(-26.0)
+        assert pyo.value(constraint.body) <= pyo.value(constraint.upper)
+
+
 class TestPhysicalConstants:
     """Test that physical constants in model.py match constant.py.
 

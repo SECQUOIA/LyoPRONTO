@@ -420,16 +420,16 @@ class TestOptimizationComparison:
             f"Should be optimal, got {solution['status']}"
         )
 
-        # Check temperature constraint (skip t=0 as model does - cold start)
+        # Check product temperature constraint (skip t=0 as model does - cold start)
         Tpr_max = standard_product.get(
             "Tpr_max", standard_product.get("T_pr_crit", -25.0)
         )
         # Skip the first few points which are the cold startup phase
         # The model skips t=0, so we skip the first point in the solution
-        Tsub_after_start = solution["Tsub"][1:]  # Skip t=0
-        Tsub_violations = [T for T in Tsub_after_start if Tpr_max - 0.5 > T]
+        Tbot_after_start = solution["Tbot"][1:]  # Skip t=0
+        Tbot_violations = [T for T in Tbot_after_start if Tpr_max + 0.5 < T]
 
-        assert len(Tsub_violations) == 0, "Temperature constraint should be satisfied"
+        assert len(Tbot_violations) == 0, "Temperature constraint should be satisfied"
 
         # Check final dryness
         Lpr0 = functions.Lpr0_FUN(

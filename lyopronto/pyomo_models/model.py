@@ -40,6 +40,19 @@ import pyomo.environ as pyo
 from lyopronto import constant, functions
 
 
+def _cake_length_rate_expr(dmdt, Ap: float, cSolid: float):
+    """Return dried cake length rate [cm/hr] from sublimation rate [kg/hr]."""
+    return (
+        (dmdt * constant.kg_To_g)
+        / (1 - cSolid * constant.rho_solution / constant.rho_solute)
+        / (Ap * constant.rho_ice)
+        * (
+            1
+            - cSolid * (constant.rho_solution - constant.rho_ice) / constant.rho_solute
+        )
+    )
+
+
 def create_multi_period_model(
     vial: Dict[str, float],
     product: Dict[str, float],
@@ -101,7 +114,7 @@ def create_multi_period_model(
         - Kv calculation
 
         Path constraints:
-        - Tsub(t) >= Tpr_max (product temperature limit)
+        - Tbot(t) <= Tpr_max (product temperature limit)
         - 0 <= Pch(t) <= 0.5 (chamber pressure bounds)
         - -50 <= Tsh(t) <= 50 (shelf temperature bounds)
 
@@ -284,18 +297,12 @@ def create_multi_period_model(
     def cake_length_ode_rule(m, t):
         """Dried cake length increases with sublimation.
 
-        dLck/dt = dmdt / (Ap * rho_ice * (1 - cSolid))
+        The rate matches the scipy calculators' mass-to-cake-length conversion.
         """
         if t == 0:
             return pyo.Constraint.Skip
 
-        rho_ice = 0.92  # Density of ice [g/cm³]
-
-        # Convert dmdt [kg/hr] to [g/hr], divide by area and density
-        return (
-            m.dLck_dt[t]
-            == (m.dmdt[t] * 1000) / (Ap * rho_ice * (1 - cSolid)) * m.t_final
-        )
+        return m.dLck_dt[t] == _cake_length_rate_expr(m.dmdt[t], Ap, cSolid) * m.t_final
 
     model.cake_length_ode = pyo.Constraint(model.t, rule=cake_length_ode_rule)
 
@@ -330,7 +337,7 @@ def create_multi_period_model(
         """
         if t == 0:
             return pyo.Constraint.Skip
-        return m.Tsub[t] >= Tpr_max
+        return m.Tbot[t] <= Tpr_max
 
     model.temp_limit = pyo.Constraint(model.t, rule=temp_limit_rule)
 
@@ -468,9 +475,11 @@ def warmstart_from_scipy_trajectory(
         )
         model.Rp[t_norm].set_value(Rp_interp)
 
-        # Estimate dmdt from heat balance
+        # Estimate dmdt from the same mass-transfer equation used in the model
         if Rp_interp > 0:
-            dmdt_interp = vial["Ap"] * (Psub_interp - Pch_interp) / (Rp_interp * 100.0)
+            dmdt_interp = functions.sub_rate(
+                vial["Ap"], Rp_interp, Tsub_interp, Pch_interp
+            )
             model.dmdt[t_norm].set_value(max(dmdt_interp, 0.0))
         else:
             model.dmdt[t_norm].set_value(0.1)
@@ -541,6 +550,7 @@ def optimize_multi_period(
             - 'Tbot': Vial bottom temperature trajectory [°C]
             - 'Lck': Dried cake length trajectory [cm]
             - 'dmdt': Sublimation rate trajectory [kg/hr]
+            - 'Kv': Vial heat transfer coefficient trajectory [cal/s/K/cm²]
             - 't_final': Total drying time [hr]
             - 'status': Solver termination status
 
@@ -568,6 +578,8 @@ def optimize_multi_period(
         warmstart_from_scipy_trajectory(model, warmstart_data, vial, product, ht)
 
     # Now apply scaling if requested
+    solve_model = model
+    scaling_transform = None
     if apply_scaling:
         model.scaling_factor = pyo.Suffix(direction=pyo.Suffix.EXPORT)
 
@@ -588,7 +600,7 @@ def optimize_multi_period(
         model.scaling_factor[model.t_final] = 0.1
 
         scaling_transform = pyo.TransformationFactory("core.scale_model")
-        model = scaling_transform.create_using(model)
+        solve_model = scaling_transform.create_using(model)
 
     # Solve
     opt = pyo.SolverFactory(solver)
@@ -600,41 +612,28 @@ def optimize_multi_period(
         opt.options["print_level"] = 5 if tee else 0
         opt.options["mu_strategy"] = "adaptive"
 
-    results = opt.solve(model, tee=tee)
+    results = opt.solve(solve_model, tee=tee)
 
-    # Helper to get variable (handles scaled vs unscaled model)
-    def get_var(name):
-        if hasattr(model, name):
-            return getattr(model, name)
-        return getattr(model, f"scaled_{name}")
+    if scaling_transform is not None:
+        scaling_transform.propagate_solution(solve_model, model)
 
-    # Extract solution
-    t_final_var = get_var("t_final")
     solution = {
         "status": str(results.solver.termination_condition),
-        "t_final": pyo.value(t_final_var),
+        "t_final": pyo.value(model.t_final),
     }
 
     # Extract trajectories
-    t_set = get_var("t") if hasattr(model, "t") else model.scaled_t
-    t_points = sorted(t_set)
-    Pch_var = get_var("Pch")
-    Tsh_var = get_var("Tsh")
-    Tsub_var = get_var("Tsub")
-    Tbot_var = get_var("Tbot")
-    Lck_var = get_var("Lck")
-    dmdt_var = get_var("dmdt")
-    Psub_var = get_var("Psub")
-    Rp_var = get_var("Rp")
+    t_points = sorted(model.t)
 
     solution["t"] = np.array([t * solution["t_final"] for t in t_points])
-    solution["Pch"] = np.array([pyo.value(Pch_var[t]) for t in t_points])
-    solution["Tsh"] = np.array([pyo.value(Tsh_var[t]) for t in t_points])
-    solution["Tsub"] = np.array([pyo.value(Tsub_var[t]) for t in t_points])
-    solution["Tbot"] = np.array([pyo.value(Tbot_var[t]) for t in t_points])
-    solution["Lck"] = np.array([pyo.value(Lck_var[t]) for t in t_points])
-    solution["dmdt"] = np.array([pyo.value(dmdt_var[t]) for t in t_points])
-    solution["Psub"] = np.array([pyo.value(Psub_var[t]) for t in t_points])
-    solution["Rp"] = np.array([pyo.value(Rp_var[t]) for t in t_points])
+    solution["Pch"] = np.array([pyo.value(model.Pch[t]) for t in t_points])
+    solution["Tsh"] = np.array([pyo.value(model.Tsh[t]) for t in t_points])
+    solution["Tsub"] = np.array([pyo.value(model.Tsub[t]) for t in t_points])
+    solution["Tbot"] = np.array([pyo.value(model.Tbot[t]) for t in t_points])
+    solution["Lck"] = np.array([pyo.value(model.Lck[t]) for t in t_points])
+    solution["dmdt"] = np.array([pyo.value(model.dmdt[t]) for t in t_points])
+    solution["Kv"] = np.array([pyo.value(model.Kv[t]) for t in t_points])
+    solution["Psub"] = np.array([pyo.value(model.Psub[t]) for t in t_points])
+    solution["Rp"] = np.array([pyo.value(model.Rp[t]) for t in t_points])
 
     return solution

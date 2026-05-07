@@ -46,6 +46,8 @@ try:
     PYOMO_AVAILABLE = True
     INCIDENCE_AVAILABLE = True
 except ImportError:
+    networkx = None
+    networkx_available = False
     PYOMO_AVAILABLE = False
     INCIDENCE_AVAILABLE = False
 
@@ -86,6 +88,7 @@ class TestStructuralAnalysis:
         assert n_eq_cons == 6, f"Expected 6 equality constraints, got {n_eq_cons}"
         assert n_vars - n_eq_cons == 2, "Model should have 2 degrees of freedom"
 
+    @pytest.mark.skipif(not networkx_available, reason="NetworkX not available")
     def test_incidence_matrix(self, standard_vial, standard_product, standard_ht):
         """Analyze variable-constraint incidence matrix."""
         Lpr0 = functions.Lpr0_FUN(2.0, standard_vial["Ap"], standard_product["cSolid"])
@@ -134,6 +137,7 @@ class TestStructuralAnalysis:
         assert G.number_of_nodes() > 0
         assert G.number_of_edges() > 0
 
+    @pytest.mark.skipif(not networkx_available, reason="NetworkX not available")
     def test_connected_components(self, standard_vial, standard_product, standard_ht):
         """Verify model has one connected component."""
         Lpr0 = functions.Lpr0_FUN(2.0, standard_vial["Ap"], standard_product["cSolid"])
@@ -157,6 +161,7 @@ class TestStructuralAnalysis:
 
         assert len(components) == 1, "Should have exactly one connected component"
 
+    @pytest.mark.skipif(not networkx_available, reason="NetworkX not available")
     def test_dulmage_mendelsohn_partition(
         self, standard_vial, standard_product, standard_ht
     ):
@@ -183,6 +188,7 @@ class TestStructuralAnalysis:
             f"Should have 2 DOF, got {len(var_dmp.unmatched)}"
         )
 
+    @pytest.mark.skipif(not networkx_available, reason="NetworkX not available")
     def test_block_triangularization(
         self, standard_vial, standard_product, standard_ht
     ):
@@ -225,6 +231,8 @@ class TestStructuralAnalysis:
 
         try:
             PyomoNLP(model)
+        except OSError:
+            pytest.skip("PyNumero ASL interface not available")
         except RuntimeError as e:
             if "PyNumero ASL" in str(e):
                 pytest.skip("PyNumero ASL interface not available")
@@ -305,6 +313,7 @@ class TestNumericalDebugging:
         # Wide range is expected, but extreme (>1e8) would be problematic
         assert mag_range < 1e8, f"Extreme magnitude range: {mag_range:.2e}"
 
+    @pytest.mark.skipif(not networkx_available, reason="NetworkX not available")
     def test_jacobian_condition_number(
         self, standard_vial, standard_product, standard_ht
     ):
@@ -489,6 +498,7 @@ class TestScipyComparison:
 class TestModelValidation:
     """Validation tests for model correctness."""
 
+    @pytest.mark.skipif(not networkx_available, reason="NetworkX not available")
     def test_all_variables_in_constraints(
         self, standard_vial, standard_product, standard_ht
     ):
