@@ -10,13 +10,7 @@ The approach:
 4. Compare against functions.py reference values
 """
 
-# LyoPRONTO, a vial-scale lyophilization process simulator
-# Copyright (C) 2025, David E. Bernal Neira
-
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# Copyright (C) 2026, SECQUOIA
 
 import numpy as np
 import pyomo.environ as pyo
@@ -225,6 +219,41 @@ class TestSublimationRateConstraint:
         assert np.isclose(dmdt_wrong / dmdt_ref, 10.0), (
             "Wrong formula should be 10x the correct value"
         )
+
+    def test_sublimation_rate_constrains_initial_point(self):
+        """Verify dmdt[0] is constrained before it is returned in trajectories."""
+        vial = {"Av": 3.8, "Ap": 3.14, "Vfill": 2.0}
+        product = {"R0": 1.4, "A1": 16.0, "A2": 0.0, "Tpr_max": -25.0, "cSolid": 0.05}
+        ht = {"KC": 2.75e-4, "KP": 8.93e-4, "KD": 0.46}
+
+        model = model_module.create_multi_period_model(
+            vial,
+            product,
+            ht,
+            Vfill=2.0,
+            n_elements=2,
+            n_collocation=2,
+            apply_scaling=False,
+        )
+
+        t0 = min(model.t)
+        assert t0 in model.sublimation_rate
+
+        Tsub = -25.0
+        Pch = 0.1
+        Rp = product["R0"]
+        dmdt = functions.sub_rate(vial["Ap"], Rp, Tsub, Pch)
+
+        model.Tsub[t0].set_value(Tsub)
+        model.Psub[t0].set_value(functions.Vapor_pressure(Tsub))
+        model.Pch[t0].set_value(Pch)
+        model.Rp[t0].set_value(Rp)
+        model.dmdt[t0].set_value(dmdt)
+
+        residual = pyo.value(
+            model.sublimation_rate[t0].body - model.sublimation_rate[t0].lower
+        )
+        assert abs(residual) < 1e-12
 
 
 class TestCakeLengthOde:

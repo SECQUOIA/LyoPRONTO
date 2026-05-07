@@ -9,22 +9,7 @@ Tests include:
 - Optimization comparison (improvement over scipy, constraint satisfaction)
 """
 
-# LyoPRONTO, a vial-scale lyophilization process simulator
-# Nonlinear optimization
-# Copyright (C) 2025, David E. Bernal Neira
-
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+# Copyright (C) 2026, SECQUOIA
 
 import os
 
@@ -430,6 +415,17 @@ class TestOptimizationComparison:
         Tbot_violations = [T for T in Tbot_after_start if Tpr_max + 0.5 < T]
 
         assert len(Tbot_violations) == 0, "Temperature constraint should be satisfied"
+
+        # Check sublimation rate is constrained consistently at every returned point
+        expected_dmdt = np.array(
+            [
+                functions.sub_rate(standard_vial["Ap"], Rp, Tsub, Pch)
+                for Rp, Tsub, Pch in zip(
+                    solution["Rp"], solution["Tsub"], solution["Pch"]
+                )
+            ]
+        )
+        assert np.allclose(solution["dmdt"], expected_dmdt, rtol=1e-5, atol=1e-8)
 
         # Check final dryness
         Lpr0 = functions.Lpr0_FUN(

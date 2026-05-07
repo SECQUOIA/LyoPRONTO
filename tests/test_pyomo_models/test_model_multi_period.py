@@ -11,22 +11,7 @@ Tests include:
 - Full optimization (slow tests)
 """
 
-# LyoPRONTO, a vial-scale lyophilization process simulator
-# Nonlinear optimization
-# Copyright (C) 2025, David E. Bernal Neira
-
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+# Copyright (C) 2026, SECQUOIA
 
 import os
 from importlib.util import find_spec
@@ -371,6 +356,35 @@ class TestModelWarmstart:
             )
 
             assert np.isclose(pyo.value(model.dmdt[t]), expected, rtol=1e-10)
+
+    def test_default_scaled_model_can_be_warmstarted(
+        self, standard_vial, standard_product, standard_ht
+    ):
+        """Verify the default model shape works with scipy warmstart."""
+        Pchamber = {"setpt": [0.1], "dt_setpt": [1800], "ramp_rate": 0.5}
+        Tshelf = {"setpt": [-10.0], "dt_setpt": [1800], "ramp_rate": 1.0, "init": -40.0}
+        scipy_traj = calc_knownRp.dry(
+            standard_vial, standard_product, standard_ht, Pchamber, Tshelf, dt=1.0
+        )
+
+        model = model_module.create_multi_period_model(
+            standard_vial,
+            standard_product,
+            standard_ht,
+            Vfill=standard_vial["Vfill"],
+            n_elements=3,
+            n_collocation=2,
+        )
+
+        assert hasattr(model, "scaling_factor")
+        assert hasattr(model, "t_final")
+        assert not hasattr(model, "scaled_t_final")
+
+        model_module.warmstart_from_scipy_trajectory(
+            model, scipy_traj, standard_vial, standard_product, standard_ht
+        )
+
+        assert np.isclose(pyo.value(model.t_final), scipy_traj[-1, 0])
 
 
 class TestModelStructuralAnalysis:

@@ -15,22 +15,7 @@ Reference:
 - Orthogonal collocation: Biegler (2010), Nonlinear Programming
 """
 
-# LyoPRONTO, a vial-scale lyophilization process simulator
-# Nonlinear optimization
-# Copyright (C) 2025, David E. Bernal Neira
-
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+# Copyright (C) 2026, SECQUOIA
 
 from typing import Dict, Optional
 
@@ -51,6 +36,29 @@ def _cake_length_rate_expr(dmdt, Ap: float, cSolid: float):
             - cSolid * (constant.rho_solution - constant.rho_ice) / constant.rho_solute
         )
     )
+
+
+def _add_scaling_factors(model: pyo.ConcreteModel) -> None:
+    """Add scaling suffixes for multi-period variables."""
+    model.scaling_factor = pyo.Suffix(direction=pyo.Suffix.EXPORT)
+
+    for t in model.t:
+        # Temperatures and pressures are already O(1)-O(10).
+        model.scaling_factor[model.Tsub[t]] = 1.0
+        model.scaling_factor[model.Tbot[t]] = 1.0
+        model.scaling_factor[model.Tsh[t]] = 1.0
+        model.scaling_factor[model.Pch[t]] = 1.0
+        model.scaling_factor[model.Psub[t]] = 1.0
+        model.scaling_factor[model.log_Psub[t]] = 1.0
+
+        # Scale small/large variables to roughly O(1).
+        model.scaling_factor[model.dmdt[t]] = 0.1
+        model.scaling_factor[model.Kv[t]] = 1000.0
+        model.scaling_factor[model.Rp[t]] = 0.01
+        model.scaling_factor[model.Lck[t]] = 1.0
+        model.scaling_factor[model.dLck_dt[t]] = 1.0
+
+    model.scaling_factor[model.t_final] = 0.1
 
 
 def create_multi_period_model(
@@ -79,7 +87,7 @@ def create_multi_period_model(
         n_elements (int): Number of finite elements for time discretization
         n_collocation (int): Number of collocation points per element (3-5 recommended)
         t_final (float): Final time [hr] (will be optimized)
-        apply_scaling (bool): Apply variable/constraint scaling
+        apply_scaling (bool): Add scaling factors for variable/constraint scaling
 
     Returns:
         model (ConcreteModel): Pyomo model ready for optimization
@@ -240,8 +248,6 @@ def create_multi_period_model(
         From functions.sub_rate: dmdt = Ap/Rp/kg_To_g*(Psub-Pch)
         Rearranged: dmdt * Rp = Ap * (Psub - Pch) / kg_To_g
         """
-        if t == 0:
-            return pyo.Constraint.Skip  # Initial condition handled separately
         # dmdt in kg/hr; kg_To_g = 1000 from constant.py
         return m.dmdt[t] * m.Rp[t] == Ap * (m.Psub[t] - m.Pch[t]) / constant.kg_To_g
 
@@ -365,44 +371,7 @@ def create_multi_period_model(
     # ======================
 
     if apply_scaling:
-        # Scaling factors (based on typical magnitudes)
-        model.scaling_factor = pyo.Suffix(direction=pyo.Suffix.EXPORT)
-
-        # Variables
-        for t in model.t:
-            # Temperatures already O(10)
-            model.scaling_factor[model.Tsub[t]] = 1.0
-            model.scaling_factor[model.Tbot[t]] = 1.0
-            model.scaling_factor[model.Tsh[t]] = 1.0
-
-            # Pressures already O(0.1-1)
-            model.scaling_factor[model.Pch[t]] = 1.0
-            model.scaling_factor[model.Psub[t]] = 1.0
-            model.scaling_factor[model.log_Psub[t]] = 1.0
-
-            # Sublimation rate O(1) -> scale to O(1)
-            model.scaling_factor[model.dmdt[t]] = 0.1
-
-            # Kv O(1e-4) -> scale to O(0.1)
-            model.scaling_factor[model.Kv[t]] = 1000.0
-
-            # Rp O(10-100) -> scale to O(1)
-            model.scaling_factor[model.Rp[t]] = 0.01
-
-            # Lck O(1) already good
-            model.scaling_factor[model.Lck[t]] = 1.0
-
-            # Derivatives (per normalized time) - only Lck has a derivative now
-            model.scaling_factor[model.dLck_dt[t]] = 1.0
-
-        # Scalar variables
-        model.scaling_factor[model.t_final] = 0.1
-
-        # Apply scaling transformation
-        scaling_transform = pyo.TransformationFactory("core.scale_model")
-        scaled_model = scaling_transform.create_using(model)
-
-        return scaled_model
+        _add_scaling_factors(model)
 
     return model
 
@@ -581,24 +550,7 @@ def optimize_multi_period(
     solve_model = model
     scaling_transform = None
     if apply_scaling:
-        model.scaling_factor = pyo.Suffix(direction=pyo.Suffix.EXPORT)
-
-        # Variables
-        for t in model.t:
-            model.scaling_factor[model.Tsub[t]] = 1.0
-            model.scaling_factor[model.Tbot[t]] = 1.0
-            model.scaling_factor[model.Tsh[t]] = 1.0
-            model.scaling_factor[model.Pch[t]] = 1.0
-            model.scaling_factor[model.Psub[t]] = 1.0
-            model.scaling_factor[model.log_Psub[t]] = 1.0
-            model.scaling_factor[model.dmdt[t]] = 0.1
-            model.scaling_factor[model.Kv[t]] = 1000.0
-            model.scaling_factor[model.Rp[t]] = 0.01
-            model.scaling_factor[model.Lck[t]] = 1.0
-            model.scaling_factor[model.dLck_dt[t]] = 1.0
-
-        model.scaling_factor[model.t_final] = 0.1
-
+        _add_scaling_factors(model)
         scaling_transform = pyo.TransformationFactory("core.scale_model")
         solve_model = scaling_transform.create_using(model)
 
