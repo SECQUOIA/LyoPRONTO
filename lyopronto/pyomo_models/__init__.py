@@ -1,5 +1,4 @@
-# Copyright 2019-2025, Gayathri Shivkumar, Petr S. Kazarin, Alina A. Alexeenko
-# Maintained by Isaac S. Wheeler
+# Copyright (C) 2026, SECQUOIA
 #
 # This file is part of LyoPRONTO.
 # LyoPRONTO is free software: you can redistribute it and/or modify
@@ -15,8 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-"""
-Pyomo-based optimization models for lyophilization process.
+"""Pyomo-based optimization models for lyophilization processes.
 
 This module provides Pyomo-based formulations for lyophilization optimization,
 complementing the existing scipy-based optimizers. The Pyomo models offer:
@@ -34,20 +32,24 @@ Usage:
     # conda activate [env_name]
     # python -m pip install ".[optimization]"
 
-    from lyopronto.pyomo_models import optimize_Tsh_pyomo
-    
-    result = optimize_Tsh_pyomo(vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial)
+    from lyopronto.pyomo_models import PYOMO_AVAILABLE
 
-The optimizers maintain API compatibility with scipy-based versions:
-- optimize_Tsh_pyomo: Optimize shelf temperature trajectory
-- optimize_Pch_pyomo: Optimize chamber pressure trajectory  
-- optimize_Pch_Tsh_pyomo: Optimize both pressure and temperature
+Actual optimizer implementations will be added in subsequent PRs.
 
 Note: Requires IPOPT solver. Install via: idaes get-extensions --extra petsc
 """
 
-# Placeholder - actual implementations will be added in subsequent PRs
-__all__ = []
+from importlib.util import find_spec
+
+
+def _is_pyomo_available() -> bool:
+    """Return whether the optional Pyomo dependency is importable."""
+    return find_spec("pyomo") is not None
+
+
+PYOMO_AVAILABLE = _is_pyomo_available()
+
+__all__ = ["PYOMO_AVAILABLE"]
 
 # Version will be set when implementations are added
 __version__ = "0.1.0-dev"
