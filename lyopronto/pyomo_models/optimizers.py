@@ -911,6 +911,35 @@ def _ensure_successful_solve(results: Any, context: str) -> None:
     )
 
 
+def _solve_optimizer_model(
+    model: pyo.ConcreteModel,
+    solver: pyo.SolverFactory,
+    *,
+    context: str,
+    control_mode: str,
+    warmstart_scipy: bool,
+    simulation_mode: bool,
+    tee: bool,
+) -> Any:
+    """Solve an optimizer model without reusing a failed staged subproblem."""
+    if warmstart_scipy and not simulation_mode:
+        success, message = staged_solve(
+            model, solver, control_mode=control_mode, tee=tee
+        )
+        if success:
+            return getattr(model, "_last_solver_result", None)
+
+        last = getattr(model, "_last_solver_result", None)
+        status = getattr(getattr(last, "solver", None), "status", None)
+        term = getattr(getattr(last, "solver", None), "termination_condition", None)
+        raise ValueError(
+            f"{context} staged solve failed: {message} "
+            f"(status={status}, termination_condition={term})"
+        )
+
+    return solver.solve(model, tee=tee)
+
+
 def staged_solve(
     model: pyo.ConcreteModel,
     solver: pyo.SolverFactory,
@@ -1361,20 +1390,15 @@ def optimize_Tsh_pyomo(
                 opt.options["warm_start_bound_push"] = 1e-8
                 opt.options["warm_start_mult_bound_push"] = 1e-8
 
-    # Execute staged solve or direct solve
-    results = None
-    if warmstart_scipy and not simulation_mode:
-        success, message = staged_solve(model, opt, control_mode="Tsh", tee=tee)
-        if not success:
-            if tee:
-                print(f"Warning: Staged solve incomplete: {message}")
-                print("Attempting direct solve as fallback...")
-            results = opt.solve(model, tee=tee)
-        else:
-            results = getattr(model, "_last_solver_result", None)
-    else:
-        # Direct solve (simulation mode or no warmstart)
-        results = opt.solve(model, tee=tee)
+    results = _solve_optimizer_model(
+        model,
+        opt,
+        context="optimize_Tsh_pyomo",
+        control_mode="Tsh",
+        warmstart_scipy=warmstart_scipy,
+        simulation_mode=simulation_mode,
+        tee=tee,
+    )
 
     # Check constraint violations in simulation mode
     if simulation_mode and warmstart_scipy and tee:
@@ -1788,19 +1812,15 @@ def optimize_Pch_pyomo(
             opt.options["warm_start_bound_push"] = 1e-8
             opt.options["warm_start_mult_bound_push"] = 1e-8
 
-    # Solve
-    results = None
-    if warmstart_scipy and not simulation_mode:
-        success, message = staged_solve(model, opt, control_mode="Pch", tee=tee)
-        if not success:
-            if tee:
-                print(f"Warning: Staged solve incomplete: {message}")
-                print("Attempting direct solve as fallback...")
-            results = opt.solve(model, tee=tee)
-        else:
-            results = getattr(model, "_last_solver_result", None)
-    else:
-        results = opt.solve(model, tee=tee)
+    results = _solve_optimizer_model(
+        model,
+        opt,
+        context="optimize_Pch_pyomo",
+        control_mode="Pch",
+        warmstart_scipy=warmstart_scipy,
+        simulation_mode=simulation_mode,
+        tee=tee,
+    )
 
     _ensure_successful_solve(results, "optimize_Pch_pyomo")
     output_arr = _extract_output_array(model, vial, product)
@@ -2021,19 +2041,15 @@ def optimize_Pch_Tsh_pyomo(
             opt.options["warm_start_bound_push"] = 1e-9
             opt.options["warm_start_mult_bound_push"] = 1e-9
 
-    # Solve with sequential control release
-    results = None
-    if warmstart_scipy and not simulation_mode:
-        success, message = staged_solve(model, opt, control_mode="both", tee=tee)
-        if not success:
-            if tee:
-                print(f"Warning: Staged solve incomplete: {message}")
-                print("Attempting direct solve as fallback...")
-            results = opt.solve(model, tee=tee)
-        else:
-            results = getattr(model, "_last_solver_result", None)
-    else:
-        results = opt.solve(model, tee=tee)
+    results = _solve_optimizer_model(
+        model,
+        opt,
+        context="optimize_Pch_Tsh_pyomo",
+        control_mode="both",
+        warmstart_scipy=warmstart_scipy,
+        simulation_mode=simulation_mode,
+        tee=tee,
+    )
 
     _ensure_successful_solve(results, "optimize_Pch_Tsh_pyomo")
     output_arr = _extract_output_array(model, vial, product)
