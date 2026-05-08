@@ -27,16 +27,11 @@ python benchmarks/grid_cli.py generate \
 - `--raw-colloc` — disable effective-nfe parity reporting
 - `--force` — regenerate even if output exists (reuse-first by default)
 
-**Make shortcut:**
-```bash
-make bench VARY='product.A1=16,18,20 ht.KC=2.75e-4,3.3e-4,4.0e-4' METHODS=fd,colloc
-```
-
 ### 2. Analyze Results
 Open `benchmarks/grid_analysis.ipynb` (read-only; expects pre-generated JSONL):
 
 ```bash
-JSONL_PATH=benchmarks/results/grid_A1_KC.jsonl jupyter notebook benchmarks/grid_analysis.ipynb
+JSONL_PATH=benchmarks/results/baseline_Tsh_3x3_summary.jsonl jupyter notebook benchmarks/grid_analysis.ipynb
 ```
 
 Notebook cells produce:
@@ -44,11 +39,6 @@ Notebook cells produce:
 - Heatmaps (objective difference, speedup, parity)
 - Scatter plots and histograms
 - Summary interpretation
-
-**Headless execution (optional):**
-```bash
-make analyze OUT=benchmarks/results/grid_A1_KC.jsonl METRIC=ratio.pyomo_over_scipy
-```
 
 ## Core Modules
 
@@ -71,19 +61,20 @@ make analyze OUT=benchmarks/results/grid_A1_KC.jsonl METRIC=ratio.pyomo_over_sci
 Each JSONL record includes:
 - `version`: schema version (currently 2)
 - `hash.inputs`, `hash.record`: SHA-256 hashes for deduplication
-- `environment`: Python, Pyomo, Ipopt versions, OS, hostname, timestamp
+- `environment`: Python, NumPy, Pyomo, and platform versions
 - `task`, `scenario`: optimization variant and scenario name
+- `params`: varied parameter path/value mapping used for `hash.inputs`
 - `grid.param1`, `grid.param2`, ... : swept parameters with paths and values
 - `scipy`: `{success, wall_time_s, objective_time_hr, solver, metrics}`
 - `pyomo`: same as scipy, plus:
   - `discretization`: `{method, n_elements_requested, n_elements_applied, n_collocation, effective_nfe, total_mesh_points}`
   - `warmstart_used`: bool
-- `failed`: overall failure flag (any solver failed or dryness unmet)
+- `failed`: overall failure flag (any solver failed, dryness unmet, or product temperature exceeded)
 
 ## Notes
 
 - **Warmstart disabled by default** for robustness testing; enable with `--warmstart`.
 - **Effective-nfe true by default** for collocation parity with FD mesh density.
 - **Reuse-first**: if JSONL exists, generation skipped unless `--force` supplied.
-- **Trajectories embedded** in records (numpy arrays → lists during serialization).
+- **Trajectories optional**: use `--save-trajectories` to embed trajectories (numpy arrays → lists during serialization).
 - **Hashing** prevents duplicate runs (schema v2 `hash.inputs` field).

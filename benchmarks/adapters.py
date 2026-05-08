@@ -1,3 +1,5 @@
+# Copyright (C) 2026, SECQUOIA
+
 """Adapters normalizing scipy and Pyomo optimizer outputs.
 
 Each adapter returns a dictionary with standardized keys:
@@ -15,9 +17,27 @@ from typing import Any
 
 import numpy as np
 from lyopronto import opt_Pch, opt_Pch_Tsh, opt_Tsh
-from lyopronto.pyomo_models import optimizers as pyomo_opt
 
 DRYNESS_TARGET = 98.9  # Percentage (0-100)
+ACCEPTABLE_PYOMO_TERMINATIONS = {"optimal", "locallyoptimal"}
+
+
+def _load_pyomo_optimizers():
+    """Import optional Pyomo optimizers only when a Pyomo method is requested."""
+    try:
+        from lyopronto.pyomo_models import optimizers as pyomo_opt
+    except ImportError as exc:
+        raise RuntimeError(
+            "Pyomo benchmark methods require optional optimization dependencies. "
+            "Install them with `pip install .[optimization]`."
+        ) from exc
+    return pyomo_opt
+
+
+def _acceptable_pyomo_termination(termination_condition: Any) -> bool:
+    normalized = str(termination_condition or "").lower().replace(" ", "")
+    return normalized in ACCEPTABLE_PYOMO_TERMINATIONS
+
 
 # Scipy adapters -------------------------------------------------------------
 
@@ -128,6 +148,8 @@ def pyomo_adapter(
         Default True. If False, only polynomial derivative constraints are used, which may
         allow numerical derivatives between mesh points to exceed the ramp limit (by ~15%).
     """
+    pyomo_opt = _load_pyomo_optimizers()
+
     if task == "Tsh":
         Pchamber = {"setpt": [0.1], "dt_setpt": [180.0], "ramp_rate": 0.5}
         Tshelf = {"min": -45.0, "max": 120.0}
@@ -184,8 +206,16 @@ def pyomo_adapter(
             meta = res.get("metadata", {})
         else:
             traj = res
-        success = True
-        message = "pyomo run completed"
+        termination = meta.get("termination_condition")
+        success = (
+            isinstance(traj, np.ndarray)
+            and traj.size > 0
+            and _acceptable_pyomo_termination(termination)
+        )
+        if success:
+            message = "pyomo run completed"
+        else:
+            message = f"pyomo non-optimal termination: {termination}"
     except Exception as e:
         traj = np.empty((0, 7))
         success = False

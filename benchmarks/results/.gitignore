@@ -6,8 +6,5 @@
 # Track summary files (metrics only, no trajectories - ~30KB each)
 !*_summary.jsonl
 
-# Track one small trajectory file for visualization examples (~400KB)
-!both_trajectories.jsonl
-
 # Track baseline PNG plots for documentation
 !baseline_*.png

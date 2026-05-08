@@ -1,3 +1,5 @@
+# Copyright (C) 2026, SECQUOIA
+
 """Result schema utilities for benchmark runs.
 
 Extended to support trajectory storage and discretization metadata for
@@ -21,6 +23,16 @@ except Exception:
     PYOMO_VERSION = None
 
 import numpy as np
+
+
+def _json_default(o: Any) -> Any:
+    if isinstance(o, np.ndarray):
+        return o.tolist()
+    if isinstance(o, np.generic):
+        return o.item()
+    if isinstance(o, (set, tuple)):
+        return list(o)
+    return str(o)
 
 
 def environment_info() -> dict[str, Any]:
@@ -55,7 +67,7 @@ def hash_inputs(params: dict[str, Any]) -> str:
 def hash_record(record: dict[str, Any]) -> str:
     """Hash entire record excluding existing hash fields to detect duplicates."""
     shadow = {k: v for k, v in record.items() if not k.startswith("hash.")}
-    raw = json.dumps(shadow, default=str, separators=(",", ":"))
+    raw = json.dumps(shadow, default=_json_default, separators=(",", ":"))
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
 
 
@@ -70,16 +82,4 @@ def serialize(record: dict[str, Any]) -> str:
     if "hash.record" not in record:
         record["hash.record"] = hash_record(record)
 
-    def default(o):
-        if isinstance(o, (set, tuple)):
-            return list(o)
-        try:
-            import numpy as _np
-
-            if isinstance(o, _np.ndarray):
-                return o.tolist()
-        except Exception:
-            pass
-        return str(o)
-
-    return json.dumps(record, default=default, separators=(",", ":"))
+    return json.dumps(record, default=_json_default, separators=(",", ":"))

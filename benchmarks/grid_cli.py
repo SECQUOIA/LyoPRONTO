@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+
+# Copyright (C) 2026, SECQUOIA
+
 """Generic benchmarking CLI for Pyomo vs Scipy across N-D parameter grids.
 
 Features
@@ -8,7 +11,7 @@ Features
 - Discretization controls: --n-elements, --n-collocation, --raw-colloc (disable effective parity).
 - Robustness-first: warmstart disabled by default; enable with --warmstart.
 - Reuse-first: if output JSONL exists and --force not supplied, skip generation.
-- Trajectories embedded; schema v2 serialization handles numpy arrays.
+- Optional trajectory embedding; schema v2 serialization handles numpy arrays.
 
 Examples
 --------
@@ -31,12 +34,25 @@ import sys
 from pathlib import Path
 from typing import Any
 
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 from benchmarks.adapters import pyomo_adapter, scipy_adapter
 from benchmarks.scenarios import SCENARIOS
 from benchmarks.schema import base_record, serialize
 from benchmarks.validate import compute_residuals
 
 VALID_METHODS = {"scipy", "fd", "colloc"}
+
+
+def product_critical_temp(product: dict[str, Any]) -> float | None:
+    return product.get("Tpr_max", product.get("T_pr_crit"))
+
+
+def metrics_failed(metrics: dict[str, Any]) -> bool:
+    return (metrics.get("dryness_target_met") is False) or (
+        metrics.get("product_temp_ok") is False
+    )
 
 
 def parse_vary(values: list[str]) -> list[dict[str, Any]]:
@@ -123,6 +139,7 @@ def generate(args: argparse.Namespace) -> int:
             scen = copy.deepcopy(base_scen)
             for path, val in zip(vary_paths, combo):
                 set_nested(scen, path, val)
+            params = dict(zip(vary_paths, combo))
             vial_c = scen["vial"]
             product_c = scen["product"]
             ht_c = scen["ht"]
@@ -145,7 +162,10 @@ def generate(args: argparse.Namespace) -> int:
                         dt=args.dt,
                     )
                     sc_metrics = (
-                        compute_residuals(scipy_res["trajectory"])
+                        compute_residuals(
+                            scipy_res["trajectory"],
+                            product_critical_temp=product_critical_temp(product_c),
+                        )
                         if scipy_res["success"]
                         else {}
                     )
@@ -165,6 +185,7 @@ def generate(args: argparse.Namespace) -> int:
                         {
                             "task": task,
                             "scenario": scenario_name,
+                            "params": params,
                             "grid": {
                                 **{
                                     f"param{i + 1}": {"path": p, "value": v}
@@ -175,8 +196,8 @@ def generate(args: argparse.Namespace) -> int:
                             "pyomo": None,  # placeholder for analysis scripts
                         }
                     )
-                    rec["failed"] = (not rec["scipy"]["success"]) or (
-                        not rec["scipy"]["metrics"].get("dryness_target_met", True)
+                    rec["failed"] = (not rec["scipy"]["success"]) or metrics_failed(
+                        rec["scipy"]["metrics"]
                     )
                     f.write(serialize(rec) + "\n")
                     f.flush()
@@ -216,12 +237,20 @@ def generate(args: argparse.Namespace) -> int:
                     use_secant_ramp_constraints=(not args.no_secant_constraints),
                 )
                 sc_metrics = (
-                    compute_residuals(scipy_res["trajectory"])
+                    compute_residuals(
+                        scipy_res["trajectory"],
+                        product_critical_temp=product_critical_temp(product_c),
+                    )
                     if scipy_res["success"]
                     else {}
                 )
                 py_metrics = (
-                    compute_residuals(py_res["trajectory"]) if py_res["success"] else {}
+                    compute_residuals(
+                        py_res["trajectory"],
+                        product_critical_temp=product_critical_temp(product_c),
+                    )
+                    if py_res["success"]
+                    else {}
                 )
                 rec = base_record()
                 scipy_block = {
@@ -256,6 +285,7 @@ def generate(args: argparse.Namespace) -> int:
                     {
                         "task": task,
                         "scenario": scenario_name,
+                        "params": params,
                         "grid": {
                             **{
                                 f"param{i + 1}": {"path": p, "value": v}
@@ -269,8 +299,8 @@ def generate(args: argparse.Namespace) -> int:
                 rec["failed"] = (
                     (not rec["scipy"]["success"])
                     or (not rec["pyomo"]["success"])
-                    or (not rec["scipy"]["metrics"].get("dryness_target_met", True))
-                    or (not rec["pyomo"]["metrics"].get("dryness_target_met", True))
+                    or metrics_failed(rec["scipy"]["metrics"])
+                    or metrics_failed(rec["pyomo"]["metrics"])
                 )
                 f.write(serialize(rec) + "\n")
                 f.flush()
