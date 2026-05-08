@@ -19,8 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `optimize_Pch`: Optimize chamber pressure trajectory at fixed shelf temperature
   - `optimize_Pch_Tsh`: Simultaneous optimization of both control variables
 - **New module structure** (`lyopronto/pyomo_models/`):
-  - `optimizer.py`: Main optimizer interface functions
-  - `multi_period.py`: Multi-period DAE model with orthogonal collocation (563 lines)
+  - `optimizers.py`: Main optimizer interface functions
+  - `model.py`: Multi-period DAE model with orthogonal collocation
   - `single_step.py`: Single time-step optimization model
   - `utils.py`: Utilities for initialization, scaling, and validation
   - `README.md`: Comprehensive module documentation
@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Adapters** (`benchmarks/adapters.py`): Normalized scipy/Pyomo runners for fair comparison
 - **Analysis notebook** (`benchmarks/grid_analysis.ipynb`): Visualization of results
 - **Schema v2**: Structured output with trajectories, metadata, and content hashing
+- **SciPy trajectory verification**: IPOPT replay and all-point residual validation for benchmark trajectories
 
 #### Documentation
 - `docs/PHYSICS_REFERENCE.md`: Physics equations and model documentation
@@ -37,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Testing Infrastructure
 - 93% code coverage on Pyomo modules
-- Comprehensive test suite in `tests/pyomo/` (12 test files)
+- Comprehensive test suite in `tests/test_pyomo_models/` (12 test files)
 - CI/CD workflows for main branch, PRs, and manual slow tests
 - Smart PR testing: draft PRs get fast tests, ready PRs get full coverage
 
@@ -57,7 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Dependencies
 - Added optional `optimization` dependency group for Pyomo-based features
-- Pyomo ≥6.7.0 and IDAES-PSE ≥2.9.0 now available as optional dependencies
+- Pyomo >=6.7.0 and IDAES-PSE now available as optional dependencies
 - Core scipy-based functionality remains dependency-free of Pyomo
 
 #### Project Structure
