@@ -18,42 +18,37 @@ from importlib.util import find_spec
 
 import numpy as np
 import pytest
-from lyopronto import calc_knownRp, functions
-from lyopronto.pyomo_models import model as model_module
 
-# Try to import pyomo and analysis tools
+pyo = pytest.importorskip("pyomo.environ")
+dae = pytest.importorskip("pyomo.dae")
+
 try:
-    import pyomo.dae as dae
-    import pyomo.environ as pyo
     from pyomo.contrib.incidence_analysis import IncidenceGraphInterface
 
-    PYOMO_AVAILABLE = True
     INCIDENCE_AVAILABLE = True
 except ImportError:
-    PYOMO_AVAILABLE = False
     INCIDENCE_AVAILABLE = False
+
+from lyopronto import calc_knownRp, functions
+from lyopronto.pyomo_models import model as model_module
 
 NETWORKX_AVAILABLE = find_spec("networkx") is not None
 
 # Check for IPOPT solver
 IPOPT_AVAILABLE = False
-if PYOMO_AVAILABLE:
+try:
+    from idaes.core.solvers import get_solver
+
+    solver = get_solver("ipopt")
+    IPOPT_AVAILABLE = True
+except Exception:
     try:
-        from idaes.core.solvers import get_solver
-
-        solver = get_solver("ipopt")
-        IPOPT_AVAILABLE = True
+        solver = pyo.SolverFactory("ipopt")
+        IPOPT_AVAILABLE = solver.available()
     except Exception:
-        try:
-            solver = pyo.SolverFactory("ipopt")
-            IPOPT_AVAILABLE = solver.available()
-        except Exception:
-            IPOPT_AVAILABLE = False
+        IPOPT_AVAILABLE = False
 
-pytestmark = [
-    pytest.mark.pyomo,
-    pytest.mark.skipif(not PYOMO_AVAILABLE, reason="Pyomo not available"),
-]
+pytestmark = [pytest.mark.pyomo]
 
 
 class TestModelStructure:
@@ -798,6 +793,38 @@ class TestModelNumerics:
         assert np.isclose(solution["t"][-1], 10.0)
         assert np.isclose(solution["dmdt"][0], 1.0)
         assert np.isclose(solution["Kv"][0], 5e-4)
+
+    def test_non_optimal_solver_result_raises(
+        self, standard_vial, standard_product, standard_ht, monkeypatch
+    ):
+        """Verify failed solver termination is not returned as a trajectory."""
+
+        class FakeSolver:
+            def solve(self, model, tee=False):
+                class SolverResults:
+                    status = pyo.SolverStatus.error
+                    termination_condition = pyo.TerminationCondition.infeasible
+
+                class Results:
+                    solver = SolverResults()
+
+                return Results()
+
+        monkeypatch.setattr(
+            model_module.pyo, "SolverFactory", lambda solver_name: FakeSolver()
+        )
+
+        with pytest.raises(RuntimeError, match="did not converge"):
+            model_module.optimize_multi_period(
+                standard_vial,
+                standard_product,
+                standard_ht,
+                Vfill=standard_vial["Vfill"],
+                n_elements=2,
+                n_collocation=2,
+                solver="fake",
+                apply_scaling=True,
+            )
 
 
 @pytest.mark.slow

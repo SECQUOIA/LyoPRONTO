@@ -13,8 +13,10 @@ The approach:
 # Copyright (C) 2026, SECQUOIA
 
 import numpy as np
-import pyomo.environ as pyo
 import pytest
+
+pyo = pytest.importorskip("pyomo.environ")
+
 from lyopronto import constant, functions
 from lyopronto.pyomo_models import model as model_module
 

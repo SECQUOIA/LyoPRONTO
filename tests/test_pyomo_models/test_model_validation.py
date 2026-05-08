@@ -15,37 +15,28 @@ import os
 
 import numpy as np
 import pytest
+
+pyo = pytest.importorskip("pyomo.environ")
+pytest.importorskip("pyomo.dae")
+
 from lyopronto import calc_knownRp, functions
 from lyopronto.pyomo_models import model as model_module
 
-# Try to import pyomo
-try:
-    import pyomo.dae as dae
-    import pyomo.environ as pyo
-
-    PYOMO_AVAILABLE = True
-except ImportError:
-    PYOMO_AVAILABLE = False
-
 # Check for IPOPT solver
 IPOPT_AVAILABLE = False
-if PYOMO_AVAILABLE:
+try:
+    from idaes.core.solvers import get_solver
+
+    solver = get_solver("ipopt")
+    IPOPT_AVAILABLE = True
+except Exception:
     try:
-        from idaes.core.solvers import get_solver
-
-        solver = get_solver("ipopt")
-        IPOPT_AVAILABLE = True
+        solver = pyo.SolverFactory("ipopt")
+        IPOPT_AVAILABLE = solver.available()
     except Exception:
-        try:
-            solver = pyo.SolverFactory("ipopt")
-            IPOPT_AVAILABLE = solver.available()
-        except Exception:
-            IPOPT_AVAILABLE = False
+        IPOPT_AVAILABLE = False
 
-pytestmark = [
-    pytest.mark.pyomo,
-    pytest.mark.skipif(not PYOMO_AVAILABLE, reason="Pyomo not available"),
-]
+pytestmark = [pytest.mark.pyomo]
 
 
 class TestScipyComparison:

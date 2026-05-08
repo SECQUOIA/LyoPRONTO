@@ -61,6 +61,33 @@ def _add_scaling_factors(model: pyo.ConcreteModel) -> None:
     model.scaling_factor[model.t_final] = 0.1
 
 
+def _is_successful_termination(results) -> bool:
+    """Return whether solver termination is acceptable for solution extraction."""
+    solver = getattr(results, "solver", None)
+    termination_condition = getattr(solver, "termination_condition", None)
+
+    acceptable = {str(pyo.TerminationCondition.optimal).lower()}
+    locally_optimal = getattr(pyo.TerminationCondition, "locallyOptimal", None)
+    if locally_optimal is not None:
+        acceptable.add(str(locally_optimal).lower())
+
+    return str(termination_condition).lower() in acceptable
+
+
+def _raise_for_failed_solve(results) -> None:
+    """Raise if solver results should not be treated as a valid trajectory."""
+    if _is_successful_termination(results):
+        return
+
+    solver = getattr(results, "solver", None)
+    termination_condition = getattr(solver, "termination_condition", None)
+    status = getattr(solver, "status", None)
+    raise RuntimeError(
+        "Multi-period optimization did not converge to an optimal solution "
+        f"(status={status}, termination_condition={termination_condition})"
+    )
+
+
 def create_multi_period_model(
     vial: Dict[str, float],
     product: Dict[str, float],
@@ -565,6 +592,7 @@ def optimize_multi_period(
         opt.options["mu_strategy"] = "adaptive"
 
     results = opt.solve(solve_model, tee=tee)
+    _raise_for_failed_solve(results)
 
     if scaling_transform is not None:
         scaling_transform.propagate_solution(solve_model, model)

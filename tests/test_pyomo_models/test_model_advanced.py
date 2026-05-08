@@ -16,31 +16,30 @@ Reference: https://pyomo.readthedocs.io/en/6.8.1/explanation/analysis/incidence/
 
 import numpy as np
 import pytest
-from lyopronto import constant, functions, opt_Pch_Tsh
-from lyopronto.pyomo_models import single_step, utils
 
-# Try to import pyomo and analysis tools
+pyo = pytest.importorskip("pyomo.environ")
+
 try:
-    import pyomo.environ as pyo
     from pyomo.common.dependencies import attempt_import
     from pyomo.contrib.incidence_analysis import IncidenceGraphInterface
 
     # Try to import networkx for graph analysis
     networkx, networkx_available = attempt_import("networkx")
 
-    PYOMO_AVAILABLE = True
     INCIDENCE_AVAILABLE = True
 except ImportError:
     networkx = None
     networkx_available = False
-    PYOMO_AVAILABLE = False
     INCIDENCE_AVAILABLE = False
+
+from lyopronto import constant, functions, opt_Pch_Tsh
+from lyopronto.pyomo_models import single_step, utils
 
 pytestmark = [
     pytest.mark.pyomo,
     pytest.mark.skipif(
-        not (PYOMO_AVAILABLE and INCIDENCE_AVAILABLE),
-        reason="Pyomo or incidence analysis tools not available",
+        not INCIDENCE_AVAILABLE,
+        reason="Pyomo incidence analysis tools not available",
     ),
 ]
 
