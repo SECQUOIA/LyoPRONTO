@@ -1,10 +1,8 @@
-# Ignore most generated benchmark results (large files with trajectories)
-*.jsonl
-*.png
-*.csv
+# Ignore generated benchmark outputs by default.
+*
 
-# Track summary files (metrics only, no trajectories - ~30KB each)
-!*_summary.jsonl
-
-# Track baseline PNG plots for documentation
-!baseline_*.png
+# Keep policy docs and intentional root-level reference summaries.
+!.gitignore
+!README.md
+!baseline_Pch_3x3_summary.jsonl
+!baseline_Tsh_3x3_summary.jsonl
