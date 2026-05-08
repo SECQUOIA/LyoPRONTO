@@ -5,14 +5,15 @@ These tests validate the optimizer examples that match the web interface
 optimizer functionality with fixed chamber pressure and shelf temperature optimization.
 """
 
-import pytest
 import numpy as np
 import pandas as pd
-from lyopronto import opt_Tsh, constant, functions
+import pytest
+from lyopronto import constant, functions, opt_Tsh
+
 from .utils import (
-    assert_physically_reasonable_output,
     assert_complete_drying,
     assert_incomplete_drying,
+    assert_physically_reasonable_output,
 )
 
 
@@ -243,11 +244,15 @@ class TestOptTsh:
             f"Max product temp mismatch: got {max_T_bot:.2f}°C, expected {ref_max_T_bot:.2f}°C"
         )
 
-    @pytest.mark.skip(reason="Example notebook not yet implemented")
+    @pytest.mark.slow
     def test_optimizer_example_script_runs(self):
         """Test that the optimizer example script runs successfully."""
-        # Import and run the example
-        pass
+        from examples.example_optimizer import run_optimizer_example
+
+        output = run_optimizer_example()
+
+        assert_physically_reasonable_output(output, Tmax=120)
+        assert_complete_drying(output)
 
 
 class TestOptimizerEdgeCases:
