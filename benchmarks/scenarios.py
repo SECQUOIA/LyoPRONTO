@@ -1,3 +1,5 @@
+# Copyright (C) 2026, SECQUOIA
+
 """Benchmark scenario definitions for LyoPRONTO optimization tasks.
 
 Each scenario is a dictionary with the required parameter sets:

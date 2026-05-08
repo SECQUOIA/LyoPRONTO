@@ -1,3 +1,5 @@
+# Copyright (C) 2026, SECQUOIA
+
 """Validation utilities for benchmark outputs.
 
 Computes physical residuals and simple quality checks.
@@ -18,13 +20,16 @@ IDX_TSH = 3
 IDX_PCH = 4  # mTorr
 IDX_FLUX = 5
 IDX_PERCENT = 6  # percent_dried (0-100%)
+TEMP_TOL = 1e-6
 
 
 def _safe(arr: np.ndarray) -> np.ndarray:
     return arr if arr.size else np.array([])
 
 
-def compute_residuals(traj: np.ndarray) -> dict[str, Any]:
+def compute_residuals(
+    traj: np.ndarray, product_critical_temp: float | None = None
+) -> dict[str, Any]:
     """Compute residual style metrics for a trajectory."""
     if traj.size == 0:
         return {
@@ -35,8 +40,12 @@ def compute_residuals(traj: np.ndarray) -> dict[str, Any]:
             "pch_positive": None,
             "flux_nonnegative": None,
             "dryness_target_met": None,
+            "product_temp_ok": None,
+            "max_Tbot": None,
+            "product_critical_temp": product_critical_temp,
         }
     percent = traj[:, IDX_PERCENT]
+    tbot = traj[:, IDX_TBOT]
     tsh = traj[:, IDX_TSH]
     pch_mTorr = traj[:, IDX_PCH]
     flux = traj[:, IDX_FLUX]
@@ -49,16 +58,24 @@ def compute_residuals(traj: np.ndarray) -> dict[str, Any]:
     pch_pos = bool(np.all(pch_mTorr > 0))
     flux_ok = bool(np.all(flux >= -1e-8))
 
-    dryness_target = percent[-1] >= 98.9 - 0.1  # 98.8% threshold
+    dryness_target = bool(percent[-1] >= 98.9 - 0.1)  # 98.8% threshold
+    product_temp_ok = (
+        None
+        if product_critical_temp is None
+        else bool(np.all(tbot <= float(product_critical_temp) + TEMP_TOL))
+    )
 
     return {
         "n_points": int(traj.shape[0]),
         "final_percent_dried": float(percent[-1]),
+        "max_Tbot": float(np.max(tbot)),
         "monotonic_dried": monotonic,
         "tsh_bounds_ok": tsh_ok,
         "pch_positive": pch_pos,
         "flux_nonnegative": flux_ok,
         "dryness_target_met": dryness_target,
+        "product_temp_ok": product_temp_ok,
+        "product_critical_temp": product_critical_temp,
     }
 
 
