@@ -54,6 +54,7 @@ from lyopronto.pyomo_models.optimizers import (
     optimize_Tsh_pyomo,
     replay_scipy_controls_with_ipopt,
     validate_scipy_residuals,
+    validate_scipy_trajectory_points,
 )
 from lyopronto.pyomo_models.utils import cake_length_conversion
 
@@ -319,6 +320,24 @@ class TestScipyValidation:
                 f"Constraint {constr_name} has residual {vals['max']:.2e} > 1e-3"
             )
 
+    def test_scipy_solution_validates_at_all_trajectory_points(
+        self, complete_drying_params
+    ):
+        """Test every SciPy point against the Pyomo-equivalent physics equations."""
+        vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial = complete_drying_params
+
+        scipy_out = opt_Tsh.dry(vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial)
+
+        residuals = validate_scipy_trajectory_points(
+            scipy_out, vial, product, ht, eq_cap=eq_cap, nVial=nVial, verbose=False
+        )
+
+        assert "cake_length_dynamics" in residuals
+        for constr_name, vals in residuals.items():
+            assert vals["max"] < 1e-4, (
+                f"Constraint {constr_name} has residual {vals['max']:.2e} > 1e-4"
+            )
+
     def test_energy_balance_validates_exactly(self, complete_drying_params):
         """Test that energy balance constraint validates at high precision."""
         vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial = complete_drying_params
@@ -375,6 +394,7 @@ class TestScipyValidation:
         assert metadata["termination_condition"] == "optimal"
         assert metadata["max_constraint_residual"] < 1e-4
         assert metadata["max_scipy_trajectory_residual"] < 1e-4
+        assert metadata["max_scipy_mesh_residual"] < 1e-4
         assert metadata["max_replay_solution_residual"] < 1e-4
         assert "cake_length_dynamics" in metadata["scipy_trajectory_residuals"]
         assert abs(output[-1, 0] - scipy_out[-1, 0]) < 1e-9

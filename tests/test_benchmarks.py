@@ -161,6 +161,10 @@ def test_ipopt_replay_adapter_reports_validation_metadata(monkeypatch):
                 "scipy_trajectory_residuals": {
                     "energy_balance": {"max": 1e-8, "mean": 1e-9}
                 },
+                "max_scipy_mesh_residual": 2e-8,
+                "scipy_mesh_residuals": {
+                    "energy_balance": {"max": 2e-8, "mean": 2e-9}
+                },
                 "max_replay_solution_residual": 1e-10,
                 "replay_solution_residuals": {
                     "energy_balance": {"max": 1e-10, "mean": 1e-11}
@@ -187,5 +191,6 @@ def test_ipopt_replay_adapter_reports_validation_metadata(monkeypatch):
     assert result["validation"]["kind"] == "scipy_control_replay"
     assert result["validation"]["max_constraint_residual"] == 1e-8
     assert result["validation"]["max_scipy_trajectory_residual"] == 1e-8
+    assert result["validation"]["max_scipy_mesh_residual"] == 2e-8
     assert result["validation"]["max_replay_solution_residual"] == 1e-10
     assert result["validation"]["trajectory_comparison"]["matched"] is True
