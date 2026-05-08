@@ -74,7 +74,7 @@ Documentation = "https://lyohub.github.io/LyoPRONTO/"
 "Bug Tracker" = "https://github.com/LyoHUB/LyoPRONTO/issues"
 
 [tool.setuptools.packages.find]
-include = ["lyopronto*"]
+include = ["lyopronto*", "benchmarks*"]
 
 [tool.mypy]
 python_version = "3.8"
