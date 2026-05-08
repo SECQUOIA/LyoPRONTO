@@ -7,10 +7,18 @@ import sys
 from types import SimpleNamespace
 
 import numpy as np
+import pytest
 from benchmarks import adapters
 from benchmarks.scenarios import SCENARIOS
 from benchmarks.schema import serialize
 from benchmarks.validate import compute_residuals
+
+ALLOWED_TRACKED_BENCHMARK_RESULTS = {
+    "benchmarks/results/.gitignore",
+    "benchmarks/results/README.md",
+    "benchmarks/results/baseline_Pch_3x3_summary.jsonl",
+    "benchmarks/results/baseline_Tsh_3x3_summary.jsonl",
+}
 
 
 def test_grid_cli_script_entrypoint_help(repo_root, tmp_path):
@@ -28,6 +36,58 @@ def test_grid_cli_script_entrypoint_help(repo_root, tmp_path):
 
     assert result.returncode == 0, result.stderr
     assert "Benchmark generation CLI" in result.stdout
+
+
+def test_benchmark_results_tracks_only_policy_files(repo_root):
+    result = subprocess.run(
+        ["git", "ls-files", "benchmarks/results"],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        pytest.skip(f"git ls-files unavailable: {result.stderr.strip()}")
+
+    tracked_results = set(result.stdout.splitlines())
+
+    assert tracked_results == ALLOWED_TRACKED_BENCHMARK_RESULTS
+
+
+def test_benchmark_results_gitignore_blocks_generated_outputs(repo_root):
+    generated_outputs = [
+        "benchmarks/results/local_grid.jsonl",
+        "benchmarks/results/archive/grid_ratio.png",
+        "benchmarks/results/test/processed/summary.json",
+    ]
+
+    result = subprocess.run(
+        ["git", "check-ignore", "--no-index", *generated_outputs],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode not in {0, 1}:
+        pytest.skip(f"git check-ignore unavailable: {result.stderr.strip()}")
+
+    assert result.returncode == 0, result.stderr
+    assert set(result.stdout.splitlines()) == set(generated_outputs)
+
+    allowed_result = subprocess.run(
+        [
+            "git",
+            "check-ignore",
+            "--no-index",
+            "benchmarks/results/baseline_Tsh_3x3_summary.jsonl",
+        ],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert allowed_result.returncode == 1, allowed_result.stdout
 
 
 def test_compute_residuals_uses_native_bools_and_checks_product_temperature():
@@ -162,9 +222,7 @@ def test_ipopt_replay_adapter_reports_validation_metadata(monkeypatch):
                     "energy_balance": {"max": 1e-8, "mean": 1e-9}
                 },
                 "max_scipy_mesh_residual": 2e-8,
-                "scipy_mesh_residuals": {
-                    "energy_balance": {"max": 2e-8, "mean": 2e-9}
-                },
+                "scipy_mesh_residuals": {"energy_balance": {"max": 2e-8, "mean": 2e-9}},
                 "max_replay_solution_residual": 1e-10,
                 "replay_solution_residuals": {
                     "energy_balance": {"max": 1e-10, "mean": 1e-11}

@@ -4,7 +4,7 @@ This directory contains generated benchmark data from comparing Pyomo and scipy 
 
 ## Version Control Policy
 
-Most generated results are **not tracked in git** (see `.gitignore`). Results can be reproduced by running the benchmark scripts.
+Generated results are **not tracked in git** by default (see `.gitignore`). Results can be reproduced by running the benchmark scripts.
 
 ## Representative Examples (Tracked)
 
@@ -49,4 +49,4 @@ JSONL_PATH=benchmarks/results/baseline_Tsh_3x3_summary.jsonl jupyter notebook be
 
 ## Other Generated Files (Not Tracked)
 
-Any other `.jsonl`, `.png`, or `.csv` files in this directory are local working files and should not be committed.
+Any other files or directories in this directory are local working artifacts and should not be committed. This includes raw JSONL trajectories, generated figures, CSV exports, notebook outputs, and processed summary files unless they are explicitly promoted to the tracked reference list above.
