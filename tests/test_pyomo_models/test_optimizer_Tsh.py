@@ -36,7 +36,7 @@ pytestmark = [
     pytest.mark.xdist_group("pyomo_serial"),  # Group all pyomo tests in same worker
 ]
 
-from lyopronto import opt_Tsh
+from lyopronto import functions, opt_Tsh
 from lyopronto.pyomo_models import optimizers
 
 
@@ -206,15 +206,11 @@ class TestPyomoOptTshBasic:
             "Pressure deviated from setpoint"
         )
 
-    def test_chamber_pressure_profile_without_warmstart(self, standard_opt_tsh_inputs):
-        """Test that fixed pressure profiles are honored without scipy warmstart."""
+    def test_chamber_pressure_constant_without_warmstart_matches_profile(
+        self, standard_opt_tsh_inputs
+    ):
+        """Test constant fixed pressure profiles without scipy warmstart."""
         vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial = standard_opt_tsh_inputs
-        Pchamber = {
-            **Pchamber,
-            "setpt": np.array([0.10, 0.20]),
-            "dt_setpt": np.array([30.0, 1800.0]),
-            "ramp_rate": 1.0,
-        }
 
         output = optimizers.optimize_Tsh_pyomo(
             vial,
@@ -231,9 +227,36 @@ class TestPyomoOptTshBasic:
         )
 
         P_chamber = output[:, 4] / 1000.0
-        assert np.isclose(P_chamber[0], 0.10, atol=1e-6)
-        assert P_chamber.max() > 0.15
-        assert P_chamber.max() <= 0.20 + 1e-6
+        expected = functions.RampInterpolator(Pchamber)(output[:, 0])
+        np.testing.assert_allclose(P_chamber, expected, atol=1e-6)
+
+    @pytest.mark.parametrize("warmstart_scipy", [False, True])
+    def test_changing_chamber_pressure_profile_rejected_with_free_time(
+        self, standard_opt_tsh_inputs, warmstart_scipy
+    ):
+        """Changing fixed pressure schedules are rejected while t_final is free."""
+        vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial = standard_opt_tsh_inputs
+        Pchamber = {
+            **Pchamber,
+            "setpt": np.array([0.10, 0.20]),
+            "dt_setpt": np.array([30.0, 1800.0]),
+            "ramp_rate": 1.0,
+        }
+
+        with pytest.raises(ValueError, match="Changing fixed Pch profiles"):
+            optimizers.optimize_Tsh_pyomo(
+                vial,
+                product,
+                ht,
+                Pchamber,
+                Tshelf,
+                dt,
+                eq_cap,
+                nVial,
+                n_elements=5,
+                n_collocation=2,
+                warmstart_scipy=warmstart_scipy,
+            )
 
     def test_shelf_temperature_optimized(self, standard_opt_tsh_inputs):
         """Test that shelf temperature varies (is optimized)."""

@@ -41,7 +41,7 @@ pytestmark = [
     ),
 ]
 
-from lyopronto import opt_Pch
+from lyopronto import functions, opt_Pch
 from lyopronto.pyomo_models.optimizers import (
     _warmstart_from_scipy_output,
     create_optimizer_model,
@@ -69,12 +69,7 @@ class TestPyomoOptPchModelStructure:
         product = {"R0": 1.4, "A1": 16.0, "A2": 0.0, "T_pr_crit": -5.0, "cSolid": 0.05}
         ht = {"KC": 0.000275, "KP": 0.000893, "KD": 0.46}
         Pchamber = {"min": 0.06, "max": 0.20}
-        Tshelf = {
-            "init": -35,
-            "setpt": [-20, 20],
-            "dt_setpt": [180, 1800],
-            "ramp_rate": 10.0,
-        }
+        Tshelf = {"init": 20, "setpt": [20], "dt_setpt": [1800], "ramp_rate": 1.0}
         eq_cap = {"a": -0.182, "b": 11.7}
         nVial = 398
         return vial, product, ht, Pchamber, Tshelf, eq_cap, nVial
@@ -207,12 +202,7 @@ class TestPyomoOptPchOptimization:
         product = {"R0": 1.4, "A1": 16.0, "A2": 0.0, "T_pr_crit": -5.0, "cSolid": 0.05}
         ht = {"KC": 0.000275, "KP": 0.000893, "KD": 0.46}
         Pchamber = {"min": 0.06, "max": 0.20}
-        Tshelf = {
-            "init": -35,
-            "setpt": [-20, 20],
-            "dt_setpt": [180, 1800],
-            "ramp_rate": 10.0,
-        }
+        Tshelf = {"init": 20, "setpt": [20], "dt_setpt": [1800], "ramp_rate": 1.0}
         eq_cap = {"a": -0.182, "b": 11.7}
         nVial = 398
         dt = 0.01
@@ -364,11 +354,36 @@ class TestPyomoOptPchOptimization:
         )
 
         Tsh = result[:, 3]
-        expected_min = min([Tshelf["init"], *Tshelf["setpt"]])
-        expected_max = max([Tshelf["init"], *Tshelf["setpt"]])
-        assert np.isclose(Tsh[0], Tshelf["init"], atol=1e-6)
-        assert Tsh.min() >= expected_min - 1e-6
-        assert Tsh.max() <= expected_max + 1e-6
+        expected = functions.RampInterpolator(Tshelf)(result[:, 0])
+        np.testing.assert_allclose(Tsh, expected, atol=1e-6)
+
+    @pytest.mark.parametrize("warmstart_scipy", [False, True])
+    def test_changing_shelf_profile_rejected_with_free_time(
+        self, optimizer_params, warmstart_scipy
+    ):
+        """Changing fixed shelf schedules are rejected while t_final is free."""
+        vial, product, ht, Pchamber, _, eq_cap, nVial, dt = optimizer_params
+        Tshelf = {
+            "init": -35,
+            "setpt": [-20, 20],
+            "dt_setpt": [180, 1800],
+            "ramp_rate": 10.0,
+        }
+
+        with pytest.raises(ValueError, match="Changing fixed Tsh profiles"):
+            optimize_Pch_pyomo(
+                vial,
+                product,
+                ht,
+                Pchamber=Pchamber,
+                Tshelf=Tshelf,
+                dt=dt,
+                eq_cap=eq_cap,
+                nVial=nVial,
+                n_elements=6,
+                warmstart_scipy=warmstart_scipy,
+                tee=False,
+            )
 
 
 class TestPyomoOptPchStagedSolve:
@@ -381,12 +396,7 @@ class TestPyomoOptPchStagedSolve:
         product = {"R0": 1.4, "A1": 16.0, "A2": 0.0, "T_pr_crit": -5.0, "cSolid": 0.05}
         ht = {"KC": 0.000275, "KP": 0.000893, "KD": 0.46}
         Pchamber = {"min": 0.06, "max": 0.20}
-        Tshelf = {
-            "init": -35,
-            "setpt": [-20, 20],
-            "dt_setpt": [180, 1800],
-            "ramp_rate": 10.0,
-        }
+        Tshelf = {"init": 20, "setpt": [20], "dt_setpt": [1800], "ramp_rate": 1.0}
         eq_cap = {"a": -0.182, "b": 11.7}
         nVial = 398
         dt = 0.01
@@ -426,12 +436,7 @@ class TestPyomoOptPchPhysicalConstraints:
         product = {"R0": 1.4, "A1": 16.0, "A2": 0.0, "T_pr_crit": -5.0, "cSolid": 0.05}
         ht = {"KC": 0.000275, "KP": 0.000893, "KD": 0.46}
         Pchamber = {"min": 0.06, "max": 0.20}
-        Tshelf = {
-            "init": -35,
-            "setpt": [-20, 20],
-            "dt_setpt": [180, 1800],
-            "ramp_rate": 10.0,
-        }
+        Tshelf = {"init": 20, "setpt": [20], "dt_setpt": [1800], "ramp_rate": 1.0}
         eq_cap = {"a": -0.182, "b": 11.7}
         nVial = 398
         dt = 0.01
