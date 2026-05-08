@@ -17,22 +17,21 @@ The model includes:
     - Objective: maximize sublimation driving force (minimize Pch - Psub)
 """
 
-# LyoPRONTO, a vial-scale lyophilization process simulator
-# Nonlinear optimization
-# Copyright (C) 2025, David E. Bernal Neira
-
-# This program is free software: you can redistribute it and/or modify
+# Copyright (C) 2026, SECQUOIA
+#
+# This file is part of LyoPRONTO.
+# LyoPRONTO is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License for more details.
-
+#
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import pyomo.environ as pyo
 
