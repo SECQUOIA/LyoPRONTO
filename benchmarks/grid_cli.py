@@ -37,12 +37,12 @@ from typing import Any
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from benchmarks.adapters import pyomo_adapter, scipy_adapter
+from benchmarks.adapters import ipopt_replay_adapter, pyomo_adapter, scipy_adapter
 from benchmarks.scenarios import SCENARIOS
 from benchmarks.schema import base_record, serialize
 from benchmarks.validate import compute_residuals
 
-VALID_METHODS = {"scipy", "fd", "colloc"}
+VALID_METHODS = {"scipy", "fd", "colloc", "replay"}
 
 
 def product_critical_temp(product: dict[str, Any]) -> float | None:
@@ -218,24 +218,40 @@ def generate(args: argparse.Namespace) -> int:
                         scen,
                         dt=args.dt,
                     )
-                py_res = pyomo_adapter(
-                    task,
-                    vial_c,
-                    product_c,
-                    ht_c,
-                    eq_cap_c,
-                    nVial_c,
-                    scen,
-                    dt=args.dt,
-                    warmstart=args.warmstart,
-                    method=method,
-                    n_elements=args.n_elements,
-                    n_collocation=args.n_collocation,
-                    effective_nfe=(not args.raw_colloc),
-                    tsh_ramp_rate=args.tsh_ramp,
-                    pch_ramp_rate=args.pch_ramp,
-                    use_secant_ramp_constraints=(not args.no_secant_constraints),
-                )
+                if method == "replay":
+                    py_res = ipopt_replay_adapter(
+                        task,
+                        vial_c,
+                        product_c,
+                        ht_c,
+                        eq_cap_c,
+                        nVial_c,
+                        scen,
+                        scipy_result=scipy_res,
+                        method="colloc",
+                        n_elements=args.n_elements,
+                        n_collocation=args.n_collocation,
+                        effective_nfe=(not args.raw_colloc),
+                    )
+                else:
+                    py_res = pyomo_adapter(
+                        task,
+                        vial_c,
+                        product_c,
+                        ht_c,
+                        eq_cap_c,
+                        nVial_c,
+                        scen,
+                        dt=args.dt,
+                        warmstart=args.warmstart,
+                        method=method,
+                        n_elements=args.n_elements,
+                        n_collocation=args.n_collocation,
+                        effective_nfe=(not args.raw_colloc),
+                        tsh_ramp_rate=args.tsh_ramp,
+                        pch_ramp_rate=args.pch_ramp,
+                        use_secant_ramp_constraints=(not args.no_secant_constraints),
+                    )
                 sc_metrics = (
                     compute_residuals(
                         scipy_res["trajectory"],
@@ -276,6 +292,8 @@ def generate(args: argparse.Namespace) -> int:
                     if args.tsh_ramp or args.pch_ramp
                     else None,
                 }
+                if py_res.get("validation"):
+                    pyomo_block["validation"] = py_res["validation"]
                 if args.save_trajectories:
                     if scipy_res["success"]:
                         scipy_block["trajectory"] = scipy_res["trajectory"]
@@ -300,7 +318,10 @@ def generate(args: argparse.Namespace) -> int:
                     (not rec["scipy"]["success"])
                     or (not rec["pyomo"]["success"])
                     or metrics_failed(rec["scipy"]["metrics"])
-                    or metrics_failed(rec["pyomo"]["metrics"])
+                    or (
+                        method != "replay"
+                        and metrics_failed(rec["pyomo"]["metrics"])
+                    )
                 )
                 f.write(serialize(rec) + "\n")
                 f.flush()
@@ -346,7 +367,9 @@ def build_parser() -> argparse.ArgumentParser:
         help="Parameter path=value1,value2,... (repeatable)",
     )
     g.add_argument(
-        "--methods", default="scipy,fd,colloc", help="Comma-separated methods to run"
+        "--methods",
+        default="scipy,fd,colloc",
+        help="Comma-separated methods to run: scipy, fd, colloc, replay",
     )
     g.add_argument(
         "--n-elements", type=int, default=24, help="Number of finite elements"
