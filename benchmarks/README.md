@@ -20,7 +20,7 @@ python benchmarks/grid_cli.py generate \
 
 **Options:**
 - `--vary key=val1,val2,...` (repeatable) — parameter sweeps
-- `--methods scipy,fd,colloc` — which solvers to run
+- `--methods scipy,fd,colloc` — which solvers to run; add `replay` to validate the SciPy trajectory by fixing its controls and final time in Pyomo and solving with IPOPT
 - `--n-elements N` — finite elements (both FD and collocation base)
 - `--n-collocation NCP` — collocation points per element
 - `--warmstart` — enable staged solve with scipy trajectory (off by default for robustness)
@@ -56,6 +56,23 @@ Notebook cells produce:
 - `Pch` — optimize chamber pressure only (shelf fixed)
 - `both` — joint optimization (pressure + temperature)
 
+## SciPy Replay Validation
+
+Use the `replay` method when you want an implementation check rather than a new optimization result. The CLI runs the SciPy baseline, fixes `Pch`, `Tsh`, and `t_final` from that trajectory on a collocation Pyomo mesh, and asks IPOPT to solve the physics feasibility problem:
+
+```bash
+python benchmarks/grid_cli.py generate \
+  --task Tsh --scenario baseline \
+  --vary product.A1=16 \
+  --vary ht.KC=2.75e-4 \
+  --methods scipy,replay \
+  --n-elements 24 \
+  --out benchmarks/results/tsh_replay_validation.jsonl \
+  --force
+```
+
+Replay records include an optional `pyomo.validation` block with the maximum Pyomo constraint residual and trajectory comparison metrics. Replay drying-completion metrics are diagnostic; they do not set the record-level `failed` flag unless the replay solve or residual check fails.
+
 ## Output Schema (v2)
 
 Each JSONL record includes:
@@ -69,7 +86,8 @@ Each JSONL record includes:
 - `pyomo`: same as scipy, plus:
   - `discretization`: `{method, n_elements_requested, n_elements_applied, n_collocation, effective_nfe, total_mesh_points}`
   - `warmstart_used`: bool
-- `failed`: overall failure flag (any solver failed, dryness unmet, or product temperature exceeded)
+  - `validation`: optional replay-only residual and trajectory comparison diagnostics
+- `failed`: overall failure flag (any solver failed, dryness unmet, or product temperature exceeded; replay records use this for solve/residual failure while keeping drying differences diagnostic)
 
 ## Notes
 

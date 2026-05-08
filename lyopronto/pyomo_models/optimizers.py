@@ -927,6 +927,166 @@ def _solve_optimizer_model(
     return solver.solve(model, tee=tee)
 
 
+def _trajectory_bounds(
+    values: np.ndarray, lower: float, upper: float, min_padding: float
+) -> Tuple[float, float]:
+    """Return non-degenerate bounds that contain a trajectory."""
+    lo = float(np.min(values))
+    hi = float(np.max(values))
+    padding = max((hi - lo) * 0.05, min_padding)
+    return max(lower, lo - padding), min(upper, hi + padding)
+
+
+def _replay_control_bounds(
+    scipy_output: np.ndarray, Pchamber: Dict, Tshelf: Dict
+) -> Tuple[Dict[str, float], Dict[str, float]]:
+    """Build optimization-mode bounds that contain fixed SciPy controls."""
+    pch_values = scipy_output[:, 4] / 1000.0
+    tsh_values = scipy_output[:, 3]
+
+    if "min" in Pchamber and "max" in Pchamber:
+        pch_bounds = {"min": float(Pchamber["min"]), "max": float(Pchamber["max"])}
+    else:
+        pch_min, pch_max = _trajectory_bounds(pch_values, 0.01, 1.0, 0.01)
+        pch_bounds = {"min": pch_min, "max": pch_max}
+
+    if "min" in Tshelf and "max" in Tshelf:
+        tsh_bounds = {"min": float(Tshelf["min"]), "max": float(Tshelf["max"])}
+    else:
+        tsh_min, tsh_max = _trajectory_bounds(tsh_values, -50.0, 150.0, 1.0)
+        tsh_bounds = {"min": tsh_min, "max": tsh_max}
+
+    return pch_bounds, tsh_bounds
+
+
+def _fix_controls_from_scipy_output(
+    model: pyo.ConcreteModel, scipy_output: np.ndarray
+) -> None:
+    """Fix Pch and Tsh controls on the Pyomo mesh from a SciPy trajectory."""
+    time_scipy = scipy_output[:, 0]
+    t_final_scipy = float(time_scipy[-1])
+    pch_scipy = scipy_output[:, 4] / 1000.0
+    tsh_scipy = scipy_output[:, 3]
+
+    model.t_final.fix(t_final_scipy)
+    for t in sorted(model.t):
+        actual_time = float(t) * t_final_scipy
+        model.Pch[t].fix(float(np.interp(actual_time, time_scipy, pch_scipy)))
+        model.Tsh[t].fix(float(np.interp(actual_time, time_scipy, tsh_scipy)))
+
+
+def _solver_metadata(results: Any) -> Dict[str, Any]:
+    """Extract serializable solver metadata."""
+    solver = getattr(results, "solver", None)
+    return {
+        "status": str(getattr(solver, "status", None)) if solver is not None else None,
+        "termination_condition": str(getattr(solver, "termination_condition", None))
+        if solver is not None
+        else None,
+        "ipopt_iterations": getattr(solver, "iterations", None)
+        if solver is not None
+        else None,
+    }
+
+
+def replay_scipy_controls_with_ipopt(
+    scipy_output: np.ndarray,
+    vial: Dict[str, float],
+    product: Dict[str, float],
+    ht: Dict[str, float],
+    Pchamber: Dict,
+    Tshelf: Dict,
+    eq_cap: Dict[str, float],
+    nVial: int,
+    n_elements: int = 24,
+    n_collocation: int = 3,
+    use_finite_differences: bool = True,
+    treat_n_elements_as_effective: bool = False,
+    solver: str = "ipopt",
+    tee: bool = False,
+    return_metadata: bool = False,
+) -> Any:
+    """Replay SciPy controls in the Pyomo model and solve feasibility with IPOPT.
+
+    This validation mode fixes both control trajectories and final drying time from
+    an existing SciPy result, then asks IPOPT to solve the Pyomo physics equations.
+    The terminal dryness constraint is disabled so drying completion can be
+    measured as replay output instead of imposed. It is intended to verify
+    implementation consistency, not to optimize a cycle.
+    """
+    if not isinstance(scipy_output, np.ndarray) or scipy_output.size == 0:
+        raise ValueError("scipy_output must be a non-empty trajectory array")
+
+    Pch_bounds, Tsh_bounds = _replay_control_bounds(scipy_output, Pchamber, Tshelf)
+
+    model = create_optimizer_model(
+        vial,
+        product,
+        ht,
+        vial["Vfill"],
+        eq_cap,
+        nVial,
+        Pchamber=Pch_bounds,
+        Tshelf=Tsh_bounds,
+        n_elements=n_elements,
+        n_collocation=n_collocation,
+        treat_n_elements_as_effective=treat_n_elements_as_effective,
+        control_mode="both",
+        apply_scaling=True,
+        use_finite_differences=use_finite_differences,
+        use_secant_ramp_constraints=False,
+    )
+
+    _warmstart_from_scipy_output(model, scipy_output, vial, product, ht)
+    _fix_controls_from_scipy_output(model, scipy_output)
+    model.obj.deactivate()
+    model.final_dryness.deactivate()
+
+    try:
+        from idaes.core.solvers import get_solver
+
+        opt = get_solver(solver)
+    except ImportError:
+        opt = pyo.SolverFactory(solver)
+
+    if solver == "ipopt" and hasattr(opt, "options"):
+        opt.options["max_iter"] = 5000
+        opt.options["tol"] = 1e-6
+        opt.options["acceptable_tol"] = 1e-4
+        opt.options["print_level"] = 5 if tee else 0
+        opt.options["mu_strategy"] = "adaptive"
+        opt.options["bound_relax_factor"] = 1e-8
+        opt.options["constr_viol_tol"] = 1e-6
+        opt.options["warm_start_init_point"] = "yes"
+        opt.options["warm_start_bound_push"] = 1e-8
+        opt.options["warm_start_mult_bound_push"] = 1e-8
+
+    results = opt.solve(model, tee=tee)
+    _ensure_successful_solve(results, "replay_scipy_controls_with_ipopt")
+
+    output_arr = _extract_output_array(model, vial, product)
+    residuals = validate_scipy_residuals(
+        model, scipy_output, vial, product, ht, verbose=tee
+    )
+    max_residual = max((float(vals["max"]) for vals in residuals.values()), default=0.0)
+
+    if return_metadata:
+        meta = {
+            **_solver_metadata(results),
+            "objective_time_hr": float(pyo.value(model.t_final)),
+            "n_points": len(sorted(model.t)),
+            "t_final_fixed": True,
+            "controls_fixed": ["Pch", "Tsh"],
+            "max_constraint_residual": max_residual,
+            "residuals": {
+                name: {"max": float(vals["max"]), "mean": float(vals["mean"])}
+                for name, vals in residuals.items()
+            },
+        }
+        return {"output": output_arr, "metadata": meta}
+    return output_arr
+
+
 def staged_solve(
     model: pyo.ConcreteModel,
     solver: pyo.SolverFactory,

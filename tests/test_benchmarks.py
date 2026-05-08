@@ -136,3 +136,46 @@ def test_pyomo_pch_adapter_uses_constant_fixed_shelf_profile(monkeypatch):
     assert seen["Tshelf"]["init"] == -18.0
     assert seen["Tshelf"]["init"] == seen["Tshelf"]["setpt"][0]
     assert len(seen["Tshelf"]["setpt"]) == 1
+
+
+def test_ipopt_replay_adapter_reports_validation_metadata(monkeypatch):
+    baseline = SCENARIOS["baseline"]
+    scipy_trajectory = np.array(
+        [
+            [0.0, -26.0, -25.0, -20.0, 100.0, 0.2, 0.0],
+            [1.0, -25.0, -25.0, -18.0, 100.0, 0.1, 99.0],
+        ]
+    )
+
+    def fake_replay(scipy_output, *args, **kwargs):
+        return {
+            "output": scipy_output.copy(),
+            "metadata": {
+                "status": "ok",
+                "termination_condition": "optimal",
+                "objective_time_hr": 1.0,
+                "n_points": 2,
+                "max_constraint_residual": 1e-8,
+                "residuals": {"energy_balance": {"max": 1e-8, "mean": 1e-9}},
+            },
+        }
+
+    fake_pyomo = SimpleNamespace(replay_scipy_controls_with_ipopt=fake_replay)
+    monkeypatch.setattr(adapters, "_load_pyomo_optimizers", lambda: fake_pyomo)
+
+    result = adapters.ipopt_replay_adapter(
+        "Tsh",
+        baseline["vial"],
+        baseline["product"],
+        baseline["ht"],
+        baseline["eq_cap"],
+        baseline["nVial"],
+        baseline,
+        scipy_result={"trajectory": scipy_trajectory},
+    )
+
+    assert result["success"] is True
+    assert result["discretization"]["method"] == "replay-fd"
+    assert result["validation"]["kind"] == "scipy_control_replay"
+    assert result["validation"]["max_constraint_residual"] == 1e-8
+    assert result["validation"]["trajectory_comparison"]["matched"] is True

@@ -18,6 +18,8 @@ from typing import Any
 import numpy as np
 from lyopronto import opt_Pch, opt_Pch_Tsh, opt_Tsh
 
+from benchmarks.validate import compare_trajectories
+
 DRYNESS_TARGET = 98.9  # Percentage (0-100)
 ACCEPTABLE_PYOMO_TERMINATIONS = {"optimal", "locallyoptimal"}
 
@@ -50,6 +52,22 @@ def _load_pyomo_optimizers():
     return pyomo_opt
 
 
+def _scipy_task_setup(task: str) -> tuple[Any, dict[str, Any], dict[str, Any]]:
+    """Return the legacy scipy runner and controls for a benchmark task."""
+    if task == "Tsh":
+        Pchamber = {"setpt": [0.1], "dt_setpt": [1800.0], "ramp_rate": 0.5}
+        Tshelf = {"min": -45.0, "max": 120.0}
+        return opt_Tsh.dry, Pchamber, Tshelf
+    if task == "Pch":
+        Pchamber, Tshelf = _pch_benchmark_controls()
+        return opt_Pch.dry, Pchamber, Tshelf
+    if task == "both":
+        Pchamber = {"min": 0.05}
+        Tshelf = {"min": -45.0, "max": 120.0}
+        return opt_Pch_Tsh.dry, Pchamber, Tshelf
+    raise ValueError(f"Unknown task '{task}'")
+
+
 def _acceptable_pyomo_termination(termination_condition: Any) -> bool:
     normalized = str(termination_condition or "").lower().replace(" ", "")
     return normalized in ACCEPTABLE_PYOMO_TERMINATIONS
@@ -74,24 +92,8 @@ def scipy_adapter(
     task 'Pch': optimize chamber pressure only (shelf temperature schedule fixed)
     task 'both': optimize both pressure and temperature concurrently
     """
-    if task == "Tsh":
-        # Pressure schedule fixed at 0.1 Torr with long hold allowing completion
-        Pchamber = {"setpt": [0.1], "dt_setpt": [1800.0], "ramp_rate": 0.5}
-        # Shelf temperature optimization bounds
-        Tshelf = {"min": -45.0, "max": 120.0}
-        runner = opt_Tsh.dry
-        args = (vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial)
-    elif task == "Pch":
-        Pchamber, Tshelf = _pch_benchmark_controls()
-        runner = opt_Pch.dry
-        args = (vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial)
-    elif task == "both":
-        Pchamber = {"min": 0.05}
-        Tshelf = {"min": -45.0, "max": 120.0}
-        runner = opt_Pch_Tsh.dry
-        args = (vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial)
-    else:
-        raise ValueError(f"Unknown task '{task}'")
+    runner, Pchamber, Tshelf = _scipy_task_setup(task)
+    args = (vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial)
 
     start = time.perf_counter()
     out = runner(*args)
@@ -111,6 +113,111 @@ def scipy_adapter(
         "solver": {"status": "n/a", "termination_condition": "n/a"},
         "solver_stats": {},
         "raw": out,
+    }
+
+
+def ipopt_replay_adapter(
+    task: str,
+    vial: dict[str, float],
+    product: dict[str, float],
+    ht: dict[str, float],
+    eq_cap: dict[str, float],
+    nVial: int,
+    scenario: dict[str, Any],
+    scipy_result: dict[str, Any],
+    method: str = "fd",
+    n_elements: int = 24,
+    n_collocation: int = 3,
+    effective_nfe: bool = True,
+    residual_tol: float = 1e-4,
+) -> dict[str, Any]:
+    """Replay a SciPy trajectory with controls fixed and solve Pyomo with IPOPT."""
+    pyomo_opt = _load_pyomo_optimizers()
+    _, Pchamber, Tshelf = _scipy_task_setup(task)
+
+    use_fd = method.lower() == "fd"
+    treat_eff = (not use_fd) and bool(effective_nfe)
+    scipy_traj = scipy_result["trajectory"]
+
+    start = time.perf_counter()
+    meta: dict[str, Any] = {}
+    try:
+        res = pyomo_opt.replay_scipy_controls_with_ipopt(
+            scipy_traj,
+            vial,
+            product,
+            ht,
+            Pchamber,
+            Tshelf,
+            eq_cap,
+            nVial,
+            n_elements=int(n_elements),
+            n_collocation=int(n_collocation),
+            use_finite_differences=use_fd,
+            treat_n_elements_as_effective=treat_eff,
+            return_metadata=True,
+            tee=False,
+        )
+        traj = res["output"]
+        meta = res.get("metadata", {})
+        comparison = compare_trajectories(scipy_traj, traj)
+        termination = meta.get("termination_condition")
+        max_residual = float(meta.get("max_constraint_residual", float("inf")))
+        success = (
+            isinstance(traj, np.ndarray)
+            and traj.size > 0
+            and _acceptable_pyomo_termination(termination)
+            and max_residual <= residual_tol
+        )
+        message = (
+            "ipopt replay completed"
+            if success
+            else f"ipopt replay validation failed: termination={termination}, max_residual={max_residual:.2e}"
+        )
+    except Exception as e:
+        traj = np.empty((0, 7))
+        comparison = {}
+        success = False
+        message = f"ipopt replay failure: {e.__class__.__name__}: {e}"[:300]
+    wall = time.perf_counter() - start
+
+    if use_fd:
+        total_mesh_points = int(n_elements) + 1
+    else:
+        total_mesh_points = int(n_elements) * int(n_collocation) + 1
+    discretization = {
+        "method": "replay-fd" if use_fd else "replay-colloc",
+        "n_elements_requested": int(n_elements),
+        "n_elements_applied": int(n_elements),
+        "n_collocation": int(n_collocation) if not use_fd else None,
+        "effective_nfe": bool(treat_eff) if not use_fd else False,
+        "total_mesh_points": total_mesh_points,
+    }
+
+    return {
+        "trajectory": traj,
+        "success": success,
+        "message": message,
+        "wall_time_s": wall,
+        "objective_time_hr": float(meta["objective_time_hr"]) if success else None,
+        "solver": {
+            "status": meta.get("status"),
+            "termination_condition": meta.get("termination_condition"),
+            "ipopt_iterations": meta.get("ipopt_iterations"),
+            "n_points": meta.get("n_points"),
+            "staged_solve_success": None,
+        },
+        "solver_stats": {},
+        "raw": traj,
+        "warmstart_used": True,
+        "discretization": discretization,
+        "validation": {
+            "kind": "scipy_control_replay",
+            "residual_tol": residual_tol,
+            "max_constraint_residual": meta.get("max_constraint_residual"),
+            "residuals": meta.get("residuals"),
+            "trajectory_comparison": comparison,
+        },
     }
 
 
