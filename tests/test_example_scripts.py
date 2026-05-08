@@ -1,21 +1,28 @@
-"""
-Smoke tests for legacy example scripts.
+"""Smoke tests for documentation notebooks and example scripts."""
 
-These tests verify that the legacy example scripts (examples/legacy/ex_knownRp_PD.py,
-ex_unknownRp_PD.py) still run without errors. They provide basic coverage for validation
-modules like calc_unknownRp.py.
+import subprocess
+import sys
 
-Tests:
-    - test_ex_knownRp_execution: Verifies ex_knownRp_PD.py runs successfully
-    - test_ex_unknownRp_execution: Verifies ex_unknownRp_PD.py runs successfully with test data
-
-Coverage Impact:
-    - Provides smoke test coverage for calc_unknownRp.py (now 89%)
-    - Validates validation module code paths work in real-world scenarios
-"""
-
-import pytest
 import papermill as pm
+import pytest
+
+
+def _ipopt_available():
+    """Return whether a Pyomo-compatible IPOPT solver is available."""
+    try:
+        import pyomo.environ as pyo
+    except ImportError:
+        return False
+
+    try:
+        from idaes.core.solvers import get_solver
+
+        return bool(get_solver("ipopt").available())
+    except Exception:
+        try:
+            return bool(pyo.SolverFactory("ipopt").available(exception_flag=False))
+        except Exception:
+            return False
 
 
 class TestDocsNotebooks:
@@ -23,7 +30,7 @@ class TestDocsNotebooks:
 
     @pytest.mark.notebook
     def test_knownRp_notebook_execution(self, repo_root):
-        """Test that ex_knownRp_PD.py runs without error."""
+        """Test that the known-resistance documentation notebook runs."""
         pm.execute_notebook(
             repo_root / "docs/examples/knownRp_PD.ipynb",
             repo_root / "docs/examples/knownRp_PD_output.ipynb",
@@ -32,10 +39,36 @@ class TestDocsNotebooks:
 
     @pytest.mark.notebook
     def test_unknownRp_notebook_execution(self, repo_root):
-        """Test that ex_knownRp_PD.py runs without error."""
+        """Test that the unknown-resistance documentation notebook runs."""
         pm.execute_notebook(
             repo_root / "docs/examples/unknownRp_PD.ipynb",
             repo_root / "docs/examples/unknownRp_PD_output.ipynb",
-            parameters=dict(data_path=str(repo_root / "docs" / "examples") + "/"),
+            parameters={"data_path": str(repo_root / "docs" / "examples") + "/"},
         )
         # Will error if execution fails
+
+
+class TestPyomoExamples:
+    """Smoke tests for optional Pyomo example scripts."""
+
+    @pytest.mark.pyomo
+    @pytest.mark.slow
+    @pytest.mark.skipif(
+        not _ipopt_available(), reason="Pyomo or IPOPT solver not available"
+    )
+    def test_pyomo_optimizer_example_runs(self, repo_root):
+        """Test that the Pyomo optimizer example runs without error."""
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(repo_root / "examples" / "example_pyomo_optimizer.py"),
+            ],
+            cwd=repo_root,
+            capture_output=True,
+            text=True,
+            timeout=180,
+            check=False,
+        )
+
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "Example complete!" in result.stdout

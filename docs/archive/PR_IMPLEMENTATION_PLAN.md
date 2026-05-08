@@ -1,5 +1,9 @@
 # Pyomo Branch Merge - PR Implementation Plan
 
+> Historical note: this was an internal planning document for the staged Pyomo
+> merge sequence. It is archived for provenance and should not be treated as
+> current user or contributor documentation.
+
 **Date**: January 2025  
 **Target**: Merge `pyomo` branch into SECQUOIA/LyoPRONTO `main`  
 **Ground Truth**: LyoHUB/LyoPRONTO (upstream)
@@ -101,7 +105,8 @@ git commit -m "Sync with upstream LyoHUB/LyoPRONTO"
 [project.optional-dependencies]
 optimization = [
     "pyomo>=6.7.0",
-    "idaes-pse>=2.9.0",
+    "idaes-pse>=2.5,<2.6; python_version < '3.10'",
+    "idaes-pse>=2.9.0; python_version >= '3.10'",
 ]
 ```
 
