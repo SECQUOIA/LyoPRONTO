@@ -78,3 +78,4 @@ Each JSONL record includes:
 - **Reuse-first**: if JSONL exists, generation skipped unless `--force` supplied.
 - **Trajectories optional**: use `--save-trajectories` to embed trajectories (numpy arrays → lists during serialization).
 - **Hashing** prevents duplicate runs (schema v2 `hash.inputs` field).
+- **Pch benchmark setup** uses a constant fixed shelf temperature profile so Pyomo can optimize free final time; changing fixed-control profiles require simulation mode or optimizing that control.
