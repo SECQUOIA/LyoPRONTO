@@ -1,3 +1,5 @@
+# Copyright (C) 2026, SECQUOIA
+
 """
 Tests for LyoPRONTO Pyomo opt_Pch_Tsh optimizer (joint pressure and temperature optimization).
 
@@ -15,33 +17,26 @@ Following the coexistence philosophy: Pyomo optimizers complement (not replace) 
 import numpy as np
 import pytest
 
-# Try to import pyomo
-try:
-    import pyomo.environ as pyo
-
-    PYOMO_AVAILABLE = True
-except ImportError:
-    PYOMO_AVAILABLE = False
+pyo = pytest.importorskip("pyomo.environ", reason="Pyomo not available")
 
 # Check for IPOPT solver
 IPOPT_AVAILABLE = False
-if PYOMO_AVAILABLE:
-    try:
-        from idaes.core.solvers import get_solver
+try:
+    from idaes.core.solvers import get_solver
 
-        solver = get_solver("ipopt")
-        IPOPT_AVAILABLE = True
-    except:
-        try:
-            solver = pyo.SolverFactory("ipopt")
-            IPOPT_AVAILABLE = solver.available()
-        except:
-            IPOPT_AVAILABLE = False
+    solver = get_solver("ipopt")
+    IPOPT_AVAILABLE = True
+except Exception:
+    try:
+        solver = pyo.SolverFactory("ipopt")
+        IPOPT_AVAILABLE = solver.available()
+    except Exception:
+        IPOPT_AVAILABLE = False
 
 pytestmark = [
     pytest.mark.pyomo,
     pytest.mark.skipif(
-        not (PYOMO_AVAILABLE and IPOPT_AVAILABLE),
+        not IPOPT_AVAILABLE,
         reason="Pyomo or IPOPT solver not available",
     ),
 ]
@@ -58,6 +53,7 @@ from lyopronto.pyomo_models.optimizers import (
 from tests.utils import (
     FLOAT_RTOL,
     INITIAL_PERCENT_ATOL,
+    PERCENT_COMPLETE,
     PERCENT_MAX,
     PYOMO_PERCENT_COMPLETE,
 )
@@ -232,14 +228,14 @@ class TestPyomoOptPchTshOptimization:
 
         # Check drying completion
         final_dryness = result[-1, 6]
-        assert final_dryness >= 0.989, (
-            f"Should reach 99% drying, got {final_dryness * 100:.1f}%"
+        assert final_dryness >= PERCENT_COMPLETE - 0.1, (
+            f"Should reach 99% drying, got {final_dryness:.1f}%"
         )
 
         # Check temperature constraint
-        Tsub_max = result[:, 1].max()
-        assert Tsub_max <= -5.0 + 0.5, (
-            f"Tsub should stay below T_pr_crit=-5°C, got {Tsub_max:.2f}°C"
+        Tbot_max = result[:, 2].max()
+        assert Tbot_max <= -5.0 + 0.5, (
+            f"Tbot should stay below T_pr_crit=-5°C, got {Tbot_max:.2f}°C"
         )
 
     def test_optimize_Pch_Tsh_improves_over_single_control(self, optimizer_params):
@@ -302,7 +298,9 @@ class TestPyomoOptPchTshOptimization:
 
         # Check drying completion
         final_dryness = result[-1, 6]
-        assert final_dryness >= 0.989, "Should reach 99% drying with trust region"
+        assert final_dryness >= PERCENT_COMPLETE - 0.1, (
+            "Should reach 99% drying with trust region"
+        )
 
     def test_optimize_Pch_Tsh_output_format(self, optimizer_params):
         """Test that output format matches scipy."""
@@ -335,7 +333,7 @@ class TestPyomoOptPchTshOptimization:
 
         # Check column 6: percent dried (0-100, not fraction)
         percent_dried = result[:, 6]
-        assert 0 <= percent_dried.min() <= INITIAL_PERCENT_ATOL, (
+        assert -1e-6 <= percent_dried.min() <= INITIAL_PERCENT_ATOL, (
             "Initial dryness should be near 0%"
         )
         assert (
@@ -401,7 +399,7 @@ class TestPyomoOptPchTshPhysicalConstraints:
         return vial, product, ht, Pchamber, Tshelf, eq_cap, nVial, dt
 
     def test_temperature_constraint_satisfied(self, physics_params):
-        """Test that Tsub <= T_pr_crit throughout drying."""
+        """Test that Tbot <= T_pr_crit throughout drying."""
         vial, product, ht, Pchamber, Tshelf, eq_cap, nVial, dt = physics_params
 
         result = optimize_Pch_Tsh_pyomo(
@@ -419,12 +417,12 @@ class TestPyomoOptPchTshPhysicalConstraints:
             tee=False,
         )
 
-        Tsub = result[:, 1]
+        Tbot = result[:, 2]
         T_pr_crit = product["T_pr_crit"]
 
         # Allow small numerical tolerance
-        assert np.all(Tsub <= T_pr_crit + 0.5), (
-            f"Tsub should stay below {T_pr_crit}°C, max={Tsub.max():.2f}°C"
+        assert np.all(Tbot <= T_pr_crit + 0.5), (
+            f"Tbot should stay below {T_pr_crit}°C, max={Tbot.max():.2f}°C"
         )
 
     def test_both_controls_vary(self, physics_params):

@@ -1,3 +1,5 @@
+# Copyright (C) 2026, SECQUOIA
+
 """Tests for Pyomo opt_Tsh equivalent - shelf temperature optimization.
 
 This module tests the Pyomo multi-period optimizer against scipy opt_Tsh reference,
@@ -6,41 +8,36 @@ validating equivalence within acceptable tolerances.
 
 import numpy as np
 import pytest
-from lyopronto import opt_Tsh
-from lyopronto.pyomo_models import optimizers
+from tests.utils import PERCENT_COMPLETE
 
-# Try to import pyomo
-try:
-    import pyomo.environ as pyo
-
-    PYOMO_AVAILABLE = True
-except ImportError:
-    PYOMO_AVAILABLE = False
+pyo = pytest.importorskip("pyomo.environ", reason="Pyomo not available")
 
 # Check for IPOPT solver (via IDAES or standalone)
 IPOPT_AVAILABLE = False
-if PYOMO_AVAILABLE:
-    try:
-        from idaes.core.solvers import get_solver
+try:
+    from idaes.core.solvers import get_solver
 
-        solver = get_solver("ipopt")
-        IPOPT_AVAILABLE = True
-    except:
-        try:
-            solver = pyo.SolverFactory("ipopt")
-            IPOPT_AVAILABLE = solver.available()
-        except:
-            IPOPT_AVAILABLE = False
+    solver = get_solver("ipopt")
+    IPOPT_AVAILABLE = True
+except Exception:
+    try:
+        solver = pyo.SolverFactory("ipopt")
+        IPOPT_AVAILABLE = solver.available()
+    except Exception:
+        IPOPT_AVAILABLE = False
 
 pytestmark = [
     pytest.mark.pyomo,
     pytest.mark.skipif(
-        not (PYOMO_AVAILABLE and IPOPT_AVAILABLE),
+        not IPOPT_AVAILABLE,
         reason="Pyomo or IPOPT solver not available",
     ),
     pytest.mark.serial,  # Run these tests serially, not in parallel
     pytest.mark.xdist_group("pyomo_serial"),  # Group all pyomo tests in same worker
 ]
+
+from lyopronto import opt_Tsh
+from lyopronto.pyomo_models import optimizers
 
 
 @pytest.fixture
@@ -155,8 +152,8 @@ class TestPyomoOptTshBasic:
         )
 
         final_dried = output[-1, 6]
-        assert final_dried >= 0.989, (
-            f"Should dry to >98.9%, got {final_dried * 100:.1f}%"
+        assert final_dried >= PERCENT_COMPLETE - 0.1, (
+            f"Should dry to >98.9%, got {final_dried:.1f}%"
         )
 
     def test_respects_critical_temperature(self, standard_opt_tsh_inputs):
@@ -208,6 +205,35 @@ class TestPyomoOptTshBasic:
         assert np.all(np.abs(P_chamber_mTorr - P_setpoint_mTorr) < 1.0), (
             "Pressure deviated from setpoint"
         )
+
+    def test_chamber_pressure_profile_without_warmstart(self, standard_opt_tsh_inputs):
+        """Test that fixed pressure profiles are honored without scipy warmstart."""
+        vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial = standard_opt_tsh_inputs
+        Pchamber = {
+            **Pchamber,
+            "setpt": np.array([0.10, 0.20]),
+            "dt_setpt": np.array([30.0, 1800.0]),
+            "ramp_rate": 1.0,
+        }
+
+        output = optimizers.optimize_Tsh_pyomo(
+            vial,
+            product,
+            ht,
+            Pchamber,
+            Tshelf,
+            dt,
+            eq_cap,
+            nVial,
+            n_elements=5,
+            n_collocation=2,
+            warmstart_scipy=False,
+        )
+
+        P_chamber = output[:, 4] / 1000.0
+        assert np.isclose(P_chamber[0], 0.10, atol=1e-6)
+        assert P_chamber.max() > 0.15
+        assert P_chamber.max() <= 0.20 + 1e-6
 
     def test_shelf_temperature_optimized(self, standard_opt_tsh_inputs):
         """Test that shelf temperature varies (is optimized)."""
@@ -335,7 +361,7 @@ class TestPyomoOptTshEquivalence:
         assert percent_dried[0] < 0.01
 
         # Ends near 100% dried (allow numerical tolerance)
-        assert percent_dried[-1] > 0.989
+        assert percent_dried[-1] > PERCENT_COMPLETE - 0.1
 
 
 class TestPyomoOptTshEdgeCases:
@@ -362,7 +388,7 @@ class TestPyomoOptTshEdgeCases:
             n_collocation=2,
         )
 
-        assert output[-1, 6] > 0.989  # Allow numerical tolerance
+        assert output[-1, 6] > PERCENT_COMPLETE - 0.1
         # Allow 3.5°C tolerance for discretization effects with lower critical temp
         assert np.all(output[:, 2] <= -6.5), (
             f"Max Tbot={output[:, 2].max():.2f}°C exceeds -6.5°C"

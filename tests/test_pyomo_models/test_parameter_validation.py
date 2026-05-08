@@ -1,3 +1,5 @@
+# Copyright (C) 2026, SECQUOIA
+
 """Tests for parameter validation in create_optimizer_model.
 
 This module tests that the Pyomo optimizer model creation properly validates
@@ -6,17 +8,10 @@ input parameters and raises appropriate errors for invalid configurations.
 
 import pytest
 
-# Try to import pyomo
-try:
-    import pyomo.environ as pyo
-
-    PYOMO_AVAILABLE = True
-except ImportError:
-    PYOMO_AVAILABLE = False
+pyo = pytest.importorskip("pyomo.environ", reason="Pyomo not installed")
 
 pytestmark = [
     pytest.mark.pyomo,
-    pytest.mark.skipif(not PYOMO_AVAILABLE, reason="Pyomo not installed"),
 ]
 
 from lyopronto.pyomo_models.optimizers import create_optimizer_model

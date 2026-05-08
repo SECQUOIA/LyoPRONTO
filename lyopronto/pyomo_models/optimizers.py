@@ -6,22 +6,7 @@ scipy-based optimizers, with equipment capability constraints and control mode s
 Following the coexistence philosophy: these complement (not replace) the scipy optimizers.
 """
 
-# LyoPRONTO, a vial-scale lyophilization process simulator
-# Nonlinear optimization
-# Copyright (C) 2025, David E. Bernal Neira
-
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+# Copyright (C) 2026, SECQUOIA
 
 import contextlib
 from typing import Any, Dict, Optional, Tuple
@@ -30,6 +15,8 @@ import numpy as np
 import pyomo.dae as dae
 import pyomo.environ as pyo
 from lyopronto import functions
+
+from .utils import cake_length_conversion
 
 try:
     from pyomo.util.infeasible import log_infeasible_constraints
@@ -143,7 +130,7 @@ def create_optimizer_model(
                 - cake_length_ode: dLck/dt = t_final * dmdt * conversion_factor
                 - energy_balance: Q_sublimation = Q_from_shelf
                 - vial_bottom_temp: Tbot = Tsub + frozen_layer_temperature_rise
-                - critical_temp: Tsub ≤ T_pr_crit
+                - critical_temp: Tbot ≤ T_pr_crit
                 - equipment_capability: total_sublimation_rate ≤ capacity
             - **Objective**: minimize t_final
 
@@ -385,20 +372,13 @@ def create_optimizer_model(
 
     # Physical constants
     dHs_cal = 678.0  # cal/g
-    rho_ice = 0.917  # g/cm³
     k_ice = 0.0059  # cal/s/cm/K (thermal conductivity of ice)
     hr_To_s = 3600  # hr to seconds
+    lck_conversion = cake_length_conversion(vial, product)
 
     def cake_length_ode_rule(m, t):
         """Dried cake length growth - ONLY ODE in the system."""
-        kg_To_g = 1000
-        rho_solution = 1.0  # g/cm³
-        rho_solute = 1.13  # g/cm³
-
-        conversion = kg_To_g / (
-            (1 - product["cSolid"] * rho_solution / rho_solute) * vial["Ap"] * rho_ice
-        )
-        return m.dLck_dt[t] == m.t_final * m.dmdt[t] * conversion
+        return m.dLck_dt[t] == m.t_final * m.dmdt[t] * lck_conversion
 
     model.cake_length_ode = pyo.Constraint(model.t, rule=cake_length_ode_rule)
 
@@ -471,7 +451,7 @@ def create_optimizer_model(
 
     def temp_limit_rule(m, t):
         """Product temperature must stay at or below critical temperature."""
-        return m.Tsub[t] <= Tpr_max
+        return m.Tbot[t] <= Tpr_max
 
     model.temp_limit = pyo.Constraint(model.t, rule=temp_limit_rule)
 
@@ -874,6 +854,63 @@ def add_control_tracking_penalty(
         )
 
 
+def _make_profile_interpolator(profile: Dict) -> functions.RampInterpolator:
+    """Build a legacy-compatible ramp interpolator for a fixed control profile."""
+    profile = profile.copy()
+    setpt = np.atleast_1d(profile.get("setpt", []))
+    has_change = len(setpt) > 1 or (
+        "init" in profile and len(setpt) == 1 and float(profile["init"]) != float(setpt[0])
+    )
+    if "ramp_rate" not in profile:
+        if has_change:
+            raise ValueError("Fixed multi-setpoint profiles require 'ramp_rate'")
+        profile["ramp_rate"] = 0.0
+    if profile["ramp_rate"] <= 0.0 and has_change:
+        raise ValueError("Fixed changing profiles require positive 'ramp_rate'")
+    if profile["ramp_rate"] == 0.0 and not has_change:
+        value = float(profile.get("init", setpt[0] if len(setpt) else 0.0))
+        profile["setpt"] = np.array([value])
+        profile["dt_setpt"] = np.array([1.0])
+        profile["ramp_rate"] = 1.0
+    return functions.RampInterpolator(profile)
+
+
+def _fix_control_profile(
+    model: pyo.ConcreteModel,
+    control_name: str,
+    profile: Dict,
+    t_final: Optional[float] = None,
+) -> None:
+    """Fix a control variable to a legacy setpoint/ramp profile on the model mesh."""
+    interpolator = _make_profile_interpolator(profile)
+    horizon = float(t_final if t_final is not None else pyo.value(model.t_final))
+    control = getattr(model, control_name)
+    for t in model.t:
+        control[t].fix(float(interpolator(float(t) * horizon)))
+
+
+def _is_successful_termination(results: Any) -> bool:
+    """Return whether a solve result represents an acceptable optimum."""
+    if results is None or not hasattr(results, "solver"):
+        return False
+    return results.solver.termination_condition in {
+        pyo.TerminationCondition.optimal,
+        pyo.TerminationCondition.locallyOptimal,
+    }
+
+
+def _ensure_successful_solve(results: Any, context: str) -> None:
+    """Raise if a solver result should not be exposed as optimizer output."""
+    if _is_successful_termination(results):
+        return
+    status = getattr(getattr(results, "solver", None), "status", None)
+    term = getattr(getattr(results, "solver", None), "termination_condition", None)
+    raise ValueError(
+        f"{context} failed to converge to an optimal solution "
+        f"(status={status}, termination_condition={term})"
+    )
+
+
 def staged_solve(
     model: pyo.ConcreteModel,
     solver: pyo.SolverFactory,
@@ -944,9 +981,13 @@ def staged_solve(
         - _warmstart_from_scipy_output(): Initializes from scipy solution
         - optimize_Tsh_pyomo(): High-level optimizer using this framework
     """
-    print("\n" + "=" * 60)
-    print("STAGED SOLVE FRAMEWORK")
-    print("=" * 60)
+    def _log(message: str = "") -> None:
+        if tee:
+            print(message)
+
+    _log("\n" + "=" * 60)
+    _log("STAGED SOLVE FRAMEWORK")
+    _log("=" * 60)
 
     # Initialize metadata holders on the model for external access
     model._solver_stages = []
@@ -954,7 +995,7 @@ def staged_solve(
     model._staged_solve_success = False
 
     # ========== Stage 1: Feasibility (controls + t_final fixed) ==========
-    print("\n[Stage 1/4] Feasibility solve (controls and t_final fixed)...")
+    _log("\n[Stage 1/4] Feasibility solve (controls and t_final fixed)...")
 
     # Fix controls
     controls_to_fix = []
@@ -981,20 +1022,21 @@ def staged_solve(
     model._solver_stages.append(("feasibility", result))
 
     if result.solver.termination_condition == pyo.TerminationCondition.optimal:
-        print("  ✓ Feasibility solve successful")
+        _log("  ✓ Feasibility solve successful")
     else:
-        print(f"  ✗ Feasibility solve failed: {result.solver.termination_condition}")
+        _log(f"  ✗ Feasibility solve failed: {result.solver.termination_condition}")
         if log_infeasible_constraints:
-            print("\n  Diagnosing infeasible constraints...")
+            _log("\n  Diagnosing infeasible constraints...")
             import logging
 
             logging.getLogger("pyomo.util.infeasible").setLevel(logging.INFO)
-            log_infeasible_constraints(
-                model, tol=1e-4, log_expression=True, log_variables=True
-            )
+            if tee:
+                log_infeasible_constraints(
+                    model, tol=1e-4, log_expression=True, log_variables=True
+                )
         else:
             # Manual diagnosis
-            print("\n  Checking constraint violations manually...")
+            _log("\n  Checking constraint violations manually...")
             viol_count = 0
             for con in model.component_objects(pyo.Constraint, active=True):
                 for idx in con:
@@ -1013,18 +1055,18 @@ def staged_solve(
                         viol = max(0, lb - body_val, body_val - ub)
                         if viol > 1e-3:
                             viol_count += 1
-                            if viol_count <= 5:
-                                print(
+                            if tee and viol_count <= 5:
+                                _log(
                                     f"    {con.name}[{idx}]: viol={viol:.2e}, body={body_val:.4f}, bounds=[{lb:.4f}, {ub:.4f}]"
                                 )
                     except:
                         pass
             if viol_count > 5:
-                print(f"    ... and {viol_count - 5} more violations")
+                _log(f"    ... and {viol_count - 5} more violations")
         return False, "Stage 1 (feasibility) failed"
 
     # ========== Stage 2: Time optimization (controls fixed) ==========
-    print("\n[Stage 2/4] Time minimization (controls fixed)...")
+    _log("\n[Stage 2/4] Time minimization (controls fixed)...")
 
     model.t_final.unfix()
     model.obj.activate()
@@ -1038,16 +1080,16 @@ def staged_solve(
         pyo.TerminationCondition.optimal,
         pyo.TerminationCondition.locallyOptimal,
     ]:
-        print(
+        _log(
             f"  ✓ Time optimization successful, t_final = {pyo.value(model.t_final):.3f} hr"
         )
         pyo.value(model.t_final)
     else:
-        print(f"  ✗ Time optimization failed: {result.solver.termination_condition}")
+        _log(f"  ✗ Time optimization failed: {result.solver.termination_condition}")
         return False, "Stage 2 (time optimization) failed"
 
     # ========== Stage 3: Release controls with piecewise-constant ==========
-    print("\n[Stage 3/4] Releasing controls (piecewise-constant)...")
+    _log("\n[Stage 3/4] Releasing controls (piecewise-constant)...")
 
     # Unfix controls
     for ctrl_name in controls_to_fix:
@@ -1072,15 +1114,15 @@ def staged_solve(
         pyo.TerminationCondition.optimal,
         pyo.TerminationCondition.locallyOptimal,
     ]:
-        print(
+        _log(
             f"  ✓ Control optimization successful, t_final = {pyo.value(model.t_final):.3f} hr"
         )
     else:
-        print(f"  ⚠ Control optimization: {result.solver.termination_condition}")
-        print("  Attempting recovery...")
+        _log(f"  ⚠ Control optimization: {result.solver.termination_condition}")
+        _log("  Attempting recovery...")
 
     # ========== Stage 4: Full optimal control ==========
-    print("\n[Stage 4/4] Full optimization (all DOFs released)...")
+    _log("\n[Stage 4/4] Full optimization (all DOFs released)...")
 
     result = solver.solve(model, tee=tee)
     model._last_solver_result = result
@@ -1090,15 +1132,15 @@ def staged_solve(
         pyo.TerminationCondition.optimal,
         pyo.TerminationCondition.locallyOptimal,
     ]:
-        print(
+        _log(
             f"  ✓ Full optimization successful, t_final = {pyo.value(model.t_final):.3f} hr"
         )
-        print("=" * 60 + "\n")
+        _log("=" * 60 + "\n")
         model._staged_solve_success = True
         return True, "All stages completed successfully"
     else:
-        print(f"  ✗ Full optimization: {result.solver.termination_condition}")
-        print("=" * 60 + "\n")
+        _log(f"  ✗ Full optimization: {result.solver.termination_condition}")
+        _log("=" * 60 + "\n")
         model._staged_solve_success = False
         return False, f"Stage 4 failed: {result.solver.termination_condition}"
 
@@ -1237,7 +1279,7 @@ def optimize_Tsh_pyomo(
         ... )
         >>>
         >>> print(f"Drying time: {result[-1, 0]:.2f} hr")
-        >>> print(f"Final dryness: {result[-1, 6]*100:.1f}%")
+        >>> print(f"Final dryness: {result[-1, 6]:.1f}%")
 
     See Also:
         - lyopronto.opt_Tsh.dry(): Scipy baseline optimizer
@@ -1267,17 +1309,13 @@ def optimize_Tsh_pyomo(
         use_secant_ramp_constraints=use_secant_ramp_constraints,
     )
 
-    # Fix chamber pressure to setpoint
-    Pch_fixed = Pchamber["setpt"][0]
-    for t in model.t:
-        model.Pch[t].fix(Pch_fixed)
-
     # Warmstart from scipy if requested
     if warmstart_scipy:
         scipy_output = opt_Tsh.dry(
             vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial
         )
         _warmstart_from_scipy_output(model, scipy_output, vial, product, ht)
+        _fix_control_profile(model, "Pch", Pchamber, t_final=scipy_output[-1, 0])
 
         # Validate scipy trajectory on Pyomo mesh
         validate_scipy_residuals(
@@ -1296,6 +1334,8 @@ def optimize_Tsh_pyomo(
                     model.Tsh[t].fix()
                 if hasattr(model.Lck[t], "fix"):
                     model.Lck[t].fix()
+    else:
+        _fix_control_profile(model, "Pch", Pchamber)
 
     # Configure solver with robust options
     try:
@@ -1326,8 +1366,9 @@ def optimize_Tsh_pyomo(
     if warmstart_scipy and not simulation_mode:
         success, message = staged_solve(model, opt, control_mode="Tsh", tee=tee)
         if not success:
-            print(f"Warning: Staged solve incomplete: {message}")
-            print("Attempting direct solve as fallback...")
+            if tee:
+                print(f"Warning: Staged solve incomplete: {message}")
+                print("Attempting direct solve as fallback...")
             results = opt.solve(model, tee=tee)
         else:
             results = getattr(model, "_last_solver_result", None)
@@ -1336,7 +1377,7 @@ def optimize_Tsh_pyomo(
         results = opt.solve(model, tee=tee)
 
     # Check constraint violations in simulation mode
-    if simulation_mode and warmstart_scipy:
+    if simulation_mode and warmstart_scipy and tee:
         print("\n=== Constraint Violation Check (Simulation Mode) ===")
         print(f"Solver status: {results.solver.status}")
         print(f"Termination condition: {results.solver.termination_condition}")
@@ -1384,6 +1425,7 @@ def optimize_Tsh_pyomo(
         print("=" * 55)
 
     # Extract solution in same format as scipy optimizer
+    _ensure_successful_solve(results, "optimize_Tsh_pyomo")
     output_arr = _extract_output_array(model, vial, product)
     if return_metadata:
         last = results or getattr(model, "_last_solver_result", None)
@@ -1706,10 +1748,7 @@ def optimize_Pch_pyomo(
             vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial
         )
         _warmstart_from_scipy_output(model, scipy_output, vial, product, ht)
-
-        # Fix shelf temperature to scipy trajectory
-        for t in model.t:
-            model.Tsh[t].fix()
+        _fix_control_profile(model, "Tsh", Tshelf, t_final=scipy_output[-1, 0])
 
         # Validate
         if tee:
@@ -1724,6 +1763,8 @@ def optimize_Pch_pyomo(
                 model.Tbot[t].fix()
                 model.Pch[t].fix()
                 model.Lck[t].fix()
+    else:
+        _fix_control_profile(model, "Tsh", Tshelf)
 
     # Configure solver
     try:
@@ -1752,14 +1793,16 @@ def optimize_Pch_pyomo(
     if warmstart_scipy and not simulation_mode:
         success, message = staged_solve(model, opt, control_mode="Pch", tee=tee)
         if not success:
-            print(f"Warning: Staged solve incomplete: {message}")
-            print("Attempting direct solve as fallback...")
+            if tee:
+                print(f"Warning: Staged solve incomplete: {message}")
+                print("Attempting direct solve as fallback...")
             results = opt.solve(model, tee=tee)
         else:
             results = getattr(model, "_last_solver_result", None)
     else:
         results = opt.solve(model, tee=tee)
 
+    _ensure_successful_solve(results, "optimize_Pch_pyomo")
     output_arr = _extract_output_array(model, vial, product)
     if return_metadata:
         last = results or getattr(model, "_last_solver_result", None)
@@ -1983,14 +2026,16 @@ def optimize_Pch_Tsh_pyomo(
     if warmstart_scipy and not simulation_mode:
         success, message = staged_solve(model, opt, control_mode="both", tee=tee)
         if not success:
-            print(f"Warning: Staged solve incomplete: {message}")
-            print("Attempting direct solve as fallback...")
+            if tee:
+                print(f"Warning: Staged solve incomplete: {message}")
+                print("Attempting direct solve as fallback...")
             results = opt.solve(model, tee=tee)
         else:
             results = getattr(model, "_last_solver_result", None)
     else:
         results = opt.solve(model, tee=tee)
 
+    _ensure_successful_solve(results, "optimize_Pch_Tsh_pyomo")
     output_arr = _extract_output_array(model, vial, product)
     if return_metadata:
         last = results or getattr(model, "_last_solver_result", None)

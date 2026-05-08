@@ -1,3 +1,5 @@
+# Copyright (C) 2026, SECQUOIA
+
 """
 Tests for LyoPRONTO Pyomo-based optimizers.
 
@@ -15,47 +17,43 @@ import numpy as np
 import pandas as pd
 import pytest
 
-# Try to import pyomo
-try:
-    import pyomo.environ as pyo
-
-    PYOMO_AVAILABLE = True
-except ImportError:
-    PYOMO_AVAILABLE = False
+pyo = pytest.importorskip("pyomo.environ", reason="Pyomo not available")
+from pyomo.opt import SolverResults, SolverStatus
 
 # Check for IPOPT solver
 IPOPT_AVAILABLE = False
-if PYOMO_AVAILABLE:
-    try:
-        from idaes.core.solvers import get_solver
+try:
+    from idaes.core.solvers import get_solver
 
-        solver = get_solver("ipopt")
-        IPOPT_AVAILABLE = True
-    except:
-        try:
-            solver = pyo.SolverFactory("ipopt")
-            IPOPT_AVAILABLE = solver.available()
-        except:
-            IPOPT_AVAILABLE = False
+    solver = get_solver("ipopt")
+    IPOPT_AVAILABLE = True
+except Exception:
+    try:
+        solver = pyo.SolverFactory("ipopt")
+        IPOPT_AVAILABLE = solver.available()
+    except Exception:
+        IPOPT_AVAILABLE = False
 
 pytestmark = [
     pytest.mark.pyomo,
     pytest.mark.skipif(
-        not (PYOMO_AVAILABLE and IPOPT_AVAILABLE),
+        not IPOPT_AVAILABLE,
         reason="Pyomo or IPOPT solver not available",
     ),
 ]
 
 from lyopronto import opt_Tsh
 from lyopronto.pyomo_models.optimizers import (
+    _ensure_successful_solve,
     _warmstart_from_scipy_output,
     create_optimizer_model,
     optimize_Tsh_pyomo,
     validate_scipy_residuals,
 )
+from lyopronto.pyomo_models.utils import cake_length_conversion
 
 # Import tolerance constants
-from tests.utils import TEMP_ATOL
+from tests.utils import PERCENT_COMPLETE, TEMP_ATOL
 
 
 class TestPyomoModelStructure:
@@ -171,6 +169,46 @@ class TestPyomoModelStructure:
         assert len(t_points) == 11, (
             f"Expected 11 time points (n_elements=10), got {len(t_points)}"
         )
+
+    def test_cake_length_ode_uses_scipy_conversion(self, standard_params):
+        """Test dLck/dt uses the same conversion as the scipy optimizers."""
+        vial, product, ht, Pchamber, Tshelf, eq_cap, nVial = standard_params
+        product = product.copy()
+        product["cSolid"] = 0.20
+
+        model = create_optimizer_model(
+            vial,
+            product,
+            ht,
+            vial["Vfill"],
+            eq_cap,
+            nVial,
+            Pchamber=Pchamber,
+            Tshelf=Tshelf,
+            n_elements=5,
+            control_mode="Tsh",
+            use_finite_differences=True,
+        )
+
+        t = next(t for t in model.t if t != min(model.t))
+        model.t_final.set_value(4.0)
+        model.dmdt[t].set_value(0.123)
+        model.dLck_dt[t].set_value(0.0)
+
+        expected = 4.0 * 0.123 * cake_length_conversion(vial, product)
+        assert np.isclose(pyo.value(model.cake_length_ode[t].body), -expected)
+
+
+class TestSolveValidation:
+    """Test solver termination validation before output extraction."""
+
+    def test_nonoptimal_result_raises_before_output(self):
+        results = SolverResults()
+        results.solver.status = SolverStatus.warning
+        results.solver.termination_condition = pyo.TerminationCondition.infeasible
+
+        with pytest.raises(ValueError, match="failed to converge"):
+            _ensure_successful_solve(results, "test_optimizer")
 
 
 class TestScipyValidation:
@@ -311,8 +349,8 @@ class TestStagedSolve:
 
         # Should reach target dryness (99%)
         final_dryness = result[-1, 6]
-        assert final_dryness >= 0.98, (
-            f"Drying incomplete: {final_dryness * 100:.1f}% dried"
+        assert final_dryness >= PERCENT_COMPLETE - 1.0, (
+            f"Drying incomplete: {final_dryness:.1f}% dried"
         )
 
     def test_pyomo_improves_on_scipy_time(self, optimizer_params):
@@ -423,13 +461,12 @@ class TestReferenceData:
             tee=False,
         )
 
-        Tsub = result[:, 1]  # Sublimation temperature (product temperature)
+        Tbot = result[:, 2]  # Product temperature at vial bottom
         T_crit = product["T_pr_crit"]
 
         # Product temperature should not exceed critical temperature
-        # Allow small tolerance for numerical precision
-        assert np.all(Tsub <= T_crit + TEMP_ATOL), (
-            f"Product temperature exceeded critical: max={Tsub.max():.2f}°C, crit={T_crit}°C"
+        assert np.all(Tbot <= T_crit + TEMP_ATOL), (
+            f"Product temperature exceeded critical: max={Tbot.max():.2f}°C, crit={T_crit}°C"
         )
 
 
@@ -440,7 +477,7 @@ class TestPhysicalConstraints:
     def test_params(self):
         """Standard test parameters."""
         vial = {"Av": 3.14, "Ap": 2.27, "Vfill": 3.0}
-        product = {"R0": 1.4, "A1": 16.0, "A2": 0.0, "T_pr_crit": -25.0, "cSolid": 0.05}
+        product = {"R0": 1.4, "A1": 16.0, "A2": 0.0, "T_pr_crit": -5.0, "cSolid": 0.05}
         ht = {"KC": 2.75e-4, "KP": 8.93e-4, "KD": 0.46}
         Pchamber = {"setpt": [0.10], "dt_setpt": [3600.0], "ramp_rate": 0.5}
         Tshelf = {
@@ -487,7 +524,7 @@ class TestPhysicalConstraints:
         assert np.all(Tbot >= Tsub - 0.01), "Tbot should be >= Tsub"
 
     def test_drying_progresses_monotonically(self, test_params):
-        """Test that drying fraction increases monotonically."""
+        """Test that drying percent increases monotonically."""
         vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial = test_params
 
         result = optimize_Tsh_pyomo(
@@ -504,15 +541,15 @@ class TestPhysicalConstraints:
             tee=False,
         )
 
-        frac_dried = result[:, 6]
+        percent_dried = result[:, 6]
 
-        # Drying fraction should increase monotonically
-        diff = np.diff(frac_dried)
-        assert np.all(diff >= -1e-6), "Drying fraction should increase monotonically"
+        # Drying percent should increase monotonically
+        diff = np.diff(percent_dried)
+        assert np.all(diff >= -1e-6), "Drying percent should increase monotonically"
 
         # Should end near 99%
-        assert frac_dried[-1] >= 0.98, (
-            f"Final drying {frac_dried[-1] * 100:.1f}% too low"
+        assert percent_dried[-1] >= PERCENT_COMPLETE - 1.0, (
+            f"Final drying {percent_dried[-1]:.1f}% too low"
         )
 
     def test_no_singularity_at_completion(self, test_params):
