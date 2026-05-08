@@ -93,3 +93,46 @@ def test_pyomo_adapter_rejects_non_optimal_metadata(monkeypatch):
     assert result["success"] is False
     assert result["objective_time_hr"] is None
     assert "infeasible" in result["message"]
+
+
+def test_pyomo_pch_adapter_uses_constant_fixed_shelf_profile(monkeypatch):
+    baseline = SCENARIOS["baseline"]
+    fake_output = np.array(
+        [
+            [0.0, -26.0, -25.0, -18.0, 100.0, 0.2, 0.0],
+            [1.0, -25.0, -25.0, -18.0, 100.0, 0.1, 99.0],
+        ]
+    )
+    seen = {}
+
+    def fake_optimizer(*args, **kwargs):
+        seen["Pchamber"] = args[3]
+        seen["Tshelf"] = args[4]
+        return {
+            "output": fake_output,
+            "metadata": {
+                "status": "ok",
+                "termination_condition": "optimal",
+                "objective_time_hr": 1.0,
+            },
+        }
+
+    fake_pyomo = SimpleNamespace(optimize_Pch_pyomo=fake_optimizer)
+    monkeypatch.setattr(adapters, "_load_pyomo_optimizers", lambda: fake_pyomo)
+
+    result = adapters.pyomo_adapter(
+        "Pch",
+        baseline["vial"],
+        baseline["product"],
+        baseline["ht"],
+        baseline["eq_cap"],
+        baseline["nVial"],
+        baseline,
+    )
+
+    assert result["success"] is True
+    assert seen["Pchamber"]["min"] == 0.05
+    assert seen["Pchamber"]["max"] == 0.5
+    assert seen["Tshelf"]["init"] == -18.0
+    assert seen["Tshelf"]["init"] == seen["Tshelf"]["setpt"][0]
+    assert len(seen["Tshelf"]["setpt"]) == 1

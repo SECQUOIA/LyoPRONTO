@@ -22,6 +22,22 @@ DRYNESS_TARGET = 98.9  # Percentage (0-100)
 ACCEPTABLE_PYOMO_TERMINATIONS = {"optimal", "locallyoptimal"}
 
 
+def _pch_benchmark_controls() -> tuple[dict[str, float], dict[str, Any]]:
+    """Return fixed controls shared by SciPy and Pyomo Pch benchmarks."""
+    # optimize_Pch_pyomo uses free final time, so fixed shelf profiles must be
+    # constant. The -18 C setpoint keeps the baseline -25 C product constraint
+    # feasible while allowing the SciPy reference to complete the 3x3 grid.
+    return (
+        {"min": 0.05, "max": 0.5},
+        {
+            "init": -18.0,
+            "setpt": [-18.0],
+            "dt_setpt": [6000.0],
+            "ramp_rate": 1.0,
+        },
+    )
+
+
 def _load_pyomo_optimizers():
     """Import optional Pyomo optimizers only when a Pyomo method is requested."""
     try:
@@ -66,17 +82,7 @@ def scipy_adapter(
         runner = opt_Tsh.dry
         args = (vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial)
     elif task == "Pch":
-        # Pressure optimization lower bound
-        Pchamber = {"min": 0.05}
-        # Shelf multi-step schedule with sufficient time for drying completion
-        # NOTE: dt_setpt in MINUTES (opt_Pch expects minutes, converts internally)
-        # High resistance products (A1=20) need ~86 hours, use 100 hours for margin
-        Tshelf = {
-            "init": -35.0,
-            "setpt": [-20.0, 120.0],
-            "dt_setpt": [300.0, 5700.0],
-            "ramp_rate": 1.0,
-        }
+        Pchamber, Tshelf = _pch_benchmark_controls()
         runner = opt_Pch.dry
         args = (vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial)
     elif task == "both":
@@ -158,18 +164,9 @@ def pyomo_adapter(
         runner = pyomo_opt.optimize_Tsh_pyomo
         args = (vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial)
     elif task == "Pch":
-        Pchamber = {"min": 0.05}
+        Pchamber, Tshelf = _pch_benchmark_controls()
         if pch_ramp_rate is not None:
             Pchamber["max_ramp_rate"] = pch_ramp_rate
-        # Shelf multi-step schedule with sufficient time for drying completion
-        # NOTE: dt_setpt in MINUTES (Pyomo internally uses same convention as scipy)
-        # High resistance products (A1=20) need ~86 hours, use 100 hours for margin
-        Tshelf = {
-            "init": -35.0,
-            "setpt": [-20.0, 120.0],
-            "dt_setpt": [300.0, 5700.0],
-            "ramp_rate": 1.0,
-        }
         runner = pyomo_opt.optimize_Pch_pyomo
         args = (vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial)
     elif task == "both":

@@ -34,6 +34,15 @@ python benchmarks/grid_cli.py generate \
   --out benchmarks/results/baseline_Tsh_3x3_summary.jsonl \
   --force
 
+python benchmarks/grid_cli.py generate \
+  --task Pch --scenario baseline \
+  --vary product.A1=16,18,20 \
+  --vary ht.KC=2.75e-4,3.3e-4,4.0e-4 \
+  --methods scipy,fd,colloc \
+  --n-elements 24 --n-collocation 3 \
+  --out benchmarks/results/baseline_Pch_3x3_summary.jsonl \
+  --force
+
 # Analyze and generate plots
 JSONL_PATH=benchmarks/results/baseline_Tsh_3x3_summary.jsonl jupyter notebook benchmarks/grid_analysis.ipynb
 ```
