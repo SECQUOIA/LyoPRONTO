@@ -35,6 +35,7 @@ Main user-facing optimizer functions (equivalent to scipy opt_Tsh, opt_Pch, opt_
 - Equipment capability constraints
 - Scipy warmstart support
 - 4-stage convergence framework (staged_solve)
+- SciPy trajectory residual checks and IPOPT replay helpers used by benchmarks
 
 ### `model.py`
 Multi-period DAE model creation with orthogonal collocation on finite elements.
@@ -263,11 +264,12 @@ pip install pyomo
 - [x] Comparison tests vs scipy
 - [x] Documentation and examples
 
-### Phase 2: Multi-Period Optimization (Future)
-- [ ] Time-discretized simultaneous optimization
-- [ ] ODE constraints with backward Euler / trapezoidal rule
-- [ ] Full trajectory optimization
-- [ ] Performance benchmarks vs scipy sequential
+### Phase 2: Multi-Period Optimization ✅
+- [x] Time-discretized simultaneous optimization
+- [x] ODE constraints with orthogonal collocation
+- [x] Full trajectory optimization
+- [x] Performance benchmarks vs scipy sequential
+- [x] SciPy trajectory residual checks and IPOPT replay validation
 
 ### Phase 3: Advanced Features (Future)
 - [ ] Parameter estimation (R0, A1, A2 from experimental data)

@@ -116,7 +116,7 @@ ruff format lyopronto/ tests/ benchmarks/
 mypy lyopronto/
 
 # Full quality check
-ruff check lyopronto/ tests/ && ruff format --check lyopronto/ tests/ && pytest tests/ -v
+ruff check lyopronto/ tests/ benchmarks/ && ruff format --check lyopronto/ tests/ benchmarks/ && pytest tests/ -v
 ```
 
 **Pre-commit hooks** (recommended): Install once to auto-run checks on every commit:
