@@ -220,6 +220,8 @@ def ipopt_replay_adapter(
                 "max_scipy_trajectory_residual"
             ),
             "scipy_trajectory_residuals": meta.get("scipy_trajectory_residuals"),
+            "max_scipy_mesh_residual": meta.get("max_scipy_mesh_residual"),
+            "scipy_mesh_residuals": meta.get("scipy_mesh_residuals"),
             "max_replay_solution_residual": meta.get(
                 "max_replay_solution_residual"
             ),

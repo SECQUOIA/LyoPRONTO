@@ -766,6 +766,114 @@ def validate_scipy_residuals(
     return residuals
 
 
+def validate_scipy_trajectory_points(
+    scipy_output: np.ndarray,
+    vial: Dict[str, float],
+    product: Dict[str, float],
+    ht: Dict[str, float],
+    eq_cap: Optional[Dict[str, float]] = None,
+    nVial: Optional[int] = None,
+    verbose: bool = True,
+) -> Dict[str, Dict[str, float]]:
+    """Validate Pyomo-equivalent physics residuals at every SciPy trajectory point.
+
+    Unlike ``validate_scipy_residuals``, this check does not sample onto the Pyomo
+    discretization mesh. It evaluates every recorded SciPy time point directly and
+    is therefore the strict all-points compatibility check for the legacy
+    trajectory.
+    """
+    if scipy_output.size == 0:
+        return {}
+
+    time = scipy_output[:, 0]
+    Tsub = scipy_output[:, 1]
+    Tbot = scipy_output[:, 2]
+    Tsh = scipy_output[:, 3]
+    Pch = scipy_output[:, 4] / constant.Torr_to_mTorr
+    dmdt = scipy_output[:, 5] * (vial["Ap"] * constant.cm_To_m**2)
+
+    Lpr0 = functions.Lpr0_FUN(vial["Vfill"], vial["Ap"], product["cSolid"])
+    Lck = scipy_output[:, 6] / 100.0 * Lpr0
+    Psub = functions.Vapor_pressure(Tsub)
+    log_Psub = np.log(Psub)
+    Rp = functions.Rp_FUN(Lck, product["R0"], product["A1"], product["A2"])
+    Kv = functions.Kv_FUN(ht["KC"], ht["KP"], ht["KD"], Pch)
+
+    def summarize(name: str, values: np.ndarray) -> None:
+        finite = np.asarray(values, dtype=float)
+        finite = finite[np.isfinite(finite)]
+        if finite.size:
+            residuals[name] = {
+                "max": float(np.max(np.abs(finite))),
+                "mean": float(np.mean(np.abs(finite))),
+            }
+
+    residuals: Dict[str, Dict[str, float]] = {}
+    summarize(
+        "vapor_pressure_log",
+        log_Psub - (np.log(2.698e10) - 6144.96 / (Tsub + 273.15)),
+    )
+    summarize("vapor_pressure_exp", Psub - np.exp(log_Psub))
+    summarize(
+        "product_resistance",
+        Rp - product["R0"] - product["A1"] * Lck / (1 + product["A2"] * Lck),
+    )
+    summarize(
+        "kv_calc",
+        Kv * (1.0 + ht["KD"] * Pch)
+        - ht["KC"] * (1.0 + ht["KD"] * Pch)
+        - ht["KP"] * Pch,
+    )
+    summarize("sublimation_rate", dmdt * Rp * 1000.0 - vial["Ap"] * (Psub - Pch))
+
+    Q_sub = constant.dHs * (Psub - Pch) * vial["Ap"] / Rp / constant.hr_To_s
+    Q_shelf = Kv * vial["Av"] * (Tsh - Tbot)
+    summarize("energy_balance", Q_sub - Q_shelf)
+    summarize(
+        "vial_bottom_temp",
+        Tbot
+        - (
+            Tsub
+            + (Lpr0 - Lck)
+            * (Psub - Pch)
+            * constant.dHs
+            / Rp
+            / constant.hr_To_s
+            / constant.k_ice
+        ),
+    )
+    summarize(
+        "temp_limit",
+        np.maximum(0.0, Tbot - product.get("Tpr_max", product.get("T_pr_crit", -25.0))),
+    )
+    if eq_cap is not None and nVial is not None:
+        summarize(
+            "equipment_capability",
+            np.maximum(0.0, nVial * dmdt - (eq_cap["a"] + eq_cap["b"] * Pch)),
+        )
+
+    if scipy_output.shape[0] > 1:
+        positive_dt = np.diff(time) > 0.0
+        if np.any(positive_dt):
+            predicted_dL = (
+                dmdt[:-1] * cake_length_conversion(vial, product) * np.diff(time)
+            )
+            summarize(
+                "cake_length_dynamics",
+                (np.diff(Lck) - predicted_dL)[positive_dt],
+            )
+
+    if verbose:
+        print("\n" + "=" * 60)
+        print("SCIPY TRAJECTORY VALIDATION AT ALL RECORDED POINTS")
+        print("=" * 60)
+        for name, vals in residuals.items():
+            print(f"{name:30s}: max={vals['max']:.2e}, mean={vals['mean']:.2e}")
+        print("=" * 60 + "\n")
+
+    return residuals
+
+
 def add_slack_variables(
     model: pyo.ConcreteModel,
     constraint_names: list,
@@ -1050,6 +1158,9 @@ def replay_scipy_controls_with_ipopt(
 
     This validation mode fixes both control trajectories and final drying time from
     an existing SciPy result, then asks IPOPT to solve the Pyomo physics equations.
+    Before solving, it evaluates the Pyomo-equivalent residuals at every recorded
+    SciPy trajectory point; those all-point residuals are the primary validation
+    gate exposed in metadata.
     The terminal dryness constraint is disabled so drying completion can be
     measured as replay output instead of imposed. It is intended to verify
     implementation consistency, not to optimize a cycle.
@@ -1077,11 +1188,22 @@ def replay_scipy_controls_with_ipopt(
         use_secant_ramp_constraints=False,
     )
 
-    _warmstart_from_scipy_output(model, scipy_output, vial, product, ht)
-    scipy_trajectory_residuals = validate_scipy_residuals(
-        model, scipy_output, vial, product, ht, verbose=tee
+    scipy_trajectory_residuals = validate_scipy_trajectory_points(
+        scipy_output,
+        vial,
+        product,
+        ht,
+        eq_cap=eq_cap,
+        nVial=nVial,
+        verbose=tee,
     )
     max_scipy_trajectory_residual = _max_residual(scipy_trajectory_residuals)
+
+    _warmstart_from_scipy_output(model, scipy_output, vial, product, ht)
+    scipy_mesh_residuals = validate_scipy_residuals(
+        model, scipy_output, vial, product, ht, verbose=tee
+    )
+    max_scipy_mesh_residual = _max_residual(scipy_mesh_residuals)
     _fix_controls_from_scipy_output(model, scipy_output)
     model.obj.deactivate()
     model.final_dryness.deactivate()
@@ -1127,6 +1249,8 @@ def replay_scipy_controls_with_ipopt(
             "scipy_trajectory_residuals": _serialize_residuals(
                 scipy_trajectory_residuals
             ),
+            "max_scipy_mesh_residual": max_scipy_mesh_residual,
+            "scipy_mesh_residuals": _serialize_residuals(scipy_mesh_residuals),
             "max_replay_solution_residual": max_replay_residual,
             "replay_solution_residuals": _serialize_residuals(replay_residuals),
         }
