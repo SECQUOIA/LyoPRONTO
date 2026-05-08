@@ -26,6 +26,30 @@ import numpy as np
 from .. import constant, functions
 
 
+def cake_length_conversion(vial, product):
+    """Return scipy-compatible dried cake length growth per sublimation rate.
+
+    The scipy optimizers update dried cake length as ``dL = dmdt * dt * conversion``.
+    Keeping this factor shared prevents the Pyomo models from drifting from the
+    legacy percent-dried dynamics.
+    """
+    c_solid = product["cSolid"]
+    return (
+        constant.kg_To_g
+        / (
+            (1 - c_solid * constant.rho_solution / constant.rho_solute)
+            * vial["Ap"]
+            * constant.rho_ice
+        )
+        * (
+            1
+            - c_solid
+            * (constant.rho_solution - constant.rho_ice)
+            / constant.rho_solute
+        )
+    )
+
+
 def initialize_from_scipy(scipy_output, time_index, vial, product, Lpr0, ht=None):
     """Create warmstart data dictionary from scipy optimization output.
 

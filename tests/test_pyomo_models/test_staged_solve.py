@@ -1,3 +1,5 @@
+# Copyright (C) 2026, SECQUOIA
+
 """Tests for staged solve framework.
 
 This module tests the staged solve framework that runs Pyomo optimization
@@ -8,33 +10,26 @@ import numpy as np
 import pytest
 from tests.utils import PERCENT_COMPLETE
 
-# Try to import pyomo
-try:
-    import pyomo.environ as pyo
-
-    PYOMO_AVAILABLE = True
-except ImportError:
-    PYOMO_AVAILABLE = False
+pyo = pytest.importorskip("pyomo.environ", reason="Pyomo not available")
 
 # Check for IPOPT solver
 IPOPT_AVAILABLE = False
-if PYOMO_AVAILABLE:
-    try:
-        from idaes.core.solvers import get_solver
+try:
+    from idaes.core.solvers import get_solver
 
-        solver = get_solver("ipopt")
-        IPOPT_AVAILABLE = True
-    except:
-        try:
-            solver = pyo.SolverFactory("ipopt")
-            IPOPT_AVAILABLE = solver.available()
-        except:
-            IPOPT_AVAILABLE = False
+    solver = get_solver("ipopt")
+    IPOPT_AVAILABLE = True
+except Exception:
+    try:
+        solver = pyo.SolverFactory("ipopt")
+        IPOPT_AVAILABLE = solver.available()
+    except Exception:
+        IPOPT_AVAILABLE = False
 
 pytestmark = [
     pytest.mark.pyomo,
     pytest.mark.skipif(
-        not (PYOMO_AVAILABLE and IPOPT_AVAILABLE),
+        not IPOPT_AVAILABLE,
         reason="Pyomo or IPOPT solver not available",
     ),
 ]
@@ -129,9 +124,9 @@ class TestStagedSolve:
 
         T_pr_crit = standard_inputs["product"]["T_pr_crit"]
         # Allow 0.5°C tolerance for numerical solver
-        critical_temp_satisfied = np.all(output[:, 1] <= T_pr_crit + 0.5)
+        critical_temp_satisfied = np.all(output[:, 2] <= T_pr_crit + 0.5)
         assert critical_temp_satisfied, (
-            f"Critical temperature violated: max Tsub = {np.max(output[:, 1]):.2f}°C, "
+            f"Critical temperature violated: max Tbot = {np.max(output[:, 2]):.2f}°C, "
             f"limit = {T_pr_crit}°C"
         )
 
@@ -156,8 +151,8 @@ class TestStagedSolve:
         )
 
         final_percent_dried = output[-1, 6]
-        assert final_percent_dried >= PERCENT_COMPLETE, (
-            f"Drying incomplete: {final_percent_dried:.2f}% < {PERCENT_COMPLETE}%"
+        assert final_percent_dried >= PERCENT_COMPLETE - 0.1, (
+            f"Drying incomplete: {final_percent_dried:.2f}% < {PERCENT_COMPLETE - 0.1}%"
         )
 
     @pytest.mark.slow

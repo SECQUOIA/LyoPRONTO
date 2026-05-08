@@ -1,3 +1,5 @@
+# Copyright (C) 2026, SECQUOIA
+
 """Tests for warmstart adapters for scipy optimizers.
 
 This module tests that _warmstart_from_scipy_output correctly handles
@@ -10,33 +12,26 @@ trajectories from opt_Tsh, opt_Pch, and opt_Pch_Tsh, with proper:
 import numpy as np
 import pytest
 
-# Try to import pyomo
-try:
-    import pyomo.environ as pyo
-
-    PYOMO_AVAILABLE = True
-except ImportError:
-    PYOMO_AVAILABLE = False
+pyo = pytest.importorskip("pyomo.environ", reason="Pyomo not available")
 
 # Check for IPOPT solver
 IPOPT_AVAILABLE = False
-if PYOMO_AVAILABLE:
-    try:
-        from idaes.core.solvers import get_solver
+try:
+    from idaes.core.solvers import get_solver
 
-        solver = get_solver("ipopt")
-        IPOPT_AVAILABLE = True
-    except:
-        try:
-            solver = pyo.SolverFactory("ipopt")
-            IPOPT_AVAILABLE = solver.available()
-        except:
-            IPOPT_AVAILABLE = False
+    solver = get_solver("ipopt")
+    IPOPT_AVAILABLE = True
+except Exception:
+    try:
+        solver = pyo.SolverFactory("ipopt")
+        IPOPT_AVAILABLE = solver.available()
+    except Exception:
+        IPOPT_AVAILABLE = False
 
 pytestmark = [
     pytest.mark.pyomo,
     pytest.mark.skipif(
-        not (PYOMO_AVAILABLE and IPOPT_AVAILABLE),
+        not IPOPT_AVAILABLE,
         reason="Pyomo or IPOPT solver not available",
     ),
 ]
