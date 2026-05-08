@@ -14,7 +14,7 @@ from typing import Any, Dict, Optional, Tuple
 import numpy as np
 import pyomo.dae as dae
 import pyomo.environ as pyo
-from lyopronto import functions
+from lyopronto import constant, functions
 
 from .utils import cake_length_conversion
 
@@ -663,6 +663,7 @@ def validate_scipy_residuals(
     product: Dict[str, float],
     ht: Dict[str, float],
     verbose: bool = True,
+    include_dynamics: bool = True,
 ) -> Dict[str, float]:
     """Validate scipy trajectory on Pyomo mesh and compute residuals.
 
@@ -673,6 +674,7 @@ def validate_scipy_residuals(
         product: Product parameters
         ht: Heat transfer parameters
         verbose: Print detailed residuals
+        include_dynamics: Include direct SciPy cake-length update residuals
 
     Returns:
         residuals: Dict with max/mean residuals for each constraint family
@@ -734,6 +736,29 @@ def validate_scipy_residuals(
                     print(
                         f"{constr_name:30s}: max={max_viol:.2e}, mean={mean_viol:.2e}"
                     )
+
+    if include_dynamics and scipy_output.shape[0] > 1:
+        time = scipy_output[:, 0]
+        positive_dt = np.diff(time) > 0.0
+        if np.any(positive_dt):
+            Lpr0 = functions.Lpr0_FUN(vial["Vfill"], vial["Ap"], product["cSolid"])
+            Lck = scipy_output[:, 6] / 100.0 * Lpr0
+            dmdt = scipy_output[:-1, 5] * (vial["Ap"] * constant.cm_To_m**2)
+            predicted_dL = (
+                dmdt
+                * cake_length_conversion(vial, product)
+                * np.diff(time)
+            )
+            dynamic_viols = np.abs(np.diff(Lck) - predicted_dL)[positive_dt]
+            residuals["cake_length_dynamics"] = {
+                "max": float(np.max(dynamic_viols)),
+                "mean": float(np.mean(dynamic_viols)),
+            }
+            if verbose:
+                vals = residuals["cake_length_dynamics"]
+                print(
+                    f"{'cake_length_dynamics':30s}: max={vals['max']:.2e}, mean={vals['mean']:.2e}"
+                )
 
     if verbose:
         print("=" * 60 + "\n")
@@ -989,6 +1014,21 @@ def _solver_metadata(results: Any) -> Dict[str, Any]:
     }
 
 
+def _max_residual(residuals: Dict[str, Dict[str, float]]) -> float:
+    """Return the maximum residual across constraint families."""
+    return max((float(vals["max"]) for vals in residuals.values()), default=0.0)
+
+
+def _serialize_residuals(
+    residuals: Dict[str, Dict[str, float]],
+) -> Dict[str, Dict[str, float]]:
+    """Return residuals with plain Python floats."""
+    return {
+        name: {"max": float(vals["max"]), "mean": float(vals["mean"])}
+        for name, vals in residuals.items()
+    }
+
+
 def replay_scipy_controls_with_ipopt(
     scipy_output: np.ndarray,
     vial: Dict[str, float],
@@ -1038,6 +1078,10 @@ def replay_scipy_controls_with_ipopt(
     )
 
     _warmstart_from_scipy_output(model, scipy_output, vial, product, ht)
+    scipy_trajectory_residuals = validate_scipy_residuals(
+        model, scipy_output, vial, product, ht, verbose=tee
+    )
+    max_scipy_trajectory_residual = _max_residual(scipy_trajectory_residuals)
     _fix_controls_from_scipy_output(model, scipy_output)
     model.obj.deactivate()
     model.final_dryness.deactivate()
@@ -1065,10 +1109,10 @@ def replay_scipy_controls_with_ipopt(
     _ensure_successful_solve(results, "replay_scipy_controls_with_ipopt")
 
     output_arr = _extract_output_array(model, vial, product)
-    residuals = validate_scipy_residuals(
-        model, scipy_output, vial, product, ht, verbose=tee
+    replay_residuals = validate_scipy_residuals(
+        model, scipy_output, vial, product, ht, verbose=tee, include_dynamics=False
     )
-    max_residual = max((float(vals["max"]) for vals in residuals.values()), default=0.0)
+    max_replay_residual = _max_residual(replay_residuals)
 
     if return_metadata:
         meta = {
@@ -1077,11 +1121,14 @@ def replay_scipy_controls_with_ipopt(
             "n_points": len(sorted(model.t)),
             "t_final_fixed": True,
             "controls_fixed": ["Pch", "Tsh"],
-            "max_constraint_residual": max_residual,
-            "residuals": {
-                name: {"max": float(vals["max"]), "mean": float(vals["mean"])}
-                for name, vals in residuals.items()
-            },
+            "max_constraint_residual": max_scipy_trajectory_residual,
+            "residuals": _serialize_residuals(scipy_trajectory_residuals),
+            "max_scipy_trajectory_residual": max_scipy_trajectory_residual,
+            "scipy_trajectory_residuals": _serialize_residuals(
+                scipy_trajectory_residuals
+            ),
+            "max_replay_solution_residual": max_replay_residual,
+            "replay_solution_residuals": _serialize_residuals(replay_residuals),
         }
         return {"output": output_arr, "metadata": meta}
     return output_arr

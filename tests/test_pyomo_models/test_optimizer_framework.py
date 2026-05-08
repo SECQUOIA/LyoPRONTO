@@ -374,6 +374,9 @@ class TestScipyValidation:
 
         assert metadata["termination_condition"] == "optimal"
         assert metadata["max_constraint_residual"] < 1e-4
+        assert metadata["max_scipy_trajectory_residual"] < 1e-4
+        assert metadata["max_replay_solution_residual"] < 1e-4
+        assert "cake_length_dynamics" in metadata["scipy_trajectory_residuals"]
         assert abs(output[-1, 0] - scipy_out[-1, 0]) < 1e-9
         assert output[-1, 6] > 0.0
 

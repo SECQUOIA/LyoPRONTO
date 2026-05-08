@@ -71,7 +71,7 @@ python benchmarks/grid_cli.py generate \
   --force
 ```
 
-Replay records include an optional `pyomo.validation` block with the maximum Pyomo constraint residual and trajectory comparison metrics. Replay drying-completion metrics are diagnostic; they do not set the record-level `failed` flag unless the replay solve or residual check fails.
+Replay records include an optional `pyomo.validation` block with direct SciPy-trajectory residuals on the Pyomo mesh, IPOPT replay-solution residuals, and trajectory comparison metrics. The direct SciPy-trajectory residual is the merge gate: if the SciPy trajectory is infeasible for the Pyomo physics constraints, the replay record fails. Replay drying-completion metrics are diagnostic; they do not set the record-level `failed` flag unless the replay solve or residual check fails.
 
 ## Output Schema (v2)
 
