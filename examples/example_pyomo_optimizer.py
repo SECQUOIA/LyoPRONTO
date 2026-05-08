@@ -8,19 +8,66 @@ flexibility for advanced optimization scenarios.
 # Copyright (C) 2026, SECQUOIA
 
 from lyopronto import functions
-from lyopronto.pyomo_models import PYOMO_AVAILABLE
 
-if not PYOMO_AVAILABLE:
+
+def _pyomo_available():
+    """Return whether optional Pyomo dependencies are importable."""
+    try:
+        from lyopronto.pyomo_models import PYOMO_AVAILABLE
+    except Exception:
+        return False
+
+    return bool(PYOMO_AVAILABLE)
+
+
+def _ipopt_available():
+    """Return whether IPOPT is available through IDAES or Pyomo."""
+    if not _pyomo_available():
+        return False
+
+    try:
+        from idaes.core.solvers import get_solver
+
+        return bool(get_solver("ipopt").available())
+    except Exception:
+        try:
+            import pyomo.environ as pyo
+
+            return bool(pyo.SolverFactory("ipopt").available(exception_flag=False))
+        except Exception:
+            return False
+
+
+def _load_pyomo_modules():
+    """Import Pyomo modules after optional dependency checks pass."""
+    from lyopronto.pyomo_models import single_step, utils
+
+    return single_step, utils
+
+
+def _print_pyomo_install_help():
     print("ERROR: Pyomo is not installed.")
     print("Install with: pip install lyopronto[optimization]")
     print("For IPOPT solver: conda install -c conda-forge ipopt")
-    raise SystemExit(1)
 
-from lyopronto.pyomo_models import single_step
+
+def _print_ipopt_install_help():
+    print("ERROR: IPOPT solver is not available.")
+    print("Install with: conda install -c conda-forge ipopt")
+    print("Or install IDAES solver binaries with: idaes get-extensions")
 
 
 def main():
     """Run Pyomo single-step optimization example."""
+    if not _pyomo_available():
+        _print_pyomo_install_help()
+        return 1
+
+    if not _ipopt_available():
+        _print_ipopt_install_help()
+        return 1
+
+    single_step, utils = _load_pyomo_modules()
 
     print("=" * 70)
     print("LyoPRONTO - Pyomo Single-Step Optimization Example")
@@ -118,9 +165,6 @@ def main():
                 f"  Driving force:               ΔP = {solution['Psub'] - solution['Pch']:.4f} Torr"
             )
 
-            # Validate solution
-            from lyopronto.pyomo_models import utils
-
             is_valid, violations = utils.check_solution_validity(solution)
 
             if is_valid:
@@ -130,11 +174,18 @@ def main():
                 for v in violations:
                     print(f"    - {v}")
 
-            results.append((Lck, solution))
+            results.append((stage_name, Lck, solution))
 
         except Exception as e:
             print(f"  ✗ Optimization failed: {e}")
             continue
+
+    if not results:
+        print("\nERROR: No optimization stages solved successfully.")
+        print(
+            "Check IPOPT installation and solver diagnostics, then rerun the example."
+        )
+        return 1
 
     # ==================== Summary ====================
     print("\n" + "=" * 70)
@@ -145,13 +196,13 @@ def main():
     )
     print("-" * 70)
 
-    for i, (Lck, sol) in enumerate(results):
-        stage_name = drying_stages[i][1]
+    for stage_name, Lck, sol in results:
         print(
             f"{stage_name:<20} {Lck:<12.4f} {sol['Pch']:<12.4f} "
             f"{sol['Tsh']:<12.2f} {sol['dmdt']:<12.4f}"
         )
 
+    print(f"\nSolved optimization stages: {len(results)} of {len(drying_stages)}")
     print("\n" + "=" * 70)
     print("Observations:")
     print("  - As drying progresses (Lck increases), product resistance increases")
@@ -165,7 +216,8 @@ def main():
     print("  - Experiment with different bounds (Pch_bounds, Tsh_bounds)")
     print("  - Compare with scipy results from opt_Pch_Tsh.dry()")
     print("  - Set tee=True to see detailed solver output")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
