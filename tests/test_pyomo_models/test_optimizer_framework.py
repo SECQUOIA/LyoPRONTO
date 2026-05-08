@@ -13,6 +13,8 @@ These tests validate the Pyomo implementation of opt_Tsh, ensuring:
 Following the coexistence philosophy: Pyomo optimizers complement (not replace) scipy.
 """
 
+from types import SimpleNamespace
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -43,8 +45,10 @@ pytestmark = [
 ]
 
 from lyopronto import opt_Tsh
+from lyopronto.pyomo_models import optimizers as optimizers_module
 from lyopronto.pyomo_models.optimizers import (
     _ensure_successful_solve,
+    _solve_optimizer_model,
     _warmstart_from_scipy_output,
     create_optimizer_model,
     optimize_Tsh_pyomo,
@@ -209,6 +213,51 @@ class TestSolveValidation:
 
         with pytest.raises(ValueError, match="failed to converge"):
             _ensure_successful_solve(results, "test_optimizer")
+
+    @pytest.mark.parametrize(
+        ("context", "control_mode"),
+        [
+            ("optimize_Tsh_pyomo", "Tsh"),
+            ("optimize_Pch_pyomo", "Pch"),
+            ("optimize_Pch_Tsh_pyomo", "both"),
+        ],
+    )
+    def test_staged_failure_does_not_run_direct_fallback(
+        self, monkeypatch, context, control_mode
+    ):
+        failed = SolverResults()
+        failed.solver.status = SolverStatus.warning
+        failed.solver.termination_condition = pyo.TerminationCondition.infeasible
+
+        def fail_staged_solve(model, solver, control_mode, tee=False):
+            model._last_solver_result = failed
+            return False, "Stage 2 (time optimization) failed"
+
+        class SolverThatWouldHideFailure:
+            solve_calls = 0
+
+            def solve(self, model, tee=False):
+                self.solve_calls += 1
+                result = SolverResults()
+                result.solver.status = SolverStatus.ok
+                result.solver.termination_condition = pyo.TerminationCondition.optimal
+                return result
+
+        monkeypatch.setattr(optimizers_module, "staged_solve", fail_staged_solve)
+        solver = SolverThatWouldHideFailure()
+
+        with pytest.raises(ValueError, match="staged solve failed"):
+            _solve_optimizer_model(
+                SimpleNamespace(),
+                solver,
+                context=context,
+                control_mode=control_mode,
+                warmstart_scipy=True,
+                simulation_mode=False,
+                tee=False,
+            )
+
+        assert solver.solve_calls == 0
 
 
 class TestScipyValidation:
