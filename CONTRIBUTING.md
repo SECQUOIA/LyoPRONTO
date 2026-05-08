@@ -55,11 +55,8 @@ cd LyoPRONTO
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Install in development mode
-pip install -e .
-
-# Install development dependencies
-pip install -r requirements-dev.txt
+# Install in development mode with test and quality tools
+pip install -e ".[dev]"
 
 # Run tests to verify setup
 pytest tests/ -v

@@ -3,6 +3,7 @@
 
 # Testing framework
 pytest>=7.4.0
+pytest-mock>=3
 pytest-cov>=4.1.0
 pytest-xdist>=3.3.0
 
@@ -10,9 +11,14 @@ pytest-xdist>=3.3.0
 hypothesis>=6.82.0
 
 # Code formatting and linting
-black>=23.7.0
-flake8>=6.1.0
+ruff>=0.12.0
 mypy>=1.4.0
+pre-commit>=3.5.0
+
+# Data handling and notebook smoke tests
+pandas>=2.0
+papermill>=2.6.0
+ipykernel>=6.15.0
 
 # Documentation (optional, uncomment if needed)
 # mkdocs>=1.5.0

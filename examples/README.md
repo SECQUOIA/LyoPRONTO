@@ -75,6 +75,36 @@ python examples/example_optimizer.py
 
 ---
 
+### `example_pyomo_optimizer.py` **Pyomo Optimization Example**
+
+**Purpose**: Demonstrate the optional Pyomo single-step optimizer at several drying stages
+
+**Features**:
+- Solves chamber pressure and shelf temperature for fixed dried-cake lengths
+- Uses the same standard vial, product, heat-transfer, and equipment-capability parameters as the optimizer examples
+- Validates each Pyomo solution for basic physical consistency
+- Shows how to call `lyopronto.pyomo_models.single_step.optimize_single_step`
+
+**Prerequisites**:
+```bash
+pip install -e ".[optimization]"
+idaes get-extensions  # or install an IPOPT executable by another supported method
+```
+
+**Usage**:
+```bash
+python examples/example_pyomo_optimizer.py
+```
+
+**Output**:
+- Console: Optimized pressure, shelf temperature, sublimation state, and validity checks for each drying stage
+
+**Expected Results**:
+- Successful IPOPT solves for the start, half-dried, and nearly complete stages
+- Physically valid solutions with positive sublimation driving force
+
+---
+
 ### `example_freezing.py` ❄️ **Freezing Simulation**
 
 **Purpose**: Simulate the freezing phase of lyophilization
@@ -307,17 +337,6 @@ def main():
 if __name__ == "__main__":
     main()
 ```
-
----
-
-## Planned Examples
-
-Future examples to add:
-
-### `example_pyomo_optimization.py` (Future)
-- Use Pyomo-based simultaneous optimization
-- Compare with scipy approach
-- Demonstrate coexistence of scipy and Pyomo methods
 
 ---
 

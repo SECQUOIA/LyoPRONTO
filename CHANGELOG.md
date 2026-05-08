@@ -15,9 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 4-stage convergence framework for robust solution finding
   - Supports scipy warmstart initialization for improved convergence
 - **Three optimization modes**:
-  - `optimize_Tsh`: Optimize shelf temperature trajectory at fixed chamber pressure
-  - `optimize_Pch`: Optimize chamber pressure trajectory at fixed shelf temperature
-  - `optimize_Pch_Tsh`: Simultaneous optimization of both control variables
+  - `optimize_Tsh_pyomo`: Optimize shelf temperature trajectory at fixed chamber pressure
+  - `optimize_Pch_pyomo`: Optimize chamber pressure trajectory at fixed shelf temperature
+  - `optimize_Pch_Tsh_pyomo`: Simultaneous optimization of both control variables
 - **New module structure** (`lyopronto/pyomo_models/`):
   - `optimizers.py`: Main optimizer interface functions
   - `model.py`: Multi-period DAE model with orthogonal collocation
@@ -90,21 +90,23 @@ The scipy-based optimizers (`opt_Pch.py`, `opt_Tsh.py`, `opt_Pch_Tsh.py`) remain
 1. **Install optional dependencies**:
    ```bash
    pip install lyopronto[optimization]
-   # Or manually:
-   pip install pyomo>=6.7.0 idaes-pse>=2.9.0
    idaes get-extensions  # Downloads IPOPT solver
    ```
 
 2. **Use Pyomo optimizers**:
    ```python
-   from lyopronto.pyomo_models import optimize_Tsh, optimize_Pch, optimize_Pch_Tsh
+   from lyopronto.pyomo_models import optimize_Tsh_pyomo
    
-   result = optimize_Tsh(
-       vial=vial_params,
-       product=product_params,
-       Pch_setpoint=0.1,  # Torr
-       objective="min_time",
-       warmstart=True,  # Use scipy solution as initial guess
+   result = optimize_Tsh_pyomo(
+       vial=vial,
+       product=product,
+       ht=ht,
+       Pchamber={"setpt": [0.15], "dt_setpt": [1800.0], "ramp_rate": 0.5},
+       Tshelf={"min": -45.0, "max": 120.0, "init": -35.0},
+       dt=0.01,
+       eq_cap={"a": -0.182, "b": 11.7},
+       nVial=398,
+       warmstart_scipy=True,
    )
    ```
 
@@ -112,11 +114,13 @@ The scipy-based optimizers (`opt_Pch.py`, `opt_Tsh.py`, `opt_Pch_Tsh.py`) remain
    ```python
    # Scipy (existing)
    from lyopronto import opt_Tsh
-   scipy_result = opt_Tsh.optimize(...)
+   scipy_result = opt_Tsh.dry(vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial)
    
    # Pyomo (new)
-   from lyopronto.pyomo_models import optimize_Tsh
-   pyomo_result = optimize_Tsh(..., warmstart=True)
+   from lyopronto.pyomo_models import optimize_Tsh_pyomo
+   pyomo_result = optimize_Tsh_pyomo(
+       vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial, warmstart_scipy=True
+   )
    ```
 
 ### Coexistence Philosophy
