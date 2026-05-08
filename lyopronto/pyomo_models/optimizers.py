@@ -795,31 +795,6 @@ def add_slack_variables(
     )
 
 
-def add_trust_region(
-    model: pyo.ConcreteModel,
-    reference_values: Dict,
-    trust_radii: Dict[str, float],
-) -> None:
-    """Add trust region around reference trajectory.
-
-    Args:
-        model: Pyomo model
-        reference_values: Dict with {var_name: {t: value}} from scipy
-        trust_radii: Dict with {var_name: radius} in absolute units
-    """
-    model.trust_region_cons = pyo.ConstraintList()
-
-    for var_name, radius in trust_radii.items():
-        if hasattr(model, var_name):
-            var = getattr(model, var_name)
-            ref_vals = reference_values.get(var_name, {})
-            for t in model.t:
-                if t in ref_vals:
-                    ref_val = ref_vals[t]
-                    model.trust_region_cons.add(var[t] >= ref_val - radius)
-                    model.trust_region_cons.add(var[t] <= ref_val + radius)
-
-
 def add_control_tracking_penalty(
     model: pyo.ConcreteModel,
     control_refs: Dict[str, Dict],
@@ -858,9 +833,7 @@ def _make_profile_interpolator(profile: Dict) -> functions.RampInterpolator:
     """Build a legacy-compatible ramp interpolator for a fixed control profile."""
     profile = profile.copy()
     setpt = np.atleast_1d(profile.get("setpt", []))
-    has_change = len(setpt) > 1 or (
-        "init" in profile and len(setpt) == 1 and float(profile["init"]) != float(setpt[0])
-    )
+    has_change = _profile_has_change(profile)
     if "ramp_rate" not in profile:
         if has_change:
             raise ValueError("Fixed multi-setpoint profiles require 'ramp_rate'")
@@ -875,6 +848,14 @@ def _make_profile_interpolator(profile: Dict) -> functions.RampInterpolator:
     return functions.RampInterpolator(profile)
 
 
+def _profile_has_change(profile: Dict) -> bool:
+    """Return whether a fixed-control profile changes over time."""
+    setpt = np.atleast_1d(profile.get("setpt", []))
+    return len(setpt) > 1 or (
+        "init" in profile and len(setpt) == 1 and float(profile["init"]) != float(setpt[0])
+    )
+
+
 def _fix_control_profile(
     model: pyo.ConcreteModel,
     control_name: str,
@@ -882,6 +863,12 @@ def _fix_control_profile(
     t_final: Optional[float] = None,
 ) -> None:
     """Fix a control variable to a legacy setpoint/ramp profile on the model mesh."""
+    if _profile_has_change(profile) and not model.t_final.fixed:
+        raise ValueError(
+            f"Changing fixed {control_name} profiles are not supported while "
+            "t_final is free. Use a single fixed setpoint, run in simulation_mode "
+            "with a fixed warmstart horizon, or optimize this control instead."
+        )
     interpolator = _make_profile_interpolator(profile)
     horizon = float(t_final if t_final is not None else pyo.value(model.t_final))
     control = getattr(model, control_name)
@@ -961,8 +948,8 @@ def staged_solve(
         - Controls remain fixed at scipy values
         - Enforces 99% drying constraint
 
-    **Stage 3 - Control Optimization**: Unfix controls (piecewise-constant)
-        - Controls released but simplified
+    **Stage 3 - Control Optimization**: Unfix optimized controls
+        - Controls released on the existing discretization
         - Maintains time optimization
 
     **Stage 4 - Full Optimization**: All DOFs released
@@ -1117,8 +1104,8 @@ def staged_solve(
         _log(f"  ✗ Time optimization failed: {result.solver.termination_condition}")
         return False, "Stage 2 (time optimization) failed"
 
-    # ========== Stage 3: Release controls with piecewise-constant ==========
-    _log("\n[Stage 3/4] Releasing controls (piecewise-constant)...")
+    # ========== Stage 3: Release controls ==========
+    _log("\n[Stage 3/4] Releasing optimized controls...")
 
     # Unfix controls
     for ctrl_name in controls_to_fix:
@@ -1244,6 +1231,9 @@ def optimize_Tsh_pyomo(
             - 'setpt' (list): Pressure setpoint(s) [Torr]
             - 'dt_setpt' (list): Time at each setpoint [min]
             - 'ramp_rate' (float): Ramp rate [Torr/min] (optional)
+            - While optimizing t_final, fixed pressure must be a single constant
+              setpoint; changing time schedules require simulation_mode or a
+              future formulation that links the profile to optimized real time.
         Tshelf (dict): Shelf temperature bounds for optimization
             - 'min' (float): Minimum temperature [°C]
             - 'max' (float): Maximum temperature [°C]
@@ -1344,6 +1334,8 @@ def optimize_Tsh_pyomo(
             vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial
         )
         _warmstart_from_scipy_output(model, scipy_output, vial, product, ht)
+        if simulation_mode:
+            model.t_final.fix()
         _fix_control_profile(model, "Pch", Pchamber, t_final=scipy_output[-1, 0])
 
         # Validate scipy trajectory on Pyomo mesh
@@ -1353,7 +1345,6 @@ def optimize_Tsh_pyomo(
 
         # In simulation mode, fix all variables to scipy values
         if simulation_mode:
-            model.t_final.fix()
             for t in model.t:
                 if hasattr(model.Tsub[t], "fix"):
                     model.Tsub[t].fix()
@@ -1713,6 +1704,9 @@ def optimize_Pch_pyomo(
             - 'init' (float): Initial temperature [°C]
             - 'setpt' (list): Temperature setpoints [°C]
             - 'dt_setpt' (list): Time at each setpoint [min]
+            - While optimizing t_final, fixed shelf temperature must be a single
+              constant setpoint; changing time schedules require simulation_mode
+              or optimizing shelf temperature instead.
         dt (float): Time step for scipy warmstart [hr]
         eq_cap (dict): Equipment capability (a, b)
         nVial (int): Number of vials
@@ -1736,7 +1730,7 @@ def optimize_Pch_pyomo(
         >>> result = optimize_Pch_pyomo(
         ...     vial, product, ht,
         ...     Pchamber={'min': 0.06, 'max': 0.20},
-        ...     Tshelf={'init': -35, 'setpt': [-20, 20], 'dt_setpt': [180, 1800]},
+        ...     Tshelf={'init': 20, 'setpt': [20], 'dt_setpt': [1800]},
         ...     dt=0.01, eq_cap=eq_cap, nVial=398
         ... )
 
@@ -1772,6 +1766,8 @@ def optimize_Pch_pyomo(
             vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial
         )
         _warmstart_from_scipy_output(model, scipy_output, vial, product, ht)
+        if simulation_mode:
+            model.t_final.fix()
         _fix_control_profile(model, "Tsh", Tshelf, t_final=scipy_output[-1, 0])
 
         # Validate
@@ -1781,7 +1777,6 @@ def optimize_Pch_pyomo(
             )
 
         if simulation_mode:
-            model.t_final.fix()
             for t in model.t:
                 model.Tsub[t].fix()
                 model.Tbot[t].fix()
@@ -1889,8 +1884,8 @@ def optimize_Pch_Tsh_pyomo(
     **Joint Control Strategy**:
         - Stage 1: Feasibility (both controls fixed)
         - Stage 2: Time optimization (controls fixed)
-        - Stage 3: Release Tsh (optimize shelf temp, Pch fixed)
-        - Stage 4: Release Pch (optimize both)
+        - Stage 3: Release optimized controls together
+        - Stage 4: Full re-solve from the released-control solution
         - Optional: Trust region around scipy for initial stages
 
     **Physics**: Same corrected 1 ODE + 2 algebraic as single-control optimizers
