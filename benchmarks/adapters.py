@@ -216,6 +216,14 @@ def ipopt_replay_adapter(
             "residual_tol": residual_tol,
             "max_constraint_residual": meta.get("max_constraint_residual"),
             "residuals": meta.get("residuals"),
+            "max_scipy_trajectory_residual": meta.get(
+                "max_scipy_trajectory_residual"
+            ),
+            "scipy_trajectory_residuals": meta.get("scipy_trajectory_residuals"),
+            "max_replay_solution_residual": meta.get(
+                "max_replay_solution_residual"
+            ),
+            "replay_solution_residuals": meta.get("replay_solution_residuals"),
             "trajectory_comparison": comparison,
         },
     }
