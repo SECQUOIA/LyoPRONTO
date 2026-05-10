@@ -21,7 +21,8 @@ IDX_PCH = 4  # mTorr
 IDX_FLUX = 5
 IDX_PERCENT = 6  # percent_dried (0-100%)
 TEMP_TOL = 1e-6
-RAMP_TOL = 1e-9
+# Match solver feasibility tolerance to avoid false ramp failures from IPOPT noise.
+RAMP_TOL = 1e-6
 DRYNESS_TARGET_PERCENT = 98.9
 DRYNESS_TOL_PERCENT = 0.1
 

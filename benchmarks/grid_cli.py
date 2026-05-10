@@ -64,9 +64,19 @@ def metrics_failed(metrics: dict[str, Any]) -> bool:
     return any(metrics.get(flag) is False for flag in failure_flags)
 
 
-def metric_kwargs(args: argparse.Namespace, product: dict[str, Any]) -> dict[str, Any]:
+def scipy_metric_kwargs(
+    args: argparse.Namespace, product: dict[str, Any]
+) -> dict[str, Any]:
     return {
         "product_critical_temp": product_critical_temp(product),
+    }
+
+
+def pyomo_metric_kwargs(
+    args: argparse.Namespace, product: dict[str, Any]
+) -> dict[str, Any]:
+    return {
+        **scipy_metric_kwargs(args, product),
         "tsh_ramp_rate": args.tsh_ramp,
         "pch_ramp_rate": args.pch_ramp,
     }
@@ -181,7 +191,7 @@ def generate(args: argparse.Namespace) -> int:
                     sc_metrics = (
                         compute_residuals(
                             scipy_res["trajectory"],
-                            **metric_kwargs(args, product_c),
+                            **scipy_metric_kwargs(args, product_c),
                         )
                         if scipy_res["success"]
                         else {}
@@ -276,7 +286,7 @@ def generate(args: argparse.Namespace) -> int:
                 sc_metrics = (
                     compute_residuals(
                         scipy_res["trajectory"],
-                        **metric_kwargs(args, product_c),
+                        **scipy_metric_kwargs(args, product_c),
                     )
                     if scipy_res["success"]
                     else {}
@@ -284,7 +294,7 @@ def generate(args: argparse.Namespace) -> int:
                 py_metrics = (
                     compute_residuals(
                         py_res["trajectory"],
-                        **metric_kwargs(args, product_c),
+                        **pyomo_metric_kwargs(args, product_c),
                     )
                     if py_res["success"]
                     else {}
