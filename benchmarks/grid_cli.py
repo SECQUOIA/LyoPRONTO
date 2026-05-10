@@ -12,6 +12,11 @@ Features
 - Robustness-first: warmstart disabled by default; enable with --warmstart.
 - Reuse-first: if output JSONL exists and --force not supplied, skip generation.
 - Optional trajectory embedding; schema v2 serialization handles numpy arrays.
+- Post-solve validation marks records failed when solver success is followed by
+  physical constraint violations.
+- Optional IPOPT time guards: --solver-timeout maps to CPU seconds
+  (IPOPT max_cpu_time); --solver-wall-time maps to IPOPT max_wall_time where
+  supported by the installed IPOPT version.
 
 Examples
 --------
@@ -50,9 +55,21 @@ def product_critical_temp(product: dict[str, Any]) -> float | None:
 
 
 def metrics_failed(metrics: dict[str, Any]) -> bool:
-    return (metrics.get("dryness_target_met") is False) or (
-        metrics.get("product_temp_ok") is False
+    failure_flags = (
+        "dryness_target_met",
+        "product_temp_ok",
+        "tsh_ramp_ok",
+        "pch_ramp_ok",
     )
+    return any(metrics.get(flag) is False for flag in failure_flags)
+
+
+def metric_kwargs(args: argparse.Namespace, product: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "product_critical_temp": product_critical_temp(product),
+        "tsh_ramp_rate": args.tsh_ramp,
+        "pch_ramp_rate": args.pch_ramp,
+    }
 
 
 def parse_vary(values: list[str]) -> list[dict[str, Any]]:
@@ -164,7 +181,7 @@ def generate(args: argparse.Namespace) -> int:
                     sc_metrics = (
                         compute_residuals(
                             scipy_res["trajectory"],
-                            product_critical_temp=product_critical_temp(product_c),
+                            **metric_kwargs(args, product_c),
                         )
                         if scipy_res["success"]
                         else {}
@@ -232,6 +249,8 @@ def generate(args: argparse.Namespace) -> int:
                         n_elements=args.n_elements,
                         n_collocation=args.n_collocation,
                         effective_nfe=(not args.raw_colloc),
+                        solver_cpu_time=args.solver_timeout,
+                        solver_wall_time=args.solver_wall_time,
                     )
                 else:
                     py_res = pyomo_adapter(
@@ -251,11 +270,13 @@ def generate(args: argparse.Namespace) -> int:
                         tsh_ramp_rate=args.tsh_ramp,
                         pch_ramp_rate=args.pch_ramp,
                         use_secant_ramp_constraints=(not args.no_secant_constraints),
+                        solver_cpu_time=args.solver_timeout,
+                        solver_wall_time=args.solver_wall_time,
                     )
                 sc_metrics = (
                     compute_residuals(
                         scipy_res["trajectory"],
-                        product_critical_temp=product_critical_temp(product_c),
+                        **metric_kwargs(args, product_c),
                     )
                     if scipy_res["success"]
                     else {}
@@ -263,7 +284,7 @@ def generate(args: argparse.Namespace) -> int:
                 py_metrics = (
                     compute_residuals(
                         py_res["trajectory"],
-                        product_critical_temp=product_critical_temp(product_c),
+                        **metric_kwargs(args, product_c),
                     )
                     if py_res["success"]
                     else {}
@@ -409,6 +430,18 @@ def build_parser() -> argparse.ArgumentParser:
         help="Disable explicit secant slope constraints for collocation ramp rates. "
         "When disabled, only polynomial derivative constraints are used, which may "
         "allow numerical derivatives to exceed ramp limit by ~15%%. Default: enabled.",
+    )
+    g.add_argument(
+        "--solver-timeout",
+        type=float,
+        default=None,
+        help="Optional IPOPT CPU-time limit in seconds (maps to max_cpu_time).",
+    )
+    g.add_argument(
+        "--solver-wall-time",
+        type=float,
+        default=None,
+        help="Optional IPOPT wall-clock time limit in seconds (maps to max_wall_time where supported).",
     )
     g.add_argument("--out", required=True, help="Output JSONL path")
     g.add_argument(
