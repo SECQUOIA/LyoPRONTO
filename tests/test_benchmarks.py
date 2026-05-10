@@ -8,7 +8,7 @@ from types import SimpleNamespace
 
 import numpy as np
 import pytest
-from benchmarks import adapters
+from benchmarks import adapters, run_single_case
 from benchmarks.grid_cli import (
     build_parser,
     metrics_failed,
@@ -42,6 +42,188 @@ def test_grid_cli_script_entrypoint_help(repo_root, tmp_path):
 
     assert result.returncode == 0, result.stderr
     assert "Benchmark generation CLI" in result.stdout
+
+
+def test_single_case_script_entrypoint_help(repo_root, tmp_path):
+    env = os.environ.copy()
+    env["MPLCONFIGDIR"] = str(tmp_path / "mpl")
+
+    result = subprocess.run(
+        [sys.executable, "benchmarks/run_single_case.py", "--help"],
+        cwd=repo_root,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Run one SciPy/Pyomo benchmark case" in result.stdout
+    assert "--set" in result.stdout
+    assert "--tee" in result.stdout
+
+
+def test_single_case_parser_accepts_debug_options():
+    parser = run_single_case.build_parser()
+
+    args = parser.parse_args(
+        [
+            "--task",
+            "both",
+            "--scenario",
+            "baseline",
+            "--set",
+            "product.A1=20",
+            "--set",
+            "ht.KC=4e-4",
+            "--method",
+            "colloc",
+            "--n-elements",
+            "8",
+            "--n-collocation",
+            "2",
+            "--raw-colloc",
+            "--warmstart",
+            "--tsh-ramp",
+            "40",
+            "--pch-ramp",
+            "0.05",
+            "--no-secant-constraints",
+            "--solver-timeout",
+            "12.5",
+            "--solver-wall-time",
+            "30",
+            "--tee",
+        ]
+    )
+
+    assert args.task == "both"
+    assert args.overrides == ["product.A1=20", "ht.KC=4e-4"]
+    assert args.method == "colloc"
+    assert args.raw_colloc is True
+    assert args.warmstart is True
+    assert args.tsh_ramp == 40.0
+    assert args.pch_ramp == 0.05
+    assert args.no_secant_constraints is True
+    assert args.solver_timeout == 12.5
+    assert args.solver_wall_time == 30.0
+    assert args.tee is True
+
+
+def test_single_case_runner_uses_current_adapters(monkeypatch, capsys):
+    fake_traj = np.array(
+        [
+            [0.0, -30.0, -25.0, -20.0, 100.0, 0.2, 0.0],
+            [1.0, -29.0, -25.0, -15.0, 150.0, 0.1, 99.0],
+        ]
+    )
+    seen = {}
+
+    def fake_scipy_adapter(task, vial, product, ht, eq_cap, nVial, scenario, dt):
+        seen["scipy"] = {
+            "task": task,
+            "product_A1": product["A1"],
+            "ht_KC": ht["KC"],
+            "nVial": nVial,
+            "dt": dt,
+        }
+        return {
+            "trajectory": fake_traj,
+            "success": True,
+            "message": "scipy ok",
+            "wall_time_s": 0.01,
+            "objective_time_hr": 1.0,
+            "solver": {"status": "n/a", "termination_condition": "n/a"},
+        }
+
+    def fake_pyomo_adapter(
+        task,
+        vial,
+        product,
+        ht,
+        eq_cap,
+        nVial,
+        scenario,
+        **kwargs,
+    ):
+        seen["pyomo"] = {
+            "task": task,
+            "product_A1": product["A1"],
+            "ht_KC": ht["KC"],
+            "nVial": nVial,
+            **kwargs,
+        }
+        return {
+            "trajectory": fake_traj,
+            "success": True,
+            "message": "pyomo ok",
+            "wall_time_s": 0.02,
+            "objective_time_hr": 1.0,
+            "solver": {"status": "ok", "termination_condition": "optimal"},
+            "warmstart_used": kwargs["warmstart"],
+            "discretization": {"method": kwargs["method"]},
+        }
+
+    monkeypatch.setattr(run_single_case, "scipy_adapter", fake_scipy_adapter)
+    monkeypatch.setattr(run_single_case, "pyomo_adapter", fake_pyomo_adapter)
+
+    exit_code = run_single_case.main(
+        [
+            "--task",
+            "both",
+            "--scenario",
+            "baseline",
+            "--set",
+            "product.A1=20",
+            "--set",
+            "ht.KC=4e-4",
+            "--method",
+            "colloc",
+            "--n-elements",
+            "8",
+            "--n-collocation",
+            "2",
+            "--raw-colloc",
+            "--warmstart",
+            "--tsh-ramp",
+            "40",
+            "--pch-ramp",
+            "0.05",
+            "--no-secant-constraints",
+            "--solver-timeout",
+            "12.5",
+            "--solver-wall-time",
+            "30",
+            "--tee",
+        ]
+    )
+
+    output = capsys.readouterr().out
+
+    assert exit_code == 0
+    assert seen["scipy"] == {
+        "task": "both",
+        "product_A1": 20,
+        "ht_KC": 4e-4,
+        "nVial": 400,
+        "dt": 0.01,
+    }
+    assert seen["pyomo"]["method"] == "colloc"
+    assert seen["pyomo"]["n_elements"] == 8
+    assert seen["pyomo"]["n_collocation"] == 2
+    assert seen["pyomo"]["effective_nfe"] is False
+    assert seen["pyomo"]["warmstart"] is True
+    assert seen["pyomo"]["tsh_ramp_rate"] == 40.0
+    assert seen["pyomo"]["pch_ramp_rate"] == 0.05
+    assert seen["pyomo"]["use_secant_ramp_constraints"] is False
+    assert seen["pyomo"]["solver_cpu_time"] == 12.5
+    assert seen["pyomo"]["solver_wall_time"] == 30.0
+    assert seen["pyomo"]["tee"] is True
+    assert "SciPy summary" in output
+    assert "Pyomo summary" in output
+    assert "objective_time_hr: 1" in output
+    assert "termination_condition: optimal" in output
+    assert "trajectory_size: 2 points x 7 columns" in output
 
 
 def test_benchmark_results_tracks_only_policy_files(repo_root):
@@ -350,10 +532,12 @@ def test_pyomo_adapter_propagates_solver_time_guards(monkeypatch):
         baseline,
         solver_cpu_time=12.5,
         solver_wall_time=30.0,
+        tee=True,
     )
 
     assert seen["solver_cpu_time"] == 12.5
     assert seen["solver_wall_time"] == 30.0
+    assert seen["tee"] is True
     assert result["solver"]["max_cpu_time_s"] == 12.5
     assert result["solver"]["max_wall_time_s"] == 30.0
     assert result["solver"]["timeout_options"] == {

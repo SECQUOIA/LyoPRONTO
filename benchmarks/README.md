@@ -44,9 +44,29 @@ Notebook cells produce:
 - Scatter plots and histograms
 - Summary interpretation
 
+### Debug One Case
+Use `run_single_case.py` to reproduce one SciPy baseline and one Pyomo run
+without writing JSONL or figure artifacts:
+
+```bash
+python benchmarks/run_single_case.py \
+  --task both --scenario baseline \
+  --set product.A1=20 \
+  --set ht.KC=4e-4 \
+  --method fd \
+  --n-elements 24 \
+  --tsh-ramp 40 \
+  --pch-ramp 0.05 \
+  --tee
+```
+
+The runner prints compact SciPy and Pyomo summaries with objective time, solver
+status, termination condition, trajectory size, and validation metrics.
+
 ## Core Modules
 
 - **`grid_cli.py`** — CLI for N-dimensional grid generation (replaces legacy `run_grid*.py`)
+- **`run_single_case.py`** — CLI for one-case SciPy/Pyomo debug runs without generated artifacts
 - **`adapters.py`** — Normalized scipy/Pyomo runners with discretization metadata
 - **`scenarios.py`** — Scenario definitions (vial, product, ht, eq_cap, nVial)
 - **`schema.py`** — Versioned record serialization (v2: trajectories + hashing)
