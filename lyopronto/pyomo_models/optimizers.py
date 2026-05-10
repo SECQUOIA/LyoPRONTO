@@ -1122,6 +1122,46 @@ def _solver_metadata(results: Any) -> Dict[str, Any]:
     }
 
 
+def _validate_solver_time_limit(value: Optional[float], option: str) -> Optional[float]:
+    if value is None:
+        return None
+    seconds = float(value)
+    if seconds <= 0:
+        raise ValueError(f"{option} must be positive seconds, got {value!r}")
+    return seconds
+
+
+def _apply_ipopt_time_limits(
+    opt: Any,
+    solver: str,
+    *,
+    solver_cpu_time: Optional[float] = None,
+    solver_wall_time: Optional[float] = None,
+) -> Dict[str, float]:
+    """Apply optional IPOPT CPU/wall time guards and return applied options."""
+    applied: Dict[str, float] = {}
+    if solver != "ipopt" or not hasattr(opt, "options"):
+        return applied
+
+    cpu_time = _validate_solver_time_limit(solver_cpu_time, "solver_cpu_time")
+    wall_time = _validate_solver_time_limit(solver_wall_time, "solver_wall_time")
+    if cpu_time is not None:
+        opt.options["max_cpu_time"] = cpu_time
+        applied["max_cpu_time"] = cpu_time
+    if wall_time is not None:
+        opt.options["max_wall_time"] = wall_time
+        applied["max_wall_time"] = wall_time
+    return applied
+
+
+def _solver_limit_metadata(options: Dict[str, float]) -> Dict[str, Any]:
+    return {
+        "solver_max_cpu_time_s": options.get("max_cpu_time"),
+        "solver_max_wall_time_s": options.get("max_wall_time"),
+        "solver_timeout_options": dict(options),
+    }
+
+
 def _max_residual(residuals: Dict[str, Dict[str, float]]) -> float:
     """Return the maximum residual across constraint families."""
     return max((float(vals["max"]) for vals in residuals.values()), default=0.0)
@@ -1153,6 +1193,8 @@ def replay_scipy_controls_with_ipopt(
     solver: str = "ipopt",
     tee: bool = False,
     return_metadata: bool = False,
+    solver_cpu_time: Optional[float] = None,
+    solver_wall_time: Optional[float] = None,
 ) -> Any:
     """Replay SciPy controls in the Pyomo model and solve feasibility with IPOPT.
 
@@ -1227,7 +1269,34 @@ def replay_scipy_controls_with_ipopt(
         opt.options["warm_start_bound_push"] = 1e-8
         opt.options["warm_start_mult_bound_push"] = 1e-8
 
+    solver_time_options = _apply_ipopt_time_limits(
+        opt,
+        solver,
+        solver_cpu_time=solver_cpu_time,
+        solver_wall_time=solver_wall_time,
+    )
     results = opt.solve(model, tee=tee)
+    if not _is_successful_termination(results):
+        if return_metadata:
+            meta = {
+                **_solver_metadata(results),
+                **_solver_limit_metadata(solver_time_options),
+                "objective_time_hr": None,
+                "n_points": len(sorted(model.t)),
+                "t_final_fixed": True,
+                "controls_fixed": ["Pch", "Tsh"],
+                "max_constraint_residual": max_scipy_trajectory_residual,
+                "residuals": _serialize_residuals(scipy_trajectory_residuals),
+                "max_scipy_trajectory_residual": max_scipy_trajectory_residual,
+                "scipy_trajectory_residuals": _serialize_residuals(
+                    scipy_trajectory_residuals
+                ),
+                "max_scipy_mesh_residual": max_scipy_mesh_residual,
+                "scipy_mesh_residuals": _serialize_residuals(scipy_mesh_residuals),
+                "max_replay_solution_residual": None,
+                "replay_solution_residuals": {},
+            }
+            return {"output": np.empty((0, 7)), "metadata": meta}
     _ensure_successful_solve(results, "replay_scipy_controls_with_ipopt")
 
     output_arr = _extract_output_array(model, vial, product)
@@ -1239,6 +1308,7 @@ def replay_scipy_controls_with_ipopt(
     if return_metadata:
         meta = {
             **_solver_metadata(results),
+            **_solver_limit_metadata(solver_time_options),
             "objective_time_hr": float(pyo.value(model.t_final)),
             "n_points": len(sorted(model.t)),
             "t_final_fixed": True,
@@ -1511,6 +1581,8 @@ def optimize_Tsh_pyomo(
     simulation_mode: bool = False,
     return_metadata: bool = False,
     use_secant_ramp_constraints: bool = True,
+    solver_cpu_time: Optional[float] = None,
+    solver_wall_time: Optional[float] = None,
 ) -> Any:
     """Optimize shelf temperature trajectory for minimum drying time (Pyomo implementation).
 
@@ -1591,6 +1663,10 @@ def optimize_Tsh_pyomo(
         simulation_mode (bool, default=False): If True, fix all vars and just validate
         solver (str, default='ipopt'): Solver name
         tee (bool, default=False): Print solver output
+        solver_cpu_time (float, optional): IPOPT CPU-time guard in seconds
+            (max_cpu_time). This is process CPU time, not wall-clock time.
+        solver_wall_time (float, optional): IPOPT wall-clock guard in seconds
+            (max_wall_time) where supported by the installed IPOPT version.
 
     Returns:
         numpy.ndarray: Optimized trajectory with shape (n_points, 7)
@@ -1712,6 +1788,12 @@ def optimize_Tsh_pyomo(
                 opt.options["warm_start_bound_push"] = 1e-8
                 opt.options["warm_start_mult_bound_push"] = 1e-8
 
+    solver_time_options = _apply_ipopt_time_limits(
+        opt,
+        solver,
+        solver_cpu_time=solver_cpu_time,
+        solver_wall_time=solver_wall_time,
+    )
     results = _solve_optimizer_model(
         model,
         opt,
@@ -1771,6 +1853,15 @@ def optimize_Tsh_pyomo(
         print("=" * 55)
 
     # Extract solution in same format as scipy optimizer
+    if not _is_successful_termination(results) and return_metadata:
+        meta = {
+            **_solver_metadata(results),
+            **_solver_limit_metadata(solver_time_options),
+            "objective_time_hr": None,
+            "n_points": len(sorted(model.t)),
+            "staged_solve_success": getattr(model, "_staged_solve_success", None),
+        }
+        return {"output": np.empty((0, 7)), "metadata": meta}
     _ensure_successful_solve(results, "optimize_Tsh_pyomo")
     output_arr = _extract_output_array(model, vial, product)
     if return_metadata:
@@ -1787,6 +1878,7 @@ def optimize_Tsh_pyomo(
             else None
         )
         meta = {
+            **_solver_limit_metadata(solver_time_options),
             "objective_time_hr": float(pyo.value(model.t_final)),
             "status": status,
             "termination_condition": term,
@@ -2006,6 +2098,8 @@ def optimize_Pch_pyomo(
     simulation_mode: bool = False,
     return_metadata: bool = False,
     use_secant_ramp_constraints: bool = True,
+    solver_cpu_time: Optional[float] = None,
+    solver_wall_time: Optional[float] = None,
 ) -> Any:
     """Optimize chamber pressure trajectory for minimum drying time (Pyomo implementation).
 
@@ -2138,6 +2232,12 @@ def optimize_Pch_pyomo(
             opt.options["warm_start_bound_push"] = 1e-8
             opt.options["warm_start_mult_bound_push"] = 1e-8
 
+    solver_time_options = _apply_ipopt_time_limits(
+        opt,
+        solver,
+        solver_cpu_time=solver_cpu_time,
+        solver_wall_time=solver_wall_time,
+    )
     results = _solve_optimizer_model(
         model,
         opt,
@@ -2148,6 +2248,15 @@ def optimize_Pch_pyomo(
         tee=tee,
     )
 
+    if not _is_successful_termination(results) and return_metadata:
+        meta = {
+            **_solver_metadata(results),
+            **_solver_limit_metadata(solver_time_options),
+            "objective_time_hr": None,
+            "n_points": len(sorted(model.t)),
+            "staged_solve_success": getattr(model, "_staged_solve_success", None),
+        }
+        return {"output": np.empty((0, 7)), "metadata": meta}
     _ensure_successful_solve(results, "optimize_Pch_pyomo")
     output_arr = _extract_output_array(model, vial, product)
     if return_metadata:
@@ -2164,6 +2273,7 @@ def optimize_Pch_pyomo(
             else None
         )
         meta = {
+            **_solver_limit_metadata(solver_time_options),
             "objective_time_hr": float(pyo.value(model.t_final)),
             "status": status,
             "termination_condition": term,
@@ -2196,6 +2306,8 @@ def optimize_Pch_Tsh_pyomo(
     trust_radii: Optional[Dict[str, float]] = None,
     return_metadata: bool = False,
     use_secant_ramp_constraints: bool = True,
+    solver_cpu_time: Optional[float] = None,
+    solver_wall_time: Optional[float] = None,
 ) -> Any:
     """Joint optimization of pressure and shelf temperature (Pyomo implementation).
 
@@ -2367,6 +2479,12 @@ def optimize_Pch_Tsh_pyomo(
             opt.options["warm_start_bound_push"] = 1e-9
             opt.options["warm_start_mult_bound_push"] = 1e-9
 
+    solver_time_options = _apply_ipopt_time_limits(
+        opt,
+        solver,
+        solver_cpu_time=solver_cpu_time,
+        solver_wall_time=solver_wall_time,
+    )
     results = _solve_optimizer_model(
         model,
         opt,
@@ -2377,6 +2495,15 @@ def optimize_Pch_Tsh_pyomo(
         tee=tee,
     )
 
+    if not _is_successful_termination(results) and return_metadata:
+        meta = {
+            **_solver_metadata(results),
+            **_solver_limit_metadata(solver_time_options),
+            "objective_time_hr": None,
+            "n_points": len(sorted(model.t)),
+            "staged_solve_success": getattr(model, "_staged_solve_success", None),
+        }
+        return {"output": np.empty((0, 7)), "metadata": meta}
     _ensure_successful_solve(results, "optimize_Pch_Tsh_pyomo")
     output_arr = _extract_output_array(model, vial, product)
     if return_metadata:
@@ -2393,6 +2520,7 @@ def optimize_Pch_Tsh_pyomo(
             else None
         )
         meta = {
+            **_solver_limit_metadata(solver_time_options),
             "objective_time_hr": float(pyo.value(model.t_final)),
             "status": status,
             "termination_condition": term,

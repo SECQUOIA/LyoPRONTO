@@ -25,6 +25,10 @@ python benchmarks/grid_cli.py generate \
 - `--n-collocation NCP` — collocation points per element
 - `--warmstart` — enable staged solve with scipy trajectory (off by default for robustness)
 - `--raw-colloc` — disable effective-nfe parity reporting
+- `--tsh-ramp N` — enforce and validate max shelf-temperature ramp rate [C/hr] on Pyomo runs
+- `--pch-ramp N` — enforce and validate max chamber-pressure ramp rate [Torr/hr] on Pyomo runs
+- `--solver-timeout N` — pass an IPOPT CPU-time guard in seconds via `max_cpu_time`; this is CPU time, not wall-clock elapsed time
+- `--solver-wall-time N` — pass an IPOPT wall-clock guard in seconds via `max_wall_time` when the installed IPOPT version supports it
 - `--force` — regenerate even if output exists (reuse-first by default)
 
 ### 2. Analyze Results
@@ -87,7 +91,9 @@ Each JSONL record includes:
   - `discretization`: `{method, n_elements_requested, n_elements_applied, n_collocation, effective_nfe, total_mesh_points}`
   - `warmstart_used`: bool
   - `validation`: optional replay-only residual and trajectory comparison diagnostics
-- `failed`: overall failure flag (any solver failed, dryness unmet, or product temperature exceeded; replay records use this for solve/residual failure while keeping drying differences diagnostic)
+  - `solver.max_cpu_time_s`, `solver.max_wall_time_s`, and `solver.timeout_options`: configured IPOPT time guards when supplied
+- `metrics`: post-solve validation values including final dryness shortfall, max product-temperature violation, and optional `Tsh`/`Pch` ramp-rate maxima and violations
+- `failed`: overall failure flag (any solver failed, dryness unmet, product temperature exceeded, or configured ramp limit violated; replay records use this for solve/residual failure while keeping drying differences diagnostic)
 
 ## Notes
 

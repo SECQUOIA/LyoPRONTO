@@ -21,20 +21,70 @@ IDX_PCH = 4  # mTorr
 IDX_FLUX = 5
 IDX_PERCENT = 6  # percent_dried (0-100%)
 TEMP_TOL = 1e-6
+RAMP_TOL = 1e-9
+DRYNESS_TARGET_PERCENT = 98.9
+DRYNESS_TOL_PERCENT = 0.1
 
 
 def _safe(arr: np.ndarray) -> np.ndarray:
     return arr if arr.size else np.array([])
 
 
+def _max_abs_rate(values: np.ndarray, time: np.ndarray) -> float:
+    """Return the maximum absolute first-difference rate over positive intervals."""
+    if values.size < 2 or time.size < 2:
+        return 0.0
+    dt = np.diff(time)
+    positive = dt > 0
+    if not np.any(positive):
+        return 0.0
+    rates = np.diff(values)[positive] / dt[positive]
+    return float(np.max(np.abs(rates)))
+
+
+def _ramp_metrics(
+    values: np.ndarray,
+    time: np.ndarray,
+    limit: float | None,
+    *,
+    metric_name: str,
+    unit: str,
+) -> dict[str, Any]:
+    """Compute ramp-rate metrics using the caller-provided output units."""
+    key_prefix = f"{metric_name}_{unit}"
+    if limit is None:
+        return {
+            f"{metric_name}_limit_{unit}": None,
+            f"max_{key_prefix}": None,
+            f"max_{metric_name}_violation_{unit}": None,
+            f"{metric_name}_ok": None,
+        }
+
+    max_rate = _max_abs_rate(values, time)
+    violation = max(0.0, max_rate - float(limit))
+    return {
+        f"{metric_name}_limit_{unit}": float(limit),
+        f"max_{key_prefix}": max_rate,
+        f"max_{metric_name}_violation_{unit}": float(violation),
+        f"{metric_name}_ok": bool(violation <= RAMP_TOL),
+    }
+
+
 def compute_residuals(
-    traj: np.ndarray, product_critical_temp: float | None = None
+    traj: np.ndarray,
+    product_critical_temp: float | None = None,
+    tsh_ramp_rate: float | None = None,
+    pch_ramp_rate: float | None = None,
+    dryness_target_percent: float = DRYNESS_TARGET_PERCENT,
 ) -> dict[str, Any]:
     """Compute residual style metrics for a trajectory."""
     if traj.size == 0:
         return {
             "n_points": 0,
             "final_percent_dried": None,
+            "dryness_target_percent": float(dryness_target_percent),
+            "dryness_tolerance_percent": DRYNESS_TOL_PERCENT,
+            "final_dryness_shortfall_percent": None,
             "monotonic_dried": None,
             "tsh_bounds_ok": None,
             "pch_positive": None,
@@ -43,7 +93,17 @@ def compute_residuals(
             "product_temp_ok": None,
             "max_Tbot": None,
             "product_critical_temp": product_critical_temp,
+            "max_product_temp_violation_C": None,
+            "tsh_ramp_limit_C_per_hr": tsh_ramp_rate,
+            "max_tsh_ramp_C_per_hr": None,
+            "max_tsh_ramp_violation_C_per_hr": None,
+            "tsh_ramp_ok": None if tsh_ramp_rate is None else False,
+            "pch_ramp_limit_Torr_per_hr": pch_ramp_rate,
+            "max_pch_ramp_Torr_per_hr": None,
+            "max_pch_ramp_violation_Torr_per_hr": None,
+            "pch_ramp_ok": None if pch_ramp_rate is None else False,
         }
+    time = traj[:, IDX_TIME]
     percent = traj[:, IDX_PERCENT]
     tbot = traj[:, IDX_TBOT]
     tsh = traj[:, IDX_TSH]
@@ -58,17 +118,42 @@ def compute_residuals(
     pch_pos = bool(np.all(pch_mTorr > 0))
     flux_ok = bool(np.all(flux >= -1e-8))
 
-    dryness_target = bool(percent[-1] >= 98.9 - 0.1)  # 98.8% threshold
+    dryness_threshold = float(dryness_target_percent) - DRYNESS_TOL_PERCENT
+    dryness_shortfall = max(0.0, float(dryness_target_percent) - float(percent[-1]))
+    dryness_target = bool(percent[-1] >= dryness_threshold)
+    max_tbot = float(np.max(tbot))
+    product_temp_violation = (
+        None
+        if product_critical_temp is None
+        else max(0.0, max_tbot - float(product_critical_temp))
+    )
     product_temp_ok = (
         None
         if product_critical_temp is None
-        else bool(np.all(tbot <= float(product_critical_temp) + TEMP_TOL))
+        else bool(product_temp_violation <= TEMP_TOL)
+    )
+    tsh_ramp_metrics = _ramp_metrics(
+        tsh,
+        time,
+        tsh_ramp_rate,
+        metric_name="tsh_ramp",
+        unit="C_per_hr",
+    )
+    pch_ramp_metrics = _ramp_metrics(
+        pch_mTorr / 1000.0,
+        time,
+        pch_ramp_rate,
+        metric_name="pch_ramp",
+        unit="Torr_per_hr",
     )
 
-    return {
+    metrics = {
         "n_points": int(traj.shape[0]),
         "final_percent_dried": float(percent[-1]),
-        "max_Tbot": float(np.max(tbot)),
+        "dryness_target_percent": float(dryness_target_percent),
+        "dryness_tolerance_percent": DRYNESS_TOL_PERCENT,
+        "final_dryness_shortfall_percent": float(dryness_shortfall),
+        "max_Tbot": max_tbot,
         "monotonic_dried": monotonic,
         "tsh_bounds_ok": tsh_ok,
         "pch_positive": pch_pos,
@@ -76,7 +161,11 @@ def compute_residuals(
         "dryness_target_met": dryness_target,
         "product_temp_ok": product_temp_ok,
         "product_critical_temp": product_critical_temp,
+        "max_product_temp_violation_C": product_temp_violation,
     }
+    metrics.update(tsh_ramp_metrics)
+    metrics.update(pch_ramp_metrics)
+    return metrics
 
 
 def compare_trajectories(
