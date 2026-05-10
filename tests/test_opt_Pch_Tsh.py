@@ -265,6 +265,13 @@ class TestOptPchTshEdgeCases:
 class TestOptPchTshValidation:
     """Validation tests comparing opt_Pch_Tsh behavior."""
 
+    @pytest.mark.filterwarnings(
+        "ignore:Optimization failed at .*:UserWarning:lyopronto\\.opt_Pch"
+    )
+    @pytest.mark.filterwarnings(
+        "ignore:Total time exceeded\\. Drying incomplete:"
+        "UserWarning:lyopronto\\.opt_Pch"
+    )
     def test_joint_optimization_faster_than_single(self, standard_opt_pch_tsh_inputs):
         """Test that joint optimization is at least as fast as pressure-only optimization.
 

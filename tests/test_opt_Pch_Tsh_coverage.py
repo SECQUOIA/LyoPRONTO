@@ -320,6 +320,13 @@ class TestOptPchTshComparison:
             'nVial': nVial
         }
     
+    @pytest.mark.filterwarnings(
+        "ignore:Optimization failed at .*:UserWarning:lyopronto\\.opt_Pch"
+    )
+    @pytest.mark.filterwarnings(
+        "ignore:Total time exceeded\\. Drying incomplete:"
+        "UserWarning:lyopronto\\.opt_Pch"
+    )
     @pytest.mark.slow
     def test_joint_opt_vs_pch_only(self, comparison_setup):
         """Test joint optimization against Pch-only optimization.
