@@ -9,7 +9,12 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 from benchmarks import adapters
-from benchmarks.grid_cli import build_parser, metrics_failed
+from benchmarks.grid_cli import (
+    build_parser,
+    metrics_failed,
+    pyomo_metric_kwargs,
+    scipy_metric_kwargs,
+)
 from benchmarks.scenarios import SCENARIOS
 from benchmarks.schema import serialize
 from benchmarks.validate import compute_residuals
@@ -135,9 +140,56 @@ def test_compute_residuals_reports_post_solve_constraint_violations():
     assert metrics["max_pch_ramp_violation_Torr_per_hr"] == pytest.approx(0.05)
 
 
+def test_compute_residuals_accepts_ramp_noise_within_solver_tolerance():
+    traj = np.array(
+        [
+            [0.0, -30.0, -26.0, -20.0, 100.0, 0.2, 0.0],
+            [1.0, -29.0, -25.5, -9.9999995, 200.0005, 0.1, 99.0],
+        ]
+    )
+
+    metrics = compute_residuals(
+        traj,
+        tsh_ramp_rate=10.0,
+        pch_ramp_rate=0.1,
+    )
+
+    assert metrics["tsh_ramp_ok"] is True
+    assert metrics["max_tsh_ramp_violation_C_per_hr"] == pytest.approx(5e-7)
+    assert metrics["pch_ramp_ok"] is True
+    assert metrics["max_pch_ramp_violation_Torr_per_hr"] == pytest.approx(5e-7)
+
+
 def test_metrics_failed_includes_ramp_validation_flags():
     assert metrics_failed({"dryness_target_met": True, "tsh_ramp_ok": True}) is False
     assert metrics_failed({"dryness_target_met": True, "tsh_ramp_ok": False}) is True
+
+
+def test_grid_cli_scipy_metrics_ignore_pyomo_only_ramp_limits():
+    args = SimpleNamespace(tsh_ramp=1.0, pch_ramp=0.01)
+    product = {"T_pr_crit": -25.0}
+    traj = np.array(
+        [
+            [0.0, -30.0, -26.0, -20.0, 100.0, 0.2, 0.0],
+            [1.0, -29.0, -26.0, 20.0, 500.0, 0.1, 99.0],
+        ]
+    )
+
+    scipy_metrics = compute_residuals(
+        traj,
+        **scipy_metric_kwargs(args, product),
+    )
+    pyomo_metrics = compute_residuals(
+        traj,
+        **pyomo_metric_kwargs(args, product),
+    )
+
+    assert scipy_metrics["tsh_ramp_ok"] is None
+    assert scipy_metrics["pch_ramp_ok"] is None
+    assert metrics_failed(scipy_metrics) is False
+    assert pyomo_metrics["tsh_ramp_ok"] is False
+    assert pyomo_metrics["pch_ramp_ok"] is False
+    assert metrics_failed(pyomo_metrics) is True
 
 
 def test_grid_cli_parses_solver_time_guards():
