@@ -263,6 +263,9 @@ class TestOptPchEdgeCases:
         # All pressures should be >= 100 mTorr
         assert np.all(output[:, 4] >= 100), "Pressure should respect higher min bound"
 
+    @pytest.mark.filterwarnings(
+        "ignore:Optimization failed at .*:UserWarning:lyopronto\\.opt_Pch"
+    )
     def test_narrow_pressure_range(self, standard_opt_pch_inputs):
         """Test with narrow pressure optimization range."""
         vial, product, ht, _, Tshelf, dt, eq_cap, nVial = standard_opt_pch_inputs

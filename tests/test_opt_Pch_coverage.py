@@ -4,6 +4,16 @@ import numpy as np
 from lyopronto import opt_Pch
 from .utils import assert_physically_reasonable_output
 
+pytestmark = [
+    pytest.mark.filterwarnings(
+        "ignore:Optimization failed at .*:UserWarning:lyopronto\\.opt_Pch"
+    ),
+    pytest.mark.filterwarnings(
+        "ignore:Total time exceeded\\. Drying incomplete:"
+        "UserWarning:lyopronto\\.opt_Pch"
+    ),
+]
+
 
 class TestOptPchOnly:
     """Test pressure-only optimizer (fixed shelf temperature)."""

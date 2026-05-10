@@ -247,14 +247,15 @@ class TestEdgeCases:
         setup['Tshelf'] = {'init': -50.0, 'setpt': [-40.0], 
                            'dt_setpt': [1800.0], 'ramp_rate': 0.5}
         
-        output = calc_knownRp.dry(
-            setup['vial'],
-            setup['product'],
-            setup['ht'],
-            setup['Pchamber'],
-            setup['Tshelf'],
-            setup['dt']
-        )
+        with pytest.warns(UserWarning, match="Chamber pressure setpoint exceeds"):
+            output = calc_knownRp.dry(
+                setup['vial'],
+                setup['product'],
+                setup['ht'],
+                setup['Pchamber'],
+                setup['Tshelf'],
+                setup['dt']
+            )
         
         # Should still produce valid output
         assert output.shape[0] > 0
