@@ -16,9 +16,8 @@ import time
 from typing import Any
 
 import numpy as np
-from lyopronto import opt_Pch, opt_Pch_Tsh, opt_Tsh
-
 from benchmarks.validate import compare_trajectories
+from lyopronto import opt_Pch, opt_Pch_Tsh, opt_Tsh
 
 DRYNESS_TARGET = 98.9  # Percentage (0-100)
 ACCEPTABLE_PYOMO_TERMINATIONS = {"optimal", "locallyoptimal"}
@@ -245,15 +244,11 @@ def ipopt_replay_adapter(
             "residual_tol": residual_tol,
             "max_constraint_residual": meta.get("max_constraint_residual"),
             "residuals": meta.get("residuals"),
-            "max_scipy_trajectory_residual": meta.get(
-                "max_scipy_trajectory_residual"
-            ),
+            "max_scipy_trajectory_residual": meta.get("max_scipy_trajectory_residual"),
             "scipy_trajectory_residuals": meta.get("scipy_trajectory_residuals"),
             "max_scipy_mesh_residual": meta.get("max_scipy_mesh_residual"),
             "scipy_mesh_residuals": meta.get("scipy_mesh_residuals"),
-            "max_replay_solution_residual": meta.get(
-                "max_replay_solution_residual"
-            ),
+            "max_replay_solution_residual": meta.get("max_replay_solution_residual"),
             "replay_solution_residuals": meta.get("replay_solution_residuals"),
             "trajectory_comparison": comparison,
         },
@@ -282,6 +277,7 @@ def pyomo_adapter(
     use_secant_ramp_constraints: bool = True,  # Add secant slope constraints for collocation
     solver_cpu_time: float | None = None,
     solver_wall_time: float | None = None,
+    tee: bool = False,
 ) -> dict[str, Any]:
     """Run Pyomo optimizer counterpart for specified task with discretization controls.
 
@@ -301,6 +297,8 @@ def pyomo_adapter(
         When using collocation with ramp constraints, add explicit secant slope constraints.
         Default True. If False, only polynomial derivative constraints are used, which may
         allow numerical derivatives between mesh points to exceed the ramp limit (by ~15%).
+    tee : bool
+        Show solver output for interactive debugging.
     """
     pyomo_opt = _load_pyomo_optimizers()
 
@@ -343,7 +341,7 @@ def pyomo_adapter(
             treat_n_elements_as_effective=treat_eff,
             warmstart_scipy=warmstart,
             return_metadata=True,
-            tee=False,
+            tee=tee,
             use_secant_ramp_constraints=use_secant_ramp_constraints,
             solver_cpu_time=solver_cpu_time,
             solver_wall_time=solver_wall_time,
