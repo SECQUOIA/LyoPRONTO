@@ -92,6 +92,7 @@ drying OCP in Srisuma and Braatz, arXiv:2509.10826v1.
 - `generate_problem1_policy_initialization()` - Build a policy-based warm start
 - `initialize_paper_problem1_from_trajectory()` - Seed a model from a trajectory
 - `load_upstream_matlab_trajectory()` - Read upstream MATLAB output saved to `.mat`
+- `compare_paper_problem1_trajectories()` - Compare Pyomo and upstream metrics
 - `classify_paper_policies()` - Infer active Policy 1/Policy 2 regions
 
 This module uses SI/Kelvin units from the paper/upstream code and is separate
@@ -100,6 +101,24 @@ a coarse `n_z=5` mesh, and the upstream paper's `n_z=20` spatial mesh is covered
 by a slow validation test using IPOPT acceptable termination
 (`acceptable_tol=1e-3`, `acceptable_iter=5`). Both reproduce the expected
 Policy 1 -> Policy 2 sequence near the paper's reported switch time.
+
+Regenerate the full upstream Problem 1 reference with:
+
+```bash
+python benchmarks/paper_problem1_reference.py generate \
+  --upstream-root /home/bernalde/repos/simDAE-optimalcontrol-lyo \
+  --output benchmarks/results/paper_problem1_upstream_reference.mat
+```
+
+The command writes batch-safe MATLAB wrappers outside the upstream clone and
+requires MATLAB Python to import GEKKO for the upstream Policy 2 segment. Compare
+the exported artifact against a Pyomo solve with:
+
+```bash
+python benchmarks/paper_problem1_reference.py compare-pyomo \
+  benchmarks/results/paper_problem1_upstream_reference.mat \
+  --n-z 20 --nfe 12 --ncp 3
+```
 
 ## Installation
 

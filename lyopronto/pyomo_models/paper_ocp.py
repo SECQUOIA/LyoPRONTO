@@ -515,9 +515,10 @@ def load_upstream_matlab_trajectory(mat_path: str | Path) -> dict[str, Any]:
     """Load an upstream MATLAB trajectory saved from ``Sim_1stDrying_OCP``.
 
     The loader accepts either arrays named like the upstream output fields
-    (``t``, ``T``, ``S``, ``Tb``) or the first-segment arrays produced by the
-    local verification script (``t``, ``y``, ``Tb``), where ``y`` contains
-    temperature columns followed by interface position.
+    (``t``, ``T``, ``S``, ``Tb``, optionally ``dSdt``, ``policy``, and
+    ``tsw``) or the first-segment arrays produced by the local verification
+    script (``t``, ``y``, ``Tb``), where ``y`` contains temperature columns
+    followed by interface position.
     """
     from scipy.io import loadmat
 
@@ -562,8 +563,19 @@ def load_upstream_matlab_trajectory(mat_path: str | Path) -> dict[str, Any]:
         ).reshape(-1)
     else:
         interface_velocity_values = np.gradient(interface_position, time_s, edge_order=1)
+    if len(interface_velocity_values) != len(time_s):
+        raise ValueError("dSdt must share the same length as t")
 
-    return {
+    config = PaperPrimaryDryingConfig()
+    policies: dict[str, Any] = {}
+    if "policy" in data:
+        policies["raw_policy"] = np.atleast_1d(np.asarray(data["policy"])).reshape(-1)
+    if "tsw" in data:
+        switch_times_s = np.atleast_1d(np.asarray(data["tsw"], dtype=float)).reshape(-1)
+        policies["switch_times_s"] = switch_times_s
+        policies["switch_times_hr"] = switch_times_s / 3600.0
+
+    trajectory = {
         "states": {
             "time_s": time_s,
             "time_hr": time_s / 3600.0,
@@ -575,11 +587,153 @@ def load_upstream_matlab_trajectory(mat_path: str | Path) -> dict[str, Any]:
         "controls": {
             "shelf_temperature_K": shelf_temperature,
         },
+        "metrics": {
+            "drying_time_s": float(time_s[-1]),
+            "drying_time_hr": float(time_s[-1] / 3600.0),
+            "terminal_interface_position_m": float(interface_position[-1]),
+            "max_product_temperature_K": float(temperature.max()),
+        },
+        "problem": {
+            "name": "paper_problem_1_upstream_reference",
+            "temperature_limit_K": config.problem1_temperature_limit,
+            "shelf_temperature_min_K": config.shelf_temperature_min,
+            "shelf_temperature_max_K": config.shelf_temperature_max,
+        },
         "metadata": {
             "source": "upstream_matlab",
             "path": str(mat_path),
         },
     }
+    if policies:
+        trajectory["policies"] = policies
+    return trajectory
+
+
+def compare_paper_problem1_trajectories(
+    pyomo_result: Mapping[str, Any],
+    upstream_trajectory: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Compare a Pyomo Paper Problem 1 result against an upstream trajectory."""
+    pyomo_drying_time_hr = _drying_time_hr(pyomo_result)
+    upstream_drying_time_hr = _drying_time_hr(upstream_trajectory)
+    pyomo_switch_time_hr = _first_switch_time_hr(pyomo_result)
+    upstream_switch_time_hr = _first_switch_time_hr(upstream_trajectory)
+    pyomo_terminal_s = _terminal_interface_position(pyomo_result)
+    upstream_terminal_s = _terminal_interface_position(upstream_trajectory)
+    pyomo_peak_temperature = _peak_temperature(pyomo_result)
+    upstream_peak_temperature = _peak_temperature(upstream_trajectory)
+
+    return {
+        "pyomo_drying_time_hr": pyomo_drying_time_hr,
+        "upstream_drying_time_hr": upstream_drying_time_hr,
+        "drying_time_deviation_hr": pyomo_drying_time_hr - upstream_drying_time_hr,
+        "pyomo_first_switch_time_hr": pyomo_switch_time_hr,
+        "upstream_first_switch_time_hr": upstream_switch_time_hr,
+        "first_switch_time_deviation_hr": _nullable_difference(
+            pyomo_switch_time_hr,
+            upstream_switch_time_hr,
+        ),
+        "pyomo_terminal_interface_position_m": pyomo_terminal_s,
+        "upstream_terminal_interface_position_m": upstream_terminal_s,
+        "terminal_interface_position_deviation_m": pyomo_terminal_s - upstream_terminal_s,
+        "pyomo_peak_temperature_K": pyomo_peak_temperature,
+        "upstream_peak_temperature_K": upstream_peak_temperature,
+        "peak_temperature_deviation_K": pyomo_peak_temperature
+        - upstream_peak_temperature,
+        "max_temperature_profile_max_abs_deviation_K": (
+            _max_temperature_profile_deviation(pyomo_result, upstream_trajectory)
+        ),
+    }
+
+
+def _drying_time_hr(result: Mapping[str, Any]) -> float:
+    metrics = result.get("metrics", {})
+    if "drying_time_hr" in metrics:
+        return float(metrics["drying_time_hr"])
+    return float(np.asarray(result["states"]["time_s"], dtype=float)[-1] / 3600.0)
+
+
+def _first_switch_time_hr(result: Mapping[str, Any]) -> float | None:
+    policies = result.get("policies", {})
+    switch_times = policies.get("switch_times_hr")
+    if switch_times is not None:
+        switch_array = np.atleast_1d(np.asarray(switch_times, dtype=float)).reshape(-1)
+        if len(switch_array) > 0:
+            return float(switch_array[0])
+
+    segments = policies.get("segments", [])
+    if len(segments) > 1:
+        return float(segments[1]["start_time_hr"])
+    return None
+
+
+def _terminal_interface_position(result: Mapping[str, Any]) -> float:
+    metrics = result.get("metrics", {})
+    if "terminal_interface_position_m" in metrics:
+        return float(metrics["terminal_interface_position_m"])
+    interface_position = np.asarray(
+        result["states"]["interface_position_m"],
+        dtype=float,
+    )
+    return float(interface_position[-1])
+
+
+def _peak_temperature(result: Mapping[str, Any]) -> float:
+    metrics = result.get("metrics", {})
+    if "max_product_temperature_K" in metrics:
+        return float(metrics["max_product_temperature_K"])
+    max_temperature = np.asarray(result["states"]["max_temperature_K"], dtype=float)
+    return float(max_temperature.max())
+
+
+def _nullable_difference(left: float | None, right: float | None) -> float | None:
+    if left is None or right is None:
+        return None
+    return float(left - right)
+
+
+def _max_temperature_profile_deviation(
+    pyomo_result: Mapping[str, Any],
+    upstream_trajectory: Mapping[str, Any],
+) -> float:
+    pyomo_time, pyomo_max_temperature = _unique_time_series(
+        pyomo_result["states"]["time_s"],
+        pyomo_result["states"]["max_temperature_K"],
+    )
+    upstream_time, upstream_max_temperature = _unique_time_series(
+        upstream_trajectory["states"]["time_s"],
+        upstream_trajectory["states"]["max_temperature_K"],
+    )
+    start = max(float(pyomo_time[0]), float(upstream_time[0]))
+    stop = min(float(pyomo_time[-1]), float(upstream_time[-1]))
+    if stop <= start:
+        return float("nan")
+
+    sample_time = upstream_time[(upstream_time >= start) & (upstream_time <= stop)]
+    sample_time = np.unique(np.concatenate(([start], sample_time, [stop])))
+    if len(sample_time) < 2:
+        sample_time = np.linspace(start, stop, 2)
+
+    pyomo_interp = np.interp(sample_time, pyomo_time, pyomo_max_temperature)
+    upstream_interp = np.interp(
+        sample_time,
+        upstream_time,
+        upstream_max_temperature,
+    )
+    return float(np.max(np.abs(pyomo_interp - upstream_interp)))
+
+
+def _unique_time_series(
+    time_values: Iterable[float],
+    values: Iterable[float],
+) -> tuple[np.ndarray, np.ndarray]:
+    time = np.asarray(time_values, dtype=float).reshape(-1)
+    series = np.asarray(values, dtype=float).reshape(-1)
+    order = np.argsort(time)
+    time = time[order]
+    series = series[order]
+    unique_time, unique_indices = np.unique(time, return_index=True)
+    return unique_time, series[unique_indices]
 
 
 def create_paper_problem1_model(

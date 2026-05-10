@@ -32,6 +32,7 @@ def test_pyomo_exports_optimizers_when_pyomo_available():
         "generate_problem1_policy_initialization",
         "initialize_paper_problem1_from_trajectory",
         "load_upstream_matlab_trajectory",
+        "compare_paper_problem1_trajectories",
         "solve_paper_problem1",
         "classify_paper_policies",
     }

@@ -89,6 +89,45 @@ segment, Pyomo shelf temperatures were within `0.26 K` at the switch and within
 that offset explains the small interface-position differences in the GEKKO
 segment comparison.
 
+## Regenerating The Upstream Reference
+
+Issue #27 is handled by `benchmarks/paper_problem1_reference.py`. The generator
+keeps the upstream clone read-only: it writes temporary MATLAB wrappers for
+`SimPy_MaxT` and `SimPy_MaxFlux` that use the known upstream `Python/` folder
+instead of `matlab.desktop.editor.getActiveFilename`, then runs
+`Sim_1stDrying_OCP` for `Case2` and saves:
+
+- `t`
+- `T`
+- `S`
+- `Tb`
+- `dSdt`
+- `policy`
+- `tsw`
+
+The MATLAB Python environment must be able to import GEKKO because the upstream
+Policy 2 segment calls `pyfun_MaxT.py`.
+
+```bash
+python benchmarks/paper_problem1_reference.py generate \
+  --upstream-root /home/bernalde/repos/simDAE-optimalcontrol-lyo \
+  --output benchmarks/results/paper_problem1_upstream_reference.mat
+```
+
+Use `--runner-only --work-dir /tmp/lyopronto-paper-problem1` to inspect the
+generated MATLAB files and exact `matlab -batch` command without running
+MATLAB.
+
+The exported artifact can seed the Pyomo solve and report Pyomo-vs-upstream
+deviations for drying time, first switch time, terminal interface position, peak
+temperature, and max-temperature profile:
+
+```bash
+python benchmarks/paper_problem1_reference.py compare-pyomo \
+  benchmarks/results/paper_problem1_upstream_reference.mat \
+  --n-z 20 --nfe 12 --ncp 3
+```
+
 ## Mesh Diagnostics
 
 All rows use `nfe=12`, `ncp=3`, `LAGRANGE-RADAU`, the policy initializer, and a
@@ -103,13 +142,12 @@ All rows use `nfe=12`, `ncp=3`, `LAGRANGE-RADAU`, the policy initializer, and a
 
 Next steps are tracked in GitHub issues:
 
-1. #27 - Make upstream reference trajectory generation reproducible.
-2. #28 - Prepare the first Paper Problem 1 validation PR.
-3. #29 - Add Problem 2 with the interface-velocity constraint and expected
+1. #28 - Prepare the first Paper Problem 1 validation PR.
+2. #29 - Add Problem 2 with the interface-velocity constraint and expected
    Policy 3 -> Policy 1 -> Policy 2 sequence.
-4. #30 - Compare the paper-reference transcription against LyoPRONTO's existing
+3. #30 - Compare the paper-reference transcription against LyoPRONTO's existing
    quasi-steady Pyomo and scipy optimizers.
-5. #31 - If the benchmark is credible, add a LyoPRONTO-facing experimental
+4. #31 - If the benchmark is credible, add a LyoPRONTO-facing experimental
    policy API with the same rich result format.
 
 #26 is addressed by the bottom-node temperature constraint alignment, the
