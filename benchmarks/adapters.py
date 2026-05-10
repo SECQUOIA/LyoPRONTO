@@ -22,6 +22,7 @@ from benchmarks.validate import compare_trajectories
 
 DRYNESS_TARGET = 98.9  # Percentage (0-100)
 ACCEPTABLE_PYOMO_TERMINATIONS = {"optimal", "locallyoptimal"}
+TIMEOUT_TERMINATION_TOKENS = ("timeout", "maxtime", "maxcpu", "maxwall")
 
 
 def _pch_benchmark_controls() -> tuple[dict[str, float], dict[str, Any]]:
@@ -71,6 +72,32 @@ def _scipy_task_setup(task: str) -> tuple[Any, dict[str, Any], dict[str, Any]]:
 def _acceptable_pyomo_termination(termination_condition: Any) -> bool:
     normalized = str(termination_condition or "").lower().replace(" ", "")
     return normalized in ACCEPTABLE_PYOMO_TERMINATIONS
+
+
+def _timeout_termination(termination_condition: Any) -> bool:
+    normalized = str(termination_condition or "").lower().replace(" ", "")
+    return any(token in normalized for token in TIMEOUT_TERMINATION_TOKENS)
+
+
+def _solver_info_from_metadata(
+    meta: dict[str, Any],
+    *,
+    solver_cpu_time: float | None,
+    solver_wall_time: float | None,
+) -> dict[str, Any]:
+    """Build normalized solver metadata for benchmark records."""
+    termination = meta.get("termination_condition")
+    return {
+        "status": meta.get("status"),
+        "termination_condition": termination,
+        "ipopt_iterations": meta.get("ipopt_iterations"),
+        "n_points": meta.get("n_points"),
+        "staged_solve_success": meta.get("staged_solve_success"),
+        "max_cpu_time_s": meta.get("solver_max_cpu_time_s", solver_cpu_time),
+        "max_wall_time_s": meta.get("solver_max_wall_time_s", solver_wall_time),
+        "timeout_options": meta.get("solver_timeout_options", {}),
+        "timeout_termination": _timeout_termination(termination),
+    }
 
 
 # Scipy adapters -------------------------------------------------------------
@@ -130,6 +157,8 @@ def ipopt_replay_adapter(
     n_collocation: int = 3,
     effective_nfe: bool = True,
     residual_tol: float = 1e-4,
+    solver_cpu_time: float | None = None,
+    solver_wall_time: float | None = None,
 ) -> dict[str, Any]:
     """Replay a SciPy trajectory with controls fixed and solve Pyomo with IPOPT."""
     pyomo_opt = _load_pyomo_optimizers()
@@ -157,6 +186,8 @@ def ipopt_replay_adapter(
             treat_n_elements_as_effective=treat_eff,
             return_metadata=True,
             tee=False,
+            solver_cpu_time=solver_cpu_time,
+            solver_wall_time=solver_wall_time,
         )
         traj = res["output"]
         meta = res.get("metadata", {})
@@ -200,13 +231,11 @@ def ipopt_replay_adapter(
         "message": message,
         "wall_time_s": wall,
         "objective_time_hr": float(meta["objective_time_hr"]) if success else None,
-        "solver": {
-            "status": meta.get("status"),
-            "termination_condition": meta.get("termination_condition"),
-            "ipopt_iterations": meta.get("ipopt_iterations"),
-            "n_points": meta.get("n_points"),
-            "staged_solve_success": None,
-        },
+        "solver": _solver_info_from_metadata(
+            meta,
+            solver_cpu_time=solver_cpu_time,
+            solver_wall_time=solver_wall_time,
+        ),
         "solver_stats": {},
         "raw": traj,
         "warmstart_used": True,
@@ -251,6 +280,8 @@ def pyomo_adapter(
     tsh_ramp_rate: float | None = None,  # Max Tsh ramp rate [°C/hr]
     pch_ramp_rate: float | None = None,  # Max Pch ramp rate [Torr/hr]
     use_secant_ramp_constraints: bool = True,  # Add secant slope constraints for collocation
+    solver_cpu_time: float | None = None,
+    solver_wall_time: float | None = None,
 ) -> dict[str, Any]:
     """Run Pyomo optimizer counterpart for specified task with discretization controls.
 
@@ -314,6 +345,8 @@ def pyomo_adapter(
             return_metadata=True,
             tee=False,
             use_secant_ramp_constraints=use_secant_ramp_constraints,
+            solver_cpu_time=solver_cpu_time,
+            solver_wall_time=solver_wall_time,
         )
         if isinstance(res, dict) and "output" in res:
             traj = res["output"]
@@ -344,13 +377,11 @@ def pyomo_adapter(
         float(meta.get("objective_time_hr", default_t)) if success else None
     )
 
-    solver_info = {
-        "status": meta.get("status"),
-        "termination_condition": meta.get("termination_condition"),
-        "ipopt_iterations": meta.get("ipopt_iterations"),
-        "n_points": meta.get("n_points"),
-        "staged_solve_success": meta.get("staged_solve_success"),
-    }
+    solver_info = _solver_info_from_metadata(
+        meta,
+        solver_cpu_time=solver_cpu_time,
+        solver_wall_time=solver_wall_time,
+    )
 
     # Discretization reporting
     if use_fd:
