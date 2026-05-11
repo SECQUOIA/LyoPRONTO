@@ -88,19 +88,28 @@ drying OCP in Srisuma and Braatz, arXiv:2509.10826v1.
 
 **Key functions:**
 - `create_paper_problem1_model()` - Build the orthogonal-collocation Pyomo model
+- `create_paper_problem2_model()` - Build Problem 2 with the interface-velocity constraint
 - `solve_paper_problem1()` - Solve Paper Problem 1 with IPOPT
+- `solve_paper_problem2()` - Solve Paper Problem 2 with IPOPT
 - `generate_problem1_policy_initialization()` - Build a policy-based warm start
+- `generate_problem2_policy_initialization()` - Build the Problem 2 Policy 3 -> Policy 1 -> Policy 2 warm start
 - `initialize_paper_problem1_from_trajectory()` - Seed a model from a trajectory
 - `load_upstream_matlab_trajectory()` - Read upstream MATLAB output saved to `.mat`
 - `compare_paper_problem1_trajectories()` - Compare Pyomo and upstream metrics
-- `classify_paper_policies()` - Infer active Policy 1/Policy 2 regions
+- `classify_paper_policies()` - Infer active Policy 1/Policy 2/Policy 3 regions
 
 This module uses SI/Kelvin units from the paper/upstream code and is separate
-from LyoPRONTO's cm/Torr/degC production APIs. The validated default solve uses
-a coarse `n_z=5` mesh, and the upstream paper's `n_z=20` spatial mesh is covered
-by a slow validation test using IPOPT acceptable termination
-(`acceptable_tol=1e-3`, `acceptable_iter=5`). Both reproduce the expected
-Policy 1 -> Policy 2 sequence near the paper's reported switch time.
+from LyoPRONTO's cm/Torr/degC production APIs. Problem 1 validates the
+temperature-constrained drying-time objective and reproduces the expected
+Policy 1 -> Policy 2 sequence near the paper's reported switch time. Problem 2
+adds the 240 K product-temperature limit, 260 K shelf-temperature upper bound,
+and `2.8e-7 m/s` interface-velocity path constraint; the coarse validation
+tracks the expected Policy 3 -> Policy 1 -> Policy 2 sequence.
+
+The validated default solves use a coarse `n_z=5` mesh. For Problem 1, the
+upstream paper's `n_z=20` spatial mesh is also covered by a slow validation test
+using IPOPT acceptable termination (`acceptable_tol=1e-3`,
+`acceptable_iter=5`).
 
 Regenerate the full upstream Problem 1 reference with:
 

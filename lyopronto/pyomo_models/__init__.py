@@ -51,10 +51,13 @@ if PYOMO_AVAILABLE:
         classify_paper_policies,
         compare_paper_problem1_trajectories,
         create_paper_problem1_model,
+        create_paper_problem2_model,
         generate_problem1_policy_initialization,
+        generate_problem2_policy_initialization,
         initialize_paper_problem1_from_trajectory,
         load_upstream_matlab_trajectory,
         solve_paper_problem1,
+        solve_paper_problem2,
     )
     from .single_step import (
         create_single_step_model,
@@ -75,11 +78,14 @@ if PYOMO_AVAILABLE:
         "PaperPrimaryDryingConfig",
         "PaperDiscretization",
         "create_paper_problem1_model",
+        "create_paper_problem2_model",
         "generate_problem1_policy_initialization",
+        "generate_problem2_policy_initialization",
         "initialize_paper_problem1_from_trajectory",
         "load_upstream_matlab_trajectory",
         "compare_paper_problem1_trajectories",
         "solve_paper_problem1",
+        "solve_paper_problem2",
         "classify_paper_policies",
     ]
 

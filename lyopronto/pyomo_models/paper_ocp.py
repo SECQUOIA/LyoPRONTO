@@ -1332,7 +1332,6 @@ def _initialize_problem1_model(model: Any) -> None:
     discretization = model._paper_discretization
     derived = model._paper_derived
     settings = model._paper_problem_settings
-    settings = model._paper_problem_settings
     terminal_s = discretization.terminal_drying_fraction * derived.product_height
     time_guess = settings.time_guess
     model.t_final.set_value(time_guess)
