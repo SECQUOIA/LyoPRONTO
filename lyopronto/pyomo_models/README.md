@@ -111,6 +111,24 @@ upstream paper's `n_z=20` spatial mesh is also covered by a slow validation test
 using IPOPT acceptable termination (`acceptable_tol=1e-3`,
 `acceptable_iter=5`).
 
+### `policy_ocp.py`
+Experimental LyoPRONTO-facing policy OCP adapter. This module does not expose
+the SI/Kelvin paper model as a production optimizer. Instead, it reuses
+`create_optimizer_model()` and the current quasi-steady LyoPRONTO Pyomo
+formulation in cm/Torr/degC units.
+
+**Key functions:**
+- `create_lyopronto_policy_ocp_model()` - Build the quasi-steady model and add optional policy caps
+- `solve_lyopronto_policy_ocp()` - Solve the shelf-temperature policy OCP with IPOPT
+- `extract_lyopronto_policy_solution()` - Return a paper-style rich result object
+- `classify_lyopronto_policies()` - Infer Policy 1/2/3 activity from LyoPRONTO trajectories
+
+The optional Policy 3 caps use LyoPRONTO output units: sublimation flux in
+`kg/hr/m^2` and interface velocity in `cm/hr`. With no cap provided, the adapter
+adds no path constraints beyond the existing Pyomo optimizer model, preserving
+the behavior of the legacy SciPy optimizers and the existing Pyomo optimizer
+entry points.
+
 Regenerate the full upstream Problem 1 reference with:
 
 ```bash

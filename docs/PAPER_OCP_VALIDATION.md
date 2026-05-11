@@ -192,6 +192,30 @@ units, reuse the existing quasi-steady Pyomo optimizer infrastructure, return a
 rich result object, classify active policies from LyoPRONTO trajectories, and
 avoid changing existing SciPy or Pyomo optimizer behavior.
 
+## Experimental LyoPRONTO Policy OCP Adapter
+
+Issue #31 adds the first LyoPRONTO-facing policy adapter in
+`lyopronto.pyomo_models.policy_ocp`. The adapter deliberately uses the existing
+LyoPRONTO quasi-steady Pyomo model rather than the paper-reference moving
+boundary heat-equation transcription:
+
+- units stay in the LyoPRONTO convention: cm, Torr, degC, hr, and flux output
+  in `kg/hr/m^2`;
+- the state model remains the current one-ODE dried-cake-length formulation
+  with algebraic sublimation and vial-bottom temperatures;
+- optional Policy 3 caps can be supplied as a sublimation-flux cap in
+  `kg/hr/m^2` or an interface-velocity cap in `cm/hr`;
+- Policy 1/2/3 classification is returned in the same rich-result style as the
+  paper benchmark, but it is inferred from shelf maximum, product-temperature
+  limit, and LyoPRONTO cap activity;
+- no web or high-level integration is included in this first pass.
+
+The adapter returns `states`, `controls`, `metrics`, `metadata`, `problem`,
+`config`, `trajectory`, and `policies` sections. With no flux or velocity cap,
+it adds no extra path constraints to `create_optimizer_model()`, so the existing
+SciPy optimizers and the public Pyomo optimizer functions keep their current
+behavior and return types.
+
 ## Problem 2 First-Pass Tolerances
 
 The Problem 2 validation is intentionally coarse at this stage. The paper
@@ -226,8 +250,9 @@ Next steps are tracked in GitHub issues:
 1. #28 - Prepare the first Paper Problem 1 validation PR.
 2. #30 - Compare the paper-reference transcription against LyoPRONTO's existing
    quasi-steady Pyomo and scipy optimizers.
-3. #31 - If the benchmark is credible, add a LyoPRONTO-facing experimental
-   policy API with the same rich result format.
+3. Follow-on work after #31 - Run refined LyoPRONTO policy-OCP solves against
+   representative scenarios and decide whether the experimental adapter should
+   graduate into a supported public API.
 
 #26 is addressed by the bottom-node temperature constraint alignment, the
 smaller expression-based NLP for vapor pressure/resistance/flux/interface
