@@ -78,6 +78,27 @@ class PaperPrimaryDryingConfig:
     problem1_time_guess: float = 7.0 * 3600.0
     time_bounds: tuple[float, float] = (0.25 * 3600.0, 15.0 * 3600.0)
 
+    # Paper Problem 2 OCP settings.
+    problem2_temperature_limit: float = 240.0
+    problem2_interface_velocity_limit: float = 2.8e-7
+    problem2_shelf_temperature_max: float = 260.0
+    problem2_time_guess: float = 8.9 * 3600.0
+    problem2_policy3_switch_time_guess: float = 2.0 * 3600.0
+    problem2_policy1_switch_time_guess: float = 3.9 * 3600.0
+
+
+@dataclass(frozen=True)
+class PaperProblemSettings:
+    """Problem-specific path limits for paper-reference OCPs."""
+
+    key: str
+    name: str
+    temperature_limit: float
+    shelf_temperature_min: float
+    shelf_temperature_max: float
+    time_guess: float
+    interface_velocity_limit: float | None = None
+
 
 @dataclass(frozen=True)
 class PaperDiscretization:
@@ -131,15 +152,12 @@ def derive_primary_drying_parameters(
         xs / config.solute_density + (1.0 - xs) / config.ice_density
     )
     frozen_heat_capacity = (
-        xs * config.solute_heat_capacity
-        + (1.0 - xs) * config.ice_heat_capacity
+        xs * config.solute_heat_capacity + (1.0 - xs) * config.ice_heat_capacity
     )
     frozen_conductivity = (
         xs * config.solute_conductivity + (1.0 - xs) * config.ice_conductivity
     )
-    frozen_diffusivity = frozen_conductivity / (
-        frozen_density * frozen_heat_capacity
-    )
+    frozen_diffusivity = frozen_conductivity / (frozen_density * frozen_heat_capacity)
     initial_mass = config.frozen_volume * solution_density
     frozen_volume = initial_mass / frozen_density
     cross_section_area = np.pi * config.vial_diameter**2 / 4.0
@@ -217,6 +235,40 @@ def interface_velocity(
         derived = derive_primary_drying_parameters(config, n_z=20)
     flux = sublimation_flux(interface_temperature, interface_position, config)
     return flux / (derived.frozen_density - config.dried_region_density)
+
+
+def temperature_for_saturation_pressure(
+    pressure: np.ndarray | float,
+    config: PaperPrimaryDryingConfig = PaperPrimaryDryingConfig(),
+) -> np.ndarray | float:
+    """Return temperature [K] for the paper saturation-pressure equation."""
+    return config.vapor_pressure_a / (np.log(pressure) - config.vapor_pressure_b)
+
+
+def _paper_problem_settings(
+    config: PaperPrimaryDryingConfig,
+    problem: str,
+) -> PaperProblemSettings:
+    if problem == "problem1":
+        return PaperProblemSettings(
+            key=problem,
+            name="paper_problem_1",
+            temperature_limit=config.problem1_temperature_limit,
+            shelf_temperature_min=config.shelf_temperature_min,
+            shelf_temperature_max=config.shelf_temperature_max,
+            time_guess=config.problem1_time_guess,
+        )
+    if problem == "problem2":
+        return PaperProblemSettings(
+            key=problem,
+            name="paper_problem_2",
+            temperature_limit=config.problem2_temperature_limit,
+            shelf_temperature_min=config.shelf_temperature_min,
+            shelf_temperature_max=config.problem2_shelf_temperature_max,
+            time_guess=config.problem2_time_guess,
+            interface_velocity_limit=config.problem2_interface_velocity_limit,
+        )
+    raise ValueError(f"unsupported paper OCP problem: {problem}")
 
 
 def generate_problem1_policy_initialization(
@@ -351,7 +403,9 @@ def generate_problem1_policy_initialization(
             float(sol2.t_events[0][0]) if len(sol2.t_events[0]) else float(sol2.t[-1])
         )
 
-    time_s = _policy_sample_times(switch_time, final_time, n_time_points, sol2 is not None)
+    time_s = _policy_sample_times(
+        switch_time, final_time, n_time_points, sol2 is not None
+    )
     temperature_values = np.zeros((len(time_s), n_z), dtype=float)
     interface_values = np.zeros(len(time_s), dtype=float)
     shelf_values = np.zeros(len(time_s), dtype=float)
@@ -426,7 +480,9 @@ def generate_problem1_policy_initialization(
             "drying_time_hr": final_time / 3600.0,
             "policy1_switch_time_s": switch_time,
             "policy1_switch_time_hr": switch_time / 3600.0,
-            "terminal_drying_fraction": float(interface_values[-1] / derived.product_height),
+            "terminal_drying_fraction": float(
+                interface_values[-1] / derived.product_height
+            ),
         },
         "metadata": {
             "source": "problem1_policy_initialization",
@@ -439,6 +495,240 @@ def generate_problem1_policy_initialization(
             "temperature_limit_K": config.problem1_temperature_limit,
             "shelf_temperature_min_K": config.shelf_temperature_min,
             "shelf_temperature_max_K": config.shelf_temperature_max,
+            "terminal_drying_fraction_target": discretization.terminal_drying_fraction,
+        },
+    }
+
+
+def generate_problem2_policy_initialization(
+    config: PaperPrimaryDryingConfig | None = None,
+    discretization: PaperDiscretization | None = None,
+    n_time_points: int = 260,
+    rtol: float = 1.0e-8,
+    atol: float = 1.0e-10,
+) -> dict[str, Any]:
+    """Generate a policy-sequenced warm start for Paper Problem 2.
+
+    The paper reports Policy 3 -> Policy 1 -> Policy 2 switching at about
+    2.0 h and 3.9 h, then terminal drying near 8.9 h.  This initializer uses
+    those switch-time landmarks and the model's algebraic flux equations to
+    build a deterministic, feasible-scale seed for direct transcription.
+    """
+    from scipy.integrate import solve_ivp
+    from scipy.optimize import brentq
+
+    config = config or PaperPrimaryDryingConfig()
+    discretization = discretization or PaperDiscretization()
+    settings = _paper_problem_settings(config, "problem2")
+    derived = derive_primary_drying_parameters(config, discretization.n_z)
+    n_z = discretization.n_z
+    velocity_limit = float(settings.interface_velocity_limit)
+    target_s = discretization.terminal_drying_fraction * derived.product_height
+    switch_31 = float(config.problem2_policy3_switch_time_guess)
+    switch_12 = float(config.problem2_policy1_switch_time_guess)
+
+    if not 0.0 < switch_31 < switch_12 < config.time_bounds[1]:
+        raise ValueError("Problem 2 switch-time guesses must be ordered")
+
+    policy3_switch_s = min(velocity_limit * switch_31, 0.9 * target_s)
+
+    def velocity_at_temperature(interface_position: float) -> float:
+        return _interface_velocity_at_temperature(
+            settings.temperature_limit,
+            interface_position,
+            config,
+            derived,
+        )
+
+    try:
+        policy2_switch_s = brentq(
+            lambda s: velocity_at_temperature(s) - velocity_limit,
+            policy3_switch_s,
+            target_s,
+        )
+    except ValueError:
+        policy2_switch_s = min(
+            policy3_switch_s + velocity_limit * 0.8 * (switch_12 - switch_31),
+            0.8 * target_s,
+        )
+
+    policy1_velocity = (policy2_switch_s - policy3_switch_s) / (switch_12 - switch_31)
+    policy1_velocity = max(min(policy1_velocity, 0.98 * velocity_limit), 1.0e-12)
+
+    def policy2_rhs(_time, y):
+        return [velocity_at_temperature(float(y[0]))]
+
+    def finish_event(_time, y):
+        return float(y[0]) - target_s
+
+    finish_event.terminal = True
+    finish_event.direction = 1
+
+    sol2 = solve_ivp(
+        policy2_rhs,
+        (switch_12, config.time_bounds[1]),
+        [policy2_switch_s],
+        method="BDF",
+        dense_output=True,
+        events=finish_event,
+        rtol=rtol,
+        atol=atol,
+        max_step=100.0,
+    )
+    if not sol2.success:
+        raise RuntimeError(f"Problem 2 Policy 2 initialization failed: {sol2.message}")
+    final_time = (
+        float(sol2.t_events[0][0]) if len(sol2.t_events[0]) else float(sol2.t[-1])
+    )
+
+    time_s = _policy_sample_times_multiple(
+        (switch_31, switch_12),
+        final_time,
+        n_time_points,
+    )
+    temperature_values = np.zeros((len(time_s), n_z), dtype=float)
+    interface_values = np.zeros(len(time_s), dtype=float)
+    shelf_values = np.zeros(len(time_s), dtype=float)
+    interface_velocity_values = np.zeros(len(time_s), dtype=float)
+    flux_values = np.zeros(len(time_s), dtype=float)
+    labels: list[str] = []
+
+    for index, time in enumerate(time_s):
+        if np.isclose(time, 0.0):
+            interface_position = config.initial_interface_position
+            velocity = float(
+                interface_velocity(
+                    config.initial_temperature,
+                    interface_position,
+                    config,
+                    derived,
+                )
+            )
+            top_temperature = config.initial_temperature
+            bottom_temperature = config.initial_temperature
+            shelf_temperature = settings.shelf_temperature_min
+            label = "policy_3_interface_velocity_tracking"
+        elif time <= switch_31:
+            fraction = float(time / switch_31)
+            interface_position = velocity_limit * time
+            velocity = velocity_limit
+            top_temperature = _temperature_for_interface_velocity(
+                velocity,
+                interface_position,
+                config,
+                derived,
+            )
+            bottom_temperature = min(
+                settings.temperature_limit - 2.0,
+                config.initial_temperature
+                + (settings.temperature_limit - 4.0 - config.initial_temperature)
+                * fraction,
+            )
+            shelf_temperature = (
+                settings.shelf_temperature_min
+                + (settings.shelf_temperature_max - settings.shelf_temperature_min)
+                * fraction**1.4
+            )
+            label = "policy_3_interface_velocity_tracking"
+        elif time <= switch_12:
+            fraction = float((time - switch_31) / (switch_12 - switch_31))
+            interface_position = (
+                policy3_switch_s + (policy2_switch_s - policy3_switch_s) * fraction
+            )
+            velocity = policy1_velocity
+            top_temperature = _temperature_for_interface_velocity(
+                velocity,
+                interface_position,
+                config,
+                derived,
+            )
+            bottom_temperature = settings.temperature_limit - 2.0 * (1.0 - fraction)
+            shelf_temperature = settings.shelf_temperature_max
+            label = "policy_1_max_heat_input"
+        else:
+            fraction = float((time - switch_12) / max(final_time - switch_12, 1.0))
+            interface_position = float(sol2.sol(time)[0])
+            velocity = velocity_at_temperature(interface_position)
+            top_temperature = settings.temperature_limit
+            bottom_temperature = settings.temperature_limit
+            shelf_temperature = settings.shelf_temperature_max - 8.0 * fraction
+            shelf_temperature = float(
+                np.clip(
+                    shelf_temperature,
+                    settings.shelf_temperature_min,
+                    settings.shelf_temperature_max,
+                )
+            )
+            label = "policy_2_temperature_tracking"
+
+        top_temperature = float(
+            np.clip(
+                top_temperature,
+                discretization.temperature_lower_bound,
+                settings.temperature_limit,
+            )
+        )
+        bottom_temperature = float(
+            np.clip(
+                bottom_temperature,
+                top_temperature,
+                settings.temperature_limit,
+            )
+        )
+        temperature = np.linspace(top_temperature, bottom_temperature, n_z)
+        flux = float(sublimation_flux(top_temperature, interface_position, config))
+
+        temperature_values[index, :] = temperature
+        interface_values[index] = interface_position
+        shelf_values[index] = shelf_temperature
+        interface_velocity_values[index] = velocity
+        flux_values[index] = flux
+        labels.append(label)
+
+    return {
+        "states": {
+            "time_s": time_s,
+            "time_hr": time_s / 3600.0,
+            "temperature_K": temperature_values,
+            "max_temperature_K": temperature_values.max(axis=1),
+            "interface_position_m": interface_values,
+            "interface_velocity_m_per_s": interface_velocity_values,
+            "sublimation_flux_kg_m2_s": flux_values,
+        },
+        "controls": {
+            "shelf_temperature_K": shelf_values,
+        },
+        "policies": {
+            "labels": labels,
+            "segments": _compress_policy_labels(time_s / 3600.0, labels),
+            "switch_times_hr": [switch_31 / 3600.0, switch_12 / 3600.0],
+        },
+        "metrics": {
+            "drying_time_s": final_time,
+            "drying_time_hr": final_time / 3600.0,
+            "policy3_switch_time_s": switch_31,
+            "policy3_switch_time_hr": switch_31 / 3600.0,
+            "policy1_switch_time_s": switch_12,
+            "policy1_switch_time_hr": switch_12 / 3600.0,
+            "terminal_drying_fraction": float(
+                interface_values[-1] / derived.product_height
+            ),
+            "max_interface_velocity_m_per_s": float(
+                interface_velocity_values[1:].max()
+            ),
+        },
+        "metadata": {
+            "source": "problem2_policy_initialization",
+            "n_z": n_z,
+            "rtol": rtol,
+            "atol": atol,
+        },
+        "problem": {
+            "name": "paper_problem_2_policy_initialization",
+            "temperature_limit_K": settings.temperature_limit,
+            "interface_velocity_limit_m_per_s": velocity_limit,
+            "shelf_temperature_min_K": settings.shelf_temperature_min,
+            "shelf_temperature_max_K": settings.shelf_temperature_max,
             "terminal_drying_fraction_target": discretization.terminal_drying_fraction,
         },
     }
@@ -485,12 +775,20 @@ def initialize_paper_problem1_from_trajectory(
         interface_value = float(np.interp(absolute_time, time_s, interface_position))
         shelf_value = float(np.interp(absolute_time, time_s, shelf_temperature))
         source_temperature_at_time = np.array(
-            [np.interp(absolute_time, time_s, temperature[:, j]) for j in range(temperature.shape[1])]
+            [
+                np.interp(absolute_time, time_s, temperature[:, j])
+                for j in range(temperature.shape[1])
+            ]
         )
         source_dtemperature_at_time = np.array(
-            [np.interp(absolute_time, time_s, dtemperature_dt[:, j]) for j in range(temperature.shape[1])]
+            [
+                np.interp(absolute_time, time_s, dtemperature_dt[:, j])
+                for j in range(temperature.shape[1])
+            ]
         )
-        target_temperature = np.interp(target_psi, source_psi, source_temperature_at_time)
+        target_temperature = np.interp(
+            target_psi, source_psi, source_temperature_at_time
+        )
         target_dtemperature_dt = np.interp(
             target_psi,
             source_psi,
@@ -502,7 +800,9 @@ def initialize_paper_problem1_from_trajectory(
         for i, value in zip(model.z, target_temperature):
             _set_var_value_within_bounds(model.T[i, tau], float(value))
             if hasattr(model, "dT_dtau"):
-                model.dT_dtau[i, tau].set_value(float(final_time * target_dtemperature_dt[i]))
+                model.dT_dtau[i, tau].set_value(
+                    float(final_time * target_dtemperature_dt[i])
+                )
 
         velocity = float(np.interp(absolute_time, time_s, dinterface_dt))
         velocity = max(velocity, 1.0e-12)
@@ -540,14 +840,18 @@ def load_upstream_matlab_trajectory(mat_path: str | Path) -> dict[str, Any]:
     if temperature.ndim == 1:
         temperature = temperature.reshape(-1, 1)
     if "S" in data:
-        interface_position = np.atleast_1d(np.asarray(data["S"], dtype=float)).reshape(-1)
+        interface_position = np.atleast_1d(np.asarray(data["S"], dtype=float)).reshape(
+            -1
+        )
     elif "y" in data:
         interface_position = np.asarray(data["y"], dtype=float)[:, -1]
     else:
         raise ValueError("MATLAB trajectory must contain 'S' when 'y' is absent")
 
     if "Tb" not in data:
-        raise ValueError("MATLAB trajectory must contain a 'Tb' shelf-temperature array")
+        raise ValueError(
+            "MATLAB trajectory must contain a 'Tb' shelf-temperature array"
+        )
     shelf_temperature = np.atleast_1d(np.asarray(data["Tb"], dtype=float)).reshape(-1)
 
     if len(time_s) != len(temperature) or len(time_s) != len(interface_position):
@@ -562,7 +866,9 @@ def load_upstream_matlab_trajectory(mat_path: str | Path) -> dict[str, Any]:
             np.asarray(data["dSdt"], dtype=float)
         ).reshape(-1)
     else:
-        interface_velocity_values = np.gradient(interface_position, time_s, edge_order=1)
+        interface_velocity_values = np.gradient(
+            interface_position, time_s, edge_order=1
+        )
     if len(interface_velocity_values) != len(time_s):
         raise ValueError("dSdt must share the same length as t")
 
@@ -635,7 +941,8 @@ def compare_paper_problem1_trajectories(
         ),
         "pyomo_terminal_interface_position_m": pyomo_terminal_s,
         "upstream_terminal_interface_position_m": upstream_terminal_s,
-        "terminal_interface_position_deviation_m": pyomo_terminal_s - upstream_terminal_s,
+        "terminal_interface_position_deviation_m": pyomo_terminal_s
+        - upstream_terminal_s,
         "pyomo_peak_temperature_K": pyomo_peak_temperature,
         "upstream_peak_temperature_K": upstream_peak_temperature,
         "peak_temperature_deviation_K": pyomo_peak_temperature
@@ -741,7 +1048,36 @@ def create_paper_problem1_model(
     discretization: PaperDiscretization | None = None,
     apply_scaling: bool = False,
 ):
-    """Create the Pyomo direct-transcription model for Paper Problem 1.
+    """Create the Pyomo direct-transcription model for Paper Problem 1."""
+    return _create_paper_problem_model(
+        "problem1",
+        config=config,
+        discretization=discretization,
+        apply_scaling=apply_scaling,
+    )
+
+
+def create_paper_problem2_model(
+    config: PaperPrimaryDryingConfig | None = None,
+    discretization: PaperDiscretization | None = None,
+    apply_scaling: bool = False,
+):
+    """Create the Pyomo direct-transcription model for Paper Problem 2."""
+    return _create_paper_problem_model(
+        "problem2",
+        config=config,
+        discretization=discretization,
+        apply_scaling=apply_scaling,
+    )
+
+
+def _create_paper_problem_model(
+    problem: str,
+    config: PaperPrimaryDryingConfig | None = None,
+    discretization: PaperDiscretization | None = None,
+    apply_scaling: bool = False,
+):
+    """Create a Pyomo direct-transcription model for a paper OCP.
 
     The model is discretized immediately with orthogonal collocation so callers
     receive an NLP ready for initialization and solve. Scaling suffixes are
@@ -752,6 +1088,7 @@ def create_paper_problem1_model(
 
     config = config or PaperPrimaryDryingConfig()
     discretization = discretization or PaperDiscretization()
+    settings = _paper_problem_settings(config, problem)
     derived = derive_primary_drying_parameters(config, discretization.n_z)
     if not 0.0 < discretization.terminal_drying_fraction < 1.0:
         raise ValueError("terminal_drying_fraction must be in (0, 1)")
@@ -760,6 +1097,7 @@ def create_paper_problem1_model(
     model._paper_config = config
     model._paper_discretization = discretization
     model._paper_derived = derived
+    model._paper_problem_settings = settings
 
     model.z = pyo.RangeSet(0, discretization.n_z - 1)
     model.t = dae.ContinuousSet(bounds=(0.0, 1.0))
@@ -771,7 +1109,7 @@ def create_paper_problem1_model(
     terminal_s = discretization.terminal_drying_fraction * derived.product_height
     model.t_final = pyo.Var(
         bounds=config.time_bounds,
-        initialize=config.problem1_time_guess,
+        initialize=settings.time_guess,
     )
     model.T = pyo.Var(
         model.z,
@@ -789,17 +1127,15 @@ def create_paper_problem1_model(
     )
     model.Tb = pyo.Var(
         model.t,
-        bounds=(config.shelf_temperature_min, config.shelf_temperature_max),
-        initialize=config.shelf_temperature_max,
+        bounds=(settings.shelf_temperature_min, settings.shelf_temperature_max),
+        initialize=settings.shelf_temperature_max,
     )
 
     model.dT_dtau = dae.DerivativeVar(model.T, wrt=model.t)
     model.dS_dtau = dae.DerivativeVar(model.S, wrt=model.t)
 
     def vapor_pressure_rule(m, t):
-        return pyo.exp(
-            config.vapor_pressure_a / m.T[0, t] + config.vapor_pressure_b
-        )
+        return pyo.exp(config.vapor_pressure_a / m.T[0, t] + config.vapor_pressure_b)
 
     model.Pw = pyo.Expression(model.t, rule=vapor_pressure_rule)
 
@@ -880,9 +1216,7 @@ def create_paper_problem1_model(
                 * m.Nw[t]
                 * config.heat_of_sublimation
                 / derived.frozen_conductivity
-                + top_radiation
-                * thickness
-                / derived.frozen_conductivity
+                + top_radiation * thickness / derived.frozen_conductivity
             )
             convection = (
                 -((m.psi[i] - 1.0) * m.dSdt[t] / thickness) * convection_gradient
@@ -955,12 +1289,24 @@ def create_paper_problem1_model(
     bottom_node = discretization.n_z - 1
 
     def product_temperature_limit_rule(m, t):
-        return m.T[bottom_node, t] <= config.problem1_temperature_limit
+        return m.T[bottom_node, t] <= settings.temperature_limit
 
     model.product_temperature_limit = pyo.Constraint(
         model.t,
         rule=product_temperature_limit_rule,
     )
+
+    if settings.interface_velocity_limit is not None:
+
+        def interface_velocity_limit_rule(m, t):
+            if t == m.t.first():
+                return pyo.Constraint.Skip
+            return 1.0e7 * m.dSdt[t] <= 1.0e7 * settings.interface_velocity_limit
+
+        model.interface_velocity_limit = pyo.Constraint(
+            model.t,
+            rule=interface_velocity_limit_rule,
+        )
 
     model.terminal_drying = pyo.Constraint(expr=model.S[1.0] >= terminal_s)
     model.objective = pyo.Objective(expr=model.t_final, sense=pyo.minimize)
@@ -985,8 +1331,10 @@ def _initialize_problem1_model(model: Any) -> None:
     config = model._paper_config
     discretization = model._paper_discretization
     derived = model._paper_derived
+    settings = model._paper_problem_settings
+    settings = model._paper_problem_settings
     terminal_s = discretization.terminal_drying_fraction * derived.product_height
-    time_guess = config.problem1_time_guess
+    time_guess = settings.time_guess
     model.t_final.set_value(time_guess)
 
     for t in sorted(model.t):
@@ -995,18 +1343,21 @@ def _initialize_problem1_model(model: Any) -> None:
         model.S[t].set_value(s_guess)
 
         if tau <= 0.35:
-            tb_guess = config.shelf_temperature_max
+            tb_guess = settings.shelf_temperature_max
         else:
             decline = (tau - 0.35) / 0.65
-            tb_guess = config.shelf_temperature_max - 20.0 * min(max(decline, 0.0), 1.0)
-        model.Tb[t].set_value(max(config.shelf_temperature_min, tb_guess))
+            tb_guess = settings.shelf_temperature_max - 20.0 * min(
+                max(decline, 0.0),
+                1.0,
+            )
+        model.Tb[t].set_value(max(settings.shelf_temperature_min, tb_guess))
 
         top_guess = min(
-            config.problem1_temperature_limit - 1.0,
+            settings.temperature_limit - 1.0,
             config.initial_temperature + 13.0 * tau,
         )
         bottom_guess = min(
-            config.problem1_temperature_limit - 0.25,
+            settings.temperature_limit - 0.25,
             config.initial_temperature + 15.0 * tau,
         )
         for i in model.z:
@@ -1040,6 +1391,7 @@ def _add_problem1_scaling(model: Any) -> None:
     _set_component_scaling(model, "initial_temperature", 1.0e-2)
     _set_component_scaling(model, "product_temperature_limit", 1.0e-2)
     _set_component_scaling(model, "nonnegative_sublimation_flux", 1.0e-1)
+    _set_component_scaling(model, "interface_velocity_limit", 1.0e7)
     _set_component_scaling(model, "terminal_drying", 1.0e2)
     _set_component_scaling(model, "dS_dtau_disc_eq", 1.0e2)
     _set_component_scaling(model, "dT_dtau_disc_eq", 1.0e-2)
@@ -1112,7 +1464,10 @@ def _numeric_temperature_rhs(
                 )
             )
             convection_gradient = (
-                thickness * flux * config.heat_of_sublimation / derived.frozen_conductivity
+                thickness
+                * flux
+                * config.heat_of_sublimation
+                / derived.frozen_conductivity
                 + top_radiation * thickness / derived.frozen_conductivity
             )
             convection = (
@@ -1152,11 +1507,7 @@ def _numeric_temperature_rhs(
                 derived.frozen_diffusivity
                 / thickness**2
                 / derived.dpsi**2
-                * (
-                    temperature[i - 1]
-                    - 2.0 * temperature[i]
-                    + temperature[i + 1]
-                )
+                * (temperature[i - 1] - 2.0 * temperature[i] + temperature[i + 1])
             )
             convection = (
                 -((derived.psi[i] - 1.0) * dinterface_dt / thickness)
@@ -1192,9 +1543,7 @@ def _policy2_shelf_temperature(
     diffusion_scale = derived.frozen_diffusivity / thickness**2 / derived.dpsi**2
     target_stencil = (side_loss - source) / diffusion_scale
     bottom_delta = (
-        target_stencil
-        - 2.0 * temperature[bottom_index - 1]
-        + 2.0 * bottom_temperature
+        target_stencil - 2.0 * temperature[bottom_index - 1] + 2.0 * bottom_temperature
     )
     denominator = (
         2.0
@@ -1231,6 +1580,64 @@ def _policy_sample_times(
     )
 
 
+def _policy_sample_times_multiple(
+    switch_times: tuple[float, ...],
+    final_time: float,
+    n_time_points: int,
+) -> np.ndarray:
+    """Return sample times preserving multiple switch points."""
+    if n_time_points < 3 * (len(switch_times) + 1):
+        raise ValueError("n_time_points is too small for the policy sequence")
+
+    boundaries = (0.0, *switch_times, final_time)
+    durations = np.diff(boundaries)
+    if np.any(durations <= 0.0):
+        raise ValueError("switch times must be strictly increasing")
+
+    raw_counts = n_time_points * durations / final_time
+    counts = [max(3, int(round(count))) for count in raw_counts]
+    while sum(counts) - len(counts) + 1 > n_time_points:
+        index = int(np.argmax(counts))
+        if counts[index] <= 3:
+            break
+        counts[index] -= 1
+    while sum(counts) - len(counts) + 1 < n_time_points:
+        index = int(np.argmax(durations))
+        counts[index] += 1
+
+    pieces = [
+        np.linspace(start, stop, count)
+        for start, stop, count in zip(boundaries[:-1], boundaries[1:], counts)
+    ]
+    return np.unique(np.concatenate(pieces))
+
+
+def _interface_velocity_at_temperature(
+    interface_temperature: float,
+    interface_position: float,
+    config: PaperPrimaryDryingConfig,
+    derived: PaperDerivedParameters,
+) -> float:
+    flux = float(sublimation_flux(interface_temperature, interface_position, config))
+    return flux / (derived.frozen_density - config.dried_region_density)
+
+
+def _temperature_for_interface_velocity(
+    interface_velocity_value: float,
+    interface_position: float,
+    config: PaperPrimaryDryingConfig,
+    derived: PaperDerivedParameters,
+) -> float:
+    flux = interface_velocity_value * (
+        derived.frozen_density - config.dried_region_density
+    )
+    pressure = config.chamber_water_pressure + flux * float(
+        product_resistance(interface_position, config)
+    )
+    pressure = max(pressure, 1.0e-12)
+    return float(temperature_for_saturation_pressure(pressure, config))
+
+
 def _set_var_value_within_bounds(var: Any, value: float) -> None:
     """Set a Pyomo VarData value after clipping to its finite bounds."""
     lower, upper = var.bounds
@@ -1252,18 +1659,77 @@ def solve_paper_problem1(
     return_model: bool = False,
 ) -> dict[str, Any]:
     """Build and solve Paper Problem 1 with Pyomo/IPOPT."""
+    return _solve_paper_problem(
+        "problem1",
+        config=config,
+        discretization=discretization,
+        solver=solver,
+        solver_options=solver_options,
+        initialization=initialization,
+        tee=tee,
+        require_success=require_success,
+        return_model=return_model,
+    )
+
+
+def solve_paper_problem2(
+    config: PaperPrimaryDryingConfig | None = None,
+    discretization: PaperDiscretization | None = None,
+    solver: str = "ipopt",
+    solver_options: Mapping[str, Any] | None = None,
+    initialization: str | Mapping[str, Any] | None = "policy",
+    tee: bool = False,
+    require_success: bool = True,
+    return_model: bool = False,
+) -> dict[str, Any]:
+    """Build and solve Paper Problem 2 with Pyomo/IPOPT."""
+    return _solve_paper_problem(
+        "problem2",
+        config=config,
+        discretization=discretization,
+        solver=solver,
+        solver_options=solver_options,
+        initialization=initialization,
+        tee=tee,
+        require_success=require_success,
+        return_model=return_model,
+    )
+
+
+def _solve_paper_problem(
+    problem: str,
+    config: PaperPrimaryDryingConfig | None = None,
+    discretization: PaperDiscretization | None = None,
+    solver: str = "ipopt",
+    solver_options: Mapping[str, Any] | None = None,
+    initialization: str | Mapping[str, Any] | None = "policy",
+    tee: bool = False,
+    require_success: bool = True,
+    return_model: bool = False,
+) -> dict[str, Any]:
+    """Build and solve a paper-reference problem with Pyomo/IPOPT."""
     import pyomo.environ as pyo
 
-    model = create_paper_problem1_model(config, discretization)
+    if problem == "problem1":
+        model = create_paper_problem1_model(config, discretization)
+    elif problem == "problem2":
+        model = create_paper_problem2_model(config, discretization)
+    else:
+        raise ValueError(f"unsupported paper OCP problem: {problem}")
     config = config or model._paper_config
     discretization = discretization or model._paper_discretization
     if initialization == "policy":
-        trajectory = generate_problem1_policy_initialization(config, discretization)
+        if problem == "problem1":
+            trajectory = generate_problem1_policy_initialization(config, discretization)
+        else:
+            trajectory = generate_problem2_policy_initialization(config, discretization)
         initialize_paper_problem1_from_trajectory(model, trajectory)
     elif isinstance(initialization, Mapping):
         initialize_paper_problem1_from_trajectory(model, initialization)
     elif initialization is not None:
-        raise ValueError("initialization must be 'policy', a trajectory mapping, or None")
+        raise ValueError(
+            "initialization must be 'policy', a trajectory mapping, or None"
+        )
 
     try:
         from idaes.core.solvers import get_solver
@@ -1294,9 +1760,10 @@ def solve_paper_problem1(
         solution["model"] = model
 
     if require_success and not _is_successful_termination(results):
+        settings = model._paper_problem_settings
         metadata = solution["metadata"]
         raise RuntimeError(
-            "Paper Problem 1 solve did not converge "
+            f"{settings.name.replace('_', ' ').title()} solve did not converge "
             f"(status={metadata['status']}, "
             f"termination_condition={metadata['termination_condition']})"
         )
@@ -1311,6 +1778,7 @@ def extract_paper_solution(model: Any, results: Any | None = None) -> dict[str, 
     config = model._paper_config
     discretization = model._paper_discretization
     derived = model._paper_derived
+    settings = model._paper_problem_settings
     t_points = sorted(model.t)
     z_points = list(model.z)
     t_final = float(pyo.value(model.t_final))
@@ -1329,38 +1797,52 @@ def extract_paper_solution(model: Any, results: Any | None = None) -> dict[str, 
     resistance = np.array([float(pyo.value(model.Rp[t])) for t in t_points])
     vapor_pressure = np.array([float(pyo.value(model.Pw[t])) for t in t_points])
     max_temperature = temperature.max(axis=1)
+    constrained_velocity = (
+        interface_velocity_values[1:]
+        if len(interface_velocity_values) > 1
+        else interface_velocity_values
+    )
 
     target_s = discretization.terminal_drying_fraction * derived.product_height
     metrics = {
         "drying_time_s": t_final,
         "drying_time_hr": t_final / 3600.0,
         "terminal_interface_position_m": float(interface_position[-1]),
-        "terminal_drying_fraction": float(interface_position[-1] / derived.product_height),
+        "terminal_drying_fraction": float(
+            interface_position[-1] / derived.product_height
+        ),
         "target_interface_position_m": target_s,
         "terminal_gap_m": max(0.0, target_s - float(interface_position[-1])),
         "max_product_temperature_K": float(max_temperature.max()),
         "max_temperature_violation_K": max(
             0.0,
-            float(max_temperature.max() - config.problem1_temperature_limit),
+            float(max_temperature.max() - settings.temperature_limit),
         ),
         "shelf_lower_violation_K": max(
             0.0,
-            float(config.shelf_temperature_min - shelf_temperature.min()),
+            float(settings.shelf_temperature_min - shelf_temperature.min()),
         ),
         "shelf_upper_violation_K": max(
             0.0,
-            float(shelf_temperature.max() - config.shelf_temperature_max),
+            float(shelf_temperature.max() - settings.shelf_temperature_max),
         ),
+        "max_interface_velocity_m_per_s": float(constrained_velocity.max()),
     }
+    if settings.interface_velocity_limit is not None:
+        metrics["initial_interface_velocity_m_per_s"] = float(
+            interface_velocity_values[0]
+        )
+        metrics["max_interface_velocity_violation_m_per_s"] = max(
+            0.0,
+            float(constrained_velocity.max() - settings.interface_velocity_limit),
+        )
 
     status = None
     termination_condition = None
     if results is not None:
         solver_info = getattr(results, "solver", None)
         status = str(getattr(solver_info, "status", None))
-        termination_condition = str(
-            getattr(solver_info, "termination_condition", None)
-        )
+        termination_condition = str(getattr(solver_info, "termination_condition", None))
 
     return {
         "states": {
@@ -1388,10 +1870,11 @@ def extract_paper_solution(model: Any, results: Any | None = None) -> dict[str, 
             "scheme": discretization.scheme,
         },
         "problem": {
-            "name": "paper_problem_1",
-            "temperature_limit_K": config.problem1_temperature_limit,
-            "shelf_temperature_min_K": config.shelf_temperature_min,
-            "shelf_temperature_max_K": config.shelf_temperature_max,
+            "name": settings.name,
+            "temperature_limit_K": settings.temperature_limit,
+            "interface_velocity_limit_m_per_s": settings.interface_velocity_limit,
+            "shelf_temperature_min_K": settings.shelf_temperature_min,
+            "shelf_temperature_max_K": settings.shelf_temperature_max,
             "terminal_drying_fraction_target": discretization.terminal_drying_fraction,
         },
         "config": asdict(config),
@@ -1406,13 +1889,16 @@ def classify_paper_policies(
     """Infer active paper policies from a result trajectory.
 
     Policy 1 is maximum heat input (``Tb = Tb_max``).  Policy 2 is product
-    temperature tracking (``max(T) = T_limit``).  If both are active at a point,
-    Policy 2 takes precedence because it is the path constraint that forces the
-    control away from unconstrained maximum heating.
+    temperature tracking (``max(T) = T_limit``).  Policy 3 is interface-velocity
+    tracking (``dS/dt = dSdt_limit``).  If multiple path constraints are active
+    at a point, Policy 2 takes precedence over Policy 3 because the product
+    temperature limit becomes the controlling active constraint in the paper's
+    Problem 2 sequence.
     """
     tolerances = dict(tolerances or {})
     temperature_tolerance = tolerances.get("temperature_K", 0.35)
     shelf_tolerance = tolerances.get("shelf_temperature_K", 0.35)
+    velocity_tolerance = tolerances.get("interface_velocity_m_per_s", 2.0e-9)
 
     states = result["states"]
     controls = result["controls"]
@@ -1420,15 +1906,33 @@ def classify_paper_policies(
     time_hr = np.asarray(states["time_hr"])
     max_temperature = np.asarray(states["max_temperature_K"])
     shelf_temperature = np.asarray(controls["shelf_temperature_K"])
+    interface_velocity_values = np.asarray(
+        states.get(
+            "interface_velocity_m_per_s",
+            np.full(max_temperature.shape, np.nan, dtype=float),
+        )
+    )
     temperature_limit = float(problem["temperature_limit_K"])
+    velocity_limit = problem.get("interface_velocity_limit_m_per_s")
+    velocity_limit = None if velocity_limit is None else float(velocity_limit)
     shelf_max = float(problem["shelf_temperature_max_K"])
 
     labels: list[str] = []
-    for temp, shelf in zip(max_temperature, shelf_temperature):
+    for temp, shelf, velocity in zip(
+        max_temperature,
+        shelf_temperature,
+        interface_velocity_values,
+    ):
         temp_active = temp >= temperature_limit - temperature_tolerance
+        velocity_active = (
+            velocity_limit is not None
+            and velocity >= velocity_limit - velocity_tolerance
+        )
         shelf_active = abs(shelf - shelf_max) <= shelf_tolerance
         if temp_active:
             labels.append("policy_2_temperature_tracking")
+        elif velocity_active:
+            labels.append("policy_3_interface_velocity_tracking")
         elif shelf_active:
             labels.append("policy_1_max_heat_input")
         else:
