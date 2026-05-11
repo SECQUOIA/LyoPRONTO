@@ -214,7 +214,10 @@ The adapter returns `states`, `controls`, `metrics`, `metadata`, `problem`,
 `config`, `trajectory`, and `policies` sections. With no flux or velocity cap,
 it adds no extra path constraints to `create_optimizer_model()`, so the existing
 SciPy optimizers and the public Pyomo optimizer functions keep their current
-behavior and return types.
+behavior and return types. When a cap is present, a SciPy trajectory can still
+initialize the Pyomo variables, but the adapter skips the fixed-control staged
+solve because the uncapped warm start may violate active Policy 3 path
+constraints before shelf temperature is released.
 
 ## Problem 2 First-Pass Tolerances
 

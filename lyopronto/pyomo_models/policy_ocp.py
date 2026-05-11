@@ -215,6 +215,19 @@ def solve_lyopronto_policy_ocp(
     else:
         _fix_control_profile(model, "Pch", Pchamber)
 
+    policy_cap_active = (
+        model._lyopronto_policy_problem["sublimation_flux_cap_kg_hr_m2"] is not None
+        or model._lyopronto_policy_problem["interface_velocity_cap_cm_hr"] is not None
+    )
+    use_staged_solve = warmstart_scipy and not policy_cap_active
+    model._lyopronto_policy_solver_strategy = {
+        "warmstart_scipy": bool(warmstart_scipy),
+        "staged_solve_used": bool(use_staged_solve),
+        "staged_solve_skip_reason": "policy_cap"
+        if warmstart_scipy and policy_cap_active
+        else None,
+    }
+
     try:
         from idaes.core.solvers import get_solver
 
@@ -250,7 +263,7 @@ def solve_lyopronto_policy_ocp(
         opt,
         context="solve_lyopronto_policy_ocp",
         control_mode="Tsh",
-        warmstart_scipy=warmstart_scipy,
+        warmstart_scipy=use_staged_solve,
         simulation_mode=False,
         tee=tee,
     )
@@ -360,6 +373,7 @@ def extract_lyopronto_policy_solution(
         "termination_condition": termination_condition,
         **discretization,
     }
+    metadata.update(getattr(model, "_lyopronto_policy_solver_strategy", {}))
     if results is not None:
         metadata.update(_solver_metadata(results))
     if solver_limit_options:

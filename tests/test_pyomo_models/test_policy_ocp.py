@@ -9,11 +9,24 @@ from lyopronto.pyomo_models.policy_ocp import (
     classify_lyopronto_policies,
     create_lyopronto_policy_ocp_model,
     extract_lyopronto_policy_solution,
+    solve_lyopronto_policy_ocp,
 )
 
 pyo = pytest.importorskip("pyomo.environ", reason="Pyomo not available")
 
 pytestmark = pytest.mark.pyomo
+
+
+def _ipopt_available():
+    try:
+        from idaes.core.solvers import get_solver
+
+        return get_solver("ipopt").available()
+    except Exception:
+        try:
+            return pyo.SolverFactory("ipopt").available(False)
+        except Exception:
+            return False
 
 
 def _policy_inputs(standard_vial, standard_product, standard_ht):
@@ -136,3 +149,34 @@ def test_policy_classifier_detects_flux_cap_policy3():
     assert policies["segments"][1]["label"] == "policy_1_max_heat_input"
     assert policies["segments"][2]["label"] == "policy_2_product_temperature_tracking"
     assert policies["switch_times_hr"] == [2.0, 3.0]
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(not _ipopt_available(), reason="IPOPT solver not available")
+def test_policy_ocp_default_warmstart_solves_active_flux_cap(
+    standard_vial,
+    standard_product,
+    standard_ht,
+):
+    inputs = _policy_inputs(standard_vial, standard_product, standard_ht)
+    inputs["Pchamber"] = {
+        "setpt": [0.1],
+        "dt_setpt": [1800.0],
+        "ramp_rate": 0.5,
+    }
+
+    result = solve_lyopronto_policy_ocp(
+        **inputs,
+        dt=0.01,
+        n_elements=4,
+        sublimation_flux_cap_kg_hr_m2=0.6,
+        solver_cpu_time=30.0,
+    )
+
+    assert result["metadata"]["termination_condition"] == "optimal"
+    assert result["metadata"]["warmstart_scipy"] is True
+    assert result["metadata"]["staged_solve_used"] is False
+    assert result["metadata"]["staged_solve_skip_reason"] == "policy_cap"
+    assert result["metrics"]["max_sublimation_flux_violation_kg_hr_m2"] <= 1.0e-6
+    labels = result["policies"]["labels"]
+    assert "policy_3_sublimation_flux_tracking" in labels

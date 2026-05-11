@@ -127,7 +127,10 @@ The optional Policy 3 caps use LyoPRONTO output units: sublimation flux in
 `kg/hr/m^2` and interface velocity in `cm/hr`. With no cap provided, the adapter
 adds no path constraints beyond the existing Pyomo optimizer model, preserving
 the behavior of the legacy SciPy optimizers and the existing Pyomo optimizer
-entry points.
+entry points. When a cap is provided with `warmstart_scipy=True`, the solve uses
+the SciPy trajectory as an initial point but skips the fixed-control staged solve
+because an uncapped warm start can violate active Policy 3 constraints before
+the shelf-temperature control is released.
 
 Regenerate the full upstream Problem 1 reference with:
 
