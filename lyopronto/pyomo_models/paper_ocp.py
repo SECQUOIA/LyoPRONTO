@@ -197,8 +197,9 @@ def sublimation_flux(
 ) -> np.ndarray | float:
     """Return sublimation flux [kg/(m^2 s)].
 
-    The Pyomo model enforces nonnegative flux.  This helper mirrors the smooth
-    equation used in the direct-transcription model.
+    This helper mirrors the smooth signed equation used in the
+    direct-transcription model. The Pyomo model adds a separate constraint that
+    keeps the sublimation driving force nonnegative.
     """
     pressure = saturation_pressure(interface_temperature, config)
     resistance = product_resistance(interface_position, config)
@@ -660,6 +661,14 @@ def create_paper_problem1_model(
 
     model.Nw = pyo.Expression(model.t, rule=sublimation_flux_rule)
 
+    def nonnegative_sublimation_flux_rule(m, t):
+        return m.Pw[t] >= config.chamber_water_pressure
+
+    model.nonnegative_sublimation_flux = pyo.Constraint(
+        model.t,
+        rule=nonnegative_sublimation_flux_rule,
+    )
+
     def interface_velocity_rule(m, t):
         return m.Nw[t] / (derived.frozen_density - config.dried_region_density)
 
@@ -876,6 +885,7 @@ def _add_problem1_scaling(model: Any) -> None:
     _set_component_scaling(model, "initial_interface", 1.0e2)
     _set_component_scaling(model, "initial_temperature", 1.0e-2)
     _set_component_scaling(model, "product_temperature_limit", 1.0e-2)
+    _set_component_scaling(model, "nonnegative_sublimation_flux", 1.0e-1)
     _set_component_scaling(model, "terminal_drying", 1.0e2)
     _set_component_scaling(model, "dS_dtau_disc_eq", 1.0e2)
     _set_component_scaling(model, "dT_dtau_disc_eq", 1.0e-2)

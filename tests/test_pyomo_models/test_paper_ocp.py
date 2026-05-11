@@ -84,6 +84,7 @@ def test_problem1_model_constructs_with_collocation():
     assert hasattr(model, "Tb")
     assert hasattr(model, "temperature_ode")
     assert len(model.product_temperature_limit) == len(list(model.t))
+    assert len(model.nonnegative_sublimation_flux) == len(list(model.t))
     assert hasattr(model, "terminal_drying")
     assert hasattr(model, "objective")
 
@@ -100,6 +101,23 @@ def test_problem1_model_initial_values_are_extractable():
     assert pyo.value(model.S[t_points[0]]) == 0.0
     assert pyo.value(model.S[t_points[-1]]) > 0.0
     assert pyo.value(model.t_final) == PaperPrimaryDryingConfig().problem1_time_guess
+
+
+def test_problem1_model_constrains_sublimation_flux_nonnegative():
+    config = PaperPrimaryDryingConfig()
+    discretization = PaperDiscretization(n_z=5, nfe=3, ncp=2)
+    model = create_paper_problem1_model(config=config, discretization=discretization)
+
+    for t in model.t:
+        constraint = model.nonnegative_sublimation_flux[t]
+        assert constraint.lower == config.chamber_water_pressure
+        assert constraint.upper is None
+
+    first_time = next(iter(model.t))
+    model.T[0, first_time].set_value(discretization.temperature_lower_bound)
+    assert pyo.value(model.nonnegative_sublimation_flux[first_time].body) < (
+        config.chamber_water_pressure
+    )
 
 
 def test_policy_classifier_detects_problem1_sequence():

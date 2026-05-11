@@ -66,9 +66,11 @@ documented acceptable NLP tolerance (`acceptable_tol=1e-3`,
 within `1e-7 m`, product-temperature violation within `2e-6 K`, drying time near
 6.19 h, and switch time near 2.4 h.
 
-As a local verification against the cloned upstream repository, the MATLAB
-Policy 1 segment for Problem 1 (`Case2`) was run from
-`/home/bernalde/repos/simDAE-optimalcontrol-lyo`. It detected the
+As verification against the upstream reference implementation
+(`PrakitrSrisuma/simDAE-optimalcontrol-lyo` commit
+`5bcfece23128be7e5be51b73693dc6674223ccc6`), the MATLAB Policy 1 segment for
+Problem 1 (`Case2`) was reproduced by running
+`Code (Conference Version)/Simulations/Sim_1stDrying_OCP.m`. It detected the
 product-temperature event at `2.363310733077 h`, which is what the policy
 initializer checks against.
 
