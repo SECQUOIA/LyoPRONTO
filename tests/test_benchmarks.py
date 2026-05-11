@@ -278,6 +278,23 @@ def test_benchmark_results_gitignore_blocks_generated_outputs(repo_root):
     assert allowed_result.returncode == 1, allowed_result.stdout
 
 
+def test_paper_ocp_notes_cover_issue30_comparison(repo_root):
+    notes = (repo_root / "docs" / "PAPER_OCP_VALIDATION.md").read_text(encoding="utf-8")
+
+    assert "## Paper-vs-LyoPRONTO Baseline Comparison" in notes
+    assert (
+        "| Model/case | Comparable scope | Drying time | Active constraints/control behavior | Temperature behavior | Interpretation |"
+        in notes
+    )
+    assert "benchmarks/results/baseline_Tsh_3x3_summary.jsonl" in notes
+    assert "12.19-14.47 h" in notes
+    assert "12.40-14.76 h" in notes
+    assert "12.00-14.23 h" in notes
+    assert "Recommendation: keep the paper-reference model validation-only" in notes
+    assert "#31" in notes
+    assert "optional flux/interface-velocity cap" in notes
+
+
 def test_compute_residuals_uses_native_bools_and_checks_product_temperature():
     traj = np.array(
         [
