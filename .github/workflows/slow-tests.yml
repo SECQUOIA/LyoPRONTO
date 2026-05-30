@@ -74,7 +74,7 @@ jobs:
           if [ "${{ inputs.include_pyomo }}" == "true" ]; then
             run_pytest pytest tests/ -n auto -v --cov=lyopronto --cov-report=xml --cov-report=term-missing
           else
-            run_pytest pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml --cov-report=term-missing
+            run_pytest pytest tests/ -n auto -v -m "not pyomo" --ignore=tests/test_pyomo_models --cov=lyopronto --cov-report=xml --cov-report=term-missing
           fi
         else
           echo "Running ONLY slow tests (marked with @pytest.mark.slow)"
@@ -82,7 +82,7 @@ jobs:
           if [ "${{ inputs.include_pyomo }}" == "true" ]; then
             run_pytest pytest tests/ -n auto -v -m "slow" --cov=lyopronto --cov-report=xml --cov-report=term-missing
           else
-            run_pytest pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml --cov-report=term-missing
+            run_pytest pytest tests/ -n auto -v -m "slow and not pyomo" --ignore=tests/test_pyomo_models --cov=lyopronto --cov-report=xml --cov-report=term-missing
           fi
         fi
     
