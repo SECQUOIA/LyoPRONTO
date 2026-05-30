@@ -40,6 +40,11 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
+optimization = [
+    "pyomo>=6.7.0",
+    "idaes-pse>=2.5,<2.6; python_version < '3.10'",
+    "idaes-pse>=2.9.0; python_version >= '3.10'",
+]
 dev = [
     "pytest>=7.4.0",
     "pytest-mock>=3",
@@ -58,7 +63,9 @@ docs = [
     "mike>=2.1",
     "mkdocs-ipynb>=0.1.1",
 ]
-
+all = [
+    "lyopronto[optimization,dev,docs]",
+]
 
 [project.urls]
 Homepage = "http://lyopronto.geddes.rcac.purdue.edu"
@@ -69,23 +76,71 @@ Documentation = "https://lyohub.github.io/LyoPRONTO/"
 [tool.setuptools.packages.find]
 include = ["lyopronto*"]
 
-[tool.pytest.ini_options]
-pythonpath = "."
-testpaths = ["tests"]
-python_files = ["test_*.py"]
-python_classes = ["Test*"]
-python_functions = ["test_*"]
-addopts = [
-    "-v",
-    "--strict-markers",
-    "--tb=short",
-    "--maxfail=5",
-    "--cov=lyopronto",
-    "--cov-report=term-missing",
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+# Exclude pyomo_models from type checking - Pyomo uses dynamic attribute
+# assignment (model.Var = pyo.Var(...)) which generates many false-positive
+# mypy errors. The code is tested via pytest instead.
+exclude = [
+    "lyopronto/pyomo_models/",
 ]
-markers = [
-    "slow: Tests that take a long time to run",
-    "fast: Quick tests that run in under 1 second",
-    "notebook: Tests that execute Jupyter notebooks for documentation",
-    "main: Tests that cover functionality previously included in main.py",
+
+[tool.ruff]
+# Target Python 3.8+ (matches project.requires-python)
+target-version = "py38"
+line-length = 88  # Black-compatible
+src = ["lyopronto", "tests", "benchmarks"]
+
+[tool.ruff.lint]
+# Enable recommended rules + some extras
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # Pyflakes
+    "I",      # isort (import sorting)
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "SIM",    # flake8-simplify
 ]
+ignore = [
+    "E501",   # Line too long (handled by formatter)
+    "B008",   # Do not perform function calls in argument defaults
+    "SIM108", # Use ternary operator (sometimes less readable)
+]
+
+# Allow autofix for all enabled rules
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.lint.per-file-ignores]
+# Tests can use assert and have longer lines
+"tests/**/*.py" = ["S101", "E501"]
+# Pyomo test files have conditional imports at module level (intentional pattern)
+"tests/test_pyomo_models/*.py" = ["E402", "E722", "F401"]
+# Pyomo models use closures in loops for rule functions (Pyomo pattern)
+"lyopronto/pyomo_models/*.py" = ["B023", "B007", "E722", "SIM102", "F811"]
+# Legacy scipy optimizers use closures in loops (legacy pattern)
+"lyopronto/opt_*.py" = ["B023"]
+# Package __init__ re-exports modules for public API  
+"lyopronto/__init__.py" = ["F401"]
+# Benchmarks may have more complex imports
+"benchmarks/**/*.py" = ["E501"]
+# Legacy examples may have style issues
+"examples/legacy/**/*.py" = ["ALL"]
+# Notebooks have different import patterns
+"**/*.ipynb" = ["E402", "B007"]
+# Test design space has complex warning handling
+"tests/test_design_space.py" = ["SIM117"]
+
+[tool.ruff.format]
+# Use double quotes (Black-compatible)
+quote-style = "double"
+# Indent with spaces
+indent-style = "space"
+# Unix line endings
+line-ending = "lf"
