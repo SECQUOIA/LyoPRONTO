@@ -96,6 +96,7 @@ def create_multi_period_model(
     n_elements: int = 10,
     n_collocation: int = 3,
     t_final: float = 10.0,
+    target_dry_fraction: float = 1.0,
     apply_scaling: bool = True,
 ) -> pyo.ConcreteModel:
     """Create multi-period Pyomo DAE model for primary drying optimization.
@@ -114,6 +115,8 @@ def create_multi_period_model(
         n_elements (int): Number of finite elements for time discretization
         n_collocation (int): Number of collocation points per element (3-5 recommended)
         t_final (float): Final time [hr] (will be optimized)
+        target_dry_fraction (float): Fraction of initial product length that must
+            be dried at final time. Defaults to 1.0 for complete drying.
         apply_scaling (bool): Add scaling factors for variable/constraint scaling
 
     Returns:
@@ -163,6 +166,9 @@ def create_multi_period_model(
         - Warmstart from scipy trajectory recommended
     """
     model = pyo.ConcreteModel()
+
+    if not 0 < target_dry_fraction <= 1:
+        raise ValueError("target_dry_fraction must be in the interval (0, 1]")
 
     # Extract parameters
     Av = vial["Av"]
@@ -355,7 +361,7 @@ def create_multi_period_model(
 
     def final_dryness_rule(m):
         """Ensure drying is complete at final time."""
-        return m.Lck[1] >= 0.95 * Lpr0  # 95% dried
+        return m.Lck[1] >= target_dry_fraction * Lpr0
 
     model.final_dryness = pyo.Constraint(rule=final_dryness_rule)
 
@@ -521,6 +527,7 @@ def optimize_multi_period(
     warmstart_data: Optional[np.ndarray] = None,
     solver: str = "ipopt",
     tee: bool = False,
+    target_dry_fraction: float = 1.0,
     apply_scaling: bool = True,
 ) -> Dict:
     """Optimize multi-period primary drying process.
@@ -535,6 +542,8 @@ def optimize_multi_period(
         warmstart_data (ndarray, optional): Scipy trajectory from calc_knownRp.dry()
         solver (str): Solver to use ('ipopt' recommended)
         tee (bool): Print solver output
+        target_dry_fraction (float): Fraction of initial product length that must
+            be dried at final time. Defaults to 1.0 for complete drying.
         apply_scaling (bool): Apply variable scaling
 
     Returns:
@@ -566,6 +575,7 @@ def optimize_multi_period(
         Vfill,
         n_elements=n_elements,
         n_collocation=n_collocation,
+        target_dry_fraction=target_dry_fraction,
         apply_scaling=False,  # Don't scale yet
     )
 

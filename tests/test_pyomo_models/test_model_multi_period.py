@@ -190,6 +190,65 @@ class TestModelStructure:
         # Path constraints
         assert hasattr(model, "temp_limit")
 
+    def test_final_dryness_defaults_to_complete_drying(
+        self, standard_vial, standard_product, standard_ht
+    ):
+        """Verify the default terminal constraint requires complete drying."""
+        model = model_module.create_multi_period_model(
+            standard_vial,
+            standard_product,
+            standard_ht,
+            Vfill=standard_vial["Vfill"],
+            n_elements=3,
+            n_collocation=2,
+            apply_scaling=False,
+        )
+        Lpr0 = functions.Lpr0_FUN(
+            standard_vial["Vfill"], standard_vial["Ap"], standard_product["cSolid"]
+        )
+
+        assert np.isclose(pyo.value(model.final_dryness.lower), Lpr0)
+
+    def test_final_dryness_target_can_be_configured(
+        self, standard_vial, standard_product, standard_ht
+    ):
+        """Verify callers can request a lower explicit terminal drying target."""
+        target_dry_fraction = 0.9
+        model = model_module.create_multi_period_model(
+            standard_vial,
+            standard_product,
+            standard_ht,
+            Vfill=standard_vial["Vfill"],
+            n_elements=3,
+            n_collocation=2,
+            target_dry_fraction=target_dry_fraction,
+            apply_scaling=False,
+        )
+        Lpr0 = functions.Lpr0_FUN(
+            standard_vial["Vfill"], standard_vial["Ap"], standard_product["cSolid"]
+        )
+
+        assert np.isclose(
+            pyo.value(model.final_dryness.lower), target_dry_fraction * Lpr0
+        )
+
+    @pytest.mark.parametrize("target_dry_fraction", [0.0, -0.1, 1.1])
+    def test_final_dryness_target_validates_fraction(
+        self, standard_vial, standard_product, standard_ht, target_dry_fraction
+    ):
+        """Verify terminal drying target cannot be outside (0, 1]."""
+        with pytest.raises(ValueError, match="target_dry_fraction"):
+            model_module.create_multi_period_model(
+                standard_vial,
+                standard_product,
+                standard_ht,
+                Vfill=standard_vial["Vfill"],
+                n_elements=3,
+                n_collocation=2,
+                target_dry_fraction=target_dry_fraction,
+                apply_scaling=False,
+            )
+
     def test_model_has_objective(self, standard_vial, standard_product, standard_ht):
         """Verify objective function exists."""
         model = model_module.create_multi_period_model(

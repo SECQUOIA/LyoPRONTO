@@ -424,4 +424,4 @@ class TestOptimizationComparison:
         )
         final_dryness = solution["Lck"][-1] / Lpr0
 
-        assert final_dryness >= 0.94, "Should achieve at least 94% drying"
+        assert final_dryness >= 0.999, "Should achieve complete drying by default"
