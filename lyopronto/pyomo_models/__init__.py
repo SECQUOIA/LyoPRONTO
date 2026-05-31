@@ -1,3 +1,25 @@
+"""Pyomo-based optimization models for lyophilization processes.
+
+This module provides Pyomo NLP (Nonlinear Programming) implementations as an
+alternative to the scipy-based optimizers. Both approaches coexist in LyoPRONTO,
+allowing users to choose the method that fits their application.
+
+Key modules:
+    - model: Multi-period DAE model creation with collocation
+    - optimizers: User-facing optimizer functions
+    - single_step: Single time-step optimization
+    - utils: Shared initialization, scaling, and result extraction utilities
+
+Usage:
+    # Install optimization dependencies first:
+    # pip install .[optimization]
+
+    from lyopronto.pyomo_models import PYOMO_AVAILABLE
+
+    if PYOMO_AVAILABLE:
+        from lyopronto.pyomo_models import optimize_Tsh_pyomo
+"""
+
 # Copyright (C) 2026, SECQUOIA
 #
 # This file is part of LyoPRONTO.
@@ -14,31 +36,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-"""Pyomo-based optimization models for lyophilization processes.
-
-This module provides Pyomo-based formulations for lyophilization optimization,
-complementing the existing scipy-based optimizers. The Pyomo models offer:
-
-- Mathematical programming formulations with explicit constraints
-- Support for IPOPT and other NLP solvers
-- Multi-period trajectory optimization
-- Orthogonal collocation discretization
-
-Usage:
-    # Install optimization dependencies first:
-    # pip install .[optimization]
-
-    # If using conda environment, install via:
-    # conda activate [env_name]
-    # python -m pip install ".[optimization]"
-
-    from lyopronto.pyomo_models import PYOMO_AVAILABLE
-
-Actual optimizer implementations will be added in subsequent PRs.
-
-Note: Requires IPOPT solver. Install via: idaes get-extensions --extra petsc
-"""
-
 from importlib.util import find_spec
 
 
@@ -51,5 +48,33 @@ PYOMO_AVAILABLE = _is_pyomo_available()
 
 __all__ = ["PYOMO_AVAILABLE"]
 
-# Version will be set when implementations are added
+if PYOMO_AVAILABLE:
+    from .model import (
+        create_multi_period_model,
+        optimize_multi_period,
+        warmstart_from_scipy_trajectory,
+    )
+    from .optimizers import (
+        optimize_Pch_pyomo,
+        optimize_Pch_Tsh_pyomo,
+        optimize_Tsh_pyomo,
+    )
+    from .single_step import (
+        create_single_step_model,
+        optimize_single_step,
+        solve_single_step,
+    )
+
+    __all__ += [
+        "create_single_step_model",
+        "solve_single_step",
+        "optimize_single_step",
+        "create_multi_period_model",
+        "optimize_multi_period",
+        "warmstart_from_scipy_trajectory",
+        "optimize_Tsh_pyomo",
+        "optimize_Pch_pyomo",
+        "optimize_Pch_Tsh_pyomo",
+    ]
+
 __version__ = "0.1.0-dev"

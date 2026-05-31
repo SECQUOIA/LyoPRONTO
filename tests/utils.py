@@ -3,6 +3,14 @@
 import numpy as np
 from pytest import approx
 
+# Tolerance constants for Pyomo optimizer tests (percent dried is 0-100 scale)
+FLOAT_RTOL = 5.0  # Allow numerical overshoot past 100% dried
+INITIAL_PERCENT_ATOL = 5.0  # Initial percent dried should be near 0%
+PERCENT_MAX = 100.0  # Theoretical maximum percent dried
+PYOMO_PERCENT_COMPLETE = 95.0  # Minimum acceptable completion for Pyomo optimizer
+PERCENT_COMPLETE = 99.0  # Minimum percent completion for drying
+TEMP_ATOL = 0.5  # Temperature constraint tolerance [degC]
+
 def assert_physically_reasonable_output(output, Tmax=60):
     """
     Assert that simulation output is physically reasonable.
