@@ -14,7 +14,12 @@ pytestmark = [
     pytest.mark.pyomo,
 ]
 
-from lyopronto.pyomo_models.optimizers import create_optimizer_model
+from lyopronto.pyomo_models.optimizers import (
+    create_optimizer_model,
+    optimize_Pch_pyomo,
+    optimize_Pch_Tsh_pyomo,
+    optimize_Tsh_pyomo,
+)
 
 
 class TestParameterValidation:
@@ -205,6 +210,99 @@ class TestValidConfigurations:
         assert model is not None
         assert hasattr(model, "Pch")
         assert hasattr(model, "Tsh")
+
+    def test_initial_conditions_are_not_mutated(self, base_params):
+        """Model defaults should not add keys to the caller's input dict."""
+        initial_conditions = {"Lck": 0.0}
+
+        create_optimizer_model(
+            base_params["vial"],
+            base_params["product"],
+            base_params["ht"],
+            base_params["vial"]["Vfill"],
+            base_params["eq_cap"],
+            base_params["nVial"],
+            control_mode="both",
+            Pchamber={"min": 0.06, "max": 0.20},
+            Tshelf={"min": -45, "max": 30},
+            initial_conditions=initial_conditions,
+            n_elements=2,
+        )
+
+        assert initial_conditions == {"Lck": 0.0}
+
+
+class TestHighLevelValidation:
+    """Tests for high-level optimizer argument combinations."""
+
+    @pytest.fixture
+    def base_params(self):
+        """Common test parameters for optimizer calls."""
+        return {
+            "vial": {"Av": 3.8, "Ap": 3.14, "Vfill": 2.0},
+            "product": {
+                "R0": 1.4,
+                "A1": 16.0,
+                "A2": 0.0,
+                "T_pr_crit": -5.0,
+                "cSolid": 0.05,
+            },
+            "ht": {"KC": 0.000275, "KP": 0.000893, "KD": 0.46},
+            "eq_cap": {"a": -0.182, "b": 11.7},
+            "nVial": 398,
+            "dt": 0.01,
+        }
+
+    def test_tsh_simulation_mode_requires_warmstart(self, base_params):
+        """Simulation mode validates a scipy trajectory and needs a warmstart."""
+        with pytest.raises(ValueError, match="simulation_mode.*warmstart_scipy"):
+            optimize_Tsh_pyomo(
+                base_params["vial"],
+                base_params["product"],
+                base_params["ht"],
+                Pchamber={"setpt": [0.15], "dt_setpt": [1800], "ramp_rate": 0.5},
+                Tshelf={"min": -45, "max": 30},
+                dt=base_params["dt"],
+                eq_cap=base_params["eq_cap"],
+                nVial=base_params["nVial"],
+                warmstart_scipy=False,
+                simulation_mode=True,
+                solver="not-a-real-solver",
+            )
+
+    def test_pch_simulation_mode_requires_warmstart(self, base_params):
+        """Simulation mode validates a scipy trajectory and needs a warmstart."""
+        with pytest.raises(ValueError, match="simulation_mode.*warmstart_scipy"):
+            optimize_Pch_pyomo(
+                base_params["vial"],
+                base_params["product"],
+                base_params["ht"],
+                Pchamber={"min": 0.06, "max": 0.20},
+                Tshelf={"init": 20, "setpt": [20], "dt_setpt": [1800]},
+                dt=base_params["dt"],
+                eq_cap=base_params["eq_cap"],
+                nVial=base_params["nVial"],
+                warmstart_scipy=False,
+                simulation_mode=True,
+                solver="not-a-real-solver",
+            )
+
+    def test_pch_tsh_simulation_mode_requires_warmstart(self, base_params):
+        """Simulation mode validates a scipy trajectory and needs a warmstart."""
+        with pytest.raises(ValueError, match="simulation_mode.*warmstart_scipy"):
+            optimize_Pch_Tsh_pyomo(
+                base_params["vial"],
+                base_params["product"],
+                base_params["ht"],
+                Pchamber={"min": 0.06, "max": 0.20},
+                Tshelf={"min": -45, "max": 30},
+                dt=base_params["dt"],
+                eq_cap=base_params["eq_cap"],
+                nVial=base_params["nVial"],
+                warmstart_scipy=False,
+                simulation_mode=True,
+                solver="not-a-real-solver",
+            )
 
 
 class TestBoundsValidation:
