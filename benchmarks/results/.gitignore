@@ -1,0 +1,8 @@
+# Ignore generated benchmark outputs by default.
+*
+
+# Keep policy docs and intentional root-level reference summaries.
+!.gitignore
+!README.md
+!baseline_Pch_3x3_summary.jsonl
+!baseline_Tsh_3x3_summary.jsonl

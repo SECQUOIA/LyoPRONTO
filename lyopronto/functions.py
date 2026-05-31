@@ -145,12 +145,31 @@ def Rp_finder(T_sub,Lpr0,Lck,Pch,Tbot):
     """
     Calculates product resistance [cm^2-hr-Torr/g]. Inputs are sublimation
     temperature [degC], initial product length [cm], cake length [cm],
-    chamber pressure [Torr], and vial bottom temperature [degC]
+    chamber pressure [Torr], and vial bottom temperature [degC].
+
+    A zero bottom-to-sublimation temperature gradient makes the inferred
+    resistance singular. Return signed infinity for a nonzero pressure driving
+    force and NaN for the fully indeterminate 0/0 case instead of emitting a
+    NumPy divide warning.
     """
 
     P_sub = Vapor_pressure(T_sub)   # Vapor pressure at the sublimation temperature [Torr]
 
-    Rp = (Lpr0-Lck)*(P_sub-Pch)*constant.dHs/(Tbot-T_sub)/constant.hr_To_s/constant.k_ice	# Product resistance [cm^2-Torr-hr/g]
+    driving_force = (Lpr0 - Lck) * (P_sub - Pch) * constant.dHs
+    temperature_gradient = Tbot - T_sub
+    with np.errstate(divide="ignore", invalid="ignore"):
+        Rp = driving_force/temperature_gradient/constant.hr_To_s/constant.k_ice	# Product resistance [cm^2-Torr-hr/g]
+    singular = np.equal(temperature_gradient, 0)
+    if np.any(singular):
+        singular_Rp = np.where(
+            np.equal(driving_force, 0),
+            np.nan,
+            np.copysign(np.inf, driving_force),
+        )
+        Rp = np.where(singular, singular_Rp, Rp)
+
+    if np.ndim(Rp) == 0:
+        return float(Rp)
 
     return Rp
 

@@ -105,6 +105,10 @@ class TestDesignSpaceCoverageGaps:
             'nVial': nVial
         }
 
+    @pytest.mark.filterwarnings(
+        "ignore:At Tshelf=.*sublimation is not feasible.*:"
+        "UserWarning:lyopronto\\.design_space"
+    )
     def test_design_space_negative_sublimation(self, design_space_setup):
         """Test design space with conditions that could lead to negative sublimation.
 
@@ -184,6 +188,10 @@ class TestDesignSpaceCoverageGaps:
         assert len(output) == 3
         assert output[1].shape[0] == 5  # Product temp isotherms
 
+    @pytest.mark.filterwarnings(
+        "ignore:At t=.*shelf temperature Tsh=.*is too low for sublimation\\.:"
+        "UserWarning:lyopronto\\.design_space"
+    )
     def test_design_space_equipment_capability_section(self, design_space_setup):
         """Test design space equipment capability calculations.
 
@@ -208,6 +216,10 @@ class TestDesignSpaceCoverageGaps:
         assert eq_cap_data.shape[0] == 3  # [T_max_eq_cap, drying_time_eq_cap, sub_flux_eq_cap]
         assert eq_cap_data[0].shape[0] == 5  # Should match number of pressure setpoints
 
+    @pytest.mark.filterwarnings(
+        "ignore:At t=.*shelf temperature Tsh=.*is too low for sublimation\\.:"
+        "UserWarning:lyopronto\\.design_space"
+    )
     def test_design_space_product_temp_isotherms(self, design_space_setup):
         """Test product temperature isotherm section thoroughly.
 
@@ -233,6 +245,10 @@ class TestDesignSpaceCoverageGaps:
         assert product_temp_data.shape[0] == 5
         assert product_temp_data[1].shape[0] == 2  # drying_time_pr for 2 pressures
 
+    @pytest.mark.filterwarnings(
+        "ignore:At Pch=.*drying completed in single timestep.*:"
+        "UserWarning:lyopronto\\.design_space"
+    )
     def test_design_space_single_timestep_both_sections(self, design_space_setup):
         """Test both shelf temp and product temp sections with single timestep completion.
 

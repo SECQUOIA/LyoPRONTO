@@ -1,5 +1,7 @@
 """Unit tests for core physics functions in lyopronto.functions."""
 
+import warnings
+
 import pytest
 import numpy as np
 from lyopronto import functions, constant
@@ -283,6 +285,51 @@ class TestRpFinder:
         Rp = functions.Rp_finder(T_sub, Lpr0, Lck, Pch, Tbot)
 
         assert Rp > 0
+
+    def test_rp_finder_zero_temperature_gradient_returns_infinite_resistance(self):
+        """Zero gradient with nonzero driving force is a singular resistance."""
+        T_sub = -20.0
+        Lpr0 = 0.7
+        Lck = 0.3
+        Pch = 0.1
+        Tbot = T_sub
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            Rp = functions.Rp_finder(T_sub, Lpr0, Lck, Pch, Tbot)
+
+        assert not caught
+        assert np.isposinf(Rp)
+
+    def test_rp_finder_zero_temperature_gradient_preserves_driving_force_sign(self):
+        """The singular resistance keeps the sign implied by the driving force."""
+        T_sub = -20.0
+        Lpr0 = 0.7
+        Lck = 0.3
+        Pch = functions.Vapor_pressure(T_sub) + 0.1
+        Tbot = T_sub
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            Rp = functions.Rp_finder(T_sub, Lpr0, Lck, Pch, Tbot)
+
+        assert not caught
+        assert np.isneginf(Rp)
+
+    def test_rp_finder_zero_gradient_and_no_driving_force_is_indeterminate(self):
+        """Zero gradient and zero pressure driving force leave Rp undefined."""
+        T_sub = -20.0
+        Lpr0 = 0.7
+        Lck = 0.3
+        Pch = functions.Vapor_pressure(T_sub)
+        Tbot = T_sub
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            Rp = functions.Rp_finder(T_sub, Lpr0, Lck, Pch, Tbot)
+
+        assert not caught
+        assert np.isnan(Rp)
 
 
 class TestPhysicalConsistency:

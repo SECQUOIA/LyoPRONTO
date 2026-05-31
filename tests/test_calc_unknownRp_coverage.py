@@ -4,6 +4,20 @@ import numpy as np
 import os
 from lyopronto import calc_unknownRp
 
+pytestmark = [
+    pytest.mark.filterwarnings(
+        "ignore:No sublimation\\.:UserWarning:lyopronto\\.calc_unknownRp"
+    ),
+    pytest.mark.filterwarnings(
+        "ignore:Total shelf temperature setpoint time exceeded; "
+        "not all temperature data used\\.:UserWarning:lyopronto\\.calc_unknownRp"
+    ),
+    pytest.mark.filterwarnings(
+        "ignore:Total chamber pressure setpoint time exceeded; "
+        "not all temperature data used\\.:UserWarning:lyopronto\\.calc_unknownRp"
+    ),
+]
+
 
 def _assert_unknownRp_reasonable(output):
     """Assert output is reasonable for unknown Rp (less strict than utils.py).
