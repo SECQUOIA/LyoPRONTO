@@ -7,6 +7,20 @@ Following the coexistence philosophy: these complement (not replace) the scipy o
 """
 
 # Copyright (C) 2026, SECQUOIA
+#
+# This file is part of LyoPRONTO.
+# LyoPRONTO is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import contextlib
 from typing import Any, Dict, Optional, Tuple
@@ -256,6 +270,7 @@ def create_optimizer_model(
         initial_conditions = {"Tsub": -40.0, "Tbot": -40.0, "Lck": 0.0}
     else:
         # Fill in any missing values with defaults
+        initial_conditions = dict(initial_conditions)
         initial_conditions.setdefault("Tsub", -40.0)
         initial_conditions.setdefault("Tbot", -40.0)
         initial_conditions.setdefault("Lck", 0.0)
@@ -723,7 +738,7 @@ def validate_scipy_residuals(
                         )
                         viol = max(0, lb - body_val, body_val - ub)
                     viols.append(viol)
-                except:
+                except Exception:
                     pass
 
             if viols:
@@ -927,6 +942,17 @@ def _solve_optimizer_model(
     return solver.solve(model, tee=tee)
 
 
+def _validate_simulation_mode(
+    *, warmstart_scipy: bool, simulation_mode: bool, context: str
+) -> None:
+    """Raise when simulation mode cannot validate an initialized trajectory."""
+    if simulation_mode and not warmstart_scipy:
+        raise ValueError(
+            f"{context} simulation_mode requires warmstart_scipy=True so a "
+            "scipy trajectory is available to validate"
+        )
+
+
 def staged_solve(
     model: pyo.ConcreteModel,
     solver: pyo.SolverFactory,
@@ -1075,7 +1101,7 @@ def staged_solve(
                                 _log(
                                     f"    {con.name}[{idx}]: viol={viol:.2e}, body={body_val:.4f}, bounds=[{lb:.4f}, {ub:.4f}]"
                                 )
-                    except:
+                    except Exception:
                         pass
             if viol_count > 5:
                 _log(f"    ... and {viol_count - 5} more violations")
@@ -1099,7 +1125,6 @@ def staged_solve(
         _log(
             f"  ✓ Time optimization successful, t_final = {pyo.value(model.t_final):.3f} hr"
         )
-        pyo.value(model.t_final)
     else:
         _log(f"  ✗ Time optimization failed: {result.solver.termination_condition}")
         return False, "Stage 2 (time optimization) failed"
@@ -1309,6 +1334,12 @@ def optimize_Tsh_pyomo(
     """
     from lyopronto import opt_Tsh
 
+    _validate_simulation_mode(
+        warmstart_scipy=warmstart_scipy,
+        simulation_mode=simulation_mode,
+        context="optimize_Tsh_pyomo",
+    )
+
     # Create model with Tsh optimization mode
     model = create_optimizer_model(
         vial,
@@ -1338,10 +1369,11 @@ def optimize_Tsh_pyomo(
             model.t_final.fix()
         _fix_control_profile(model, "Pch", Pchamber, t_final=scipy_output[-1, 0])
 
-        # Validate scipy trajectory on Pyomo mesh
-        validate_scipy_residuals(
-            model, scipy_output, vial, product, ht, verbose=tee
-        )
+        # Validate scipy trajectory on Pyomo mesh when diagnostics are requested.
+        if tee:
+            validate_scipy_residuals(
+                model, scipy_output, vial, product, ht, verbose=True
+            )
 
         # In simulation mode, fix all variables to scipy values
         if simulation_mode:
@@ -1430,7 +1462,7 @@ def optimize_Tsh_pyomo(
                                 print(
                                     f"    LHS: {lhs:.6f}, Body: {body:.6f}, RHS: {rhs:.6f}"
                                 )
-                    except:
+                    except Exception:
                         pass
 
             if violation_count == 0:
@@ -1508,8 +1540,6 @@ def _warmstart_from_scipy_output(
     # Scipy's initial state may not be at -40°C due to solver behavior
     # We need to modify the existing IC constraints to match scipy's actual ICs
     t0 = min(model.t)
-    Tsub_scipy[0]
-    Tbot_scipy[0]
     Lck0_scipy = Lck_scipy[0]
 
     # Update Lck initial condition to match scipy
@@ -1741,6 +1771,12 @@ def optimize_Pch_pyomo(
     """
     from lyopronto import opt_Pch
 
+    _validate_simulation_mode(
+        warmstart_scipy=warmstart_scipy,
+        simulation_mode=simulation_mode,
+        context="optimize_Pch_pyomo",
+    )
+
     # Create model with Pch optimization mode
     model = create_optimizer_model(
         vial,
@@ -1945,6 +1981,12 @@ def optimize_Pch_Tsh_pyomo(
         - optimize_Pch_pyomo(): Optimize pressure only
     """
     from lyopronto import opt_Pch_Tsh
+
+    _validate_simulation_mode(
+        warmstart_scipy=warmstart_scipy,
+        simulation_mode=simulation_mode,
+        context="optimize_Pch_Tsh_pyomo",
+    )
 
     # Create model with both controls active
     model = create_optimizer_model(
