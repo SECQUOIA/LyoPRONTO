@@ -295,6 +295,90 @@ def test_paper_ocp_notes_cover_issue30_comparison(repo_root):
     assert "optional flux/interface-velocity cap" in notes
 
 
+def test_tracked_reference_summaries_use_current_metric_schema(repo_root):
+    required_metrics = {
+        "dryness_target_percent",
+        "dryness_tolerance_percent",
+        "final_dryness_shortfall_percent",
+        "max_product_temp_violation_C",
+        "tsh_ramp_limit_C_per_hr",
+        "max_tsh_ramp_C_per_hr",
+        "max_tsh_ramp_violation_C_per_hr",
+        "tsh_ramp_ok",
+        "pch_ramp_limit_Torr_per_hr",
+        "max_pch_ramp_Torr_per_hr",
+        "max_pch_ramp_violation_Torr_per_hr",
+        "pch_ramp_ok",
+    }
+
+    for rel_path in (
+        "benchmarks/results/baseline_Tsh_3x3_summary.jsonl",
+        "benchmarks/results/baseline_Pch_3x3_summary.jsonl",
+    ):
+        records = [
+            json.loads(line)
+            for line in (repo_root / rel_path).read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+
+        assert records, rel_path
+        assert len(records) == 27, rel_path
+        for record in records:
+            for method_key in ("scipy", "pyomo"):
+                method_record = record.get(method_key)
+                if method_record is None:
+                    continue
+                assert required_metrics <= set(method_record["metrics"]), (
+                    rel_path,
+                    method_key,
+                    record["params"],
+                )
+
+
+def test_success_summary_uses_record_failure_flags():
+    from benchmarks.analysis import failure_lines, success_summary
+
+    records = [
+        {
+            "failed": False,
+            "params": {"product.A1": 16.0, "ht.KC": 2.75e-4},
+            "scipy": {"success": True},
+            "pyomo": None,
+        },
+        {
+            "failed": True,
+            "params": {"product.A1": 18.0, "ht.KC": 3.3e-4},
+            "scipy": {"success": True},
+            "pyomo": {
+                "success": True,
+                "discretization": {"method": "fd"},
+            },
+        },
+        {
+            "failed": False,
+            "params": {"product.A1": 20.0, "ht.KC": 4.0e-4},
+            "scipy": {"success": True},
+            "pyomo": {
+                "success": False,
+                "discretization": {"method": "colloc"},
+            },
+        },
+    ]
+
+    summary = success_summary(records)
+
+    assert summary == {
+        "total": 3,
+        "succeeded": 1,
+        "failed": 2,
+        "success_rate": pytest.approx(100 / 3),
+    }
+    assert failure_lines(records) == [
+        "fd: product.A1=18.0, ht.KC=0.00033",
+        "colloc: product.A1=20.0, ht.KC=0.0004",
+    ]
+
+
 def test_compute_residuals_uses_native_bools_and_checks_product_temperature():
     traj = np.array(
         [
