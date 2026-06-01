@@ -217,10 +217,10 @@ scipy_output = opt_Pch_Tsh.dry(vial, product, ht, Pch, Tsh, dt, eq_cap, nVial)
 
 # Extract warmstart data for a specific time step
 warmstart = utils.initialize_from_scipy(
-    scipy_output, 
-    time_index=10, 
-    vial=vial, 
-    product=product, 
+    scipy_output,
+    time_index=10,
+    vial=vial,
+    product=product,
     Lpr0=Lpr0
 )
 
