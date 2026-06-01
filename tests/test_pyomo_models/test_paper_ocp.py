@@ -2,6 +2,9 @@
 
 """Tests for the paper-reference Pyomo OCP benchmark."""
 
+import subprocess
+import sys
+
 import numpy as np
 import pytest
 from lyopronto.pyomo_models.paper_ocp import (
@@ -252,6 +255,43 @@ def test_load_upstream_matlab_trajectory_preserves_full_reference_fields(tmp_pat
     assert trajectory["problem"]["temperature_limit_K"] == 243.0
 
 
+def test_load_upstream_matlab_trajectory_collapses_duplicate_switch_times(tmp_path):
+    from scipy.io import savemat
+
+    mat_path = tmp_path / "upstream_duplicate_switch.mat"
+    savemat(
+        mat_path,
+        {
+            "t": np.array([0.0, 3600.0, 3600.0, 7200.0]),
+            "T": np.array(
+                [
+                    [228.0, 228.5, 229.0],
+                    [239.0, 240.0, 241.0],
+                    [239.1, 240.1, 241.1],
+                    [241.0, 242.0, 243.0],
+                ]
+            ),
+            "S": np.array([0.0, 1.0e-3, 1.1e-3, 2.0e-3]),
+            "Tb": np.array([273.0, 270.0, 269.0, 266.0]),
+            "dSdt": np.array([2.0e-7, 3.0e-7, 3.1e-7, 4.0e-7]),
+            "policy": np.array([1, 2]),
+            "tsw": np.array([3600.0]),
+        },
+    )
+
+    trajectory = load_upstream_matlab_trajectory(mat_path)
+
+    assert np.all(np.diff(trajectory["states"]["time_s"]) > 0.0)
+    assert np.allclose(trajectory["states"]["time_s"], [0.0, 3600.0, 7200.0])
+    assert np.allclose(
+        trajectory["states"]["temperature_K"][1],
+        [239.1, 240.1, 241.1],
+    )
+    assert np.isclose(trajectory["states"]["interface_position_m"][1], 1.1e-3)
+    assert np.isclose(trajectory["controls"]["shelf_temperature_K"][1], 269.0)
+    assert np.isclose(trajectory["states"]["interface_velocity_m_per_s"][1], 3.1e-7)
+
+
 def test_compare_paper_problem1_trajectories_reports_required_metrics():
     upstream = {
         "states": {
@@ -327,6 +367,24 @@ def test_paper_problem1_reference_runner_writes_batch_safe_wrappers(tmp_path):
     assert command[0] == "matlab"
     assert command[1] == "-batch"
     assert "run_paper_problem1_upstream_reference" in command[2]
+
+
+def test_paper_problem1_reference_script_runs_from_source_checkout():
+    from pathlib import Path
+
+    repo_root = Path(__file__).resolve().parents[2]
+    script_path = repo_root / "benchmarks" / "paper_problem1_reference.py"
+
+    result = subprocess.run(
+        [sys.executable, str(script_path), "--help"],
+        cwd=repo_root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Generate and compare Paper Problem 1" in result.stdout
 
 
 @pytest.mark.slow

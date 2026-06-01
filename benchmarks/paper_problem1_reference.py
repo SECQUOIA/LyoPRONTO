@@ -9,9 +9,15 @@ import json
 import os
 import shlex
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 from typing import Sequence
+
+if __package__ in {None, ""}:
+    repo_root = Path(__file__).resolve().parents[1]
+    if (repo_root / "lyopronto").is_dir():
+        sys.path.insert(0, str(repo_root))
 
 from lyopronto.pyomo_models.paper_ocp import (
     PaperDiscretization,
