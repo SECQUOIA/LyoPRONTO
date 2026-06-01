@@ -26,6 +26,14 @@ def test_pyomo_exports_optimizers_when_pyomo_available():
         "optimize_Tsh_pyomo",
         "optimize_Pch_pyomo",
         "optimize_Pch_Tsh_pyomo",
+        "PaperPrimaryDryingConfig",
+        "PaperDiscretization",
+        "create_paper_problem1_model",
+        "generate_problem1_policy_initialization",
+        "initialize_paper_problem1_from_trajectory",
+        "load_upstream_matlab_trajectory",
+        "solve_paper_problem1",
+        "classify_paper_policies",
     }
 
     if pyomo_models.PYOMO_AVAILABLE:

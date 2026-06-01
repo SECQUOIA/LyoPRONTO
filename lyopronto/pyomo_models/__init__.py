@@ -59,6 +59,16 @@ if PYOMO_AVAILABLE:
         optimize_Pch_Tsh_pyomo,
         optimize_Tsh_pyomo,
     )
+    from .paper_ocp import (
+        PaperDiscretization,
+        PaperPrimaryDryingConfig,
+        classify_paper_policies,
+        create_paper_problem1_model,
+        generate_problem1_policy_initialization,
+        initialize_paper_problem1_from_trajectory,
+        load_upstream_matlab_trajectory,
+        solve_paper_problem1,
+    )
     from .single_step import (
         create_single_step_model,
         optimize_single_step,
@@ -75,6 +85,14 @@ if PYOMO_AVAILABLE:
         "optimize_Tsh_pyomo",
         "optimize_Pch_pyomo",
         "optimize_Pch_Tsh_pyomo",
+        "PaperPrimaryDryingConfig",
+        "PaperDiscretization",
+        "create_paper_problem1_model",
+        "generate_problem1_policy_initialization",
+        "initialize_paper_problem1_from_trajectory",
+        "load_upstream_matlab_trajectory",
+        "solve_paper_problem1",
+        "classify_paper_policies",
     ]
 
 __version__ = "0.1.0-dev"

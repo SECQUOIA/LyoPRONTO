@@ -34,6 +34,9 @@ docs/build
 environment.yml 
 # for local settings
 .vscode/
+
+# Pixi local environments
+.pixi/
 ################################################################################
 #                               Jupyter Notebook                               #
 ################################################################################

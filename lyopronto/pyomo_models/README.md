@@ -82,6 +82,25 @@ Utility functions for initialization, scaling, and validation.
 - `check_solution_validity()` - Validate physical constraints
 - `add_scaling_suffix()` - Add scaling for numerical conditioning
 
+### `paper_ocp.py`
+Experimental paper-reference direct-transcription benchmark for the primary
+drying OCP in Srisuma and Braatz, arXiv:2509.10826v1.
+
+**Key functions:**
+- `create_paper_problem1_model()` - Build the orthogonal-collocation Pyomo model
+- `solve_paper_problem1()` - Solve Paper Problem 1 with IPOPT
+- `generate_problem1_policy_initialization()` - Build a policy-based warm start
+- `initialize_paper_problem1_from_trajectory()` - Seed a model from a trajectory
+- `load_upstream_matlab_trajectory()` - Read upstream MATLAB output saved to `.mat`
+- `classify_paper_policies()` - Infer active Policy 1/Policy 2 regions
+
+This module uses SI/Kelvin units from the paper/upstream code and is separate
+from LyoPRONTO's cm/Torr/degC production APIs. The validated default solve uses
+a coarse `n_z=5` mesh, and the upstream paper's `n_z=20` spatial mesh is covered
+by a slow validation test using IPOPT acceptable termination
+(`acceptable_tol=1e-3`, `acceptable_iter=5`). Both reproduce the expected
+Policy 1 -> Policy 2 sequence near the paper's reported switch time.
+
 ## Installation
 
 ### 1. Install Pyomo
