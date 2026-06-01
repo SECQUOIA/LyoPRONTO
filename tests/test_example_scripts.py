@@ -1,21 +1,56 @@
-"""
-Smoke tests for legacy example scripts.
+"""Smoke tests for documentation notebooks and example scripts."""
 
-These tests verify that the legacy example scripts (examples/legacy/ex_knownRp_PD.py,
-ex_unknownRp_PD.py) still run without errors. They provide basic coverage for validation
-modules like calc_unknownRp.py.
-
-Tests:
-    - test_ex_knownRp_execution: Verifies ex_knownRp_PD.py runs successfully
-    - test_ex_unknownRp_execution: Verifies ex_unknownRp_PD.py runs successfully with test data
-
-Coverage Impact:
-    - Provides smoke test coverage for calc_unknownRp.py (now 89%)
-    - Validates validation module code paths work in real-world scenarios
-"""
+import importlib.util
+import os
+import subprocess
+import sys
+from types import SimpleNamespace
 
 import pytest
-import papermill as pm
+
+
+def _ipopt_available():
+    """Return whether a Pyomo-compatible IPOPT solver is available."""
+    try:
+        import pyomo.environ as pyo
+    except ImportError:
+        return False
+
+    try:
+        from idaes.core.solvers import get_solver
+
+        return bool(get_solver("ipopt").available())
+    except Exception:
+        try:
+            return bool(pyo.SolverFactory("ipopt").available(exception_flag=False))
+        except Exception:
+            return False
+
+
+def _load_pyomo_example(repo_root):
+    """Load the Pyomo example script as a testable module."""
+    example_path = repo_root / "examples" / "example_pyomo_optimizer.py"
+    spec = importlib.util.spec_from_file_location(
+        "example_pyomo_optimizer_for_test", example_path
+    )
+    assert spec is not None
+    assert spec.loader is not None
+
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _example_subprocess_env(repo_root):
+    """Return an environment that imports the checkout before site packages."""
+    env = os.environ.copy()
+    current_pythonpath = env.get("PYTHONPATH")
+    repo_path = str(repo_root)
+    if current_pythonpath:
+        env["PYTHONPATH"] = os.pathsep.join([repo_path, current_pythonpath])
+    else:
+        env["PYTHONPATH"] = repo_path
+    return env
 
 
 class TestDocsNotebooks:
@@ -23,7 +58,9 @@ class TestDocsNotebooks:
 
     @pytest.mark.notebook
     def test_knownRp_notebook_execution(self, repo_root):
-        """Test that ex_knownRp_PD.py runs without error."""
+        """Test that the known-resistance documentation notebook runs."""
+        import papermill as pm
+
         pm.execute_notebook(
             repo_root / "docs/examples/knownRp_PD.ipynb",
             repo_root / "docs/examples/knownRp_PD_output.ipynb",
@@ -32,10 +69,165 @@ class TestDocsNotebooks:
 
     @pytest.mark.notebook
     def test_unknownRp_notebook_execution(self, repo_root):
-        """Test that ex_knownRp_PD.py runs without error."""
+        """Test that the unknown-resistance documentation notebook runs."""
+        import papermill as pm
+
         pm.execute_notebook(
             repo_root / "docs/examples/unknownRp_PD.ipynb",
             repo_root / "docs/examples/unknownRp_PD_output.ipynb",
-            parameters=dict(data_path=str(repo_root / "docs" / "examples") + "/"),
+            parameters={"data_path": str(repo_root / "docs" / "examples") + "/"},
         )
         # Will error if execution fails
+
+
+class TestPyomoExamples:
+    """Smoke tests for optional Pyomo example scripts."""
+
+    def test_pyomo_optimizer_example_reports_missing_pyomo(
+        self, repo_root, monkeypatch, capsys
+    ):
+        """Test that the example fails clearly when Pyomo is unavailable."""
+        example = _load_pyomo_example(repo_root)
+
+        monkeypatch.setattr(example, "_pyomo_available", lambda: False)
+
+        return_code = example.main()
+        captured = capsys.readouterr()
+
+        assert return_code == 1
+        assert "ERROR: Pyomo is not installed." in captured.out
+        assert "pip install lyopronto[optimization]" in captured.out
+
+    def test_pyomo_optimizer_example_checks_pyomo_dependency_directly(
+        self, repo_root, monkeypatch
+    ):
+        """Test that the example checks Pyomo itself, not LyoPRONTO imports."""
+        example = _load_pyomo_example(repo_root)
+        checked_packages = []
+
+        def fake_find_spec(name):
+            checked_packages.append(name)
+            return object()
+
+        monkeypatch.setattr(example, "find_spec", fake_find_spec)
+
+        assert example._pyomo_available() is True
+        assert checked_packages == ["pyomo"]
+
+    def test_pyomo_optimizer_example_subprocess_prefers_checkout(self, repo_root):
+        """Test that subprocess smoke coverage imports the checkout under test."""
+        env = _example_subprocess_env(repo_root)
+        pythonpath = env["PYTHONPATH"].split(os.pathsep)
+
+        assert pythonpath[0] == str(repo_root)
+
+    def test_pyomo_optimizer_example_reports_missing_ipopt(
+        self, repo_root, monkeypatch, capsys
+    ):
+        """Test that the example fails clearly when IPOPT is unavailable."""
+        example = _load_pyomo_example(repo_root)
+
+        monkeypatch.setattr(example, "_pyomo_available", lambda: True)
+        monkeypatch.setattr(example, "_ipopt_available", lambda: False)
+
+        return_code = example.main()
+        captured = capsys.readouterr()
+
+        assert return_code == 1
+        assert "ERROR: IPOPT solver is not available." in captured.out
+        assert "conda install -c conda-forge ipopt" in captured.out
+
+    def test_pyomo_optimizer_example_requires_solved_stage(
+        self, repo_root, monkeypatch, capsys
+    ):
+        """Test that the example fails if every optimization stage fails."""
+        example = _load_pyomo_example(repo_root)
+
+        def fake_optimize_single_step(**kwargs):
+            raise RuntimeError("synthetic solve failure")
+
+        fake_single_step = SimpleNamespace(
+            optimize_single_step=fake_optimize_single_step
+        )
+        fake_utils = SimpleNamespace(
+            check_solution_validity=lambda solution: (True, [])
+        )
+
+        monkeypatch.setattr(example, "_pyomo_available", lambda: True)
+        monkeypatch.setattr(example, "_ipopt_available", lambda: True)
+        monkeypatch.setattr(
+            example, "_load_pyomo_modules", lambda: (fake_single_step, fake_utils)
+        )
+
+        return_code = example.main()
+        captured = capsys.readouterr()
+
+        assert return_code == 1
+        assert "Optimization failed: synthetic solve failure" in captured.out
+        assert "ERROR: No optimization stages solved successfully." in captured.out
+
+    def test_pyomo_optimizer_example_reports_solved_stages(
+        self, repo_root, monkeypatch, capsys
+    ):
+        """Test that a successful example run reports solved optimization stages."""
+        example = _load_pyomo_example(repo_root)
+        solved_stages = []
+
+        def fake_optimize_single_step(**kwargs):
+            solved_stages.append(kwargs["Lck"])
+            return {
+                "status": "optimal",
+                "Pch": 0.1,
+                "Tsh": -25.0,
+                "Tsub": -28.0,
+                "Tbot": -27.5,
+                "Psub": 0.2,
+                "dmdt": 0.05,
+                "Rp": 10.0,
+                "Kv": 0.0003,
+            }
+
+        fake_single_step = SimpleNamespace(
+            optimize_single_step=fake_optimize_single_step
+        )
+        fake_utils = SimpleNamespace(
+            check_solution_validity=lambda solution: (True, [])
+        )
+
+        monkeypatch.setattr(example, "_pyomo_available", lambda: True)
+        monkeypatch.setattr(example, "_ipopt_available", lambda: True)
+        monkeypatch.setattr(
+            example, "_load_pyomo_modules", lambda: (fake_single_step, fake_utils)
+        )
+
+        return_code = example.main()
+        captured = capsys.readouterr()
+
+        assert return_code == 0
+        assert len(solved_stages) == 3
+        assert "Solved optimization stages: 3 of 3" in captured.out
+        assert "Example complete!" in captured.out
+
+    @pytest.mark.pyomo
+    @pytest.mark.slow
+    @pytest.mark.skipif(
+        not _ipopt_available(), reason="Pyomo or IPOPT solver not available"
+    )
+    def test_pyomo_optimizer_example_runs(self, repo_root):
+        """Test that the Pyomo optimizer example runs without error."""
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(repo_root / "examples" / "example_pyomo_optimizer.py"),
+            ],
+            cwd=repo_root,
+            capture_output=True,
+            text=True,
+            timeout=180,
+            check=False,
+            env=_example_subprocess_env(repo_root),
+        )
+
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "Solved optimization stages:" in result.stdout
+        assert "Example complete!" in result.stdout
