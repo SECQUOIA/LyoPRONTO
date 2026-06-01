@@ -1,11 +1,11 @@
 """Smoke tests for documentation notebooks and example scripts."""
 
 import importlib.util
+import os
 import subprocess
 import sys
 from types import SimpleNamespace
 
-import papermill as pm
 import pytest
 
 
@@ -41,12 +41,26 @@ def _load_pyomo_example(repo_root):
     return module
 
 
+def _example_subprocess_env(repo_root):
+    """Return an environment that imports the checkout before site packages."""
+    env = os.environ.copy()
+    current_pythonpath = env.get("PYTHONPATH")
+    repo_path = str(repo_root)
+    if current_pythonpath:
+        env["PYTHONPATH"] = os.pathsep.join([repo_path, current_pythonpath])
+    else:
+        env["PYTHONPATH"] = repo_path
+    return env
+
+
 class TestDocsNotebooks:
     """Smoke tests: run example scripts used for documentation."""
 
     @pytest.mark.notebook
     def test_knownRp_notebook_execution(self, repo_root):
         """Test that the known-resistance documentation notebook runs."""
+        import papermill as pm
+
         pm.execute_notebook(
             repo_root / "docs/examples/knownRp_PD.ipynb",
             repo_root / "docs/examples/knownRp_PD_output.ipynb",
@@ -56,6 +70,8 @@ class TestDocsNotebooks:
     @pytest.mark.notebook
     def test_unknownRp_notebook_execution(self, repo_root):
         """Test that the unknown-resistance documentation notebook runs."""
+        import papermill as pm
+
         pm.execute_notebook(
             repo_root / "docs/examples/unknownRp_PD.ipynb",
             repo_root / "docs/examples/unknownRp_PD_output.ipynb",
@@ -81,6 +97,29 @@ class TestPyomoExamples:
         assert return_code == 1
         assert "ERROR: Pyomo is not installed." in captured.out
         assert "pip install lyopronto[optimization]" in captured.out
+
+    def test_pyomo_optimizer_example_checks_pyomo_dependency_directly(
+        self, repo_root, monkeypatch
+    ):
+        """Test that the example checks Pyomo itself, not LyoPRONTO imports."""
+        example = _load_pyomo_example(repo_root)
+        checked_packages = []
+
+        def fake_find_spec(name):
+            checked_packages.append(name)
+            return object()
+
+        monkeypatch.setattr(example, "find_spec", fake_find_spec)
+
+        assert example._pyomo_available() is True
+        assert checked_packages == ["pyomo"]
+
+    def test_pyomo_optimizer_example_subprocess_prefers_checkout(self, repo_root):
+        """Test that subprocess smoke coverage imports the checkout under test."""
+        env = _example_subprocess_env(repo_root)
+        pythonpath = env["PYTHONPATH"].split(os.pathsep)
+
+        assert pythonpath[0] == str(repo_root)
 
     def test_pyomo_optimizer_example_reports_missing_ipopt(
         self, repo_root, monkeypatch, capsys
@@ -186,6 +225,7 @@ class TestPyomoExamples:
             text=True,
             timeout=180,
             check=False,
+            env=_example_subprocess_env(repo_root),
         )
 
         assert result.returncode == 0, result.stdout + result.stderr
