@@ -96,7 +96,7 @@ The scipy-based optimizers (`opt_Pch.py`, `opt_Tsh.py`, `opt_Pch_Tsh.py`) remain
 2. **Use Pyomo optimizers**:
    ```python
    from lyopronto.pyomo_models import optimize_Tsh_pyomo
-   
+
    result = optimize_Tsh_pyomo(
        vial=vial,
        product=product,
@@ -115,7 +115,7 @@ The scipy-based optimizers (`opt_Pch.py`, `opt_Tsh.py`, `opt_Pch_Tsh.py`) remain
    # Scipy (existing)
    from lyopronto import opt_Tsh
    scipy_result = opt_Tsh.dry(vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial)
-   
+
    # Pyomo (new)
    from lyopronto.pyomo_models import optimize_Tsh_pyomo
    pyomo_result = optimize_Tsh_pyomo(
@@ -129,4 +129,4 @@ Both scipy and Pyomo optimizers will continue to be maintained:
 - **scipy**: Fast, reliable, good for most use cases
 - **Pyomo**: Rigorous DAE formulation, extensible, better for research
 
-[Unreleased]: https://github.com/LyoHUB/LyoPRONTO/compare/main...HEAD
+[Unreleased]: https://github.com/SECQUOIA/LyoPRONTO/compare/main...HEAD

@@ -7,17 +7,14 @@ flexibility for advanced optimization scenarios.
 
 # Copyright (C) 2026, SECQUOIA
 
+from importlib.util import find_spec
+
 from lyopronto import functions
 
 
 def _pyomo_available():
     """Return whether optional Pyomo dependencies are importable."""
-    try:
-        from lyopronto.pyomo_models import PYOMO_AVAILABLE
-    except Exception:
-        return False
-
-    return bool(PYOMO_AVAILABLE)
+    return find_spec("pyomo") is not None
 
 
 def _ipopt_available():
