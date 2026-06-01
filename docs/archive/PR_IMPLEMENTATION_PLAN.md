@@ -4,8 +4,10 @@
 > merge sequence. It is archived for provenance and should not be treated as
 > current user or contributor documentation.
 
-**Date**: January 2025  
-**Target**: Merge `pyomo` branch into SECQUOIA/LyoPRONTO `main`  
+**Date**: January 2025
+
+**Target**: Merge `pyomo` branch into SECQUOIA/LyoPRONTO `main`
+
 **Ground Truth**: LyoHUB/LyoPRONTO (upstream)
 
 ## Executive Summary
@@ -21,7 +23,7 @@ The `pyomo` branch contains comprehensive Pyomo optimization framework additions
 | **pyomo** (current) | upstream/main | Has ALL upstream improvements + Pyomo additions + formatting |
 
 **Important**: The `pyomo` branch was based on upstream/main and already includes:
-1. Correct `k_ice = 0.0059` value  
+1. Correct `k_ice = 0.0059` value
 2. Improved `Kv_FUN` formula
 3. `RampInterpolator` class
 4. Better error handling in optimizers
@@ -33,13 +35,15 @@ The `pyomo` branch contains comprehensive Pyomo optimization framework additions
 1. **PR 0**: Sync SECQUOIA main with upstream (get scipy improvements first)
 2. **PRs 1-7**: Add Pyomo work on top
 
-**Pros**: Clean separation, easier code review, clear provenance  
+**Pros**: Clean separation, easier code review, clear provenance
+
 **Cons**: More PRs, potential merge conflicts
 
 ### Option B: Direct Split of Pyomo Branch
 Split pyomo branch changes directly into logical PRs
 
-**Pros**: Less work, already tested together  
+**Pros**: Less work, already tested together
+
 **Cons**: PRs mix upstream improvements with Pyomo additions
 
 ---
