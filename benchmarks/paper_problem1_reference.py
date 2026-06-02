@@ -105,6 +105,8 @@ addpath(fullfile(code_root, 'Events'));
 addpath(fullfile(code_root, 'Simulations'));
 addpath(fullfile(code_root, 'Calculations'));
 addpath(fullfile(code_root, 'Sim_DAE'));
+% Keep generated batch-safe wrappers ahead of upstream functions with the same names.
+addpath(runner_root, '-begin');
 
 old_dir = pwd;
 cleanup = onCleanup(@() cd(old_dir));

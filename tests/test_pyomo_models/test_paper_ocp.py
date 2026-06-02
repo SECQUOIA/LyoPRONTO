@@ -364,6 +364,8 @@ def test_paper_problem1_reference_runner_writes_batch_safe_wrappers(tmp_path):
     assert "Sim_1stDrying_OCP" in runner_source
     assert "policy" in runner_source
     assert "tsw" in runner_source
+    last_upstream_path = runner_source.index("addpath(fullfile(code_root, 'Sim_DAE'));")
+    assert runner_source.rindex("addpath(runner_root, '-begin');") > last_upstream_path
     assert command[0] == "matlab"
     assert command[1] == "-batch"
     assert "run_paper_problem1_upstream_reference" in command[2]
