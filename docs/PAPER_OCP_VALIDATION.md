@@ -92,11 +92,12 @@ segment comparison.
 
 ## Regenerating The Upstream Reference
 
-Issue #27 is handled by `benchmarks/paper_problem1_reference.py`. The generator
-keeps the upstream clone read-only: it writes temporary MATLAB wrappers for
-`SimPy_MaxT` and `SimPy_MaxFlux` that use the known upstream `Python/` folder
-instead of `matlab.desktop.editor.getActiveFilename`, then runs
-`Sim_1stDrying_OCP` for `Case2` and saves:
+`benchmarks/paper_problem1_reference.py` provides best-effort diagnostic tooling
+for the upstream reference-generation path tracked in #27. It keeps the upstream
+clone read-only: it writes temporary MATLAB wrappers for `SimPy_MaxT` and
+`SimPy_MaxFlux` that use the known upstream `Python/` folder instead of
+`matlab.desktop.editor.getActiveFilename`, then runs `Sim_1stDrying_OCP` for
+`Case2` and saves:
 
 - `t`
 - `T`
@@ -151,12 +152,14 @@ All rows use `nfe=12`, `ncp=3`, `LAGRANGE-RADAU`, the policy initializer, and a
 
 Next steps are tracked in GitHub issues:
 
-1. #28 - Prepare the first Paper Problem 1 validation PR.
-2. #29 - Add Problem 2 with the interface-velocity constraint and expected
+1. #27 - Pin or provide a known-good upstream MATLAB/Python/GEKKO environment or
+   reference artifact for reproducible trajectory generation.
+2. #28 - Prepare the first Paper Problem 1 validation PR.
+3. #29 - Add Problem 2 with the interface-velocity constraint and expected
    Policy 3 -> Policy 1 -> Policy 2 sequence.
-3. #30 - Compare the paper-reference transcription against LyoPRONTO's existing
+4. #30 - Compare the paper-reference transcription against LyoPRONTO's existing
    quasi-steady Pyomo and scipy optimizers.
-4. #31 - If the benchmark is credible, add a LyoPRONTO-facing experimental
+5. #31 - If the benchmark is credible, add a LyoPRONTO-facing experimental
    policy API with the same rich result format.
 
 #26 is addressed by the bottom-node temperature constraint alignment, the
