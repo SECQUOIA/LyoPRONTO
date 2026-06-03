@@ -93,7 +93,8 @@ drying OCP in Srisuma and Braatz, arXiv:2509.10826v1.
 - `solve_paper_problem2()` - Solve Paper Problem 2 with IPOPT
 - `generate_problem1_policy_initialization()` - Build a policy-based warm start
 - `generate_problem2_policy_initialization()` - Build the Problem 2 Policy 3 -> Policy 1 -> Policy 2 warm start
-- `initialize_paper_problem1_from_trajectory()` - Seed a model from a trajectory
+- `initialize_paper_problem_from_trajectory()` - Seed a model from a trajectory
+- `initialize_paper_problem1_from_trajectory()` - Backward-compatible alias
 - `load_upstream_matlab_trajectory()` - Read upstream MATLAB output saved to `.mat`
 - `compare_paper_problem1_trajectories()` - Compare Pyomo and upstream metrics
 - `classify_paper_policies()` - Infer active Policy 1/Policy 2/Policy 3 regions

@@ -18,6 +18,7 @@ from lyopronto.pyomo_models.paper_ocp import (
     generate_problem1_policy_initialization,
     generate_problem2_policy_initialization,
     initialize_paper_problem1_from_trajectory,
+    initialize_paper_problem_from_trajectory,
     interface_velocity,
     load_upstream_matlab_trajectory,
     product_resistance,
@@ -123,6 +124,15 @@ def test_problem2_model_constructs_with_velocity_constraint():
     lb, ub = model.Tb[next(iter(model.t))].bounds
     assert lb == 228.0
     assert ub == 260.0
+
+
+def test_problem2_velocity_constraint_skips_only_initial_point():
+    discretization = PaperDiscretization(n_z=5, nfe=4, ncp=2)
+    model = create_paper_problem2_model(discretization=discretization)
+    t_points = sorted(model.t)
+
+    assert t_points[0] not in model.interface_velocity_limit
+    assert set(model.interface_velocity_limit) == set(t_points[1:])
 
 
 def test_problem1_model_initial_values_are_extractable():
@@ -254,7 +264,7 @@ def test_initialize_model_from_policy_trajectory_sets_consistent_values():
     )
     model = create_paper_problem1_model(discretization=discretization)
 
-    initialize_paper_problem1_from_trajectory(model, trajectory)
+    initialize_paper_problem_from_trajectory(model, trajectory)
 
     t_points = sorted(model.t)
     assert np.isclose(
@@ -284,7 +294,7 @@ def test_initialize_problem2_model_from_policy_trajectory_sets_limits():
     )
     model = create_paper_problem2_model(discretization=discretization)
 
-    initialize_paper_problem1_from_trajectory(model, trajectory)
+    initialize_paper_problem_from_trajectory(model, trajectory)
 
     t_points = sorted(model.t)
     assert np.isclose(
@@ -300,6 +310,26 @@ def test_initialize_problem2_model_from_policy_trajectory_sets_limits():
         < PaperPrimaryDryingConfig().problem2_shelf_temperature_max
     )
     assert hasattr(model, "interface_velocity_limit")
+
+
+def test_problem_specific_initializer_alias_matches_general_initializer():
+    discretization = PaperDiscretization(n_z=5, nfe=4, ncp=2)
+    trajectory = generate_problem1_policy_initialization(
+        discretization=discretization,
+        n_time_points=80,
+    )
+    general_model = create_paper_problem1_model(discretization=discretization)
+    alias_model = create_paper_problem1_model(discretization=discretization)
+
+    initialize_paper_problem_from_trajectory(general_model, trajectory)
+    initialize_paper_problem1_from_trajectory(alias_model, trajectory)
+
+    t_points = sorted(general_model.t)
+    assert np.isclose(pyo.value(alias_model.t_final), pyo.value(general_model.t_final))
+    assert np.isclose(
+        pyo.value(alias_model.S[t_points[-1]]),
+        pyo.value(general_model.S[t_points[-1]]),
+    )
 
 
 def test_load_upstream_matlab_trajectory_from_segment_file(tmp_path):
@@ -644,3 +674,53 @@ def test_problem2_coarse_solve_reaches_terminal_target_and_classifies_policy():
     assert segments[1]["label"] == "policy_1_max_heat_input"
     assert segments[2]["label"] == "policy_2_temperature_tracking"
     assert np.allclose(policies["switch_times_hr"][:2], [2.0, 3.9], atol=0.8)
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(not _ipopt_available(), reason="IPOPT solver not available")
+def test_problem2_nz20_solve_keeps_velocity_feasible_and_classifies_policy():
+    discretization = PaperDiscretization(
+        n_z=20,
+        nfe=12,
+        ncp=3,
+        terminal_drying_fraction=0.995,
+    )
+    result = solve_paper_problem2(
+        discretization=discretization,
+        solver_options={
+            "max_iter": 5000,
+            "max_cpu_time": 240,
+            "tol": 1.0e-5,
+            "acceptable_tol": 1.0e-3,
+            "acceptable_iter": 5,
+            "print_level": 0,
+        },
+        require_success=True,
+    )
+
+    metrics = result["metrics"]
+    policies = result["policies"]
+    segments = policies["segments"]
+
+    assert result["metadata"]["status"] == "ok"
+    assert metrics["terminal_gap_m"] <= 1.0e-7
+    assert metrics["max_temperature_violation_K"] <= 1.0e-3
+    assert metrics["max_interface_velocity_violation_m_per_s"] <= 5.0e-10
+    assert metrics["shelf_lower_violation_K"] <= 1.0e-6
+    assert metrics["shelf_upper_violation_K"] <= 1.0e-6
+    assert np.isclose(metrics["drying_time_hr"], 8.9, atol=0.7)
+    assert segments[0]["label"] == "policy_3_interface_velocity_tracking"
+    assert segments[1]["label"] == "policy_1_max_heat_input"
+    assert segments[2]["label"] == "policy_2_temperature_tracking"
+    assert np.allclose(policies["switch_times_hr"][:2], [2.0, 3.9], atol=0.8)
+
+    states = result["states"]
+    problem = result["problem"]
+    labels = np.asarray(policies["labels"])
+    max_heat_segment = labels == "policy_1_max_heat_input"
+    velocity_limit = problem["interface_velocity_limit_m_per_s"]
+
+    assert np.any(max_heat_segment)
+    assert np.all(
+        states["interface_velocity_m_per_s"][max_heat_segment] < velocity_limit - 2.0e-9
+    )

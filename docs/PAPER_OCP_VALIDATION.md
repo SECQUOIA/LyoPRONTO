@@ -204,10 +204,10 @@ avoid changing existing SciPy or Pyomo optimizer behavior.
 
 ## Problem 2 First-Pass Tolerances
 
-The Problem 2 validation is intentionally coarse at this stage. The paper
-reports switch times near 2.0 h and 3.9 h, with drying complete around 8.9 h.
-The slow test therefore accepts broad first-pass tolerances on the coarse
-`n_z=5`, `nfe=12`, `ncp=3` mesh:
+The paper reports Problem 2 switch times near 2.0 h and 3.9 h, with drying
+complete around 8.9 h. The slow tests therefore accept broad first-pass
+tolerances on the coarse `n_z=5`, `nfe=12`, `ncp=3` mesh and confirm the same
+path-constraint behavior on a refined `n_z=20` spatial mesh:
 
 - terminal interface gap at or below `1e-7 m`;
 - product-temperature violation at or below `1e-3 K`;
@@ -216,17 +216,19 @@ The slow test therefore accepts broad first-pass tolerances on the coarse
 - drying time within `0.7 h` of the paper value;
 - first two policy switches within `0.8 h` of the paper values.
 
-The velocity constraint is skipped at the initial collocation point because the
-paper explicitly reports an initial velocity excursion before Policy 3 quickly
-brings `dS/dt` to its setpoint. Metrics still report the initial velocity
-separately, while path-constraint checks use the post-initial trajectory.
+The velocity constraint is skipped only at the initial collocation point, not
+the first finite element, because the paper explicitly reports an initial
+velocity excursion before Policy 3 quickly brings `dS/dt` to its setpoint.
+Metrics still report the initial velocity separately, while path-constraint
+checks use every post-initial collocation point. The refined `n_z=20` solve
+preserves the expected Policy 3 -> Policy 1 -> Policy 2 sequence and confirms
+that the max-heat segment is below the interface-velocity active threshold.
 
 Known limitations:
 
 - The Problem 2 initializer is a deterministic policy-sequenced warm start, not
   a full reproduction of the upstream high-index GEKKO Policy 3 solve.
-- The first validated solve is coarse. A refined `n_z=20` Problem 2 solve and a
-  MATLAB/GEKKO upstream export should be added once the upstream reference
+- A MATLAB/GEKKO upstream export should be added once the upstream reference
   tooling is extended beyond Problem 1.
 
 ## Future Work
@@ -246,5 +248,5 @@ smaller expression-based NLP for vapor pressure/resistance/flux/interface
 velocity, constraint scaling, and the `n_z=20` slow validation test.
 
 #29 is addressed by the Problem 2 config defaults, velocity path constraint,
-Policy 3 classifier support, policy-sequenced initializer, coarse slow solve,
-and first-pass tolerance documentation.
+Policy 3 classifier support, policy-sequenced initializer, coarse and refined
+slow solves, and first-pass tolerance documentation.
