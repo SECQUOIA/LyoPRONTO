@@ -15,6 +15,7 @@ from lyopronto.pyomo_models.paper_ocp import (
     create_paper_problem1_model,
     create_paper_problem2_model,
     derive_primary_drying_parameters,
+    extract_paper_solution,
     generate_problem1_policy_initialization,
     generate_problem2_policy_initialization,
     initialize_paper_problem1_from_trajectory,
@@ -145,6 +146,22 @@ def test_problem1_model_initial_values_are_extractable():
     assert pyo.value(model.t_final) == PaperPrimaryDryingConfig().problem1_time_guess
 
 
+def test_problem1_solution_reports_initial_and_post_initial_velocity_metrics():
+    model = create_paper_problem1_model(
+        discretization=PaperDiscretization(n_z=5, nfe=3, ncp=2)
+    )
+
+    result = extract_paper_solution(model)
+    velocities = result["states"]["interface_velocity_m_per_s"]
+    metrics = result["metrics"]
+
+    assert metrics["initial_interface_velocity_m_per_s"] == velocities[0]
+    assert metrics["max_interface_velocity_m_per_s"] == np.max(velocities)
+    assert metrics["max_post_initial_interface_velocity_m_per_s"] == np.max(
+        velocities[1:]
+    )
+
+
 def test_problem1_model_constrains_sublimation_flux_nonnegative():
     config = PaperPrimaryDryingConfig()
     discretization = PaperDiscretization(n_z=5, nfe=3, ncp=2)
@@ -250,7 +267,10 @@ def test_problem2_policy_initialization_matches_paper_sequence():
     assert np.allclose(trajectory["policies"]["switch_times_hr"], [2.0, 3.9])
     assert np.isclose(trajectory["metrics"]["drying_time_hr"], 8.9, atol=0.2)
     assert trajectory["metrics"]["terminal_drying_fraction"] >= 0.994
-    assert trajectory["metrics"]["max_interface_velocity_m_per_s"] <= (
+    assert trajectory["metrics"]["initial_interface_velocity_m_per_s"] > (
+        config.problem2_interface_velocity_limit
+    )
+    assert trajectory["metrics"]["max_post_initial_interface_velocity_m_per_s"] <= (
         config.problem2_interface_velocity_limit + 1.0e-12
     )
     assert "policy_3_interface_velocity_tracking" in labels
@@ -666,6 +686,12 @@ def test_problem2_coarse_solve_reaches_terminal_target_and_classifies_policy():
 
     assert metrics["terminal_gap_m"] <= 1.0e-7
     assert metrics["max_temperature_violation_K"] <= 1.0e-3
+    assert metrics["initial_interface_velocity_m_per_s"] > (
+        PaperPrimaryDryingConfig().problem2_interface_velocity_limit
+    )
+    assert metrics["max_post_initial_interface_velocity_m_per_s"] <= (
+        PaperPrimaryDryingConfig().problem2_interface_velocity_limit + 5.0e-10
+    )
     assert metrics["max_interface_velocity_violation_m_per_s"] <= 5.0e-10
     assert metrics["shelf_lower_violation_K"] <= 1.0e-6
     assert metrics["shelf_upper_violation_K"] <= 1.0e-6

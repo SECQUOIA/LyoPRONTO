@@ -246,10 +246,11 @@ path-constraint behavior on a refined `n_z=20` spatial mesh:
 The velocity constraint is skipped only at the initial collocation point, not
 the first finite element, because the paper explicitly reports an initial
 velocity excursion before Policy 3 quickly brings `dS/dt` to its setpoint.
-Metrics still report the initial velocity separately, while path-constraint
-checks use every post-initial collocation point. The refined `n_z=20` solve
-preserves the expected Policy 3 -> Policy 1 -> Policy 2 sequence and confirms
-that the max-heat segment is below the interface-velocity active threshold.
+Metrics report the initial velocity, global maximum velocity, and post-initial
+maximum velocity separately, while path-constraint checks use every post-initial
+collocation point. The refined `n_z=20` solve preserves the expected Policy 3
+-> Policy 1 -> Policy 2 sequence and confirms that the max-heat segment is below
+the interface-velocity active threshold.
 
 Known limitations:
 
@@ -275,6 +276,8 @@ Next steps are tracked in GitHub issues:
 smaller expression-based NLP for vapor pressure/resistance/flux/interface
 velocity, constraint scaling, and the `n_z=20` slow validation test.
 
-#29 is addressed by the Problem 2 config defaults, velocity path constraint,
-Policy 3 classifier support, policy-sequenced initializer, coarse and refined
-slow solves, and first-pass tolerance documentation.
+The first-pass #29 benchmark scope is covered by the Problem 2 config defaults,
+velocity path constraint, Policy 3 classifier support, policy-sequenced
+initializer, coarse and refined slow solves, and first-pass tolerance
+documentation. Full MATLAB/GEKKO upstream artifact comparison remains deferred
+until the upstream reference tooling is extended beyond Problem 1.
