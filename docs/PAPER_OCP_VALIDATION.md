@@ -23,6 +23,16 @@ units throughout. The Pyomo benchmark itself does not depend on GEKKO or
 MATLAB. GEKKO is available in the repo-local Pixi environment for upstream
 policy-segment verification.
 
+Problem 2 is now available as a second paper-reference OCP:
+
+- primary drying only, using the same moving-boundary model;
+- shelf temperature as the optimized control;
+- objective: minimize drying time;
+- constraints: product temperature at or below 240 K, interface velocity at or
+  below `2.8e-7 m/s`, and shelf temperature between 228 K and 260 K;
+- expected qualitative policy sequence: interface-velocity tracking, maximum
+  heat input, then product-temperature tracking.
+
 ## Validation Strategy
 
 The benchmark has two layers:
@@ -148,6 +158,34 @@ All rows use `nfe=12`, `ncp=3`, `LAGRANGE-RADAU`, the policy initializer, and a
 | `n_z=5` | optimal | ~6.19 h | Policy 1 -> Policy 2 |
 | `n_z=20` | optimal/acceptable | ~6.19 h | Policy 1 -> Policy 2 |
 
+## Problem 2 First-Pass Tolerances
+
+The Problem 2 validation is intentionally coarse at this stage. The paper
+reports switch times near 2.0 h and 3.9 h, with drying complete around 8.9 h.
+The slow test therefore accepts broad first-pass tolerances on the coarse
+`n_z=5`, `nfe=12`, `ncp=3` mesh:
+
+- terminal interface gap at or below `1e-7 m`;
+- product-temperature violation at or below `1e-3 K`;
+- post-initial interface-velocity violation at or below `5e-10 m/s`;
+- shelf-temperature bound violations at or below `1e-6 K`;
+- drying time within `0.7 h` of the paper value;
+- first two policy switches within `0.8 h` of the paper values.
+
+The velocity constraint is skipped at the initial collocation point because the
+paper explicitly reports an initial velocity excursion before Policy 3 quickly
+brings `dS/dt` to its setpoint. Metrics report the initial velocity, global
+maximum velocity, and post-initial maximum velocity separately, while
+path-constraint checks use the post-initial trajectory.
+
+Known limitations:
+
+- The Problem 2 initializer is a deterministic policy-sequenced warm start, not
+  a full reproduction of the upstream high-index GEKKO Policy 3 solve.
+- The first validated solve is coarse. A refined `n_z=20` Problem 2 solve and a
+  MATLAB/GEKKO upstream export should be added once the upstream reference
+  tooling is extended beyond Problem 1.
+
 ## Future Work
 
 Next steps are tracked in GitHub issues:
@@ -155,13 +193,17 @@ Next steps are tracked in GitHub issues:
 1. #27 - Pin or provide a known-good upstream MATLAB/Python/GEKKO environment or
    reference artifact for reproducible trajectory generation.
 2. #28 - Prepare the first Paper Problem 1 validation PR.
-3. #29 - Add Problem 2 with the interface-velocity constraint and expected
-   Policy 3 -> Policy 1 -> Policy 2 sequence.
-4. #30 - Compare the paper-reference transcription against LyoPRONTO's existing
+3. #30 - Compare the paper-reference transcription against LyoPRONTO's existing
    quasi-steady Pyomo and scipy optimizers.
-5. #31 - If the benchmark is credible, add a LyoPRONTO-facing experimental
+4. #31 - If the benchmark is credible, add a LyoPRONTO-facing experimental
    policy API with the same rich result format.
 
 #26 is addressed by the bottom-node temperature constraint alignment, the
 smaller expression-based NLP for vapor pressure/resistance/flux/interface
 velocity, constraint scaling, and the `n_z=20` slow validation test.
+
+The first-pass #29 benchmark scope is covered by the Problem 2 config defaults,
+velocity path constraint, Policy 3 classifier support, policy-sequenced
+initializer, coarse slow solve, and first-pass tolerance documentation. Full
+MATLAB/GEKKO upstream artifact comparison remains deferred until the upstream
+reference tooling is extended beyond Problem 1.

@@ -29,16 +29,21 @@ def test_pyomo_exports_optimizers_when_pyomo_available():
         "PaperPrimaryDryingConfig",
         "PaperDiscretization",
         "create_paper_problem1_model",
+        "create_paper_problem2_model",
         "generate_problem1_policy_initialization",
+        "generate_problem2_policy_initialization",
         "initialize_paper_problem1_from_trajectory",
         "load_upstream_matlab_trajectory",
         "compare_paper_problem1_trajectories",
         "solve_paper_problem1",
+        "solve_paper_problem2",
         "classify_paper_policies",
     }
 
     if pyomo_models.PYOMO_AVAILABLE:
         assert expected_exports.issubset(pyomo_models.__all__)
+        for name in expected_exports:
+            assert hasattr(pyomo_models, name)
     else:
         assert expected_exports.isdisjoint(pyomo_models.__all__)
 
