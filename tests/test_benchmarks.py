@@ -329,6 +329,27 @@ def test_paper_ocp_notes_cover_issue30_comparison(repo_root):
     assert "optional flux/interface-velocity cap" in notes
 
 
+def test_objective_time_stats_reports_empty_method(tmp_path):
+    summary_path = tmp_path / "summary.jsonl"
+    summary_path.write_text(
+        json.dumps(
+            {
+                "scipy": {"success": True, "objective_time_hr": 1.0},
+                "pyomo": {
+                    "success": True,
+                    "objective_time_hr": 2.0,
+                    "discretization": {"method": "colloc"},
+                },
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(AssertionError, match="no successful fd runs"):
+        _objective_time_stats(summary_path)
+
+
 def _objective_time_stats(summary_path):
     values = {"scipy": [], "fd": [], "colloc": []}
     for line in summary_path.read_text(encoding="utf-8").splitlines():
@@ -341,14 +362,15 @@ def _objective_time_stats(summary_path):
             method = pyomo_result["discretization"]["method"]
             values[method].append(float(pyomo_result["objective_time_hr"]))
 
-    return {
-        method: {
+    stats = {}
+    for method, method_values in values.items():
+        assert method_values, f"no successful {method} runs in {summary_path}"
+        stats[method] = {
             "min": min(method_values),
             "max": max(method_values),
             "mean": sum(method_values) / len(method_values),
         }
-        for method, method_values in values.items()
-    }
+    return stats
 
 
 def _range_text(stats):
