@@ -685,6 +685,12 @@ def generate_problem2_policy_initialization(
         flux_values[index] = flux
         labels.append(label)
 
+    post_initial_velocity_values = (
+        interface_velocity_values[1:]
+        if len(interface_velocity_values) > 1
+        else interface_velocity_values
+    )
+
     return {
         "states": {
             "time_s": time_s,
@@ -713,8 +719,10 @@ def generate_problem2_policy_initialization(
             "terminal_drying_fraction": float(
                 interface_values[-1] / derived.product_height
             ),
-            "max_interface_velocity_m_per_s": float(
-                interface_velocity_values[1:].max()
+            "initial_interface_velocity_m_per_s": float(interface_velocity_values[0]),
+            "max_interface_velocity_m_per_s": float(interface_velocity_values.max()),
+            "max_post_initial_interface_velocity_m_per_s": float(
+                post_initial_velocity_values.max()
             ),
         },
         "metadata": {
@@ -892,7 +900,9 @@ def load_upstream_matlab_trajectory(mat_path: str | Path) -> dict[str, Any]:
             interface_position,
             shelf_temperature,
         )
-        interface_velocity_values = np.gradient(interface_position, time_s, edge_order=1)
+        interface_velocity_values = np.gradient(
+            interface_position, time_s, edge_order=1
+        )
 
     config = PaperPrimaryDryingConfig()
     policies: dict[str, Any] = {}
@@ -1839,7 +1849,7 @@ def extract_paper_solution(model: Any, results: Any | None = None) -> dict[str, 
     resistance = np.array([float(pyo.value(model.Rp[t])) for t in t_points])
     vapor_pressure = np.array([float(pyo.value(model.Pw[t])) for t in t_points])
     max_temperature = temperature.max(axis=1)
-    constrained_velocity = (
+    post_initial_velocity = (
         interface_velocity_values[1:]
         if len(interface_velocity_values) > 1
         else interface_velocity_values
@@ -1868,15 +1878,16 @@ def extract_paper_solution(model: Any, results: Any | None = None) -> dict[str, 
             0.0,
             float(shelf_temperature.max() - settings.shelf_temperature_max),
         ),
-        "max_interface_velocity_m_per_s": float(constrained_velocity.max()),
+        "initial_interface_velocity_m_per_s": float(interface_velocity_values[0]),
+        "max_interface_velocity_m_per_s": float(interface_velocity_values.max()),
+        "max_post_initial_interface_velocity_m_per_s": float(
+            post_initial_velocity.max()
+        ),
     }
     if settings.interface_velocity_limit is not None:
-        metrics["initial_interface_velocity_m_per_s"] = float(
-            interface_velocity_values[0]
-        )
         metrics["max_interface_velocity_violation_m_per_s"] = max(
             0.0,
-            float(constrained_velocity.max() - settings.interface_velocity_limit),
+            float(post_initial_velocity.max() - settings.interface_velocity_limit),
         )
 
     status = None

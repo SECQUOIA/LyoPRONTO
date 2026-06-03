@@ -174,8 +174,9 @@ The slow test therefore accepts broad first-pass tolerances on the coarse
 
 The velocity constraint is skipped at the initial collocation point because the
 paper explicitly reports an initial velocity excursion before Policy 3 quickly
-brings `dS/dt` to its setpoint. Metrics still report the initial velocity
-separately, while path-constraint checks use the post-initial trajectory.
+brings `dS/dt` to its setpoint. Metrics report the initial velocity, global
+maximum velocity, and post-initial maximum velocity separately, while
+path-constraint checks use the post-initial trajectory.
 
 Known limitations:
 
@@ -201,6 +202,8 @@ Next steps are tracked in GitHub issues:
 smaller expression-based NLP for vapor pressure/resistance/flux/interface
 velocity, constraint scaling, and the `n_z=20` slow validation test.
 
-#29 is addressed by the Problem 2 config defaults, velocity path constraint,
-Policy 3 classifier support, policy-sequenced initializer, coarse slow solve,
-and first-pass tolerance documentation.
+The first-pass #29 benchmark scope is covered by the Problem 2 config defaults,
+velocity path constraint, Policy 3 classifier support, policy-sequenced
+initializer, coarse slow solve, and first-pass tolerance documentation. Full
+MATLAB/GEKKO upstream artifact comparison remains deferred until the upstream
+reference tooling is extended beyond Problem 1.
