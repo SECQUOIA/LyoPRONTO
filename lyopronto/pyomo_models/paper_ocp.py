@@ -865,12 +865,34 @@ def load_upstream_matlab_trajectory(mat_path: str | Path) -> dict[str, Any]:
         interface_velocity_values = np.atleast_1d(
             np.asarray(data["dSdt"], dtype=float)
         ).reshape(-1)
-    else:
-        interface_velocity_values = np.gradient(
-            interface_position, time_s, edge_order=1
+        if len(interface_velocity_values) != len(time_s):
+            raise ValueError("dSdt must share the same length as t")
+        (
+            time_s,
+            temperature,
+            interface_position,
+            shelf_temperature,
+            interface_velocity_values,
+        ) = _collapse_duplicate_time_points(
+            time_s,
+            temperature,
+            interface_position,
+            shelf_temperature,
+            interface_velocity_values,
         )
-    if len(interface_velocity_values) != len(time_s):
-        raise ValueError("dSdt must share the same length as t")
+    else:
+        (
+            time_s,
+            temperature,
+            interface_position,
+            shelf_temperature,
+        ) = _collapse_duplicate_time_points(
+            time_s,
+            temperature,
+            interface_position,
+            shelf_temperature,
+        )
+        interface_velocity_values = np.gradient(interface_position, time_s, edge_order=1)
 
     config = PaperPrimaryDryingConfig()
     policies: dict[str, Any] = {}
@@ -913,6 +935,27 @@ def load_upstream_matlab_trajectory(mat_path: str | Path) -> dict[str, Any]:
     if policies:
         trajectory["policies"] = policies
     return trajectory
+
+
+def _collapse_duplicate_time_points(
+    time_s: np.ndarray,
+    *series: np.ndarray,
+) -> tuple[np.ndarray, ...]:
+    """Collapse repeated upstream segment-boundary samples, keeping later values."""
+    time_s = np.asarray(time_s, dtype=float).reshape(-1)
+    if len(time_s) < 2:
+        return (time_s, *series)
+
+    deltas = np.diff(time_s)
+    if np.any(deltas < 0.0):
+        raise ValueError("t must be nondecreasing")
+    if not np.any(deltas == 0.0):
+        return (time_s, *series)
+
+    keep = np.ones(len(time_s), dtype=bool)
+    keep[:-1] = time_s[:-1] != time_s[1:]
+    collapsed_series = tuple(np.asarray(values)[keep] for values in series)
+    return (time_s[keep], *collapsed_series)
 
 
 def compare_paper_problem1_trajectories(

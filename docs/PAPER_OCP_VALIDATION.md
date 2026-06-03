@@ -67,14 +67,15 @@ The GEKKO segment uses `IMODE=7`, `NODES=3`, and 30 time points for the
 temperature-constrained segment. This is closer to an active-set DAE
 decomposition than a one-shot free-final-time transcription.
 
-The current default solve uses a coarse validated spatial mesh (`n_z=5`) with a
-near-complete terminal drying fraction. It checks the paper's reported switch
-time near 2.4 h and a first-pass drying-time target near 6.2 h. The refined
-`n_z=20` spatial mesh now also terminates cleanly with IPOPT when using the
-documented acceptable NLP tolerance (`acceptable_tol=1e-3`,
-`acceptable_iter=5`). The trajectory-level checks remain tight: terminal drying
-within `1e-7 m`, product-temperature violation within `2e-6 K`, drying time near
-6.19 h, and switch time near 2.4 h.
+The current supported validation target is the paper-reported behavior rather
+than an exact upstream trajectory artifact: Policy 1 -> Policy 2, a switch time
+near 2.4 h, path-constraint satisfaction, and a first-pass drying-time target
+near 6.2 h. The default solve uses a coarse validated spatial mesh (`n_z=5`)
+with a near-complete terminal drying fraction. The refined `n_z=20` spatial
+mesh now also terminates cleanly with IPOPT when using the documented acceptable
+NLP tolerance (`acceptable_tol=1e-3`, `acceptable_iter=5`). The trajectory-level
+checks remain tight: terminal drying within `1e-7 m`, product-temperature
+violation within `2e-6 K`, drying time near 6.19 h, and switch time near 2.4 h.
 
 As verification against the upstream reference implementation
 (`PrakitrSrisuma/simDAE-optimalcontrol-lyo` commit
@@ -101,11 +102,12 @@ segment comparison.
 
 ## Regenerating The Upstream Reference
 
-Issue #27 is handled by `benchmarks/paper_problem1_reference.py`. The generator
-keeps the upstream clone read-only: it writes temporary MATLAB wrappers for
-`SimPy_MaxT` and `SimPy_MaxFlux` that use the known upstream `Python/` folder
-instead of `matlab.desktop.editor.getActiveFilename`, then runs
-`Sim_1stDrying_OCP` for `Case2` and saves:
+`benchmarks/paper_problem1_reference.py` provides best-effort diagnostic tooling
+for the upstream reference-generation path tracked in #27. It keeps the upstream
+clone read-only: it writes temporary MATLAB wrappers for `SimPy_MaxT` and
+`SimPy_MaxFlux` that use the known upstream `Python/` folder instead of
+`matlab.desktop.editor.getActiveFilename`, then runs `Sim_1stDrying_OCP` for
+`Case2` and saves:
 
 - `t`
 - `T`
@@ -115,8 +117,16 @@ instead of `matlab.desktop.editor.getActiveFilename`, then runs
 - `policy`
 - `tsw`
 
-The MATLAB Python environment must be able to import GEKKO because the upstream
-Policy 2 segment calls `pyfun_MaxT.py`.
+This is an environment-dependent diagnostic path, not the primary validation
+gate. The upstream `.mat` generation depends on an exact MATLAB/Python/GEKKO
+solver stack compatible with the upstream repository. The paper reports MATLAB
+R2024b, Python 3.10, GEKKO, and 64-bit Windows 11, but it does not pin the
+GEKKO/APMonitor solver version. The generator may fail on modern MATLAB/Python
+or GEKKO setups even when MATLAB Python can import GEKKO; use the paper-reported
+scalar behavior above as the supported validation target unless a known-good
+upstream reference artifact is available. A future `--matlab-python` option
+could make interpreter selection easier, but it would not by itself address
+GEKKO/APMonitor solver crashes.
 
 ```bash
 python benchmarks/paper_problem1_reference.py generate \
@@ -250,10 +260,12 @@ Known limitations:
 
 Next steps are tracked in GitHub issues:
 
-1. #28 - Prepare the first Paper Problem 1 validation PR.
-2. #30 - Compare the paper-reference transcription against LyoPRONTO's existing
+1. #27 - Pin or provide a known-good upstream MATLAB/Python/GEKKO environment or
+   reference artifact for reproducible trajectory generation.
+2. #28 - Prepare the first Paper Problem 1 validation PR.
+3. #30 - Compare the paper-reference transcription against LyoPRONTO's existing
    quasi-steady Pyomo and scipy optimizers.
-3. Follow-on work after #31 - Run refined LyoPRONTO policy-OCP solves against
+4. Follow-on work after #31 - Run refined LyoPRONTO policy-OCP solves against
    representative scenarios and decide whether the experimental adapter should
    graduate into a supported public API.
 

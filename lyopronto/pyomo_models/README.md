@@ -99,17 +99,43 @@ drying OCP in Srisuma and Braatz, arXiv:2509.10826v1.
 - `classify_paper_policies()` - Infer active Policy 1/Policy 2/Policy 3 regions
 
 This module uses SI/Kelvin units from the paper/upstream code and is separate
-from LyoPRONTO's cm/Torr/degC production APIs. Problem 1 validates the
-temperature-constrained drying-time objective and reproduces the expected
-Policy 1 -> Policy 2 sequence near the paper's reported switch time. Problem 2
-adds the 240 K product-temperature limit, 260 K shelf-temperature upper bound,
-and `2.8e-7 m/s` interface-velocity path constraint; the coarse validation
-tracks the expected Policy 3 -> Policy 1 -> Policy 2 sequence.
+from LyoPRONTO's cm/Torr/degC production APIs. The supported validation target
+for Problem 1 is the paper-reported scalar behavior: Policy 1 -> Policy 2, a
+switch time near 2.4 h, and path-constraint satisfaction. Problem 2 adds the
+240 K product-temperature limit, 260 K shelf-temperature upper bound, and
+`2.8e-7 m/s` interface-velocity path constraint; the coarse validation tracks
+the expected Policy 3 -> Policy 1 -> Policy 2 sequence.
 
 The validated default solves use a coarse `n_z=5` mesh. For Problem 1, the
 upstream paper's `n_z=20` spatial mesh is also covered by a slow validation test
 using IPOPT acceptable termination (`acceptable_tol=1e-3`,
 `acceptable_iter=5`).
+
+An upstream `.mat` reference can be generated only when the local machine has a
+compatible MATLAB/Python/GEKKO solver stack for
+`PrakitrSrisuma/simDAE-optimalcontrol-lyo`. The paper reports MATLAB R2024b,
+Python 3.10, GEKKO, and 64-bit Windows 11, but it does not pin the
+GEKKO/APMonitor solver version; modern setups may still fail inside the
+upstream GEKKO solve. Use this command as a best-effort diagnostic, not as the
+primary validation gate:
+
+```bash
+python benchmarks/paper_problem1_reference.py generate \
+  --upstream-root /home/bernalde/repos/simDAE-optimalcontrol-lyo \
+  --output benchmarks/results/paper_problem1_upstream_reference.mat
+```
+
+The command writes batch-safe MATLAB wrappers outside the upstream clone and
+requires MATLAB Python to import GEKKO for the upstream Policy 2 segment. A
+future `--matlab-python` option could make interpreter selection easier, but it
+would not by itself fix GEKKO/APMonitor solver crashes. If a known-good artifact
+is available, compare it against a Pyomo solve with:
+
+```bash
+python benchmarks/paper_problem1_reference.py compare-pyomo \
+  benchmarks/results/paper_problem1_upstream_reference.mat \
+  --n-z 20 --nfe 12 --ncp 3
+```
 
 ### `policy_ocp.py`
 Experimental LyoPRONTO-facing policy OCP adapter. This module does not expose
@@ -131,24 +157,6 @@ entry points. When a cap is provided with `warmstart_scipy=True`, the solve uses
 the SciPy trajectory as an initial point but skips the fixed-control staged solve
 because an uncapped warm start can violate active Policy 3 constraints before
 the shelf-temperature control is released.
-
-Regenerate the full upstream Problem 1 reference with:
-
-```bash
-python benchmarks/paper_problem1_reference.py generate \
-  --upstream-root /home/bernalde/repos/simDAE-optimalcontrol-lyo \
-  --output benchmarks/results/paper_problem1_upstream_reference.mat
-```
-
-The command writes batch-safe MATLAB wrappers outside the upstream clone and
-requires MATLAB Python to import GEKKO for the upstream Policy 2 segment. Compare
-the exported artifact against a Pyomo solve with:
-
-```bash
-python benchmarks/paper_problem1_reference.py compare-pyomo \
-  benchmarks/results/paper_problem1_upstream_reference.mat \
-  --n-z 20 --nfe 12 --ncp 3
-```
 
 ## Installation
 
