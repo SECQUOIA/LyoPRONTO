@@ -9,9 +9,15 @@ import json
 import os
 import shlex
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 from typing import Sequence
+
+if __package__ in {None, ""}:
+    repo_root = Path(__file__).resolve().parents[1]
+    if (repo_root / "lyopronto").is_dir():
+        sys.path.insert(0, str(repo_root))
 
 from lyopronto.pyomo_models.paper_ocp import (
     PaperDiscretization,
@@ -99,6 +105,8 @@ addpath(fullfile(code_root, 'Events'));
 addpath(fullfile(code_root, 'Simulations'));
 addpath(fullfile(code_root, 'Calculations'));
 addpath(fullfile(code_root, 'Sim_DAE'));
+% Keep generated batch-safe wrappers ahead of upstream functions with the same names.
+addpath(runner_root, '-begin');
 
 old_dir = pwd;
 cleanup = onCleanup(@() cd(old_dir));
