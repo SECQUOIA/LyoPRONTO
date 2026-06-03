@@ -278,6 +278,113 @@ def test_benchmark_results_gitignore_blocks_generated_outputs(repo_root):
     assert allowed_result.returncode == 1, allowed_result.stdout
 
 
+def test_paper_ocp_notes_cover_issue30_comparison(repo_root):
+    notes = (repo_root / "docs" / "PAPER_OCP_VALIDATION.md").read_text(encoding="utf-8")
+    tsh_stats = _objective_time_stats(
+        repo_root / "benchmarks" / "results" / "baseline_Tsh_3x3_summary.jsonl"
+    )
+    pch_stats = _objective_time_stats(
+        repo_root / "benchmarks" / "results" / "baseline_Pch_3x3_summary.jsonl"
+    )
+
+    assert "## Paper-vs-LyoPRONTO Baseline Comparison" in notes
+    assert (
+        "| Model/case | Comparable scope | Drying time | Active constraints/control behavior | Temperature behavior | Interpretation |"
+        in notes
+    )
+    assert "benchmarks/results/baseline_Tsh_3x3_summary.jsonl" in notes
+    assert (
+        _table_cell(
+            notes,
+            "LyoPRONTO `Tsh` SciPy baseline",
+            column=3,
+        )
+        == f"{_range_text(tsh_stats['scipy'])} h across the 3x3 grid; mean {tsh_stats['scipy']['mean']:.2f} h"
+    )
+    assert (
+        _table_cell(
+            notes,
+            "LyoPRONTO `Tsh` Pyomo FD",
+            column=3,
+        )
+        == f"{_range_text(tsh_stats['fd'])} h; mean {tsh_stats['fd']['mean']:.2f} h"
+    )
+    assert (
+        _table_cell(
+            notes,
+            "LyoPRONTO `Tsh` Pyomo collocation",
+            column=3,
+        )
+        == f"{_range_text(tsh_stats['colloc'])} h; mean {tsh_stats['colloc']['mean']:.2f} h"
+    )
+    normalized_notes = " ".join(notes.split())
+    assert (
+        "Their drying-time ranges were "
+        f"{_range_text(pch_stats['scipy'])} h for SciPy, "
+        f"{_range_text(pch_stats['fd'])} h for Pyomo FD, and "
+        f"{_range_text(pch_stats['colloc'])} h for Pyomo collocation."
+    ) in normalized_notes
+    assert "Recommendation: keep the paper-reference model validation-only" in notes
+    assert "#31" in notes
+    assert "optional flux/interface-velocity cap" in notes
+
+
+def test_objective_time_stats_reports_empty_method(tmp_path):
+    summary_path = tmp_path / "summary.jsonl"
+    summary_path.write_text(
+        json.dumps(
+            {
+                "scipy": {"success": True, "objective_time_hr": 1.0},
+                "pyomo": {
+                    "success": True,
+                    "objective_time_hr": 2.0,
+                    "discretization": {"method": "colloc"},
+                },
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(AssertionError, match="no successful fd runs"):
+        _objective_time_stats(summary_path)
+
+
+def _objective_time_stats(summary_path):
+    values = {"scipy": [], "fd": [], "colloc": []}
+    for line in summary_path.read_text(encoding="utf-8").splitlines():
+        record = json.loads(line)
+        scipy_result = record.get("scipy")
+        if scipy_result and scipy_result.get("success"):
+            values["scipy"].append(float(scipy_result["objective_time_hr"]))
+        pyomo_result = record.get("pyomo")
+        if pyomo_result and pyomo_result.get("success"):
+            method = pyomo_result["discretization"]["method"]
+            values[method].append(float(pyomo_result["objective_time_hr"]))
+
+    stats = {}
+    for method, method_values in values.items():
+        assert method_values, f"no successful {method} runs in {summary_path}"
+        stats[method] = {
+            "min": min(method_values),
+            "max": max(method_values),
+            "mean": sum(method_values) / len(method_values),
+        }
+    return stats
+
+
+def _range_text(stats):
+    return f"{stats['min']:.2f}-{stats['max']:.2f}"
+
+
+def _table_cell(markdown, row_label, column):
+    for line in markdown.splitlines():
+        if line.startswith(f"| {row_label} |"):
+            cells = [cell.strip() for cell in line.strip("|").split("|")]
+            return cells[column - 1]
+    raise AssertionError(f"missing markdown table row: {row_label}")
+
+
 def test_tracked_reference_summaries_use_current_metric_schema(repo_root):
     required_metrics = {
         "dryness_target_percent",

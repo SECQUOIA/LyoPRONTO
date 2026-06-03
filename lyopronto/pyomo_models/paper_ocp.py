@@ -742,12 +742,12 @@ def generate_problem2_policy_initialization(
     }
 
 
-def initialize_paper_problem1_from_trajectory(
+def initialize_paper_problem_from_trajectory(
     model: Any,
     trajectory: Mapping[str, Any],
     set_final_time: bool = True,
 ) -> None:
-    """Initialize a discretized Paper Problem 1 model from a trajectory dict."""
+    """Initialize a discretized paper-reference model from a trajectory dict."""
     states = trajectory.get("states", trajectory)
     controls = trajectory.get("controls", {})
     time_s = np.asarray(states["time_s"], dtype=float)
@@ -817,6 +817,19 @@ def initialize_paper_problem1_from_trajectory(
 
         if hasattr(model, "dS_dtau"):
             model.dS_dtau[tau].set_value(final_time * velocity)
+
+
+def initialize_paper_problem1_from_trajectory(
+    model: Any,
+    trajectory: Mapping[str, Any],
+    set_final_time: bool = True,
+) -> None:
+    """Backward-compatible alias for ``initialize_paper_problem_from_trajectory``."""
+    initialize_paper_problem_from_trajectory(
+        model,
+        trajectory,
+        set_final_time=set_final_time,
+    )
 
 
 def load_upstream_matlab_trajectory(mat_path: str | Path) -> dict[str, Any]:
@@ -1353,6 +1366,9 @@ def _create_paper_problem_model(
 
         def interface_velocity_limit_rule(m, t):
             if t == m.t.first():
+                # The paper reports an initial velocity excursion. Only that
+                # initial point is skipped; all post-initial collocation points
+                # remain constrained and included in violation metrics.
                 return pyo.Constraint.Skip
             return 1.0e7 * m.dSdt[t] <= 1.0e7 * settings.interface_velocity_limit
 
@@ -1775,9 +1791,9 @@ def _solve_paper_problem(
             trajectory = generate_problem1_policy_initialization(config, discretization)
         else:
             trajectory = generate_problem2_policy_initialization(config, discretization)
-        initialize_paper_problem1_from_trajectory(model, trajectory)
+        initialize_paper_problem_from_trajectory(model, trajectory)
     elif isinstance(initialization, Mapping):
-        initialize_paper_problem1_from_trajectory(model, initialization)
+        initialize_paper_problem_from_trajectory(model, initialization)
     elif initialization is not None:
         raise ValueError(
             "initialization must be 'policy', a trajectory mapping, or None"

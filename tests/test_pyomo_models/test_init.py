@@ -32,12 +32,17 @@ def test_pyomo_exports_optimizers_when_pyomo_available():
         "create_paper_problem2_model",
         "generate_problem1_policy_initialization",
         "generate_problem2_policy_initialization",
+        "initialize_paper_problem_from_trajectory",
         "initialize_paper_problem1_from_trajectory",
         "load_upstream_matlab_trajectory",
         "compare_paper_problem1_trajectories",
         "solve_paper_problem1",
         "solve_paper_problem2",
         "classify_paper_policies",
+        "create_lyopronto_policy_ocp_model",
+        "solve_lyopronto_policy_ocp",
+        "extract_lyopronto_policy_solution",
+        "classify_lyopronto_policies",
     }
 
     if pyomo_models.PYOMO_AVAILABLE:

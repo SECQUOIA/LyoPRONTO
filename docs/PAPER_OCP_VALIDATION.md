@@ -158,12 +158,83 @@ All rows use `nfe=12`, `ncp=3`, `LAGRANGE-RADAU`, the policy initializer, and a
 | `n_z=5` | optimal | ~6.19 h | Policy 1 -> Policy 2 |
 | `n_z=20` | optimal/acceptable | ~6.19 h | Policy 1 -> Policy 2 |
 
+## Paper-vs-LyoPRONTO Baseline Comparison
+
+Issue #30 compares the paper-reference direct transcription against current
+LyoPRONTO baselines before adding any LyoPRONTO-facing policy OCP API. The
+closest comparable LyoPRONTO case is the `Tsh` benchmark: shelf temperature is
+optimized while chamber pressure is fixed. The committed baseline data were
+generated with the current SciPy optimizer and quasi-steady Pyomo FD/collocation
+optimizers over the `baseline` 3x3 grid:
+
+```bash
+python benchmarks/grid_cli.py generate \
+  --task Tsh --scenario baseline \
+  --vary product.A1=16,18,20 \
+  --vary ht.KC=2.75e-4,3.3e-4,4.0e-4 \
+  --methods scipy,fd,colloc \
+  --n-elements 24 --n-collocation 3 \
+  --out benchmarks/results/baseline_Tsh_3x3_summary.jsonl
+```
+
+`Pch` data in `benchmarks/results/baseline_Pch_3x3_summary.jsonl` were also
+checked as a non-comparable optimizer sanity run. They use chamber pressure as
+the manipulated variable with a fixed shelf profile, so they should not be used
+as a paper OCP comparison point. Their drying-time ranges were 18.12-23.67 h
+for SciPy, 18.15-23.71 h for Pyomo FD, and 17.90-23.37 h for Pyomo collocation.
+
+| Model/case | Comparable scope | Drying time | Active constraints/control behavior | Temperature behavior | Interpretation |
+| --- | --- | --- | --- | --- | --- |
+| Paper Problem 1 direct transcription | Shelf-only OCP, fixed chamber pressure, SI/Kelvin moving-boundary model | ~6.19 h | Policy 1 max heat input, then Policy 2 product-temperature tracking near 2.4 h | Max product temperature tracks 243 K after the switch; shelf temperature backs away from 273 K | Useful validation target for direct transcription and policy classification, but not a drop-in LyoPRONTO baseline |
+| LyoPRONTO `Tsh` SciPy baseline | Shelf-only quasi-steady optimizer, fixed 0.1 Torr chamber pressure, cm/Torr/degC model | 12.19-14.47 h across the 3x3 grid; mean 13.33 h | Shelf profile optimizer with product-temperature limit as the active path constraint | Bottom product temperature tracks -25 degC at the constraint | Closest current control-space comparison; drying-time gap is dominated by formulation, units, scenario, and constraint differences |
+| LyoPRONTO `Tsh` Pyomo FD | Same quasi-steady benchmark as SciPy, finite-difference transcription, 24 elements | 12.40-14.76 h; mean 13.58 h | Same active product-temperature constraint; no warm start in committed grid | Tracks the same -25 degC limit with 98.9% terminal drying target | Matches the SciPy baseline closely enough for LyoPRONTO regression use, but does not exercise paper Policy 3/Policy 2 structure |
+| LyoPRONTO `Tsh` Pyomo collocation | Same quasi-steady benchmark as SciPy, collocation with effective mesh parity | 12.00-14.23 h; mean 13.11 h | Same active product-temperature constraint on a collocation mesh | Tracks the same -25 degC limit with small objective shifts versus SciPy | Confirms transcription effects are modest inside the LyoPRONTO model, separate from paper-vs-LyoPRONTO physics differences |
+| Paper Problem 2 direct transcription | Shelf-only OCP with an interface-velocity path constraint | ~8.9 h first-pass coarse validation | Policy 3 interface-velocity tracking, then Policy 1 max heat input, then Policy 2 temperature tracking | Product temperature stays below 240 K after the velocity-limited phase | No current LyoPRONTO optimizer is directly comparable because the public quasi-steady APIs do not expose a flux or interface-velocity cap |
+
+Recommendation: keep the paper-reference model validation-only and adapt the
+policy constraints into LyoPRONTO instead of exposing the SI/Kelvin paper model
+as a public optimizer. The paper model should remain in
+`lyopronto.pyomo_models.paper_ocp` for upstream validation, convergence checks,
+and policy-classification tests. The LyoPRONTO-facing work should proceed
+through #31, which already converts the adapter requirements into an
+implementation issue: add an optional flux/interface-velocity cap in LyoPRONTO
+units, reuse the existing quasi-steady Pyomo optimizer infrastructure, return a
+rich result object, classify active policies from LyoPRONTO trajectories, and
+avoid changing existing SciPy or Pyomo optimizer behavior.
+
+## Experimental LyoPRONTO Policy OCP Adapter
+
+Issue #31 adds the first LyoPRONTO-facing policy adapter in
+`lyopronto.pyomo_models.policy_ocp`. The adapter deliberately uses the existing
+LyoPRONTO quasi-steady Pyomo model rather than the paper-reference moving
+boundary heat-equation transcription:
+
+- units stay in the LyoPRONTO convention: cm, Torr, degC, hr, and flux output
+  in `kg/hr/m^2`;
+- the state model remains the current one-ODE dried-cake-length formulation
+  with algebraic sublimation and vial-bottom temperatures;
+- optional Policy 3 caps can be supplied as a sublimation-flux cap in
+  `kg/hr/m^2` or an interface-velocity cap in `cm/hr`;
+- Policy 1/2/3 classification is returned in the same rich-result style as the
+  paper benchmark, but it is inferred from shelf maximum, product-temperature
+  limit, and LyoPRONTO cap activity;
+- no web or high-level integration is included in this first pass.
+
+The adapter returns `states`, `controls`, `metrics`, `metadata`, `problem`,
+`config`, `trajectory`, and `policies` sections. With no flux or velocity cap,
+it adds no extra path constraints to `create_optimizer_model()`, so the existing
+SciPy optimizers and the public Pyomo optimizer functions keep their current
+behavior and return types. When a cap is present, a SciPy trajectory can still
+initialize the Pyomo variables, but the adapter skips the fixed-control staged
+solve because the uncapped warm start may violate active Policy 3 path
+constraints before shelf temperature is released.
+
 ## Problem 2 First-Pass Tolerances
 
-The Problem 2 validation is intentionally coarse at this stage. The paper
-reports switch times near 2.0 h and 3.9 h, with drying complete around 8.9 h.
-The slow test therefore accepts broad first-pass tolerances on the coarse
-`n_z=5`, `nfe=12`, `ncp=3` mesh:
+The paper reports Problem 2 switch times near 2.0 h and 3.9 h, with drying
+complete around 8.9 h. The slow tests therefore accept broad first-pass
+tolerances on the coarse `n_z=5`, `nfe=12`, `ncp=3` mesh and confirm the same
+path-constraint behavior on a refined `n_z=20` spatial mesh:
 
 - terminal interface gap at or below `1e-7 m`;
 - product-temperature violation at or below `1e-3 K`;
@@ -172,18 +243,20 @@ The slow test therefore accepts broad first-pass tolerances on the coarse
 - drying time within `0.7 h` of the paper value;
 - first two policy switches within `0.8 h` of the paper values.
 
-The velocity constraint is skipped at the initial collocation point because the
-paper explicitly reports an initial velocity excursion before Policy 3 quickly
-brings `dS/dt` to its setpoint. Metrics report the initial velocity, global
-maximum velocity, and post-initial maximum velocity separately, while
-path-constraint checks use the post-initial trajectory.
+The velocity constraint is skipped only at the initial collocation point, not
+the first finite element, because the paper explicitly reports an initial
+velocity excursion before Policy 3 quickly brings `dS/dt` to its setpoint.
+Metrics report the initial velocity, global maximum velocity, and post-initial
+maximum velocity separately, while path-constraint checks use every post-initial
+collocation point. The refined `n_z=20` solve preserves the expected Policy 3
+-> Policy 1 -> Policy 2 sequence and confirms that the max-heat segment is below
+the interface-velocity active threshold.
 
 Known limitations:
 
 - The Problem 2 initializer is a deterministic policy-sequenced warm start, not
   a full reproduction of the upstream high-index GEKKO Policy 3 solve.
-- The first validated solve is coarse. A refined `n_z=20` Problem 2 solve and a
-  MATLAB/GEKKO upstream export should be added once the upstream reference
+- A MATLAB/GEKKO upstream export should be added once the upstream reference
   tooling is extended beyond Problem 1.
 
 ## Future Work
@@ -195,8 +268,9 @@ Next steps are tracked in GitHub issues:
 2. #28 - Prepare the first Paper Problem 1 validation PR.
 3. #30 - Compare the paper-reference transcription against LyoPRONTO's existing
    quasi-steady Pyomo and scipy optimizers.
-4. #31 - If the benchmark is credible, add a LyoPRONTO-facing experimental
-   policy API with the same rich result format.
+4. Follow-on work after #31 - Run refined LyoPRONTO policy-OCP solves against
+   representative scenarios and decide whether the experimental adapter should
+   graduate into a supported public API.
 
 #26 is addressed by the bottom-node temperature constraint alignment, the
 smaller expression-based NLP for vapor pressure/resistance/flux/interface
@@ -204,6 +278,6 @@ velocity, constraint scaling, and the `n_z=20` slow validation test.
 
 The first-pass #29 benchmark scope is covered by the Problem 2 config defaults,
 velocity path constraint, Policy 3 classifier support, policy-sequenced
-initializer, coarse slow solve, and first-pass tolerance documentation. Full
-MATLAB/GEKKO upstream artifact comparison remains deferred until the upstream
-reference tooling is extended beyond Problem 1.
+initializer, coarse and refined slow solves, and first-pass tolerance
+documentation. Full MATLAB/GEKKO upstream artifact comparison remains deferred
+until the upstream reference tooling is extended beyond Problem 1.
