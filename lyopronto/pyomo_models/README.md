@@ -138,6 +138,27 @@ python benchmarks/paper_problem1_reference.py compare-pyomo \
   --n-z 20 --nfe 12 --ncp 3
 ```
 
+### `policy_ocp.py`
+Experimental LyoPRONTO-facing policy OCP adapter. This module does not expose
+the SI/Kelvin paper model as a production optimizer. Instead, it reuses
+`create_optimizer_model()` and the current quasi-steady LyoPRONTO Pyomo
+formulation in cm/Torr/degC units.
+
+**Key functions:**
+- `create_lyopronto_policy_ocp_model()` - Build the quasi-steady model and add optional policy caps
+- `solve_lyopronto_policy_ocp()` - Solve the shelf-temperature policy OCP with IPOPT
+- `extract_lyopronto_policy_solution()` - Return a paper-style rich result object
+- `classify_lyopronto_policies()` - Infer Policy 1/2/3 activity from LyoPRONTO trajectories
+
+The optional Policy 3 caps use LyoPRONTO output units: sublimation flux in
+`kg/hr/m^2` and interface velocity in `cm/hr`. With no cap provided, the adapter
+adds no path constraints beyond the existing Pyomo optimizer model, preserving
+the behavior of the legacy SciPy optimizers and the existing Pyomo optimizer
+entry points. When a cap is provided with `warmstart_scipy=True`, the solve uses
+the SciPy trajectory as an initial point but skips the fixed-control staged solve
+because an uncapped warm start can violate active Policy 3 constraints before
+the shelf-temperature control is released.
+
 ## Installation
 
 ### 1. Install Pyomo

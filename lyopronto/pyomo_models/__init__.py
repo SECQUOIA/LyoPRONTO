@@ -74,6 +74,12 @@ if PYOMO_AVAILABLE:
         solve_paper_problem1,
         solve_paper_problem2,
     )
+    from .policy_ocp import (
+        classify_lyopronto_policies,
+        create_lyopronto_policy_ocp_model,
+        extract_lyopronto_policy_solution,
+        solve_lyopronto_policy_ocp,
+    )
     from .single_step import (
         create_single_step_model,
         optimize_single_step,
@@ -103,6 +109,10 @@ if PYOMO_AVAILABLE:
         "solve_paper_problem1",
         "solve_paper_problem2",
         "classify_paper_policies",
+        "create_lyopronto_policy_ocp_model",
+        "solve_lyopronto_policy_ocp",
+        "extract_lyopronto_policy_solution",
+        "classify_lyopronto_policies",
     ]
 
 __version__ = "0.1.0-dev"

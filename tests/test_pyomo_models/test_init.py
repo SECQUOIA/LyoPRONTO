@@ -39,6 +39,10 @@ def test_pyomo_exports_optimizers_when_pyomo_available():
         "solve_paper_problem1",
         "solve_paper_problem2",
         "classify_paper_policies",
+        "create_lyopronto_policy_ocp_model",
+        "solve_lyopronto_policy_ocp",
+        "extract_lyopronto_policy_solution",
+        "classify_lyopronto_policies",
     }
 
     if pyomo_models.PYOMO_AVAILABLE:
