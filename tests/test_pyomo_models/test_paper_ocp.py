@@ -2,12 +2,16 @@
 
 """Tests for the paper-reference Pyomo OCP benchmark."""
 
+import subprocess
+import sys
+
 import numpy as np
 import pytest
 from lyopronto.pyomo_models.paper_ocp import (
     PaperDiscretization,
     PaperPrimaryDryingConfig,
     classify_paper_policies,
+    compare_paper_problem1_trajectories,
     create_paper_problem1_model,
     derive_primary_drying_parameters,
     generate_problem1_policy_initialization,
@@ -212,6 +216,177 @@ def test_load_upstream_matlab_trajectory_from_segment_file(tmp_path):
     assert trajectory["states"]["temperature_K"].shape == (3, 2)
     assert np.allclose(trajectory["states"]["interface_position_m"], y[:, -1])
     assert np.allclose(trajectory["controls"]["shelf_temperature_K"], 273.0)
+
+
+def test_load_upstream_matlab_trajectory_preserves_full_reference_fields(tmp_path):
+    from scipy.io import savemat
+
+    mat_path = tmp_path / "upstream_full.mat"
+    t = np.array([0.0, 3600.0, 7200.0])
+    temperature = np.array(
+        [
+            [228.0, 228.5, 229.0],
+            [239.0, 240.0, 241.0],
+            [241.0, 242.0, 243.0],
+        ]
+    )
+    interface_position = np.array([0.0, 1.0e-3, 2.0e-3])
+    savemat(
+        mat_path,
+        {
+            "t": t,
+            "T": temperature,
+            "S": interface_position,
+            "Tb": np.array([273.0, 270.0, 266.0]),
+            "dSdt": np.array([2.0e-7, 3.0e-7, 4.0e-7]),
+            "policy": np.array([1, 2]),
+            "tsw": np.array([3600.0]),
+        },
+    )
+
+    trajectory = load_upstream_matlab_trajectory(mat_path)
+
+    assert trajectory["states"]["temperature_K"].shape == (3, 3)
+    assert np.allclose(trajectory["states"]["interface_velocity_m_per_s"], [2.0e-7, 3.0e-7, 4.0e-7])
+    assert np.allclose(trajectory["policies"]["raw_policy"], [1, 2])
+    assert np.allclose(trajectory["policies"]["switch_times_hr"], [1.0])
+    assert trajectory["metrics"]["drying_time_hr"] == 2.0
+    assert trajectory["metrics"]["terminal_interface_position_m"] == 2.0e-3
+    assert trajectory["problem"]["temperature_limit_K"] == 243.0
+
+
+def test_load_upstream_matlab_trajectory_collapses_duplicate_switch_times(tmp_path):
+    from scipy.io import savemat
+
+    mat_path = tmp_path / "upstream_duplicate_switch.mat"
+    savemat(
+        mat_path,
+        {
+            "t": np.array([0.0, 3600.0, 3600.0, 7200.0]),
+            "T": np.array(
+                [
+                    [228.0, 228.5, 229.0],
+                    [239.0, 240.0, 241.0],
+                    [239.1, 240.1, 241.1],
+                    [241.0, 242.0, 243.0],
+                ]
+            ),
+            "S": np.array([0.0, 1.0e-3, 1.1e-3, 2.0e-3]),
+            "Tb": np.array([273.0, 270.0, 269.0, 266.0]),
+            "dSdt": np.array([2.0e-7, 3.0e-7, 3.1e-7, 4.0e-7]),
+            "policy": np.array([1, 2]),
+            "tsw": np.array([3600.0]),
+        },
+    )
+
+    trajectory = load_upstream_matlab_trajectory(mat_path)
+
+    assert np.all(np.diff(trajectory["states"]["time_s"]) > 0.0)
+    assert np.allclose(trajectory["states"]["time_s"], [0.0, 3600.0, 7200.0])
+    assert np.allclose(
+        trajectory["states"]["temperature_K"][1],
+        [239.1, 240.1, 241.1],
+    )
+    assert np.isclose(trajectory["states"]["interface_position_m"][1], 1.1e-3)
+    assert np.isclose(trajectory["controls"]["shelf_temperature_K"][1], 269.0)
+    assert np.isclose(trajectory["states"]["interface_velocity_m_per_s"][1], 3.1e-7)
+
+
+def test_compare_paper_problem1_trajectories_reports_required_metrics():
+    upstream = {
+        "states": {
+            "time_s": np.array([0.0, 3600.0, 7200.0]),
+            "max_temperature_K": np.array([228.0, 241.0, 243.0]),
+            "interface_position_m": np.array([0.0, 1.0e-3, 2.0e-3]),
+        },
+        "metrics": {
+            "drying_time_hr": 2.0,
+            "terminal_interface_position_m": 2.0e-3,
+            "max_product_temperature_K": 243.0,
+        },
+        "policies": {"switch_times_hr": np.array([1.0])},
+    }
+    pyomo_result = {
+        "states": {
+            "time_s": np.array([0.0, 3600.0, 7560.0]),
+            "max_temperature_K": np.array([228.0, 241.5, 243.2]),
+            "interface_position_m": np.array([0.0, 1.1e-3, 2.1e-3]),
+        },
+        "metrics": {
+            "drying_time_hr": 2.1,
+            "terminal_interface_position_m": 2.1e-3,
+            "max_product_temperature_K": 243.2,
+        },
+        "policies": {"switch_times_hr": [1.1]},
+    }
+
+    comparison = compare_paper_problem1_trajectories(pyomo_result, upstream)
+
+    assert np.isclose(comparison["drying_time_deviation_hr"], 0.1)
+    assert np.isclose(comparison["first_switch_time_deviation_hr"], 0.1)
+    assert np.isclose(comparison["terminal_interface_position_deviation_m"], 1.0e-4)
+    assert np.isclose(comparison["peak_temperature_deviation_K"], 0.2)
+    assert comparison["max_temperature_profile_max_abs_deviation_K"] > 0.0
+
+
+def test_paper_problem1_reference_runner_writes_batch_safe_wrappers(tmp_path):
+    import importlib.util
+    from pathlib import Path
+
+    script_path = (
+        Path(__file__).resolve().parents[2]
+        / "benchmarks"
+        / "paper_problem1_reference.py"
+    )
+    spec = importlib.util.spec_from_file_location(
+        "paper_problem1_reference",
+        script_path,
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    upstream_root = tmp_path / "upstream"
+    work_dir = tmp_path / "work"
+
+    files = module.write_matlab_batch_files(work_dir, upstream_root)
+    command = module.build_matlab_batch_command(
+        "matlab",
+        work_dir,
+        upstream_root,
+        tmp_path / "reference.mat",
+    )
+
+    wrapper_source = files["max_t"].read_text(encoding="utf-8")
+    runner_source = files["runner"].read_text(encoding="utf-8")
+    assert "matlab.desktop.editor.getActiveFilename" not in wrapper_source
+    assert "pyfun_MaxT.py" in wrapper_source
+    assert "pyrunfile" in wrapper_source
+    assert "Sim_1stDrying_OCP" in runner_source
+    assert "policy" in runner_source
+    assert "tsw" in runner_source
+    last_upstream_path = runner_source.index("addpath(fullfile(code_root, 'Sim_DAE'));")
+    assert runner_source.rindex("addpath(runner_root, '-begin');") > last_upstream_path
+    assert command[0] == "matlab"
+    assert command[1] == "-batch"
+    assert "run_paper_problem1_upstream_reference" in command[2]
+
+
+def test_paper_problem1_reference_script_runs_from_source_checkout():
+    from pathlib import Path
+
+    repo_root = Path(__file__).resolve().parents[2]
+    script_path = repo_root / "benchmarks" / "paper_problem1_reference.py"
+
+    result = subprocess.run(
+        [sys.executable, str(script_path), "--help"],
+        cwd=repo_root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Generate and compare Paper Problem 1" in result.stdout
 
 
 @pytest.mark.slow

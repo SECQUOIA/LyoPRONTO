@@ -57,14 +57,15 @@ The GEKKO segment uses `IMODE=7`, `NODES=3`, and 30 time points for the
 temperature-constrained segment. This is closer to an active-set DAE
 decomposition than a one-shot free-final-time transcription.
 
-The current default solve uses a coarse validated spatial mesh (`n_z=5`) with a
-near-complete terminal drying fraction. It checks the paper's reported switch
-time near 2.4 h and a first-pass drying-time target near 6.2 h. The refined
-`n_z=20` spatial mesh now also terminates cleanly with IPOPT when using the
-documented acceptable NLP tolerance (`acceptable_tol=1e-3`,
-`acceptable_iter=5`). The trajectory-level checks remain tight: terminal drying
-within `1e-7 m`, product-temperature violation within `2e-6 K`, drying time near
-6.19 h, and switch time near 2.4 h.
+The current supported validation target is the paper-reported behavior rather
+than an exact upstream trajectory artifact: Policy 1 -> Policy 2, a switch time
+near 2.4 h, path-constraint satisfaction, and a first-pass drying-time target
+near 6.2 h. The default solve uses a coarse validated spatial mesh (`n_z=5`)
+with a near-complete terminal drying fraction. The refined `n_z=20` spatial
+mesh now also terminates cleanly with IPOPT when using the documented acceptable
+NLP tolerance (`acceptable_tol=1e-3`, `acceptable_iter=5`). The trajectory-level
+checks remain tight: terminal drying within `1e-7 m`, product-temperature
+violation within `2e-6 K`, drying time near 6.19 h, and switch time near 2.4 h.
 
 As verification against the upstream reference implementation
 (`PrakitrSrisuma/simDAE-optimalcontrol-lyo` commit
@@ -89,6 +90,54 @@ segment, Pyomo shelf temperatures were within `0.26 K` at the switch and within
 that offset explains the small interface-position differences in the GEKKO
 segment comparison.
 
+## Regenerating The Upstream Reference
+
+`benchmarks/paper_problem1_reference.py` provides best-effort diagnostic tooling
+for the upstream reference-generation path tracked in #27. It keeps the upstream
+clone read-only: it writes temporary MATLAB wrappers for `SimPy_MaxT` and
+`SimPy_MaxFlux` that use the known upstream `Python/` folder instead of
+`matlab.desktop.editor.getActiveFilename`, then runs `Sim_1stDrying_OCP` for
+`Case2` and saves:
+
+- `t`
+- `T`
+- `S`
+- `Tb`
+- `dSdt`
+- `policy`
+- `tsw`
+
+This is an environment-dependent diagnostic path, not the primary validation
+gate. The upstream `.mat` generation depends on an exact MATLAB/Python/GEKKO
+solver stack compatible with the upstream repository. The paper reports MATLAB
+R2024b, Python 3.10, GEKKO, and 64-bit Windows 11, but it does not pin the
+GEKKO/APMonitor solver version. The generator may fail on modern MATLAB/Python
+or GEKKO setups even when MATLAB Python can import GEKKO; use the paper-reported
+scalar behavior above as the supported validation target unless a known-good
+upstream reference artifact is available. A future `--matlab-python` option
+could make interpreter selection easier, but it would not by itself address
+GEKKO/APMonitor solver crashes.
+
+```bash
+python benchmarks/paper_problem1_reference.py generate \
+  --upstream-root /home/bernalde/repos/simDAE-optimalcontrol-lyo \
+  --output benchmarks/results/paper_problem1_upstream_reference.mat
+```
+
+Use `--runner-only --work-dir /tmp/lyopronto-paper-problem1` to inspect the
+generated MATLAB files and exact `matlab -batch` command without running
+MATLAB.
+
+The exported artifact can seed the Pyomo solve and report Pyomo-vs-upstream
+deviations for drying time, first switch time, terminal interface position, peak
+temperature, and max-temperature profile:
+
+```bash
+python benchmarks/paper_problem1_reference.py compare-pyomo \
+  benchmarks/results/paper_problem1_upstream_reference.mat \
+  --n-z 20 --nfe 12 --ncp 3
+```
+
 ## Mesh Diagnostics
 
 All rows use `nfe=12`, `ncp=3`, `LAGRANGE-RADAU`, the policy initializer, and a
@@ -103,7 +152,8 @@ All rows use `nfe=12`, `ncp=3`, `LAGRANGE-RADAU`, the policy initializer, and a
 
 Next steps are tracked in GitHub issues:
 
-1. #27 - Make upstream reference trajectory generation reproducible.
+1. #27 - Pin or provide a known-good upstream MATLAB/Python/GEKKO environment or
+   reference artifact for reproducible trajectory generation.
 2. #28 - Prepare the first Paper Problem 1 validation PR.
 3. #29 - Add Problem 2 with the interface-velocity constraint and expected
    Policy 3 -> Policy 1 -> Policy 2 sequence.

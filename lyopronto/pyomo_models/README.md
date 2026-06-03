@@ -92,14 +92,42 @@ drying OCP in Srisuma and Braatz, arXiv:2509.10826v1.
 - `generate_problem1_policy_initialization()` - Build a policy-based warm start
 - `initialize_paper_problem1_from_trajectory()` - Seed a model from a trajectory
 - `load_upstream_matlab_trajectory()` - Read upstream MATLAB output saved to `.mat`
+- `compare_paper_problem1_trajectories()` - Compare Pyomo and upstream metrics
 - `classify_paper_policies()` - Infer active Policy 1/Policy 2 regions
 
 This module uses SI/Kelvin units from the paper/upstream code and is separate
-from LyoPRONTO's cm/Torr/degC production APIs. The validated default solve uses
-a coarse `n_z=5` mesh, and the upstream paper's `n_z=20` spatial mesh is covered
+from LyoPRONTO's cm/Torr/degC production APIs. The supported validation target
+is the paper-reported scalar behavior: Policy 1 -> Policy 2, a switch time near
+2.4 h, and path-constraint satisfaction. The validated default solve uses a
+coarse `n_z=5` mesh, and the upstream paper's `n_z=20` spatial mesh is covered
 by a slow validation test using IPOPT acceptable termination
-(`acceptable_tol=1e-3`, `acceptable_iter=5`). Both reproduce the expected
-Policy 1 -> Policy 2 sequence near the paper's reported switch time.
+(`acceptable_tol=1e-3`, `acceptable_iter=5`).
+
+An upstream `.mat` reference can be generated only when the local machine has a
+compatible MATLAB/Python/GEKKO solver stack for
+`PrakitrSrisuma/simDAE-optimalcontrol-lyo`. The paper reports MATLAB R2024b,
+Python 3.10, GEKKO, and 64-bit Windows 11, but it does not pin the
+GEKKO/APMonitor solver version; modern setups may still fail inside the
+upstream GEKKO solve. Use this command as a best-effort diagnostic, not as the
+primary validation gate:
+
+```bash
+python benchmarks/paper_problem1_reference.py generate \
+  --upstream-root /home/bernalde/repos/simDAE-optimalcontrol-lyo \
+  --output benchmarks/results/paper_problem1_upstream_reference.mat
+```
+
+The command writes batch-safe MATLAB wrappers outside the upstream clone and
+requires MATLAB Python to import GEKKO for the upstream Policy 2 segment. A
+future `--matlab-python` option could make interpreter selection easier, but it
+would not by itself fix GEKKO/APMonitor solver crashes. If a known-good artifact
+is available, compare it against a Pyomo solve with:
+
+```bash
+python benchmarks/paper_problem1_reference.py compare-pyomo \
+  benchmarks/results/paper_problem1_upstream_reference.mat \
+  --n-z 20 --nfe 12 --ncp 3
+```
 
 ## Installation
 

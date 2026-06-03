@@ -63,6 +63,7 @@ if PYOMO_AVAILABLE:
         PaperDiscretization,
         PaperPrimaryDryingConfig,
         classify_paper_policies,
+        compare_paper_problem1_trajectories,
         create_paper_problem1_model,
         generate_problem1_policy_initialization,
         initialize_paper_problem1_from_trajectory,
@@ -91,6 +92,7 @@ if PYOMO_AVAILABLE:
         "generate_problem1_policy_initialization",
         "initialize_paper_problem1_from_trajectory",
         "load_upstream_matlab_trajectory",
+        "compare_paper_problem1_trajectories",
         "solve_paper_problem1",
         "classify_paper_policies",
     ]
