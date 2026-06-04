@@ -27,6 +27,9 @@ from . import opt_Pch
 from . import opt_Tsh
 from . import functions
 from . import plot_styling
+from . import typed
+
+from .typed import Q_, ureg, RpFormFit, ConstPhysProp, RampedVariable
 
 from .high_level import (
     execute_simulation, 
@@ -48,6 +51,12 @@ __all__ = [
     "opt_Tsh",
     "functions",
     "plot_styling",
+    "typed",
+    "Q_",
+    "ureg",
+    "RpFormFit",
+    "ConstPhysProp",
+    "RampedVariable",
     "execute_simulation", 
     "save_inputs_legacy",
     "save_inputs",
