@@ -443,6 +443,25 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#non-exported-julia-helpers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Non-Exported Julia Helpers
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -687,8 +706,45 @@ output table shapes.</p>
 </tr>
 </tbody>
 </table>
-<p>Non-exported Julia helpers such as physical-property functions are tracked in
-the same issue series where they are required, starting with issue #38.</p>
+<h2 id="non-exported-julia-helpers">Non-Exported Julia Helpers</h2>
+<p>These helpers are not public exports from Julia <code>LyoPronto.jl</code>, but they are
+tracked here because downstream typed APIs depend on them.</p>
+<table>
+<thead>
+<tr>
+<th>Julia helper</th>
+<th>Python status</th>
+<th>Python location</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>physical_properties.jl</code> constants</td>
+<td>ported</td>
+<td><code>lyopronto.physical_properties</code></td>
+<td>Unitful constants are represented as Pint quantities.</td>
+</tr>
+<tr>
+<td><code>calc_psub</code></td>
+<td>ported</td>
+<td><code>lyopronto.physical_properties.calc_psub</code></td>
+<td>Plain floats use kelvin and pascal; Pint inputs are converted.</td>
+</tr>
+<tr>
+<td><code>calc_Tsub</code></td>
+<td>ported</td>
+<td><code>lyopronto.physical_properties.calc_tsub</code></td>
+<td>Python also provides <code>calc_Tsub</code> as an alias.</td>
+</tr>
+<tr>
+<td><code>eppf</code> dielectric helper</td>
+<td>ported</td>
+<td><code>lyopronto.physical_properties.eppf</code></td>
+<td>Ice dielectric-loss correlation with Julia reference interpolation arrays.</td>
+</tr>
+</tbody>
+</table>
 
 
 
