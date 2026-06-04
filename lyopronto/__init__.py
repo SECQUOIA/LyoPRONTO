@@ -29,6 +29,7 @@ from . import functions
 from . import plot_styling
 from . import typed
 from . import physical_properties
+from . import vials
 
 from .typed import Q_, ureg, RpFormFit, ConstPhysProp, RampedVariable
 
@@ -54,6 +55,7 @@ __all__ = [
     "plot_styling",
     "typed",
     "physical_properties",
+    "vials",
     "Q_",
     "ureg",
     "RpFormFit",
