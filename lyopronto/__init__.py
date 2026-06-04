@@ -30,11 +30,23 @@ from . import plot_styling
 from . import typed
 from . import physical_properties
 from . import vials
+from . import pikal
 
 from .typed import Q_, ureg, RpFormFit, ConstPhysProp, RampedVariable
+from .pikal import (
+    PikalDiagnostics,
+    PikalParams,
+    PikalSolution,
+    calc_md_q,
+    calc_pikal_u0,
+    get_pikal_t0,
+    get_pikal_tstops,
+    pikal_solution_to_legacy_table,
+    solve_pikal,
+)
 
 from .high_level import (
-    execute_simulation, 
+    execute_simulation,
     save_inputs_legacy,
     save_inputs,
     read_inputs,
@@ -56,15 +68,25 @@ __all__ = [
     "typed",
     "physical_properties",
     "vials",
+    "pikal",
     "Q_",
     "ureg",
     "RpFormFit",
     "ConstPhysProp",
     "RampedVariable",
-    "execute_simulation", 
+    "PikalDiagnostics",
+    "PikalParams",
+    "PikalSolution",
+    "calc_md_q",
+    "calc_pikal_u0",
+    "get_pikal_t0",
+    "get_pikal_tstops",
+    "pikal_solution_to_legacy_table",
+    "solve_pikal",
+    "execute_simulation",
     "save_inputs_legacy",
     "save_inputs",
-    "read_inputs", 
+    "read_inputs",
     "save_csv",
     "generate_visualizations",
 ]

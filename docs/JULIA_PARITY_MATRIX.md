@@ -14,11 +14,11 @@ output table shapes.
 | `RampedVariable` | ported | `lyopronto.typed.RampedVariable` | `constant`, `linear`, and `multi` constructors. |
 | `ConstPhysProp` | ported | `lyopronto.typed.ConstPhysProp` | Callable constant physical property. |
 | `PrimaryDryFit` | planned | Issue #41 | Fitting-data container belongs to the residual/objective PR. |
-| `end_drying_callback` | planned | Issues #40, #45 | Python will implement solver terminal events. |
-| `calc_u0` | planned | Issues #40, #45 | Initial-state construction belongs with solver PRs. |
-| `get_tstops` | planned | Issues #40, #45 | `RampedVariable.timestops` is available; solver-specific handling remains planned. |
-| `lyo_1d_dae_f` | planned | Issue #40 | Conventional Pikal RHS/solver. |
-| `ParamObjPikal` | planned | Issue #40 | Typed Pikal parameter dataclass. |
+| `end_drying_callback` | partially ported | `lyopronto.pikal.solve_pikal` | Conventional Pikal terminal event is ported; RF remains planned in Issue #45. |
+| `calc_u0` | partially ported | `lyopronto.pikal.calc_pikal_u0` | Pikal initial-state helper is ported; RF remains planned in Issue #45. |
+| `get_tstops` | partially ported | `lyopronto.pikal.get_pikal_tstops` | Pikal extracts stops from ramped shelf and pressure controls; RF remains planned in Issue #45. |
+| `lyo_1d_dae_f` | ported | `lyopronto.pikal.calc_md_q`, `lyopronto.pikal.solve_pikal` | Python solves the height ODE with the Pikal algebraic temperature balance through SciPy. |
+| `ParamObjPikal` | ported | `lyopronto.pikal.PikalParams` | Typed Pikal parameter dataclass. |
 | `RpEstimator` | planned | Issue #43 | Direct Rp estimation workflow. |
 | `calc_hRp_T` | planned | Issue #43 | Direct Rp-vs-height estimate from temperature data. |
 | `lumped_cap_rf!` | planned | Issue #45 | RF/microwave RHS. |
