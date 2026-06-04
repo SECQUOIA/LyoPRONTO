@@ -16,8 +16,7 @@ import warnings
 import numpy as np
 from pint import UnitRegistry
 
-
-ureg = UnitRegistry(autoconvert_offset_to_baseunit=True)
+ureg: UnitRegistry = UnitRegistry(autoconvert_offset_to_baseunit=True)
 Q_ = ureg.Quantity
 
 
@@ -55,7 +54,10 @@ def to_magnitude_array(values: Any, unit: str | None = None) -> np.ndarray:
     if isinstance(values, Iterable) and not isinstance(values, (str, bytes)):
         values_list = list(values)
         if any(is_quantity(value) for value in values_list):
-            return np.asarray([to_magnitude(value, unit) for value in values_list], dtype=float)
+            return np.asarray(
+                [to_magnitude(value, unit) for value in values_list],
+                dtype=float,
+            )
     arr = np.asarray(values)
     if arr.dtype == object:
         converted = [to_magnitude(value, unit) for value in arr.ravel()]
@@ -126,6 +128,34 @@ class RampedVariable:
     holds: tuple[Any, ...] = ()
     timestops_hr: tuple[float, ...] = (0.0,)
 
+    def __post_init__(self) -> None:
+        if len(self.setpts) == 0:
+            raise ValueError("RampedVariable requires at least one setpoint")
+        if len(self.setpts) == 1:
+            if self.ramprates or self.holds:
+                raise ValueError(
+                    "constant RampedVariable cannot define ramp rates or holds"
+                )
+        else:
+            if len(self.ramprates) != len(self.setpts) - 1:
+                raise ValueError(
+                    "number of ramp rates must be one fewer than "
+                    "number of setpoints"
+                )
+            if len(self.holds) != max(len(self.ramprates) - 1, 0):
+                raise ValueError(
+                    "number of holds must be one fewer than "
+                    "number of ramp rates"
+                )
+
+        expected_timestops = 1 + len(self.ramprates) + len(self.holds)
+        if len(self.timestops_hr) != expected_timestops:
+            raise ValueError(
+                "timestops_hr must contain the initial time plus each "
+                "ramp and hold stop; use RampedVariable.constant, "
+                ".linear, or .multi to construct schedules"
+            )
+
     @classmethod
     def constant(cls, value: Any) -> "RampedVariable":
         return cls((value,), (), (), (0.0,))
@@ -134,32 +164,53 @@ class RampedVariable:
     def linear(cls, setpts: Any, ramprate: Any) -> "RampedVariable":
         pts = tuple(quantity_list(setpts))
         if len(pts) != 2:
-            raise ValueError("linear RampedVariable requires exactly two setpoints")
+            raise ValueError(
+                "linear RampedVariable requires exactly two setpoints"
+            )
         rates = tuple(quantity_list(ramprate))
         if len(rates) != 1:
-            raise ValueError("linear RampedVariable requires exactly one ramp rate")
+            raise ValueError(
+                "linear RampedVariable requires exactly one ramp rate"
+            )
         duration = _duration_hours(pts[1] - pts[0], rates[0])
         if duration < 0:
-            warnings.warn("Ramp rate given with probably the wrong sign, changing its sign", UserWarning)
+            warnings.warn(
+                "Ramp rate given with probably the wrong sign, "
+                "changing its sign",
+                UserWarning,
+            )
             duration = abs(duration)
         return cls(pts, rates, (), (0.0, duration))
 
     @classmethod
-    def multi(cls, setpts: Any, ramprates: Any, holds: Any) -> "RampedVariable":
+    def multi(
+        cls,
+        setpts: Any,
+        ramprates: Any,
+        holds: Any,
+    ) -> "RampedVariable":
         pts = tuple(quantity_list(setpts))
         rates = tuple(quantity_list(ramprates))
         hold_values = tuple(quantity_list(holds))
         if len(rates) == 0 or len(rates) != len(hold_values) + 1:
-            raise ValueError("number of ramps must be one more than number of holds")
+            raise ValueError(
+                "number of ramps must be one more than number of holds"
+            )
         if len(pts) != len(rates) + 1:
-            raise ValueError("number of setpoints must be one more than number of ramps")
+            raise ValueError(
+                "number of setpoints must be one more than number of ramps"
+            )
 
         times = [0.0]
         current = 0.0
         for index, rate in enumerate(rates):
             ramp_time = _duration_hours(pts[index + 1] - pts[index], rate)
             if ramp_time < 0:
-                warnings.warn("Ramp rate given with probably the wrong sign, changing its sign", UserWarning)
+                warnings.warn(
+                    "Ramp rate given with probably the wrong sign, "
+                    "changing its sign",
+                    UserWarning,
+                )
                 ramp_time = abs(ramp_time)
             current += ramp_time
             times.append(current)
@@ -194,7 +245,9 @@ class RampedVariable:
                 if ramp_end == cursor:
                     return self.setpts[index + 1]
                 frac = (th - cursor) / (ramp_end - cursor)
-                return self.setpts[index] + frac * (self.setpts[index + 1] - self.setpts[index])
+                return self.setpts[index] + frac * (
+                    self.setpts[index + 1] - self.setpts[index]
+                )
             cursor = ramp_end
             time_index += 1
             if index < len(self.holds):
