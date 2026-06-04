@@ -28,6 +28,7 @@ from . import opt_Tsh
 from . import functions
 from . import plot_styling
 from . import typed
+from . import physical_properties
 
 from .typed import Q_, ureg, RpFormFit, ConstPhysProp, RampedVariable
 
@@ -52,6 +53,7 @@ __all__ = [
     "functions",
     "plot_styling",
     "typed",
+    "physical_properties",
     "Q_",
     "ureg",
     "RpFormFit",

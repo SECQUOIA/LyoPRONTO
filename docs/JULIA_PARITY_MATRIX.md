@@ -46,5 +46,14 @@ output table shapes.
 | `make_outlines` | planned | Issue #39 | Vial/fill outline utility. |
 | `ECCURT` | planned | Issue #47 | Equipment-capability interpolation module. |
 
-Non-exported Julia helpers such as physical-property functions are tracked in
-the same issue series where they are required, starting with issue #38.
+## Non-Exported Julia Helpers
+
+These helpers are not public exports from Julia `LyoPronto.jl`, but they are
+tracked here because downstream typed APIs depend on them.
+
+| Julia helper | Python status | Python location | Notes |
+| --- | --- | --- | --- |
+| `physical_properties.jl` constants | ported | `lyopronto.physical_properties` | Unitful constants are represented as Pint quantities. |
+| `calc_psub` | ported | `lyopronto.physical_properties.calc_psub` | Plain floats use kelvin and pascal; Pint inputs are converted. |
+| `calc_Tsub` | ported | `lyopronto.physical_properties.calc_tsub` | Python also provides `calc_Tsub` as an alias. |
+| `eppf` dielectric helper | ported | `lyopronto.physical_properties.eppf` | Ice dielectric-loss correlation with Julia reference interpolation arrays. |
