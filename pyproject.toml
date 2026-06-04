@@ -23,6 +23,7 @@ dependencies = [
     "scipy>=1.10.0",
     "matplotlib>=3.7.0",
     "ruamel.yaml>=0.18.0",
+    "pint>=0.24",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
