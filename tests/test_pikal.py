@@ -8,14 +8,18 @@ import pytest
 
 from lyopronto import (
     PikalParams,
+    PrimaryDryFit,
     Q_,
     RampedVariable,
     RpFormFit,
     calc_knownRp,
     calc_md_q,
     constant,
+    err_expT,
     get_pikal_t0,
     get_pikal_tstops,
+    num_errs,
+    obj_expT,
     physical_properties,
     solve_pikal,
     vials,
@@ -88,6 +92,23 @@ def test_solve_pikal_returns_requested_save_times_when_feasible(sucrose_pikal_pa
     np.testing.assert_allclose(sol.t[:3], [1.0, 5.0, 10.0])
     assert sol.t[-1] == pytest.approx(sol.drying_time.to("hour").magnitude)
     assert sol.t[-1] > 10.0
+
+
+def test_pikal_solution_works_with_primary_dry_fit_helpers(sucrose_pikal_params):
+    sol = solve_pikal(sucrose_pikal_params, save_at=Q_([1.0, 5.0, 10.0], "hour"))
+    fit = PrimaryDryFit(sol.t_hours, sol.tf, t_end=sol.drying_time)
+
+    assert num_errs(fit) == len(sol.t) + 1
+    np.testing.assert_allclose(err_expT(sol, fit), np.zeros(num_errs(fit)), atol=1e-9)
+    assert obj_expT(sol, fit) == pytest.approx(0.0, abs=1e-18)
+
+    incomplete = solve_pikal(
+        sucrose_pikal_params,
+        t_span=(0.0, 2.0),
+        save_at=[1.0, 2.0],
+    )
+    assert np.all(np.isnan(err_expT(incomplete, fit)))
+    assert np.isnan(obj_expT(incomplete, fit))
 
 
 def test_sparse_save_at_does_not_change_multisegment_ramp_state(sucrose_pikal_params):

@@ -13,7 +13,7 @@ output table shapes.
 | `RpFormFit` | ported | `lyopronto.typed.RpFormFit` | Callable `R0 + A1*x/(1 + A2*x)`. |
 | `RampedVariable` | ported | `lyopronto.typed.RampedVariable` | `constant`, `linear`, and `multi` constructors. |
 | `ConstPhysProp` | ported | `lyopronto.typed.ConstPhysProp` | Callable constant physical property. |
-| `PrimaryDryFit` | planned | Issue #41 | Fitting-data container belongs to the residual/objective PR. |
+| `PrimaryDryFit` | ported | `lyopronto.typed.PrimaryDryFit` | Fitting-data container for product temperature, vial-wall temperature/endpoint, and drying end-time data. |
 | `end_drying_callback` | partially ported | `lyopronto.pikal.solve_pikal` | Conventional Pikal terminal event is ported; RF remains planned in Issue #45. |
 | `calc_u0` | partially ported | `lyopronto.pikal.calc_pikal_u0` | Pikal initial-state helper is ported; RF remains planned in Issue #45. |
 | `get_tstops` | partially ported | `lyopronto.pikal.get_pikal_tstops` | Pikal extracts stops from ramped shelf and pressure controls; RF remains planned in Issue #45. |
@@ -32,10 +32,10 @@ output table shapes.
 | `Rp_transform_basic` | planned | Issue #42 | Product-resistance transform. |
 | `KBB_transform_basic` | planned | Issue #46 | RF fitting transform. |
 | `KBB_transform_bounded` | planned | Issue #46 | RF bounded transform. |
-| `obj_expT` | planned | Issue #41 | Temperature/end-time objective. |
-| `err_expT` | planned | Issue #41 | Residual vector for SciPy least squares. |
+| `obj_expT` | ported | `lyopronto.fitting.obj_expT` | Temperature/end-time scalar objective. |
+| `err_expT` | ported | `lyopronto.fitting.err_expT` | Residual vector for SciPy least squares. |
 | `err_expT!` | intentionally unsupported | Python residual functions return arrays | Julia mutating API is not a Python public API target. |
-| `num_errs` | planned | Issue #41 | Residual-count helper. |
+| `num_errs` | ported | `lyopronto.fitting.num_errs` | Residual-count helper. |
 | `nls_pd` | planned | Issues #42, #46 | SciPy least-squares wrappers. |
 | `nls_pd!` | intentionally unsupported | Python fitting functions return results | Julia mutating API is not a Python public API target. |
 | `qrf_integrate` | planned | Issue #45 | RF heat-term integration helper. |

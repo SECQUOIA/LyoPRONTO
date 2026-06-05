@@ -31,8 +31,9 @@ from . import typed
 from . import physical_properties
 from . import vials
 from . import pikal
+from . import fitting
 
-from .typed import Q_, ureg, RpFormFit, ConstPhysProp, RampedVariable
+from .typed import Q_, ureg, RpFormFit, ConstPhysProp, RampedVariable, PrimaryDryFit
 from .pikal import (
     PikalDiagnostics,
     PikalParams,
@@ -44,6 +45,7 @@ from .pikal import (
     pikal_solution_to_legacy_table,
     solve_pikal,
 )
+from .fitting import err_expT, num_errs, obj_expT
 
 from .high_level import (
     execute_simulation,
@@ -69,11 +71,13 @@ __all__ = [
     "physical_properties",
     "vials",
     "pikal",
+    "fitting",
     "Q_",
     "ureg",
     "RpFormFit",
     "ConstPhysProp",
     "RampedVariable",
+    "PrimaryDryFit",
     "PikalDiagnostics",
     "PikalParams",
     "PikalSolution",
@@ -83,6 +87,9 @@ __all__ = [
     "get_pikal_tstops",
     "pikal_solution_to_legacy_table",
     "solve_pikal",
+    "err_expT",
+    "num_errs",
+    "obj_expT",
     "execute_simulation",
     "save_inputs_legacy",
     "save_inputs",
