@@ -23,20 +23,20 @@ output table shapes.
 | `calc_hRp_T` | planned | Issue #43 | Direct Rp-vs-height estimate from temperature data. |
 | `lumped_cap_rf!` | planned | Issue #45 | RF/microwave RHS. |
 | `ParamObjRF` | planned | Issue #45 | Typed RF parameter dataclass. |
-| `gen_sol_pd` | planned | Issues #42, #46 | Conventional/RF solution generators for fitting. |
-| `obj_pd` | planned | Issues #42, #46 | Scalar fitting objective. |
-| `gen_nsol_pd` | planned | Issue #42 | Multi-experiment fitting helper. |
-| `objn_pd` | planned | Issue #42 | Multi-experiment scalar objective. |
-| `KRp_transform_basic` | planned | Issue #42 | Conventional Kv/Rp log-space transform. |
-| `K_transform_basic` | planned | Issue #42 | Conventional Kv transform. |
-| `Rp_transform_basic` | planned | Issue #42 | Product-resistance transform. |
+| `gen_sol_pd` | partially ported | `lyopronto.fitting.gen_sol_pd` | Conventional Pikal solution generator is ported; RF remains planned in Issue #46. |
+| `obj_pd` | partially ported | `lyopronto.fitting.obj_pd` | Conventional Pikal scalar objective is ported; RF remains planned in Issue #46. |
+| `gen_nsol_pd` | ported | `lyopronto.fitting.gen_nsol_pd` | Multi-experiment conventional Pikal fitting helper with shared/separate groups. |
+| `objn_pd` | ported | `lyopronto.fitting.objn_pd` | Multi-experiment conventional Pikal scalar objective. |
+| `KRp_transform_basic` | ported | `lyopronto.fitting.KRpTransform` | Conventional Kv/Rp log-space transform. |
+| `K_transform_basic` | ported | `lyopronto.fitting.KTransform` | Conventional Kv transform. |
+| `Rp_transform_basic` | ported | `lyopronto.fitting.RpTransform` | Product-resistance transform. |
 | `KBB_transform_basic` | planned | Issue #46 | RF fitting transform. |
 | `KBB_transform_bounded` | planned | Issue #46 | RF bounded transform. |
 | `obj_expT` | ported | `lyopronto.fitting.obj_expT` | Temperature/end-time scalar objective. |
 | `err_expT` | ported | `lyopronto.fitting.err_expT` | Residual vector for SciPy least squares. |
 | `err_expT!` | intentionally unsupported | Python residual functions return arrays | Julia mutating API is not a Python public API target. |
 | `num_errs` | ported | `lyopronto.fitting.num_errs` | Residual-count helper. |
-| `nls_pd` | planned | Issues #42, #46 | SciPy least-squares wrappers. |
+| `nls_pd` | partially ported | `lyopronto.fitting.err_pd`, `lyopronto.fitting.errn_pd`, `lyopronto.fitting.fit_primary_drying` | Conventional Pikal residual wrappers and SciPy least-squares entry point are ported; RF remains planned in Issue #46. |
 | `nls_pd!` | intentionally unsupported | Python fitting functions return results | Julia mutating API is not a Python public API target. |
 | `qrf_integrate` | planned | Issue #45 | RF heat-term integration helper. |
 | `identify_pd_end` | planned | Issue #44 | Pirani-based end-of-primary-drying detection. |

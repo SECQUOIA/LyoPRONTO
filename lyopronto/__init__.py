@@ -45,7 +45,23 @@ from .pikal import (
     pikal_solution_to_legacy_table,
     solve_pikal,
 )
-from .fitting import err_expT, num_errs, obj_expT
+from .fitting import (
+    KRpTransform,
+    KTransform,
+    RpTransform,
+    SharedSeparateTransform,
+    SharedSeparateUpdates,
+    err_expT,
+    err_pd,
+    errn_pd,
+    fit_primary_drying,
+    gen_nsol_pd,
+    gen_sol_pd,
+    num_errs,
+    obj_expT,
+    obj_pd,
+    objn_pd,
+)
 
 from .high_level import (
     execute_simulation,
@@ -87,6 +103,18 @@ __all__ = [
     "get_pikal_tstops",
     "pikal_solution_to_legacy_table",
     "solve_pikal",
+    "RpTransform",
+    "KTransform",
+    "KRpTransform",
+    "SharedSeparateTransform",
+    "SharedSeparateUpdates",
+    "gen_sol_pd",
+    "gen_nsol_pd",
+    "err_pd",
+    "errn_pd",
+    "obj_pd",
+    "objn_pd",
+    "fit_primary_drying",
     "err_expT",
     "num_errs",
     "obj_expT",
