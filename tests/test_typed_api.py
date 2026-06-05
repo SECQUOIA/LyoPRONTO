@@ -3,7 +3,7 @@ import math
 import numpy as np
 import pytest
 
-from lyopronto import ConstPhysProp, Q_, RampedVariable, RpFormFit
+from lyopronto import ConstPhysProp, PrimaryDryFit, Q_, RampedVariable, RpFormFit
 from lyopronto.typed import to_magnitude_array
 
 
@@ -96,3 +96,58 @@ def test_quantity_array_helper_handles_pint_arrays_and_quantity_lists():
 
     mixed = to_magnitude_array([Q_(1, "hour"), Q_(30, "minute")], "minute")
     assert mixed.tolist() == pytest.approx([60.0, 30.0])
+
+
+def test_primary_dry_fit_constructor_normalizes_julia_cases():
+    times = Q_(np.linspace(0.0, 10.0, 5), "hour")
+    tf_a = Q_(np.linspace(220.0, 230.0, 5), "kelvin")
+    tf_b = Q_(np.linspace(221.0, 229.0, 4), "kelvin")
+    tvw = Q_(np.linspace(225.0, 232.0, 3), "kelvin")
+    t_end = Q_(12.0, "hour")
+
+    fit = PrimaryDryFit(times, (tf_a, tf_b), Tvws=tvw, t_end=t_end)
+
+    assert len(fit.Tfs) == 2
+    assert fit.Tf_iend == (5, 4)
+    assert len(fit.Tvws) == 1
+    assert fit.Tvw_iend == (3,)
+    assert fit.t_end == t_end
+    np.testing.assert_allclose(fit.t_hr, np.linspace(0.0, 10.0, 5))
+    np.testing.assert_allclose(fit.Tfs_K[0], np.linspace(220.0, 230.0, 5))
+    np.testing.assert_allclose(fit.Tvws_K[0], np.linspace(225.0, 232.0, 3))
+
+    product_only = PrimaryDryFit(times, tf_a)
+    assert len(product_only.Tfs) == 1
+    assert product_only.Tf_iend == (5,)
+    assert product_only.Tvws is None
+    assert product_only.Tvw_iend is None
+
+    endpoint = PrimaryDryFit(times, (tf_a, tf_b), Tvws=tvw[-1])
+    assert endpoint.Tvw_iend is None
+    assert endpoint.Tvws_K == pytest.approx(tvw[-1].to("kelvin").magnitude)
+
+    window = PrimaryDryFit(
+        times,
+        tf_a,
+        t_end=[Q_(9.0, "hour"), Q_(7.0, "hour")],
+    )
+    assert [value.to("hour").magnitude for value in window.t_end] == [7.0, 9.0]
+
+
+def test_primary_dry_fit_constructor_rejects_incompatible_quantity_inputs():
+    times = Q_(np.linspace(0.0, 10.0, 5), "hour")
+    temps = Q_(np.linspace(220.0, 230.0, 5), "kelvin")
+
+    with pytest.raises(ValueError, match="units of time"):
+        PrimaryDryFit(temps, temps)
+
+    with pytest.raises(ValueError, match="units of temperature"):
+        PrimaryDryFit(times, times)
+
+    with pytest.raises(ValueError, match="Tf_iend"):
+        PrimaryDryFit(times, (temps, temps), Tf_iend=[5])
+
+    with pytest.raises(ValueError, match="t_end"):
+        PrimaryDryFit(
+            times, temps, t_end=[Q_(1.0, "hour"), Q_(2.0, "hour"), Q_(3.0, "hour")]
+        )

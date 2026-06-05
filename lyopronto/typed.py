@@ -139,13 +139,11 @@ class RampedVariable:
         else:
             if len(self.ramprates) != len(self.setpts) - 1:
                 raise ValueError(
-                    "number of ramp rates must be one fewer than "
-                    "number of setpoints"
+                    "number of ramp rates must be one fewer than " "number of setpoints"
                 )
             if len(self.holds) != max(len(self.ramprates) - 1, 0):
                 raise ValueError(
-                    "number of holds must be one fewer than "
-                    "number of ramp rates"
+                    "number of holds must be one fewer than " "number of ramp rates"
                 )
 
         expected_timestops = 1 + len(self.ramprates) + len(self.holds)
@@ -164,19 +162,14 @@ class RampedVariable:
     def linear(cls, setpts: Any, ramprate: Any) -> "RampedVariable":
         pts = tuple(quantity_list(setpts))
         if len(pts) != 2:
-            raise ValueError(
-                "linear RampedVariable requires exactly two setpoints"
-            )
+            raise ValueError("linear RampedVariable requires exactly two setpoints")
         rates = tuple(quantity_list(ramprate))
         if len(rates) != 1:
-            raise ValueError(
-                "linear RampedVariable requires exactly one ramp rate"
-            )
+            raise ValueError("linear RampedVariable requires exactly one ramp rate")
         duration = _duration_hours(pts[1] - pts[0], rates[0])
         if duration < 0:
             warnings.warn(
-                "Ramp rate given with probably the wrong sign, "
-                "changing its sign",
+                "Ramp rate given with probably the wrong sign, " "changing its sign",
                 UserWarning,
             )
             duration = abs(duration)
@@ -193,9 +186,7 @@ class RampedVariable:
         rates = tuple(quantity_list(ramprates))
         hold_values = tuple(quantity_list(holds))
         if len(rates) == 0 or len(rates) != len(hold_values) + 1:
-            raise ValueError(
-                "number of ramps must be one more than number of holds"
-            )
+            raise ValueError("number of ramps must be one more than number of holds")
         if len(pts) != len(rates) + 1:
             raise ValueError(
                 "number of setpoints must be one more than number of ramps"
@@ -259,6 +250,169 @@ class RampedVariable:
         return self.setpts[-1]
 
 
+@dataclass(frozen=True)
+class PrimaryDryFit:
+    """Container for primary-drying temperature data used in fitting."""
+
+    t: tuple[Any, ...]
+    Tfs: tuple[tuple[Any, ...], ...]
+    Tf_iend: tuple[int, ...]
+    Tvws: tuple[tuple[Any, ...], ...] | Any | None = None
+    Tvw_iend: tuple[int, ...] | None = None
+    t_end: Any = None
+
+    def __init__(
+        self,
+        t: Any,
+        Tfs: Any,
+        *,
+        Tf_iend: Any = None,
+        Tvws: Any = None,
+        Tvw_iend: Any = None,
+        t_end: Any = None,
+    ) -> None:
+        times = tuple(quantity_list(t))
+        if not times:
+            raise ValueError("t must contain at least one time point")
+        _validate_unit_sequence(times, "time", "t")
+
+        tf_series = _normalize_temperature_series(Tfs, "Tfs")
+        if Tf_iend is None:
+            tf_iend = tuple(len(series) for series in tf_series)
+        else:
+            tf_iend = _normalize_iend(Tf_iend, len(tf_series), "Tf_iend")
+        _validate_iend_bounds(tf_iend, tf_series, "Tf_iend")
+
+        if Tvws is None:
+            tvw_value = None
+            tvw_iend = None
+        elif _looks_like_endpoint(Tvws):
+            _validate_unit_value(Tvws, "temperature", "Tvws")
+            tvw_value = Tvws
+            tvw_iend = None
+        else:
+            tvw_series = _normalize_temperature_series(Tvws, "Tvws")
+            tvw_value = tvw_series
+            if Tvw_iend is None:
+                tvw_iend = tuple(len(series) for series in tvw_series)
+            else:
+                tvw_iend = _normalize_iend(Tvw_iend, len(tvw_series), "Tvw_iend")
+            _validate_iend_bounds(tvw_iend, tvw_series, "Tvw_iend")
+
+        object.__setattr__(self, "t", times)
+        object.__setattr__(self, "Tfs", tf_series)
+        object.__setattr__(self, "Tf_iend", tf_iend)
+        object.__setattr__(self, "Tvws", tvw_value)
+        object.__setattr__(self, "Tvw_iend", tvw_iend)
+        object.__setattr__(self, "t_end", _normalize_t_end(t_end))
+
+    @property
+    def t_hr(self) -> np.ndarray:
+        """Fit times as float hours."""
+
+        return to_magnitude_array(self.t, "hour")
+
+    @property
+    def Tfs_K(self) -> tuple[np.ndarray, ...]:
+        """Product-temperature series as float kelvin arrays."""
+
+        return tuple(to_magnitude_array(series, "kelvin") for series in self.Tfs)
+
+    @property
+    def Tvws_K(self) -> tuple[np.ndarray, ...] | float | None:
+        """Vial-wall data as kelvin arrays, endpoint kelvin, or ``None``."""
+
+        if self.Tvws is None:
+            return None
+        if self.Tvw_iend is None:
+            return to_magnitude(self.Tvws, "kelvin")
+        return tuple(to_magnitude_array(series, "kelvin") for series in self.Tvws)
+
+
+def _normalize_temperature_series(
+    series: Any, name: str
+) -> tuple[tuple[Any, ...], ...]:
+    normalized = _normalize_series(series)
+    for index, values in enumerate(normalized):
+        if not values:
+            raise ValueError(f"{name} temperature series cannot be empty")
+        _validate_unit_sequence(values, "temperature", f"{name}[{index}]")
+    return normalized
+
+
+def _normalize_series(series: Any) -> tuple[tuple[Any, ...], ...]:
+    if _looks_like_endpoint(series):
+        return (tuple(quantity_list(series)),)
+    if is_quantity(series):
+        values = quantity_list(series)
+        return (tuple(values),)
+    if isinstance(series, np.ndarray):
+        if series.ndim <= 1:
+            return (tuple(series.tolist()),)
+        return tuple(tuple(row) for row in series.tolist())
+    if not isinstance(series, (tuple, list)):
+        return (tuple(quantity_list(series)),)
+    if len(series) == 0:
+        raise ValueError("temperature series cannot be empty")
+    if all(_looks_like_scalar(value) for value in series):
+        return (tuple(series),)
+    return tuple(tuple(quantity_list(value)) for value in series)
+
+
+def _normalize_iend(values: Any, nseries: int, name: str) -> tuple[int, ...]:
+    iend = tuple(int(value) for value in quantity_list(values))
+    if len(iend) != nseries:
+        raise ValueError(f"{name} must have one value for each temperature series")
+    if any(value < 0 for value in iend):
+        raise ValueError(f"{name} values must be nonnegative")
+    return iend
+
+
+def _validate_iend_bounds(
+    iend: tuple[int, ...],
+    series: tuple[tuple[Any, ...], ...],
+    name: str,
+) -> None:
+    for value, values in zip(iend, series):
+        if value > len(values):
+            raise ValueError(f"{name} cannot exceed its temperature series length")
+
+
+def _normalize_t_end(t_end: Any) -> Any:
+    if t_end is None:
+        return None
+    if _looks_like_scalar(t_end):
+        _validate_unit_value(t_end, "time", "t_end")
+        return t_end
+
+    values = tuple(quantity_list(t_end))
+    if len(values) != 2:
+        raise ValueError("t_end must be a time or a two-time window")
+    _validate_unit_sequence(values, "time", "t_end")
+    ordered = sorted(values, key=lambda value: to_magnitude(value, "hour"))
+    return tuple(ordered)
+
+
+def _looks_like_scalar(value: Any) -> bool:
+    if is_quantity(value):
+        return np.asarray(value.magnitude).ndim == 0
+    return np.isscalar(value)
+
+
+def _looks_like_endpoint(value: Any) -> bool:
+    return _looks_like_scalar(value)
+
+
+def _validate_unit_sequence(values: tuple[Any, ...], dimension: str, name: str) -> None:
+    for value in values:
+        _validate_unit_value(value, dimension, name)
+
+
+def _validate_unit_value(value: Any, dimension: str, name: str) -> None:
+    if is_quantity(value) and not value.check(f"[{dimension}]"):
+        raise ValueError(f"{name} values must have units of {dimension}")
+
+
 __all__ = [
     "ureg",
     "Q_",
@@ -270,4 +424,5 @@ __all__ = [
     "RpFormFit",
     "ConstPhysProp",
     "RampedVariable",
+    "PrimaryDryFit",
 ]
