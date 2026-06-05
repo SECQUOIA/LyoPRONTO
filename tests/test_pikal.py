@@ -90,6 +90,27 @@ def test_solve_pikal_returns_requested_save_times_when_feasible(sucrose_pikal_pa
     assert sol.t[-1] > 10.0
 
 
+def test_sparse_save_at_does_not_change_multisegment_ramp_state(sucrose_pikal_params):
+    params = replace(
+        sucrose_pikal_params,
+        Tsh=RampedVariable.multi(
+            [
+                Q_(273.15 - 45.0, "kelvin"),
+                Q_(273.15 - 35.0, "kelvin"),
+                Q_(273.15 - 25.0, "kelvin"),
+            ],
+            [Q_(1.0, "kelvin / minute"), Q_(1.0, "kelvin / minute")],
+            [Q_(1.0, "hour")],
+        ),
+    )
+
+    late_only = solve_pikal(params, t_span=(0.0, 5.0), save_at=[2.0])
+    with_early = solve_pikal(params, t_span=(0.0, 5.0), save_at=[0.5, 2.0])
+
+    np.testing.assert_allclose(with_early.t, [0.5, 2.0])
+    assert late_only.y[0, -1] == pytest.approx(with_early.y[0, -1], abs=1e-8)
+
+
 def test_pikal_tstops_and_delayed_start_match_ramped_controls(sucrose_pikal_params):
     tstops = get_pikal_tstops(sucrose_pikal_params)
     t0 = get_pikal_t0(sucrose_pikal_params)

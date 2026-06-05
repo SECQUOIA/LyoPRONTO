@@ -478,6 +478,8 @@ def solve_pikal(
         "dense_output": True,
     }
     default_options.update(solve_ivp_options)
+    # Segment restarts need the endpoint state even when t_eval is sparse.
+    default_options["dense_output"] = True
 
     for left, right in zip(breakpoints[:-1], breakpoints[1:]):
         if y0[0] <= 1e-10:
@@ -526,7 +528,10 @@ def solve_pikal(
                 hf_outputs.append(y_event)
             break
 
-        y0 = np.array([float(sol.y[0, -1])], dtype=float)
+        if sol.sol is None:
+            raise RuntimeError("Pikal solver requires dense output for segmented ramps")
+        endpoint_y = np.asarray(sol.sol(right), dtype=float).reshape(-1)
+        y0 = np.array([float(endpoint_y[0])], dtype=float)
 
     if not t_outputs:
         t_outputs.append(t0)
