@@ -520,32 +520,32 @@ output table shapes.</p>
 </tr>
 <tr>
 <td><code>end_drying_callback</code></td>
-<td>planned</td>
-<td>Issues #40, #45</td>
-<td>Python will implement solver terminal events.</td>
+<td>partially ported</td>
+<td><code>lyopronto.pikal.solve_pikal</code></td>
+<td>Conventional Pikal terminal event is ported; RF remains planned in Issue #45.</td>
 </tr>
 <tr>
 <td><code>calc_u0</code></td>
-<td>planned</td>
-<td>Issues #40, #45</td>
-<td>Initial-state construction belongs with solver PRs.</td>
+<td>partially ported</td>
+<td><code>lyopronto.pikal.calc_pikal_u0</code></td>
+<td>Pikal initial-state helper is ported; RF remains planned in Issue #45.</td>
 </tr>
 <tr>
 <td><code>get_tstops</code></td>
-<td>planned</td>
-<td>Issues #40, #45</td>
-<td><code>RampedVariable.timestops</code> is available; solver-specific handling remains planned.</td>
+<td>partially ported</td>
+<td><code>lyopronto.pikal.get_pikal_tstops</code></td>
+<td>Pikal extracts stops from ramped shelf and pressure controls; RF remains planned in Issue #45.</td>
 </tr>
 <tr>
 <td><code>lyo_1d_dae_f</code></td>
-<td>planned</td>
-<td>Issue #40</td>
-<td>Conventional Pikal RHS/solver.</td>
+<td>ported</td>
+<td><code>lyopronto.pikal.calc_md_q</code>, <code>lyopronto.pikal.solve_pikal</code></td>
+<td>Python solves the height ODE with the Pikal algebraic temperature balance through SciPy.</td>
 </tr>
 <tr>
 <td><code>ParamObjPikal</code></td>
-<td>planned</td>
-<td>Issue #40</td>
+<td>ported</td>
+<td><code>lyopronto.pikal.PikalParams</code></td>
 <td>Typed Pikal parameter dataclass.</td>
 </tr>
 <tr>
