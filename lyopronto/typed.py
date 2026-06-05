@@ -139,11 +139,11 @@ class RampedVariable:
         else:
             if len(self.ramprates) != len(self.setpts) - 1:
                 raise ValueError(
-                    "number of ramp rates must be one fewer than " "number of setpoints"
+                    "number of ramp rates must be one fewer than number of setpoints"
                 )
             if len(self.holds) != max(len(self.ramprates) - 1, 0):
                 raise ValueError(
-                    "number of holds must be one fewer than " "number of ramp rates"
+                    "number of holds must be one fewer than number of ramp rates"
                 )
 
         expected_timestops = 1 + len(self.ramprates) + len(self.holds)
@@ -169,7 +169,7 @@ class RampedVariable:
         duration = _duration_hours(pts[1] - pts[0], rates[0])
         if duration < 0:
             warnings.warn(
-                "Ramp rate given with probably the wrong sign, " "changing its sign",
+                "Ramp rate given with probably the wrong sign, changing its sign",
                 UserWarning,
             )
             duration = abs(duration)

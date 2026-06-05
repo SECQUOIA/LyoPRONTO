@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 
@@ -33,6 +33,13 @@ def err_expT(
     is divided by the square root of its compared point count, matching Julia's
     equal-series weighting. Invalid or incomplete solutions return a
     ``num_errs(fit)`` vector filled with ``NaN``.
+
+    Interpolation uses ``numpy.interp`` over the time points saved on the
+    solution. For the closest comparison to measured data, solve or save the
+    model at the measured fit times, for example with ``save_at=fit.t``.
+    Measurements at the first saved model time are included; measurements at or
+    after the terminal model time are omitted because the terminal time is
+    represented by the separate end-time residual.
     """
 
     del verbose
@@ -56,12 +63,14 @@ def err_expT(
         )
 
     if fit.Tvws is not None:
+        tvw_values = fit.Tvws_K
         if fit.Tvw_iend is None:
-            tvw_endpoint = float(fit.Tvws_K)
+            tvw_endpoint = float(cast(float, tvw_values))
             residuals.append(np.asarray([_state_value(solution, 2, -1) - tvw_endpoint]))
         else:
             tvw_model = _interp_state(solution, 2, times)
-            for series, iend in zip(fit.Tvws_K, fit.Tvw_iend):
+            tvw_series = cast(tuple[np.ndarray, ...], tvw_values)
+            for series, iend in zip(tvw_series, fit.Tvw_iend):
                 residuals.append(
                     _series_residuals(
                         series,
