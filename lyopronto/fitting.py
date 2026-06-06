@@ -360,6 +360,8 @@ def fit_primary_drying(
     ``method="minimize"`` path uses ``obj_expT``, which applies ``tweight``
     directly to the squared end-time error. This matches the Julia residual
     and scalar-objective split and only differs when ``tweight != 1``.
+    When provided, ``optimizer_method`` is forwarded to the selected SciPy
+    optimizer as its ``method`` argument.
     """
 
     theta_start = _initial_theta(transform, theta0)
@@ -389,6 +391,10 @@ def fit_primary_drying(
                     tweight=tweight,
                     badprms=badprms,
                 )
+
+        if optimizer_method is not None:
+            optimizer_options = dict(optimizer_options)
+            optimizer_options["method"] = optimizer_method
 
         raw = least_squares(
             lambda theta: _finite_or_penalty(residual_fun(theta), nan_penalty),

@@ -2,10 +2,12 @@
 
 from dataclasses import replace
 import math
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
 
+import lyopronto.fitting as fitting_module
 from lyopronto import (
     KRpTransform,
     KTransform,
@@ -175,6 +177,32 @@ def test_fit_primary_drying_minimize_recovers_heat_transfer(
     assert _ratio(fitted.Kshf(0), values["K"], values["K"].units) == pytest.approx(
         1.0, rel=0.05
     )
+
+
+def test_fit_primary_drying_forwards_least_squares_optimizer_method(
+    monkeypatch,
+    primary_drying_fit_case,
+):
+    params, fit, values = primary_drying_fit_case
+    captured = {}
+
+    def fake_least_squares(fun, x0, **kwargs):
+        captured["method"] = kwargs.get("method")
+        residuals = fun(x0)
+        assert np.all(np.isfinite(residuals))
+        return SimpleNamespace(x=np.asarray(x0, dtype=float), success=True)
+
+    monkeypatch.setattr(fitting_module, "least_squares", fake_least_squares)
+
+    result = fit_primary_drying(
+        params,
+        fit,
+        KTransform(values["K"]),
+        optimizer_method="lm",
+    )
+
+    assert captured["method"] == "lm"
+    assert result.fit_method == "least_squares"
 
 
 def test_rp_only_fit_recovers_product_resistance(primary_drying_fit_case):
