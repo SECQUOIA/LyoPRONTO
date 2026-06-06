@@ -1,13 +1,453 @@
-"""Fitting residual and objective helpers for typed primary-drying solutions."""
+"""Fitting helpers for typed primary-drying solutions."""
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+from dataclasses import dataclass, replace
 import math
 from typing import Any, cast
 
 import numpy as np
+from scipy.optimize import least_squares, minimize
 
-from .typed import PrimaryDryFit, is_quantity, to_magnitude
+from .pikal import PikalParams, solve_pikal
+from .typed import ConstPhysProp, PrimaryDryFit, RpFormFit, is_quantity, to_magnitude
+
+_FITTING_FAILURES = (ArithmeticError, RuntimeError, ValueError, OverflowError)
+
+
+@dataclass(frozen=True)
+class RpTransform:
+    """Log-space positive transform for ``RpFormFit`` coefficients."""
+
+    R0: Any
+    A1: Any | None = None
+    A2: Any | None = None
+
+    def __post_init__(self) -> None:
+        if isinstance(self.R0, RpFormFit) and self.A1 is None and self.A2 is None:
+            object.__setattr__(self, "A1", self.R0.A1)
+            object.__setattr__(self, "A2", self.R0.A2)
+            object.__setattr__(self, "R0", self.R0.R0)
+        if self.A1 is None or self.A2 is None:
+            raise ValueError("RpTransform requires R0, A1, and A2 guesses")
+
+    @property
+    def dimension(self) -> int:
+        """Number of unconstrained parameters consumed by this transform."""
+
+        return 3
+
+    def transform(self, theta: Any) -> dict[str, Any]:
+        """Return fitted parameter updates for unconstrained ``theta``."""
+
+        values = _theta_array(theta, self.dimension)
+        return {
+            "Rp": RpFormFit(
+                self.R0 * math.exp(float(values[0])),
+                self.A1 * math.exp(float(values[1])),
+                self.A2 * math.exp(float(values[2])),
+            )
+        }
+
+    __call__ = transform
+
+
+@dataclass(frozen=True)
+class KTransform:
+    """Log-space positive transform for constant heat-transfer coefficient."""
+
+    Kshf: Any
+
+    @property
+    def dimension(self) -> int:
+        """Number of unconstrained parameters consumed by this transform."""
+
+        return 1
+
+    def transform(self, theta: Any) -> dict[str, Any]:
+        """Return fitted parameter updates for unconstrained ``theta``."""
+
+        values = _theta_array(theta, self.dimension)
+        return {"Kshf": ConstPhysProp(_const_value(self.Kshf) * math.exp(values[0]))}
+
+    __call__ = transform
+
+
+@dataclass(frozen=True)
+class KRpTransform:
+    """Log-space positive transform for constant ``Kshf`` and ``RpFormFit``."""
+
+    Kshf: Any
+    R0: Any
+    A1: Any
+    A2: Any
+
+    @property
+    def dimension(self) -> int:
+        """Number of unconstrained parameters consumed by this transform."""
+
+        return 4
+
+    def transform(self, theta: Any) -> dict[str, Any]:
+        """Return fitted parameter updates for unconstrained ``theta``."""
+
+        values = _theta_array(theta, self.dimension)
+        updates = KTransform(self.Kshf).transform(values[:1])
+        updates.update(RpTransform(self.R0, self.A1, self.A2).transform(values[1:]))
+        return updates
+
+    __call__ = transform
+
+
+@dataclass(frozen=True)
+class SharedSeparateTransform:
+    """Compose shared and per-experiment parameter transforms."""
+
+    shared: Any
+    separate: Any
+    n_separate: int
+    sep_inds: tuple[int, ...] | None = None
+
+    def __post_init__(self) -> None:
+        if int(self.n_separate) <= 0:
+            raise ValueError("n_separate must be positive")
+        if self.sep_inds is not None:
+            object.__setattr__(self, "sep_inds", tuple(int(i) for i in self.sep_inds))
+
+    @property
+    def dimension(self) -> int:
+        """Number of unconstrained parameters consumed by this transform."""
+
+        return _transform_dimension(
+            self.shared
+        ) + self.n_separate * _transform_dimension(self.separate)
+
+    def transform(self, theta: Any) -> "SharedSeparateUpdates":
+        """Return grouped updates for multi-experiment fitting."""
+
+        values = _theta_array(theta, self.dimension)
+        cursor = 0
+        shared_dim = _transform_dimension(self.shared)
+        shared_updates = _call_transform(
+            self.shared, values[cursor : cursor + shared_dim]
+        )
+        cursor += shared_dim
+
+        separate_dim = _transform_dimension(self.separate)
+        separate_updates = []
+        for _ in range(self.n_separate):
+            separate_updates.append(
+                _call_transform(self.separate, values[cursor : cursor + separate_dim])
+            )
+            cursor += separate_dim
+
+        return SharedSeparateUpdates(
+            shared=shared_updates,
+            separate=tuple(separate_updates),
+            sep_inds=self.sep_inds,
+        )
+
+    __call__ = transform
+
+
+@dataclass(frozen=True)
+class SharedSeparateUpdates:
+    """Fitted updates split into shared and per-experiment groups."""
+
+    shared: dict[str, Any]
+    separate: tuple[dict[str, Any], ...]
+    sep_inds: tuple[int, ...] | None = None
+
+
+def gen_sol_pd(
+    theta: Any,
+    transform: Any,
+    params: PikalParams,
+    fitdat: PrimaryDryFit | None = None,
+    *,
+    badprms: Any = None,
+    save_at: Any = None,
+    **solve_options: Any,
+) -> Any:
+    """Generate a typed conventional primary-drying solution for fitted params."""
+
+    try:
+        updates = _call_transform(transform, theta)
+        fitted_params = _replace_params(params, updates)
+        if badprms is not None and badprms(fitted_params):
+            return np.nan
+        if fitdat is not None:
+            save_at = fitdat.t_hr
+        return solve_pikal(fitted_params, save_at=save_at, **solve_options)
+    except _FITTING_FAILURES:
+        return np.nan
+
+
+def gen_nsol_pd(
+    theta: Any,
+    transform: Any,
+    params: PikalParams | Sequence[PikalParams],
+    fitdats: Sequence[PrimaryDryFit] | None = None,
+    *,
+    badprms: Any = None,
+    save_ats: Sequence[Any] | None = None,
+    **solve_options: Any,
+) -> list[Any]:
+    """Generate typed solutions for several primary-drying experiments."""
+
+    pos, save_values = _normalize_multi_inputs(params, fitdats, save_ats)
+    try:
+        updates = _call_transform(transform, theta)
+        update_groups = _multi_update_groups(updates, len(pos))
+        fitted_params = [
+            _replace_params(param, update) for param, update in zip(pos, update_groups)
+        ]
+        if badprms is not None and any(badprms(param) for param in fitted_params):
+            return [np.nan for _ in pos]
+    except _FITTING_FAILURES:
+        return [np.nan for _ in pos]
+
+    sols = []
+    for param, save_at in zip(fitted_params, save_values):
+        try:
+            sols.append(solve_pikal(param, save_at=save_at, **solve_options))
+        except _FITTING_FAILURES:
+            sols.append(np.nan)
+    return sols
+
+
+def err_pd(
+    theta: Any,
+    transform: Any,
+    params: PikalParams,
+    fitdat: PrimaryDryFit,
+    *,
+    tweight: float = 1.0,
+    badprms: Any = None,
+    verbose: bool = False,
+    **solve_options: Any,
+) -> np.ndarray:
+    """Return residuals for one fitted conventional primary-drying experiment."""
+
+    sol = gen_sol_pd(
+        theta,
+        transform,
+        params,
+        fitdat,
+        badprms=badprms,
+        **solve_options,
+    )
+    return err_expT(sol, fitdat, tweight=tweight, verbose=verbose)
+
+
+def errn_pd(
+    theta: Any,
+    transform: Any,
+    params: PikalParams | Sequence[PikalParams],
+    fitdats: Sequence[PrimaryDryFit],
+    *,
+    tweight: float = 1.0,
+    badprms: Any = None,
+    verbose: bool = False,
+    **solve_options: Any,
+) -> np.ndarray:
+    """Return concatenated residuals for several fitted experiments."""
+
+    sols = gen_nsol_pd(
+        theta,
+        transform,
+        params,
+        fitdats,
+        badprms=badprms,
+        **solve_options,
+    )
+    residuals = [
+        err_expT(sol, fitdat, tweight=tweight, verbose=verbose)
+        for sol, fitdat in zip(sols, fitdats)
+    ]
+    return np.concatenate(residuals) if residuals else np.asarray([], dtype=float)
+
+
+def obj_pd(
+    theta: Any,
+    transform: Any,
+    params: PikalParams,
+    fitdat: PrimaryDryFit,
+    *,
+    tweight: float = 1.0,
+    tvw_weight: float = 1.0,
+    badprms: Any = None,
+    verbose: bool = False,
+    **solve_options: Any,
+) -> float:
+    """Return scalar objective for one fitted conventional drying experiment."""
+
+    sol = gen_sol_pd(
+        theta,
+        transform,
+        params,
+        fitdat,
+        badprms=badprms,
+        **solve_options,
+    )
+    return obj_expT(
+        sol,
+        fitdat,
+        tweight=tweight,
+        tvw_weight=tvw_weight,
+        verbose=verbose,
+    )
+
+
+def objn_pd(
+    theta: Any,
+    transform: Any,
+    params: PikalParams | Sequence[PikalParams],
+    fitdats: Sequence[PrimaryDryFit],
+    *,
+    tweight: float = 1.0,
+    tvw_weight: float = 1.0,
+    badprms: Any = None,
+    verbose: bool = False,
+    **solve_options: Any,
+) -> float:
+    """Return summed scalar objective for several fitted experiments."""
+
+    sols = gen_nsol_pd(
+        theta,
+        transform,
+        params,
+        fitdats,
+        badprms=badprms,
+        **solve_options,
+    )
+    value = 0.0
+    for sol, fitdat in zip(sols, fitdats):
+        obj = obj_expT(
+            sol,
+            fitdat,
+            tweight=tweight,
+            tvw_weight=tvw_weight,
+            verbose=verbose,
+        )
+        if not np.isfinite(obj):
+            return np.nan
+        value += float(obj)
+    return value
+
+
+def fit_primary_drying(
+    params: PikalParams | Sequence[PikalParams],
+    fitdat: PrimaryDryFit | Sequence[PrimaryDryFit],
+    transform: Any,
+    theta0: Any | None = None,
+    *,
+    method: str = "least_squares",
+    tweight: float = 1.0,
+    tvw_weight: float = 1.0,
+    badprms: Any = None,
+    nan_penalty: float = 1e12,
+    optimizer_method: str | None = None,
+    **optimizer_options: Any,
+) -> Any:
+    """Fit conventional primary-drying parameters with SciPy optimizers.
+
+    Notes
+    -----
+    ``method="least_squares"`` applies ``tweight`` to the end-time residual,
+    so the end-time contribution is squared after residual scaling. The
+    ``method="minimize"`` path uses ``obj_expT``, which applies ``tweight``
+    directly to the squared end-time error. This matches the Julia residual
+    and scalar-objective split and only differs when ``tweight != 1``.
+    When provided, ``optimizer_method`` is forwarded to the selected SciPy
+    optimizer as its ``method`` argument.
+    """
+
+    theta_start = _initial_theta(transform, theta0)
+    multi = _is_multi_fit(fitdat)
+
+    if method == "least_squares":
+        if multi:
+
+            def residual_fun(theta: Any) -> np.ndarray:
+                return errn_pd(
+                    theta,
+                    transform,
+                    params,
+                    cast(Sequence[PrimaryDryFit], fitdat),
+                    tweight=tweight,
+                    badprms=badprms,
+                )
+
+        else:
+
+            def residual_fun(theta: Any) -> np.ndarray:
+                return err_pd(
+                    theta,
+                    transform,
+                    cast(PikalParams, params),
+                    cast(PrimaryDryFit, fitdat),
+                    tweight=tweight,
+                    badprms=badprms,
+                )
+
+        if optimizer_method is not None:
+            optimizer_options = dict(optimizer_options)
+            optimizer_options["method"] = optimizer_method
+
+        raw = least_squares(
+            lambda theta: _finite_or_penalty(residual_fun(theta), nan_penalty),
+            theta_start,
+            **optimizer_options,
+        )
+    elif method == "minimize":
+        if multi:
+
+            def obj_fun(theta: Any) -> float:
+                return objn_pd(
+                    theta,
+                    transform,
+                    params,
+                    cast(Sequence[PrimaryDryFit], fitdat),
+                    tweight=tweight,
+                    tvw_weight=tvw_weight,
+                    badprms=badprms,
+                )
+
+        else:
+
+            def obj_fun(theta: Any) -> float:
+                return obj_pd(
+                    theta,
+                    transform,
+                    cast(PikalParams, params),
+                    cast(PrimaryDryFit, fitdat),
+                    tweight=tweight,
+                    tvw_weight=tvw_weight,
+                    badprms=badprms,
+                )
+
+        raw = minimize(
+            lambda theta: _finite_scalar_or_penalty(obj_fun(theta), nan_penalty),
+            theta_start,
+            method=optimizer_method,
+            **optimizer_options,
+        )
+    else:
+        raise ValueError('method must be "least_squares" or "minimize"')
+
+    _attach_fit_result(
+        raw,
+        params,
+        fitdat,
+        transform,
+        method,
+        tweight,
+        tvw_weight,
+        badprms,
+    )
+    return raw
 
 
 def num_errs(fit: PrimaryDryFit) -> int:
@@ -115,6 +555,204 @@ def obj_expT(
     if fit.t_end is not None:
         value += float(tweight) * float(residuals[-1] ** 2)
     return value
+
+
+def _theta_array(theta: Any, dimension: int) -> np.ndarray:
+    values = np.asarray(theta, dtype=float).reshape(-1)
+    if values.size != dimension:
+        raise ValueError(f"expected {dimension} fitting parameters, got {values.size}")
+    return values
+
+
+def _const_value(value: Any) -> Any:
+    if isinstance(value, ConstPhysProp):
+        return value.value
+    return value
+
+
+def _transform_dimension(transform: Any) -> int:
+    if transform is None:
+        return 0
+    if hasattr(transform, "dimension"):
+        return int(transform.dimension)
+    raise TypeError("transform must expose a dimension property")
+
+
+def _call_transform(
+    transform: Any, theta: Any
+) -> dict[str, Any] | SharedSeparateUpdates:
+    if transform is None:
+        _theta_array(theta, 0)
+        return {}
+    if hasattr(transform, "transform"):
+        updates = transform.transform(theta)
+    elif callable(transform):
+        updates = transform(theta)
+    else:
+        raise TypeError("transform must be callable or expose transform()")
+
+    if isinstance(updates, SharedSeparateUpdates):
+        return updates
+    if isinstance(updates, dict):
+        return dict(updates)
+    raise TypeError("transforms must return parameter-update dicts")
+
+
+def _replace_params(params: PikalParams, updates: dict[str, Any]) -> PikalParams:
+    allowed = set(PikalParams.__dataclass_fields__)
+    unknown = set(updates) - allowed
+    if unknown:
+        names = ", ".join(sorted(unknown))
+        raise ValueError(f"unknown PikalParams update field(s): {names}")
+    return replace(params, **updates)
+
+
+def _normalize_multi_inputs(
+    params: PikalParams | Sequence[PikalParams],
+    fitdats: Sequence[PrimaryDryFit] | None,
+    save_ats: Sequence[Any] | None,
+) -> tuple[list[PikalParams], list[Any]]:
+    fit_list = list(fitdats) if fitdats is not None else None
+    save_list = list(save_ats) if save_ats is not None else None
+
+    if isinstance(params, PikalParams):
+        if fit_list is not None:
+            n_exp = len(fit_list)
+        elif save_list is not None:
+            n_exp = len(save_list)
+        else:
+            n_exp = 1
+        pos = [params for _ in range(n_exp)]
+    else:
+        pos = list(params)
+
+    if not pos:
+        raise ValueError("at least one parameter object is required")
+
+    if fit_list is not None:
+        if len(fit_list) != len(pos):
+            raise ValueError("fitdats length must match the number of experiments")
+        save_values = [fitdat.t_hr for fitdat in fit_list]
+    elif save_list is not None:
+        if len(save_list) != len(pos):
+            raise ValueError("save_ats length must match the number of experiments")
+        save_values = save_list
+    else:
+        save_values = [None for _ in pos]
+    return pos, save_values
+
+
+def _multi_update_groups(
+    updates: dict[str, Any] | SharedSeparateUpdates,
+    n_experiments: int,
+) -> list[dict[str, Any]]:
+    if isinstance(updates, SharedSeparateUpdates):
+        if updates.sep_inds is None:
+            sep_inds = tuple(range(len(updates.separate)))
+        else:
+            sep_inds = updates.sep_inds
+        if len(sep_inds) != n_experiments:
+            raise ValueError("sep_inds length must match the number of experiments")
+
+        groups = []
+        for index in sep_inds:
+            if index < 0 or index >= len(updates.separate):
+                raise ValueError("sep_inds contains an out-of-range group index")
+            group = dict(updates.separate[index])
+            group.update(updates.shared)
+            groups.append(group)
+        return groups
+
+    return [dict(updates) for _ in range(n_experiments)]
+
+
+def _initial_theta(transform: Any, theta0: Any | None) -> np.ndarray:
+    dimension = _transform_dimension(transform)
+    if theta0 is None:
+        return np.zeros(dimension, dtype=float)
+    return _theta_array(theta0, dimension)
+
+
+def _is_multi_fit(fitdat: Any) -> bool:
+    return isinstance(fitdat, Sequence) and not isinstance(fitdat, PrimaryDryFit)
+
+
+def _finite_or_penalty(values: Any, penalty: float) -> np.ndarray:
+    arr = np.asarray(values, dtype=float).reshape(-1)
+    if np.any(~np.isfinite(arr)):
+        return np.full(arr.shape, float(penalty), dtype=float)
+    return arr
+
+
+def _finite_scalar_or_penalty(value: Any, penalty: float) -> float:
+    scalar = float(value)
+    if not math.isfinite(scalar):
+        return float(penalty)
+    return scalar
+
+
+def _attach_fit_result(
+    result: Any,
+    params: PikalParams | Sequence[PikalParams],
+    fitdat: PrimaryDryFit | Sequence[PrimaryDryFit],
+    transform: Any,
+    method: str,
+    tweight: float,
+    tvw_weight: float,
+    badprms: Any,
+) -> None:
+    result.fit_method = method
+    result.transform = transform
+    result.tweight = tweight
+    result.tvw_weight = tvw_weight
+
+    if _is_multi_fit(fitdat):
+        fitdats = cast(Sequence[PrimaryDryFit], fitdat)
+        pos, _save_values = _normalize_multi_inputs(params, fitdats, None)
+        updates = _call_transform(transform, result.x)
+        update_groups = _multi_update_groups(updates, len(pos))
+        result.fitted_params = tuple(
+            _replace_params(param, update) for param, update in zip(pos, update_groups)
+        )
+        result.solution = tuple(
+            gen_nsol_pd(
+                result.x,
+                transform,
+                params,
+                fitdats,
+                badprms=badprms,
+            )
+        )
+        result.objective = objn_pd(
+            result.x,
+            transform,
+            params,
+            fitdats,
+            tweight=tweight,
+            tvw_weight=tvw_weight,
+            badprms=badprms,
+        )
+    else:
+        fit = cast(PrimaryDryFit, fitdat)
+        param = cast(PikalParams, params)
+        updates = cast(dict[str, Any], _call_transform(transform, result.x))
+        result.fitted_params = _replace_params(param, updates)
+        result.solution = gen_sol_pd(
+            result.x,
+            transform,
+            param,
+            fit,
+            badprms=badprms,
+        )
+        result.objective = obj_pd(
+            result.x,
+            transform,
+            param,
+            fit,
+            tweight=tweight,
+            tvw_weight=tvw_weight,
+            badprms=badprms,
+        )
 
 
 def _num_tvw_errs(fit: PrimaryDryFit) -> int:
@@ -233,6 +871,18 @@ def _valid_solution(solution: Any, fit: PrimaryDryFit) -> bool:
 
 
 __all__ = [
+    "RpTransform",
+    "KTransform",
+    "KRpTransform",
+    "SharedSeparateTransform",
+    "SharedSeparateUpdates",
+    "gen_sol_pd",
+    "gen_nsol_pd",
+    "err_pd",
+    "errn_pd",
+    "obj_pd",
+    "objn_pd",
+    "fit_primary_drying",
     "num_errs",
     "err_expT",
     "obj_expT",
