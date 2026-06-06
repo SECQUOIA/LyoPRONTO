@@ -32,8 +32,10 @@ from . import physical_properties
 from . import vials
 from . import pikal
 from . import fitting
+from . import cycle_time
 
 from .typed import Q_, ureg, RpFormFit, ConstPhysProp, RampedVariable, PrimaryDryFit
+from .cycle_time import identify_pd_end
 from .pikal import (
     PikalDiagnostics,
     PikalParams,
@@ -91,12 +93,14 @@ __all__ = [
     "vials",
     "pikal",
     "fitting",
+    "cycle_time",
     "Q_",
     "ureg",
     "RpFormFit",
     "ConstPhysProp",
     "RampedVariable",
     "PrimaryDryFit",
+    "identify_pd_end",
     "PikalDiagnostics",
     "PikalParams",
     "PikalSolution",
