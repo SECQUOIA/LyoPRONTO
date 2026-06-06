@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 import math
-from typing import Any
+from typing import Any, cast
 import warnings
 
 import numpy as np
@@ -616,8 +616,9 @@ def calc_hRp_T(params: PikalParams, fit: Any, i: int | None = None) -> tuple[Any
         def finish(_t: float, y: np.ndarray) -> float:
             return hf0_cm - float(y[0]) - 1e-10
 
-        finish.terminal = True
-        finish.direction = -1
+        finish_event = cast(Any, finish)
+        finish_event.terminal = True
+        finish_event.direction = -1
 
         sol = solve_ivp(
             lambda t, y: [_dhd_dt_cm_hr(float(y[0]), params, series, float(t))],
@@ -726,8 +727,9 @@ def solve_pikal(
     def finish(_t: float, y: np.ndarray) -> float:
         return y[0] - 1e-10
 
-    finish.terminal = True
-    finish.direction = -1
+    finish_event = cast(Any, finish)
+    finish_event.terminal = True
+    finish_event.direction = -1
 
     default_options = {
         "method": "BDF",
