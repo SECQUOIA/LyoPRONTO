@@ -574,44 +574,44 @@ output table shapes.</p>
 </tr>
 <tr>
 <td><code>gen_sol_pd</code></td>
-<td>planned</td>
-<td>Issues #42, #46</td>
-<td>Conventional/RF solution generators for fitting.</td>
+<td>partially ported</td>
+<td><code>lyopronto.fitting.gen_sol_pd</code></td>
+<td>Conventional Pikal solution generator is ported; RF remains planned in Issue #46.</td>
 </tr>
 <tr>
 <td><code>obj_pd</code></td>
-<td>planned</td>
-<td>Issues #42, #46</td>
-<td>Scalar fitting objective.</td>
+<td>partially ported</td>
+<td><code>lyopronto.fitting.obj_pd</code></td>
+<td>Conventional Pikal scalar objective is ported; RF remains planned in Issue #46.</td>
 </tr>
 <tr>
 <td><code>gen_nsol_pd</code></td>
-<td>planned</td>
-<td>Issue #42</td>
-<td>Multi-experiment fitting helper.</td>
+<td>ported</td>
+<td><code>lyopronto.fitting.gen_nsol_pd</code></td>
+<td>Multi-experiment conventional Pikal fitting helper with shared/separate groups.</td>
 </tr>
 <tr>
 <td><code>objn_pd</code></td>
-<td>planned</td>
-<td>Issue #42</td>
-<td>Multi-experiment scalar objective.</td>
+<td>ported</td>
+<td><code>lyopronto.fitting.objn_pd</code></td>
+<td>Multi-experiment conventional Pikal scalar objective.</td>
 </tr>
 <tr>
 <td><code>KRp_transform_basic</code></td>
-<td>planned</td>
-<td>Issue #42</td>
+<td>ported</td>
+<td><code>lyopronto.fitting.KRpTransform</code></td>
 <td>Conventional Kv/Rp log-space transform.</td>
 </tr>
 <tr>
 <td><code>K_transform_basic</code></td>
-<td>planned</td>
-<td>Issue #42</td>
+<td>ported</td>
+<td><code>lyopronto.fitting.KTransform</code></td>
 <td>Conventional Kv transform.</td>
 </tr>
 <tr>
 <td><code>Rp_transform_basic</code></td>
-<td>planned</td>
-<td>Issue #42</td>
+<td>ported</td>
+<td><code>lyopronto.fitting.RpTransform</code></td>
 <td>Product-resistance transform.</td>
 </tr>
 <tr>
@@ -652,9 +652,9 @@ output table shapes.</p>
 </tr>
 <tr>
 <td><code>nls_pd</code></td>
-<td>planned</td>
-<td>Issues #42, #46</td>
-<td>SciPy least-squares wrappers.</td>
+<td>partially ported</td>
+<td><code>lyopronto.fitting.err_pd</code>, <code>lyopronto.fitting.errn_pd</code>, <code>lyopronto.fitting.fit_primary_drying</code></td>
+<td>Conventional Pikal residual wrappers and SciPy least-squares entry point are ported; RF remains planned in Issue #46.</td>
 </tr>
 <tr>
 <td><code>nls_pd!</code></td>
