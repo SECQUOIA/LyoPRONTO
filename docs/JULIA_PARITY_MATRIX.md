@@ -19,8 +19,8 @@ output table shapes.
 | `get_tstops` | partially ported | `lyopronto.pikal.get_pikal_tstops` | Pikal extracts stops from ramped shelf and pressure controls; RF remains planned in Issue #45. |
 | `lyo_1d_dae_f` | ported | `lyopronto.pikal.calc_md_q`, `lyopronto.pikal.solve_pikal` | Python solves the height ODE with the Pikal algebraic temperature balance through SciPy. |
 | `ParamObjPikal` | ported | `lyopronto.pikal.PikalParams` | Typed Pikal parameter dataclass. |
-| `RpEstimator` | planned | Issue #43 | Direct Rp estimation workflow. |
-| `calc_hRp_T` | planned | Issue #43 | Direct Rp-vs-height estimate from temperature data. |
+| `RpEstimator` | ported | `lyopronto.pikal.RpEstimator` | Direct Rp estimation input bundle for typed Pikal data. |
+| `calc_hRp_T` | ported | `lyopronto.pikal.calc_hRp_T` | Direct Rp-vs-height estimate from temperature data; returns dried height in cm and Rp in `cm^2*hr*Torr/g`. |
 | `lumped_cap_rf!` | planned | Issue #45 | RF/microwave RHS. |
 | `ParamObjRF` | planned | Issue #45 | Typed RF parameter dataclass. |
 | `gen_sol_pd` | partially ported | `lyopronto.fitting.gen_sol_pd` | Conventional Pikal solution generator is ported; RF remains planned in Issue #46. |
