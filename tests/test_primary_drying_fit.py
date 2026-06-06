@@ -103,6 +103,25 @@ def test_gen_sol_pd_uses_log_space_transforms_and_bad_parameter_gate(
     )
 
 
+def test_fitting_generators_return_nan_for_transform_overflow(
+    primary_drying_fit_case,
+):
+    params, fit, values = primary_drying_fit_case
+    rp_transform = _rp_transform(values)
+
+    assert np.isnan(gen_sol_pd([1000.0, 0.0, 0.0], rp_transform, params, fit))
+
+    transform = SharedSeparateTransform(
+        shared=KTransform(values["K"]),
+        separate=rp_transform,
+        n_separate=1,
+    )
+    sols = gen_nsol_pd(np.full(transform.dimension, 1000.0), transform, [params], [fit])
+
+    assert len(sols) == 1
+    assert np.isnan(sols[0])
+
+
 def test_fit_primary_drying_recovers_k_and_rp(primary_drying_fit_case):
     params, fit, values = primary_drying_fit_case
     transform = _krp_transform(values)
@@ -131,6 +150,30 @@ def test_fit_primary_drying_recovers_k_and_rp(primary_drying_fit_case):
     )
     assert _ratio(fitted.Rp.A2, values["A2"], values["A2"].units) == pytest.approx(
         1.0, rel=0.3
+    )
+
+
+def test_fit_primary_drying_minimize_recovers_heat_transfer(
+    primary_drying_fit_case,
+):
+    params, fit, values = primary_drying_fit_case
+    transform = KTransform(values["K"] * 0.8)
+
+    result = fit_primary_drying(
+        params,
+        fit,
+        transform,
+        method="minimize",
+        optimizer_method="Nelder-Mead",
+        options={"maxiter": 80, "xatol": 1e-5, "fatol": 1e-10},
+    )
+
+    fitted = result.fitted_params
+    assert result.success
+    assert result.fit_method == "minimize"
+    assert result.objective == pytest.approx(0.0, abs=1e-6)
+    assert _ratio(fitted.Kshf(0), values["K"], values["K"].units) == pytest.approx(
+        1.0, rel=0.05
     )
 
 

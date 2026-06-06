@@ -13,6 +13,8 @@ from scipy.optimize import least_squares, minimize
 from .pikal import PikalParams, solve_pikal
 from .typed import ConstPhysProp, PrimaryDryFit, RpFormFit, is_quantity, to_magnitude
 
+_FITTING_FAILURES = (ArithmeticError, RuntimeError, ValueError, OverflowError)
+
 
 @dataclass(frozen=True)
 class RpTransform:
@@ -170,16 +172,15 @@ def gen_sol_pd(
 ) -> Any:
     """Generate a typed conventional primary-drying solution for fitted params."""
 
-    updates = _call_transform(transform, theta)
-    fitted_params = _replace_params(params, updates)
-    if badprms is not None and badprms(fitted_params):
-        return np.nan
-
-    if fitdat is not None:
-        save_at = fitdat.t_hr
     try:
+        updates = _call_transform(transform, theta)
+        fitted_params = _replace_params(params, updates)
+        if badprms is not None and badprms(fitted_params):
+            return np.nan
+        if fitdat is not None:
+            save_at = fitdat.t_hr
         return solve_pikal(fitted_params, save_at=save_at, **solve_options)
-    except (ArithmeticError, RuntimeError, ValueError, OverflowError):
+    except _FITTING_FAILURES:
         return np.nan
 
 
@@ -196,20 +197,22 @@ def gen_nsol_pd(
     """Generate typed solutions for several primary-drying experiments."""
 
     pos, save_values = _normalize_multi_inputs(params, fitdats, save_ats)
-    updates = _call_transform(transform, theta)
-    update_groups = _multi_update_groups(updates, len(pos))
-
-    fitted_params = [
-        _replace_params(param, update) for param, update in zip(pos, update_groups)
-    ]
-    if badprms is not None and any(badprms(param) for param in fitted_params):
-        return [np.nan for _ in fitted_params]
+    try:
+        updates = _call_transform(transform, theta)
+        update_groups = _multi_update_groups(updates, len(pos))
+        fitted_params = [
+            _replace_params(param, update) for param, update in zip(pos, update_groups)
+        ]
+        if badprms is not None and any(badprms(param) for param in fitted_params):
+            return [np.nan for _ in pos]
+    except _FITTING_FAILURES:
+        return [np.nan for _ in pos]
 
     sols = []
     for param, save_at in zip(fitted_params, save_values):
         try:
             sols.append(solve_pikal(param, save_at=save_at, **solve_options))
-        except (ArithmeticError, RuntimeError, ValueError, OverflowError):
+        except _FITTING_FAILURES:
             sols.append(np.nan)
     return sols
 
@@ -348,7 +351,16 @@ def fit_primary_drying(
     optimizer_method: str | None = None,
     **optimizer_options: Any,
 ) -> Any:
-    """Fit conventional primary-drying parameters with SciPy optimizers."""
+    """Fit conventional primary-drying parameters with SciPy optimizers.
+
+    Notes
+    -----
+    ``method="least_squares"`` applies ``tweight`` to the end-time residual,
+    so the end-time contribution is squared after residual scaling. The
+    ``method="minimize"`` path uses ``obj_expT``, which applies ``tweight``
+    directly to the squared end-time error. This matches the Julia residual
+    and scalar-objective split and only differs when ``tweight != 1``.
+    """
 
     theta_start = _initial_theta(transform, theta0)
     multi = _is_multi_fit(fitdat)
