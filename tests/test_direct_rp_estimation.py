@@ -13,6 +13,7 @@ from lyopronto import (
     RampedVariable,
     RpEstimator,
     RpFormFit,
+    calc_unknownRp,
     calc_hRp_T,
     legacy_unknown_rp_to_hRp,
     solve_pikal,
@@ -120,6 +121,35 @@ def test_calc_hRp_T_skips_invalid_initial_transfer_period(direct_rp_params):
     assert np.all(rp.to("centimeter ** 2 * hour * torr / gram").magnitude >= 0.0)
 
 
+def test_calc_hRp_T_truncates_temperature_series_after_drying_completion(
+    direct_rp_params,
+):
+    fast_params = replace(
+        direct_rp_params,
+        Rp=RpFormFit(
+            Q_(0.05, "centimeter ** 2 * torr * hour / gram"),
+            Q_(0.1, "centimeter * torr * hour / gram"),
+            Q_(0.0, "1 / centimeter"),
+        ),
+        hf0=Q_(0.3, "milliliter") / direct_rp_params.Ap,
+    )
+    times = np.linspace(0.0, 24.0, 49)
+    sol = solve_pikal(fast_params, t_span=(0.0, 24.0), save_at=times)
+    sol_tf_K = sol.tf.to("kelvin").magnitude
+    fit_times = np.concatenate([sol.t, sol.t[-1] + np.array([0.5, 1.0, 1.5])])
+    fit_tf_K = np.concatenate([sol_tf_K, np.repeat(sol_tf_K[-1], 3)])
+    fit = PrimaryDryFit(Q_(fit_times, "hour"), Q_(fit_tf_K, "kelvin"))
+
+    h_dried, rp = calc_hRp_T(fast_params, fit)
+
+    assert len(h_dried.magnitude) < len(fit_times)
+    assert (
+        np.max(h_dried.to("centimeter").magnitude)
+        <= fast_params.hf0.to("centimeter").magnitude + 1e-9
+    )
+    assert np.all(rp.to("centimeter ** 2 * hour * torr / gram").magnitude >= 0.0)
+
+
 def test_legacy_unknown_rp_adapter_returns_typed_height_and_resistance():
     product_res = np.array(
         [
@@ -132,6 +162,34 @@ def test_legacy_unknown_rp_adapter_returns_typed_height_and_resistance():
 
     assert h_dried.check("[length]")
     assert rp.check("[length] ** 2 * [time] * [pressure] / [mass]")
+    np.testing.assert_allclose(h_dried.to("centimeter").magnitude, product_res[:, 1])
+    np.testing.assert_allclose(
+        rp.to("centimeter ** 2 * hour * torr / gram").magnitude,
+        product_res[:, 2],
+    )
+
+
+def test_legacy_unknown_rp_adapter_accepts_real_unknown_rp_output(
+    standard_vial,
+    standard_ht,
+    standard_pchamber,
+    standard_tshelf,
+):
+    product = {"cSolid": 0.05, "T_pr_crit": -25.0}
+    time = np.array([0.0, 1.0, 2.0, 3.0])
+    tbot_exp = np.array([-40.0, -38.0, -32.0, -25.0])
+    _output, product_res = calc_unknownRp.dry(
+        standard_vial,
+        product,
+        standard_ht,
+        standard_pchamber,
+        standard_tshelf,
+        time,
+        tbot_exp,
+    )
+
+    h_dried, rp = legacy_unknown_rp_to_hRp(product_res)
+
     np.testing.assert_allclose(h_dried.to("centimeter").magnitude, product_res[:, 1])
     np.testing.assert_allclose(
         rp.to("centimeter ** 2 * hour * torr / gram").magnitude,

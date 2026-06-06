@@ -593,7 +593,11 @@ def calc_hRp_T(params: PikalParams, fit: Any, i: int | None = None) -> tuple[Any
     -------
     tuple
         ``(h_d, Rp)`` as Pint quantity arrays in centimeters and
-        ``cm^2 * hr * Torr / g``.
+        ``cm^2 * hr * Torr / g``. The arrays cover only the usable portion of
+        the selected temperature series: invalid initial transfer points are
+        skipped, leading zero segments are trimmed, and integration stops when
+        the dried height reaches the initial fill height. Callers should not
+        assume the returned values are index-aligned with ``fit.t``.
     """
 
     series = _select_rp_estimator_series(RpEstimator(params, fit), i)
