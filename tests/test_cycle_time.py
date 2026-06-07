@@ -40,6 +40,38 @@ def test_identify_pd_end_accepts_mapping_and_object_inputs():
     assert object_result == pytest.approx(expected)
 
 
+def test_identify_pd_end_respects_absolute_indices_in_analysis_window():
+    t, pch_pir = _synthetic_pirani()
+
+    t_end = identify_pd_end(
+        t,
+        pch_pir,
+        "der2",
+        window_width=11,
+        tmin=55.0,
+        tmax=70.0,
+    )
+
+    assert t_end == pytest.approx(64.0)
+
+
+def test_identify_pd_end_onoff_accepts_windowed_quantity_mapping():
+    t, pch_pir = _synthetic_pirani()
+
+    onset, offset = identify_pd_end(
+        {"t": Q_(t, "hour"), "pch_pir": Q_(pch_pir, "pascal")},
+        "onoff",
+        window_width=11,
+        tmin=Q_(55.0, "hour"),
+        tmax=Q_(70.0, "hour"),
+    )
+
+    assert onset.check("[time]")
+    assert offset.check("[time]")
+    assert onset.to("hour").magnitude == pytest.approx(56.6428502501405)
+    assert offset.to("hour").magnitude == pytest.approx(64.86646299947469)
+
+
 def test_identify_pd_end_rejects_invalid_kind():
     t, pch_pir = _synthetic_pirani()
 

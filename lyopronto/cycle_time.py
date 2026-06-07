@@ -30,6 +30,12 @@ def identify_pd_end(
     Parameters are plain floats in the caller's time and pressure units, or
     Pint quantities. When time inputs carry units, returned times carry the
     same unit as the input time series.
+
+    The Savitzky-Golay ``window_width`` is in samples and should be chosen for
+    the sampling density and transition width of the Pirani trace. The default
+    mirrors Julia LyoPronto, but short or sparsely sampled traces may require a
+    smaller odd window. The ``der2`` detector is especially sensitive when the
+    window approaches the full series length.
     """
 
     t, pch_pir, kind = _normalize_call(t, pch_pir, kind)
