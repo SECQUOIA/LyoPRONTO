@@ -35,8 +35,8 @@ output table shapes.
 | `ParamObjRF` | planned | Issue #45 | Typed RF parameter dataclass. |
 | `gen_sol_pd` | partially ported | `lyopronto.fitting.gen_sol_pd` | Conventional Pikal solution generator is ported; RF remains planned in Issue #46. |
 | `obj_pd` | partially ported | `lyopronto.fitting.obj_pd` | Conventional Pikal scalar objective is ported; RF remains planned in Issue #46. |
-| `gen_nsol_pd` | ported | `lyopronto.fitting.gen_nsol_pd` | Multi-experiment conventional Pikal fitting helper with shared/separate groups. |
-| `objn_pd` | ported | `lyopronto.fitting.objn_pd` | Multi-experiment conventional Pikal scalar objective. |
+| `gen_nsol_pd` | partially ported | `lyopronto.fitting.gen_nsol_pd` | Multi-experiment conventional Pikal fitting helper with shared/separate groups; RF remains planned in Issue #46. |
+| `objn_pd` | partially ported | `lyopronto.fitting.objn_pd` | Multi-experiment conventional Pikal scalar objective; RF remains planned in Issue #46. |
 | `KRp_transform_basic` | ported | `lyopronto.fitting.KRpTransform` | Conventional Kv/Rp log-space transform. |
 | `K_transform_basic` | ported | `lyopronto.fitting.KTransform` | Conventional Kv transform. |
 | `Rp_transform_basic` | ported | `lyopronto.fitting.RpTransform` | Product-resistance transform. |
