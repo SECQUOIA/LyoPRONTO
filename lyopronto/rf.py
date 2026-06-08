@@ -17,6 +17,7 @@ import math
 from typing import Any, cast
 
 import numpy as np
+from pint.errors import DimensionalityError
 from scipy import special
 from scipy.integrate import solve_ivp
 from scipy.optimize import brentq
@@ -36,6 +37,7 @@ _CP_UNIT = "joule / kilogram / kelvin"
 _POWER_UNIT = "watt"
 _FREQUENCY_UNIT = "hertz"
 _FIELD_FACTOR_UNIT = "ohm / meter ** 2"
+_CALLABLE_FALLBACK_EXCEPTIONS = (TypeError, DimensionalityError)
 
 
 @dataclass(frozen=True)
@@ -227,7 +229,7 @@ def _call_with_fallback(
 ) -> Any:
     try:
         value = func(quantity_arg)
-    except Exception:
+    except _CALLABLE_FALLBACK_EXCEPTIONS:
         value = func(magnitude_arg)
     return _q(value, output_unit)
 
@@ -269,9 +271,9 @@ def _call_dielectric_loss(func: Any, temperature: Any, frequency: Any) -> float:
         except TypeError:
             try:
                 value = func(temperature)
-            except TypeError:
+            except _CALLABLE_FALLBACK_EXCEPTIONS:
                 value = func(temperature_k, frequency_hz)
-        except Exception:
+        except DimensionalityError:
             value = func(temperature_k, frequency_hz)
     else:
         value = func

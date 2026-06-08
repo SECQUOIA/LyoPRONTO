@@ -134,3 +134,46 @@ def test_solve_rf_accepts_ramped_power_control(synthetic_rf_params):
     assert sol.t[-1] == pytest.approx(sol.drying_time.to("hour").magnitude)
     assert np.all(np.isfinite(sol.y))
     assert sol.diagnostics[-1].heat_terms_watts.shape == (6,)
+
+
+def test_rf_length_callable_errors_are_not_masked(synthetic_rf_params):
+    def broken_rp(height):
+        if hasattr(height, "to"):
+            raise ValueError("bug in user callable")
+        return Q_(1.4, "centimeter ** 2 * hour * torr / gram")
+
+    params = replace(synthetic_rf_params, Rp=broken_rp)
+
+    with pytest.raises(ValueError, match="bug in user callable"):
+        calc_rf_heat_terms(calc_rf_u0(params), params, 0.0)
+
+
+def test_rf_dielectric_callable_errors_are_not_masked(synthetic_rf_params):
+    def broken_epp(temperature, frequency):
+        if hasattr(temperature, "to") or hasattr(frequency, "to"):
+            raise ValueError("bug in dielectric callable")
+        return 0.02
+
+    params = replace(synthetic_rf_params, eppf=broken_epp)
+
+    with pytest.raises(ValueError, match="bug in dielectric callable"):
+        calc_rf_heat_terms(calc_rf_u0(params), params, 0.0)
+
+
+def test_rf_scalar_callable_fallbacks_still_work(synthetic_rf_params):
+    def scalar_rp(height_cm):
+        if hasattr(height_cm, "to"):
+            raise TypeError("float-only resistance")
+        return 1.4 + 0.0 * height_cm
+
+    def scalar_epp(temperature_k, frequency_hz):
+        if hasattr(temperature_k, "to") or hasattr(frequency_hz, "to"):
+            raise TypeError("float-only dielectric loss")
+        return 0.02 + 0.0 * temperature_k + 0.0 * frequency_hz
+
+    params = replace(synthetic_rf_params, Rp=scalar_rp, eppf=scalar_epp)
+
+    terms = calc_rf_heat_terms(calc_rf_u0(params), params, 0.0)
+
+    assert len(terms) == 6
+    assert np.all(np.isfinite([term.to("watt").magnitude for term in terms]))
