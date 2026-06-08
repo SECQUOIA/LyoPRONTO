@@ -64,7 +64,9 @@ from .rf import (
     solve_rf,
 )
 from .fitting import (
+    BoundedKBBTransform,
     KRpTransform,
+    KBBTransform,
     KTransform,
     RpTransform,
     SharedSeparateTransform,
@@ -79,6 +81,10 @@ from .fitting import (
     obj_expT,
     obj_pd,
     objn_pd,
+    obj_rf,
+    err_rf,
+    gen_sol_rf,
+    fit_rf_primary_drying,
 )
 
 from .high_level import (
@@ -137,6 +143,8 @@ __all__ = [
     "rf_rhs",
     "shape_factor",
     "solve_rf",
+    "BoundedKBBTransform",
+    "KBBTransform",
     "RpTransform",
     "KTransform",
     "KRpTransform",
@@ -148,7 +156,11 @@ __all__ = [
     "errn_pd",
     "obj_pd",
     "objn_pd",
+    "gen_sol_rf",
+    "err_rf",
+    "obj_rf",
     "fit_primary_drying",
+    "fit_rf_primary_drying",
     "err_expT",
     "num_errs",
     "obj_expT",

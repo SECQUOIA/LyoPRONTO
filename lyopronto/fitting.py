@@ -11,6 +11,7 @@ import numpy as np
 from scipy.optimize import least_squares, minimize
 
 from .pikal import PikalParams, solve_pikal
+from .rf import RFParams, solve_rf
 from .typed import ConstPhysProp, PrimaryDryFit, RpFormFit, is_quantity, to_magnitude
 
 _FITTING_FAILURES = (ArithmeticError, RuntimeError, ValueError, OverflowError)
@@ -70,6 +71,90 @@ class KTransform:
 
         values = _theta_array(theta, self.dimension)
         return {"Kshf": ConstPhysProp(_const_value(self.Kshf) * math.exp(values[0]))}
+
+    __call__ = transform
+
+
+@dataclass(frozen=True)
+class KBBTransform:
+    """Log-space positive transform for RF ``Kvwf``, ``Bf``, and ``Bvw``."""
+
+    Kvwf: Any
+    Bf: Any | None = None
+    Bvw: Any | None = None
+
+    def __post_init__(self) -> None:
+        if isinstance(self.Kvwf, RFParams) and self.Bf is None and self.Bvw is None:
+            object.__setattr__(self, "Bf", self.Kvwf.Bf)
+            object.__setattr__(self, "Bvw", self.Kvwf.Bvw)
+            object.__setattr__(self, "Kvwf", self.Kvwf.Kvwf)
+        if self.Bf is None or self.Bvw is None:
+            raise ValueError("KBBTransform requires Kvwf, Bf, and Bvw guesses")
+
+    @property
+    def dimension(self) -> int:
+        """Number of unconstrained parameters consumed by this transform."""
+
+        return 3
+
+    def transform(self, theta: Any) -> dict[str, Any]:
+        """Return RF fitted parameter updates for unconstrained ``theta``."""
+
+        values = _theta_array(theta, self.dimension)
+        return {
+            "Kvwf": self.Kvwf * math.exp(float(values[0])),
+            "Bf": self.Bf * math.exp(float(values[1])),
+            "Bvw": self.Bvw * math.exp(float(values[2])),
+        }
+
+    __call__ = transform
+
+
+@dataclass(frozen=True)
+class BoundedKBBTransform:
+    """Julia-style bounded logistic transform for RF ``Kvwf``, ``Bf``, ``Bvw``.
+
+    The transform maps zero-valued unconstrained parameters back to the supplied
+    guesses and asymptotically caps each value at ``guess * scale_factor``.
+    """
+
+    Kvwf: Any
+    Bf: Any | None = None
+    Bvw: Any | None = None
+    Kvwf_scalefac: float = 1e2
+    Bf_scalefac: float = 1e4
+    Bvw_scalefac: float = 1e4
+
+    def __post_init__(self) -> None:
+        if isinstance(self.Kvwf, RFParams) and self.Bf is None and self.Bvw is None:
+            object.__setattr__(self, "Bf", self.Kvwf.Bf)
+            object.__setattr__(self, "Bvw", self.Kvwf.Bvw)
+            object.__setattr__(self, "Kvwf", self.Kvwf.Kvwf)
+        if self.Bf is None or self.Bvw is None:
+            raise ValueError(
+                "BoundedKBBTransform requires Kvwf, Bf, and Bvw guesses"
+            )
+        _validate_scale_factor(self.Kvwf_scalefac, "Kvwf_scalefac")
+        _validate_scale_factor(self.Bf_scalefac, "Bf_scalefac")
+        _validate_scale_factor(self.Bvw_scalefac, "Bvw_scalefac")
+
+    @property
+    def dimension(self) -> int:
+        """Number of unconstrained parameters consumed by this transform."""
+
+        return 3
+
+    def transform(self, theta: Any) -> dict[str, Any]:
+        """Return bounded RF fitted parameter updates for ``theta``."""
+
+        values = _theta_array(theta, self.dimension)
+        return {
+            "Kvwf": _bounded_kbb_value(
+                self.Kvwf, float(values[0]), self.Kvwf_scalefac
+            ),
+            "Bf": _bounded_kbb_value(self.Bf, float(values[1]), self.Bf_scalefac),
+            "Bvw": _bounded_kbb_value(self.Bvw, float(values[2]), self.Bvw_scalefac),
+        }
 
     __call__ = transform
 
@@ -163,14 +248,14 @@ class SharedSeparateUpdates:
 def gen_sol_pd(
     theta: Any,
     transform: Any,
-    params: PikalParams,
+    params: Any,
     fitdat: PrimaryDryFit | None = None,
     *,
     badprms: Any = None,
     save_at: Any = None,
     **solve_options: Any,
 ) -> Any:
-    """Generate a typed conventional primary-drying solution for fitted params."""
+    """Generate a typed primary-drying solution for fitted Pikal or RF params."""
 
     try:
         updates = _call_transform(transform, theta)
@@ -179,7 +264,9 @@ def gen_sol_pd(
             return np.nan
         if fitdat is not None:
             save_at = fitdat.t_hr
-        return solve_pikal(fitted_params, save_at=save_at, **solve_options)
+        return _solve_primary_drying(
+            fitted_params, save_at=save_at, **solve_options
+        )
     except _FITTING_FAILURES:
         return np.nan
 
@@ -187,14 +274,14 @@ def gen_sol_pd(
 def gen_nsol_pd(
     theta: Any,
     transform: Any,
-    params: PikalParams | Sequence[PikalParams],
+    params: Any | Sequence[Any],
     fitdats: Sequence[PrimaryDryFit] | None = None,
     *,
     badprms: Any = None,
     save_ats: Sequence[Any] | None = None,
     **solve_options: Any,
 ) -> list[Any]:
-    """Generate typed solutions for several primary-drying experiments."""
+    """Generate typed Pikal or RF solutions for several drying experiments."""
 
     pos, save_values = _normalize_multi_inputs(params, fitdats, save_ats)
     try:
@@ -211,7 +298,9 @@ def gen_nsol_pd(
     sols = []
     for param, save_at in zip(fitted_params, save_values):
         try:
-            sols.append(solve_pikal(param, save_at=save_at, **solve_options))
+            sols.append(
+                _solve_primary_drying(param, save_at=save_at, **solve_options)
+            )
         except _FITTING_FAILURES:
             sols.append(np.nan)
     return sols
@@ -220,7 +309,7 @@ def gen_nsol_pd(
 def err_pd(
     theta: Any,
     transform: Any,
-    params: PikalParams,
+    params: Any,
     fitdat: PrimaryDryFit,
     *,
     tweight: float = 1.0,
@@ -228,7 +317,7 @@ def err_pd(
     verbose: bool = False,
     **solve_options: Any,
 ) -> np.ndarray:
-    """Return residuals for one fitted conventional primary-drying experiment."""
+    """Return residuals for one fitted primary-drying experiment."""
 
     sol = gen_sol_pd(
         theta,
@@ -244,7 +333,7 @@ def err_pd(
 def errn_pd(
     theta: Any,
     transform: Any,
-    params: PikalParams | Sequence[PikalParams],
+    params: Any | Sequence[Any],
     fitdats: Sequence[PrimaryDryFit],
     *,
     tweight: float = 1.0,
@@ -272,7 +361,7 @@ def errn_pd(
 def obj_pd(
     theta: Any,
     transform: Any,
-    params: PikalParams,
+    params: Any,
     fitdat: PrimaryDryFit,
     *,
     tweight: float = 1.0,
@@ -281,7 +370,7 @@ def obj_pd(
     verbose: bool = False,
     **solve_options: Any,
 ) -> float:
-    """Return scalar objective for one fitted conventional drying experiment."""
+    """Return scalar objective for one fitted primary-drying experiment."""
 
     sol = gen_sol_pd(
         theta,
@@ -303,7 +392,7 @@ def obj_pd(
 def objn_pd(
     theta: Any,
     transform: Any,
-    params: PikalParams | Sequence[PikalParams],
+    params: Any | Sequence[Any],
     fitdats: Sequence[PrimaryDryFit],
     *,
     tweight: float = 1.0,
@@ -337,8 +426,83 @@ def objn_pd(
     return value
 
 
+def gen_sol_rf(
+    theta: Any,
+    transform: Any,
+    params: RFParams,
+    fitdat: PrimaryDryFit | None = None,
+    *,
+    badprms: Any = None,
+    save_at: Any = None,
+    **solve_options: Any,
+) -> Any:
+    """Generate a typed RF primary-drying solution for fitted params."""
+
+    return gen_sol_pd(
+        theta,
+        transform,
+        params,
+        fitdat,
+        badprms=badprms,
+        save_at=save_at,
+        **solve_options,
+    )
+
+
+def err_rf(
+    theta: Any,
+    transform: Any,
+    params: RFParams,
+    fitdat: PrimaryDryFit,
+    *,
+    tweight: float = 1.0,
+    badprms: Any = None,
+    verbose: bool = False,
+    **solve_options: Any,
+) -> np.ndarray:
+    """Return residuals for one fitted RF primary-drying experiment."""
+
+    return err_pd(
+        theta,
+        transform,
+        params,
+        fitdat,
+        tweight=tweight,
+        badprms=badprms,
+        verbose=verbose,
+        **solve_options,
+    )
+
+
+def obj_rf(
+    theta: Any,
+    transform: Any,
+    params: RFParams,
+    fitdat: PrimaryDryFit,
+    *,
+    tweight: float = 1.0,
+    tvw_weight: float = 1.0,
+    badprms: Any = None,
+    verbose: bool = False,
+    **solve_options: Any,
+) -> float:
+    """Return scalar objective for one fitted RF primary-drying experiment."""
+
+    return obj_pd(
+        theta,
+        transform,
+        params,
+        fitdat,
+        tweight=tweight,
+        tvw_weight=tvw_weight,
+        badprms=badprms,
+        verbose=verbose,
+        **solve_options,
+    )
+
+
 def fit_primary_drying(
-    params: PikalParams | Sequence[PikalParams],
+    params: Any | Sequence[Any],
     fitdat: PrimaryDryFit | Sequence[PrimaryDryFit],
     transform: Any,
     theta0: Any | None = None,
@@ -351,7 +515,7 @@ def fit_primary_drying(
     optimizer_method: str | None = None,
     **optimizer_options: Any,
 ) -> Any:
-    """Fit conventional primary-drying parameters with SciPy optimizers.
+    """Fit primary-drying parameters with SciPy optimizers.
 
     Notes
     -----
@@ -448,6 +612,40 @@ def fit_primary_drying(
         badprms,
     )
     return raw
+
+
+def fit_rf_primary_drying(
+    params: RFParams,
+    fitdat: PrimaryDryFit,
+    transform: Any,
+    theta0: Any | None = None,
+    *,
+    method: str = "least_squares",
+    tweight: float = 1.0,
+    tvw_weight: float = 1.0,
+    badprms: Any = None,
+    nan_penalty: float = 1e12,
+    optimizer_method: str | None = None,
+    **optimizer_options: Any,
+) -> Any:
+    """Fit one RF experiment's wall/product coupling and absorption parameters.
+
+    Use :func:`fit_primary_drying` directly for multi-experiment RF fitting.
+    """
+
+    return fit_primary_drying(
+        params,
+        fitdat,
+        transform,
+        theta0,
+        method=method,
+        tweight=tweight,
+        tvw_weight=tvw_weight,
+        badprms=badprms,
+        nan_penalty=nan_penalty,
+        optimizer_method=optimizer_method,
+        **optimizer_options,
+    )
 
 
 def num_errs(fit: PrimaryDryFit) -> int:
@@ -570,6 +768,29 @@ def _const_value(value: Any) -> Any:
     return value
 
 
+def _validate_scale_factor(value: Any, name: str) -> None:
+    scale = float(value)
+    if not math.isfinite(scale) or scale <= 1.0:
+        raise ValueError(f"{name} must be greater than 1")
+
+
+def _logit(value: float) -> float:
+    return math.log(value / (1.0 - value))
+
+
+def _logistic(value: float) -> float:
+    if value >= 0.0:
+        return 1.0 / (1.0 + math.exp(-value))
+    exp_value = math.exp(value)
+    return exp_value / (1.0 + exp_value)
+
+
+def _bounded_kbb_value(guess: Any, theta: float, scale_factor: float) -> Any:
+    scale = float(scale_factor)
+    shifted = theta + _logit(1.0 / scale)
+    return guess * scale * _logistic(shifted)
+
+
 def _transform_dimension(transform: Any) -> int:
     if transform is None:
         return 0
@@ -598,24 +819,34 @@ def _call_transform(
     raise TypeError("transforms must return parameter-update dicts")
 
 
-def _replace_params(params: PikalParams, updates: dict[str, Any]) -> PikalParams:
-    allowed = set(PikalParams.__dataclass_fields__)
+def _replace_params(params: Any, updates: dict[str, Any]) -> Any:
+    if not hasattr(params, "__dataclass_fields__"):
+        raise TypeError("params must be a dataclass parameter object")
+    allowed = set(params.__dataclass_fields__)
     unknown = set(updates) - allowed
     if unknown:
         names = ", ".join(sorted(unknown))
-        raise ValueError(f"unknown PikalParams update field(s): {names}")
+        raise ValueError(f"unknown {type(params).__name__} update field(s): {names}")
     return replace(params, **updates)
 
 
+def _solve_primary_drying(params: Any, *, save_at: Any = None, **solve_options: Any) -> Any:
+    if isinstance(params, RFParams):
+        return solve_rf(params, save_at=save_at, **solve_options)
+    if isinstance(params, PikalParams):
+        return solve_pikal(params, save_at=save_at, **solve_options)
+    raise TypeError("params must be PikalParams or RFParams")
+
+
 def _normalize_multi_inputs(
-    params: PikalParams | Sequence[PikalParams],
+    params: Any | Sequence[Any],
     fitdats: Sequence[PrimaryDryFit] | None,
     save_ats: Sequence[Any] | None,
-) -> tuple[list[PikalParams], list[Any]]:
+) -> tuple[list[Any], list[Any]]:
     fit_list = list(fitdats) if fitdats is not None else None
     save_list = list(save_ats) if save_ats is not None else None
 
-    if isinstance(params, PikalParams):
+    if isinstance(params, (PikalParams, RFParams)):
         if fit_list is not None:
             n_exp = len(fit_list)
         elif save_list is not None:
@@ -693,7 +924,7 @@ def _finite_scalar_or_penalty(value: Any, penalty: float) -> float:
 
 def _attach_fit_result(
     result: Any,
-    params: PikalParams | Sequence[PikalParams],
+    params: Any | Sequence[Any],
     fitdat: PrimaryDryFit | Sequence[PrimaryDryFit],
     transform: Any,
     method: str,
@@ -734,7 +965,7 @@ def _attach_fit_result(
         )
     else:
         fit = cast(PrimaryDryFit, fitdat)
-        param = cast(PikalParams, params)
+        param = params
         updates = cast(dict[str, Any], _call_transform(transform, result.x))
         result.fitted_params = _replace_params(param, updates)
         result.solution = gen_sol_pd(
@@ -837,6 +1068,10 @@ def _valid_solution(solution: Any, fit: PrimaryDryFit) -> bool:
         return False
     if hasattr(solution, "terminated") and not bool(solution.terminated):
         return False
+    if hasattr(solution, "terminated_by_drying") and not bool(
+        solution.terminated_by_drying
+    ):
+        return False
     if not hasattr(solution, "t") or not hasattr(solution, "y"):
         return False
 
@@ -871,6 +1106,8 @@ def _valid_solution(solution: Any, fit: PrimaryDryFit) -> bool:
 
 
 __all__ = [
+    "BoundedKBBTransform",
+    "KBBTransform",
     "RpTransform",
     "KTransform",
     "KRpTransform",
@@ -882,7 +1119,11 @@ __all__ = [
     "errn_pd",
     "obj_pd",
     "objn_pd",
+    "gen_sol_rf",
+    "err_rf",
+    "obj_rf",
     "fit_primary_drying",
+    "fit_rf_primary_drying",
     "num_errs",
     "err_expT",
     "obj_expT",

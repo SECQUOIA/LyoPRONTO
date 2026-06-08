@@ -2,18 +2,24 @@
 
 from dataclasses import replace
 import math
-
 import numpy as np
 import pytest
 
 from lyopronto import (
+    BoundedKBBTransform,
+    KBBTransform,
+    PrimaryDryFit,
     Q_,
     RFParams,
     RampedVariable,
     RpFormFit,
     calc_rf_heat_terms,
     calc_rf_u0,
+    err_rf,
+    fit_rf_primary_drying,
+    gen_sol_rf,
     get_rf_tstops,
+    obj_rf,
     physical_properties,
     solve_rf,
     vials,
@@ -177,3 +183,141 @@ def test_rf_scalar_callable_fallbacks_still_work(synthetic_rf_params):
 
     assert len(terms) == 6
     assert np.all(np.isfinite([term.to("watt").magnitude for term in terms]))
+
+
+def _rf_fit_data(params, save_at=None):
+    if save_at is None:
+        save_at = np.linspace(0.0, 14.0, 5)
+    sol = solve_rf(params, t_span=(0.0, 80.0), save_at=save_at)
+    return PrimaryDryFit(sol.t_hours, sol.tf, Tvws=sol.tvw, t_end=sol.drying_time)
+
+
+def _ratio(value, target):
+    return value.to(target.units).magnitude / target.magnitude
+
+
+def test_kbb_transforms_map_rf_guess_values(synthetic_rf_params):
+    transform = KBBTransform(
+        synthetic_rf_params.Kvwf * 0.5,
+        synthetic_rf_params.Bf * 0.5,
+        synthetic_rf_params.Bvw * 0.5,
+    )
+
+    updates = transform(np.log([2.0, 2.0, 2.0]))
+
+    assert _ratio(updates["Kvwf"], synthetic_rf_params.Kvwf) == pytest.approx(1.0)
+    assert _ratio(updates["Bf"], synthetic_rf_params.Bf) == pytest.approx(1.0)
+    assert _ratio(updates["Bvw"], synthetic_rf_params.Bvw) == pytest.approx(1.0)
+
+    bounded = BoundedKBBTransform(synthetic_rf_params)
+    bounded_updates = bounded(np.zeros(3))
+
+    assert _ratio(bounded_updates["Kvwf"], synthetic_rf_params.Kvwf) == pytest.approx(
+        1.0
+    )
+    assert _ratio(bounded_updates["Bf"], synthetic_rf_params.Bf) == pytest.approx(1.0)
+    assert _ratio(bounded_updates["Bvw"], synthetic_rf_params.Bvw) == pytest.approx(
+        1.0
+    )
+
+    high = bounded(np.full(3, 1000.0))
+    assert _ratio(high["Kvwf"], synthetic_rf_params.Kvwf) <= 1e2
+    assert _ratio(high["Bf"], synthetic_rf_params.Bf) <= 1e4
+    assert _ratio(high["Bvw"], synthetic_rf_params.Bvw) <= 1e4
+
+    with pytest.raises(ValueError, match="Kvwf_scalefac"):
+        BoundedKBBTransform(synthetic_rf_params, Kvwf_scalefac=1.0)
+
+
+def test_rf_solution_objective_and_residuals_use_primary_dry_fit(
+    synthetic_rf_params,
+):
+    fit = _rf_fit_data(synthetic_rf_params)
+    transform = KBBTransform(
+        synthetic_rf_params.Kvwf * 0.5,
+        synthetic_rf_params.Bf * 0.5,
+        synthetic_rf_params.Bvw * 0.5,
+    )
+    exact = np.log([2.0, 2.0, 2.0])
+
+    sol = gen_sol_rf(exact, transform, synthetic_rf_params, fit)
+    assert sol.terminated_by_drying
+    assert obj_rf(exact, transform, synthetic_rf_params, fit) == pytest.approx(
+        0.0, abs=1e-10
+    )
+    assert np.isnan(
+        obj_rf(
+            exact,
+            transform,
+            synthetic_rf_params,
+            fit,
+            badprms=lambda _params: True,
+        )
+    )
+
+    residuals = err_rf(np.zeros(3), transform, synthetic_rf_params, fit)
+    n_tf = int(sum(fit.Tf_iend))
+    n_tvw = int(sum(fit.Tvw_iend))
+    assert np.any(np.abs(residuals[:n_tf]) > 0.0)
+    assert np.any(np.abs(residuals[n_tf : n_tf + n_tvw]) > 0.0)
+
+
+def test_fit_rf_primary_drying_least_squares_recovers_kbb(synthetic_rf_params):
+    fit = _rf_fit_data(synthetic_rf_params)
+    transform = KBBTransform(
+        synthetic_rf_params.Kvwf * 0.5,
+        synthetic_rf_params.Bf * 0.5,
+        synthetic_rf_params.Bvw * 0.5,
+    )
+
+    result = fit_rf_primary_drying(
+        synthetic_rf_params,
+        fit,
+        transform,
+        max_nfev=16,
+        xtol=1e-7,
+        ftol=1e-7,
+        gtol=1e-7,
+    )
+
+    fitted = result.fitted_params
+    assert result.success
+    assert result.objective == pytest.approx(0.0, abs=1e-8)
+    assert _ratio(fitted.Kvwf, synthetic_rf_params.Kvwf) == pytest.approx(
+        1.0, rel=0.3
+    )
+    assert _ratio(fitted.Bf, synthetic_rf_params.Bf) == pytest.approx(1.0, rel=0.5)
+    assert _ratio(fitted.Bvw, synthetic_rf_params.Bvw) == pytest.approx(1.0, rel=0.3)
+
+
+def test_fit_rf_primary_drying_minimize_recovers_kbb(synthetic_rf_params):
+    fit = _rf_fit_data(synthetic_rf_params, save_at=np.array([0.0, 14.0]))
+    transform = KBBTransform(
+        synthetic_rf_params.Kvwf * 0.5,
+        synthetic_rf_params.Bf * 0.5,
+        synthetic_rf_params.Bvw * 0.5,
+    )
+    rough_objective = obj_rf(np.zeros(3), transform, synthetic_rf_params, fit)
+
+    result = fit_rf_primary_drying(
+        synthetic_rf_params,
+        fit,
+        transform,
+        theta0=np.log([2.0, 2.0, 2.0]) + np.array([0.02, -0.01, 0.015]),
+        method="minimize",
+        optimizer_method="Nelder-Mead",
+        options={"maxiter": 20, "xatol": 5e-2, "fatol": 2e-2},
+    )
+
+    fitted = result.fitted_params
+    assert result.success
+    assert result.fit_method == "minimize"
+    assert result.nfev > transform.dimension
+    assert result.objective < rough_objective
+    assert _ratio(fitted.Kvwf, synthetic_rf_params.Kvwf) == pytest.approx(
+        1.0, rel=0.3
+    )
+    assert _ratio(fitted.Bf, synthetic_rf_params.Bf) == pytest.approx(1.0, rel=0.5)
+    assert _ratio(fitted.Bvw, synthetic_rf_params.Bvw) == pytest.approx(
+        1.0, rel=0.3
+    )
