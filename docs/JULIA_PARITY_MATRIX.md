@@ -24,15 +24,15 @@ output table shapes.
 | `RampedVariable` | ported | `lyopronto.typed.RampedVariable` | `constant`, `linear`, and `multi` constructors. |
 | `ConstPhysProp` | ported | `lyopronto.typed.ConstPhysProp` | Callable constant physical property. |
 | `PrimaryDryFit` | ported | `lyopronto.typed.PrimaryDryFit` | Fitting-data container for product temperature, vial-wall temperature/endpoint, and drying end-time data. |
-| `end_drying_callback` | partially ported | `lyopronto.pikal.solve_pikal` | Conventional Pikal terminal event is ported; RF remains planned in Issue #45. |
-| `calc_u0` | partially ported | `lyopronto.pikal.calc_pikal_u0` | Pikal initial-state helper is ported; RF remains planned in Issue #45. |
-| `get_tstops` | partially ported | `lyopronto.pikal.get_pikal_tstops` | Pikal extracts stops from ramped shelf and pressure controls; RF remains planned in Issue #45. |
+| `end_drying_callback` | ported | `lyopronto.pikal.solve_pikal`, `lyopronto.rf.solve_rf` | Conventional and RF solvers stop at drying completion. |
+| `calc_u0` | ported | `lyopronto.pikal.calc_pikal_u0`, `lyopronto.rf.calc_rf_u0` | Initial-state helpers for Pikal and RF typed solvers. |
+| `get_tstops` | ported | `lyopronto.pikal.get_pikal_tstops`, `lyopronto.rf.get_rf_tstops` | Pikal and RF extract stops from ramped controls. |
 | `lyo_1d_dae_f` | ported | `lyopronto.pikal.calc_md_q`, `lyopronto.pikal.solve_pikal` | Python solves the height ODE with the Pikal algebraic temperature balance through SciPy. |
 | `ParamObjPikal` | ported | `lyopronto.pikal.PikalParams` | Typed Pikal parameter dataclass. |
 | `RpEstimator` | ported | `lyopronto.pikal.RpEstimator` | Direct Rp estimation input bundle for typed Pikal data. |
 | `calc_hRp_T` | ported | `lyopronto.pikal.calc_hRp_T` | Direct Rp-vs-height estimate from temperature data; returns dried height in cm and Rp in `cm^2*hr*Torr/g`. |
-| `lumped_cap_rf!` | planned | Issue #45 | RF/microwave RHS. |
-| `ParamObjRF` | planned | Issue #45 | Typed RF parameter dataclass. |
+| `lumped_cap_rf!` | ported | `lyopronto.rf.rf_rhs`, `lyopronto.rf.calc_rf_diagnostics` | RF/microwave RHS with heat diagnostics in Julia order. |
+| `ParamObjRF` | ported | `lyopronto.rf.RFParams` | Typed RF parameter dataclass with tuple-of-tuples constructor. |
 | `gen_sol_pd` | partially ported | `lyopronto.fitting.gen_sol_pd` | Conventional Pikal solution generator is ported; RF remains planned in Issue #46. |
 | `obj_pd` | partially ported | `lyopronto.fitting.obj_pd` | Conventional Pikal scalar objective is ported; RF remains planned in Issue #46. |
 | `gen_nsol_pd` | partially ported | `lyopronto.fitting.gen_nsol_pd` | Multi-experiment conventional Pikal fitting helper with shared/separate groups; RF remains planned in Issue #46. |
@@ -77,11 +77,10 @@ top-level imports from `lyopronto`.
 - `physical_properties` follows the same module-level policy because it
   contains constants, aliases, and correlations that are easier to keep
   coherent as one namespace.
-- Future RF names should start in `lyopronto.rf`. Once the API stabilizes,
-  direct top-level imports should be limited to the primary workflow objects
-  analogous to `RFParams`, `RFSolution`, `RFDiagnostics`, and `solve_rf`.
-  Lower-level RF heat and integration helpers should remain module-level
-  unless they become broadly used user-facing APIs.
+- RF names start in `lyopronto.rf`. The primary workflow objects and solver
+  are also available as direct top-level imports: `RFParams`, `RFSolution`,
+  `RFDiagnostics`, and `solve_rf`. Lower-level RF heat and integration helpers
+  remain module-level unless they become broadly used user-facing APIs.
 
 ## RF Preflight Notes
 

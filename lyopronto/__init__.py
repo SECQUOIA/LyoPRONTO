@@ -31,6 +31,7 @@ from . import typed
 from . import physical_properties
 from . import vials
 from . import pikal
+from . import rf
 from . import fitting
 from . import cycle_time
 
@@ -49,6 +50,18 @@ from .pikal import (
     legacy_unknown_rp_to_hRp,
     pikal_solution_to_legacy_table,
     solve_pikal,
+)
+from .rf import (
+    RFDiagnostics,
+    RFParams,
+    RFSolution,
+    calc_rf_diagnostics,
+    calc_rf_heat_terms,
+    calc_rf_u0,
+    get_rf_tstops,
+    rf_rhs,
+    shape_factor,
+    solve_rf,
 )
 from .fitting import (
     KRpTransform,
@@ -92,6 +105,7 @@ __all__ = [
     "physical_properties",
     "vials",
     "pikal",
+    "rf",
     "fitting",
     "cycle_time",
     "Q_",
@@ -113,6 +127,16 @@ __all__ = [
     "legacy_unknown_rp_to_hRp",
     "pikal_solution_to_legacy_table",
     "solve_pikal",
+    "RFDiagnostics",
+    "RFParams",
+    "RFSolution",
+    "calc_rf_diagnostics",
+    "calc_rf_heat_terms",
+    "calc_rf_u0",
+    "get_rf_tstops",
+    "rf_rhs",
+    "shape_factor",
+    "solve_rf",
     "RpTransform",
     "KTransform",
     "KRpTransform",
