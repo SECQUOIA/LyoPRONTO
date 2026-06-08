@@ -39,7 +39,7 @@ output table shapes.
 | `nls_pd` | partially ported | `lyopronto.fitting.err_pd`, `lyopronto.fitting.errn_pd`, `lyopronto.fitting.fit_primary_drying` | Conventional Pikal residual wrappers and SciPy least-squares entry point are ported; RF remains planned in Issue #46. |
 | `nls_pd!` | intentionally unsupported | Python fitting functions return results | Julia mutating API is not a Python public API target. |
 | `qrf_integrate` | planned | Issue #45 | RF heat-term integration helper. |
-| `identify_pd_end` | planned | Issue #44 | Pirani-based end-of-primary-drying detection. |
+| `identify_pd_end` | ported | `lyopronto.cycle_time.identify_pd_end` | Pirani-based end-of-primary-drying detection. |
 | `get_vial_radii` | planned | Issue #39 | SCHOTT vial metadata utility. |
 | `get_vial_mass` | planned | Issue #39 | SCHOTT vial metadata utility. |
 | `get_vial_shape` | planned | Issue #39 | SCHOTT vial shape utility. |
