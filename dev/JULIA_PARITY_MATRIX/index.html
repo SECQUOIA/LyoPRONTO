@@ -450,6 +450,61 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#status-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Status Values
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#public-api-export-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Public API Export Policy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rf-preflight-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RF Preflight Notes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parity-test-categories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parity Test Categories
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#static-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Static Checks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#non-exported-julia-helpers" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -484,6 +539,16 @@ at commit <code>f452ad4</code>.</p>
 work. Existing dict-based calculators, optimizers, design-space generation,
 and web-style I/O remain supported and keep their legacy float units and
 output table shapes.</p>
+<h2 id="status-values">Status Values</h2>
+<ul>
+<li><code>ported</code>: the Python API covers the Julia export's intended public behavior.</li>
+<li><code>partially ported</code>: the conventional Pikal path is available, but RF or
+  another Julia mode remains planned.</li>
+<li><code>planned</code>: no Python implementation is present yet; the issue listed in the
+  location column owns the port.</li>
+<li><code>intentionally unsupported</code>: the Julia API shape does not map to the Python
+  public API, usually because the Julia export is mutating.</li>
+</ul>
 <table>
 <thead>
 <tr>
@@ -586,15 +651,15 @@ output table shapes.</p>
 </tr>
 <tr>
 <td><code>gen_nsol_pd</code></td>
-<td>ported</td>
+<td>partially ported</td>
 <td><code>lyopronto.fitting.gen_nsol_pd</code></td>
-<td>Multi-experiment conventional Pikal fitting helper with shared/separate groups.</td>
+<td>Multi-experiment conventional Pikal fitting helper with shared/separate groups; RF remains planned in Issue #46.</td>
 </tr>
 <tr>
 <td><code>objn_pd</code></td>
-<td>ported</td>
+<td>partially ported</td>
 <td><code>lyopronto.fitting.objn_pd</code></td>
-<td>Multi-experiment conventional Pikal scalar objective.</td>
+<td>Multi-experiment conventional Pikal scalar objective; RF remains planned in Issue #46.</td>
 </tr>
 <tr>
 <td><code>KRp_transform_basic</code></td>
@@ -676,27 +741,27 @@ output table shapes.</p>
 </tr>
 <tr>
 <td><code>get_vial_radii</code></td>
-<td>planned</td>
-<td>Issue #39</td>
-<td>SCHOTT vial metadata utility.</td>
+<td>ported</td>
+<td><code>lyopronto.vials.get_vial_radii</code></td>
+<td>SCHOTT vial metadata utility; module-level public API.</td>
 </tr>
 <tr>
 <td><code>get_vial_mass</code></td>
-<td>planned</td>
-<td>Issue #39</td>
-<td>SCHOTT vial metadata utility.</td>
+<td>ported</td>
+<td><code>lyopronto.vials.get_vial_mass</code></td>
+<td>SCHOTT vial metadata utility; module-level public API.</td>
 </tr>
 <tr>
 <td><code>get_vial_shape</code></td>
-<td>planned</td>
-<td>Issue #39</td>
-<td>SCHOTT vial shape utility.</td>
+<td>ported</td>
+<td><code>lyopronto.vials.get_vial_shape</code></td>
+<td>SCHOTT vial shape utility; module-level public API.</td>
 </tr>
 <tr>
 <td><code>make_outlines</code></td>
-<td>planned</td>
-<td>Issue #39</td>
-<td>Vial/fill outline utility.</td>
+<td>ported</td>
+<td><code>lyopronto.vials.make_outlines</code></td>
+<td>Vial/fill outline utility; module-level public API.</td>
 </tr>
 <tr>
 <td><code>ECCURT</code></td>
@@ -706,6 +771,97 @@ output table shapes.</p>
 </tr>
 </tbody>
 </table>
+<h2 id="public-api-export-policy">Public API Export Policy</h2>
+<p>The package exposes both stable module namespaces and selected direct
+top-level imports from <code>lyopronto</code>.</p>
+<ul>
+<li>Module namespaces imported by <code>lyopronto.__init__</code>, such as
+  <code>lyopronto.typed</code>, <code>lyopronto.pikal</code>, <code>lyopronto.fitting</code>,
+  <code>lyopronto.cycle_time</code>, <code>lyopronto.physical_properties</code>, and
+  <code>lyopronto.vials</code>, are public entry points.</li>
+<li>Direct top-level imports are reserved for stable typed workflow objects and
+  functions that are expected to be common end-user imports, for example
+  <code>PikalParams</code>, <code>PikalSolution</code>, <code>PrimaryDryFit</code>, <code>solve_pikal</code>,
+  fitting transforms, and <code>identify_pd_end</code>.</li>
+<li>Domain utility families with several related helpers remain module-level
+  public APIs. The vial helpers are intentionally used as
+  <code>lyopronto.vials.get_vial_radii(...)</code> or <code>from lyopronto import vials</code>;
+  their exported names are governed by <code>lyopronto.vials.__all__</code>, not by
+  <code>lyopronto.__all__</code>.</li>
+<li><code>physical_properties</code> follows the same module-level policy because it
+  contains constants, aliases, and correlations that are easier to keep
+  coherent as one namespace.</li>
+<li>Future RF names should start in <code>lyopronto.rf</code>. Once the API stabilizes,
+  direct top-level imports should be limited to the primary workflow objects
+  analogous to <code>RFParams</code>, <code>RFSolution</code>, <code>RFDiagnostics</code>, and <code>solve_rf</code>.
+  Lower-level RF heat and integration helpers should remain module-level
+  unless they become broadly used user-facing APIs.</li>
+</ul>
+<h2 id="rf-preflight-notes">RF Preflight Notes</h2>
+<p>RF work in Issues #45 and #46 should follow the typed Pikal and fitting
+patterns already used in Python rather than extending the legacy dict-only
+interfaces.</p>
+<ul>
+<li><code>RFParams</code> should be a frozen dataclass parallel to <code>PikalParams</code>. It should
+  keep common fields such as <code>Rp</code>, <code>hf0</code>, <code>csolid</code>, <code>rho_solution</code>, <code>Kshf</code>,
+  <code>Av</code>, <code>Ap</code>, <code>pch</code>, and <code>Tsh</code>, then add RF-specific controls and material
+  properties explicitly rather than overloading the Pikal fields.</li>
+<li><code>RFSolution</code> should parallel <code>PikalSolution</code>: <code>t</code>, <code>y</code>, <code>diagnostics</code>,
+  <code>params</code>, optional raw solver segments, typed accessors, and any legacy table
+  adapter needed by callers.</li>
+<li>Heat diagnostics should be explicit. Expected diagnostic fields include
+  shelf heat, RF heat, total heat, mass-flow rate, sublimation temperature,
+  product/frozen height, product temperature, chamber pressure, shelf
+  temperature, and product resistance.</li>
+<li>Time-varying RF controls should accept <code>RampedVariable</code> or compatible
+  callables, and RF time stops should be merged with shelf and chamber-pressure
+  stops in the same style as <code>get_pikal_tstops</code>.</li>
+<li>Plain floats should use the current Julia-facing canonical units: time in
+  hours, heights in centimeters, temperatures in kelvin, chamber pressure in
+  torr, areas in square centimeters, product resistance in
+  <code>cm^2*hr*Torr/g</code>, concentration in <code>g/mL</code>, and heat-transfer coefficient in
+  <code>cal/s/K/cm^2</code>.</li>
+<li>RF heat diagnostics should use watts. The solver should define whether RF
+  power controls are per vial or total batch power before implementation; the
+  preferred solver-level convention is per-vial watts, with batch conversion
+  handled outside the RHS. Dielectric factors such as <code>eppf</code> are dimensionless.</li>
+<li>Exact Julia parity should cover equations, event behavior, time-stop
+  handling, fitting objective weights, and transform semantics. Python-specific
+  corrections should be documented where they improve API safety, such as
+  explicit Pint unit handling, clear per-vial versus batch power conventions,
+  and non-mutating return values instead of Julia <code>!</code>-style APIs.</li>
+</ul>
+<h2 id="parity-test-categories">Parity Test Categories</h2>
+<p>The existing tests mix three parity categories. New Julia-parity tests should
+make the category clear in the test name or assertion comments.</p>
+<ul>
+<li>Exact Julia parity checks assert reference constants, formulas, table values,
+  and direct API behavior that should not drift. Current examples include
+  <code>test_rpformfit_matches_julia_formula_with_quantities</code>,
+  <code>test_constant_ramped_variable_matches_julia_cases</code>,
+  <code>test_get_vial_radii_matches_julia_table_for_6r</code>,
+  <code>test_get_vial_mass_and_thickness_match_julia_table_for_6r</code>, and
+  <code>test_physical_property_constants_match_julia_units_and_values</code>.</li>
+<li>Bounded parity checks assert numerical behavior within tolerances where
+  SciPy solvers, interpolation, or fitting optimizers can differ slightly from
+  Julia. Current examples include the Pikal sucrose benchmark, direct
+  <code>calc_hRp_T</code> recovery tests, primary-drying fit recovery tests, and residual
+  weighting tests.</li>
+<li>Intentional Python divergences cover safer Python API behavior and should
+  stay documented in tests. Current examples include corrected absolute-index
+  handling in <code>identify_pd_end</code>, explicit input validation for Pirani traces,
+  quantity-aware inputs and outputs, and non-mutating fitting functions in
+  place of Julia <code>!</code> APIs.</li>
+</ul>
+<h2 id="static-checks">Static Checks</h2>
+<p>Active CI workflows currently run pytest-based suites for PRs, main-branch
+pushes, and manual slow-test dispatches. The development extra includes
+<code>ruff</code> and <code>mypy</code>, but the active GitHub Actions workflows do not enforce
+either static checker yet.</p>
+<p>Ruff can continue to be run manually while a dedicated CI decision is pending.
+Mypy is not expected to be clean without follow-up work because SciPy stubs and
+some existing fitting annotations still need attention. A separate issue should
+track adding static-check CI or documenting why these checks remain manual.</p>
 <h2 id="non-exported-julia-helpers">Non-Exported Julia Helpers</h2>
 <p>These helpers are not public exports from Julia <code>LyoPronto.jl</code>, but they are
 tracked here because downstream typed APIs depend on them.</p>
