@@ -8,6 +8,16 @@ work. Existing dict-based calculators, optimizers, design-space generation,
 and web-style I/O remain supported and keep their legacy float units and
 output table shapes.
 
+## Status Values
+
+- `ported`: the Python API covers the Julia export's intended public behavior.
+- `partially ported`: the conventional Pikal path is available, but RF or
+  another Julia mode remains planned.
+- `planned`: no Python implementation is present yet; the issue listed in the
+  location column owns the port.
+- `intentionally unsupported`: the Julia API shape does not map to the Python
+  public API, usually because the Julia export is mutating.
+
 | Julia export | Python status | Python location | Notes |
 | --- | --- | --- | --- |
 | `RpFormFit` | ported | `lyopronto.typed.RpFormFit` | Callable `R0 + A1*x/(1 + A2*x)`. |
@@ -40,11 +50,108 @@ output table shapes.
 | `nls_pd!` | intentionally unsupported | Python fitting functions return results | Julia mutating API is not a Python public API target. |
 | `qrf_integrate` | planned | Issue #45 | RF heat-term integration helper. |
 | `identify_pd_end` | ported | `lyopronto.cycle_time.identify_pd_end` | Pirani-based end-of-primary-drying detection. |
-| `get_vial_radii` | planned | Issue #39 | SCHOTT vial metadata utility. |
-| `get_vial_mass` | planned | Issue #39 | SCHOTT vial metadata utility. |
-| `get_vial_shape` | planned | Issue #39 | SCHOTT vial shape utility. |
-| `make_outlines` | planned | Issue #39 | Vial/fill outline utility. |
+| `get_vial_radii` | ported | `lyopronto.vials.get_vial_radii` | SCHOTT vial metadata utility; module-level public API. |
+| `get_vial_mass` | ported | `lyopronto.vials.get_vial_mass` | SCHOTT vial metadata utility; module-level public API. |
+| `get_vial_shape` | ported | `lyopronto.vials.get_vial_shape` | SCHOTT vial shape utility; module-level public API. |
+| `make_outlines` | ported | `lyopronto.vials.make_outlines` | Vial/fill outline utility; module-level public API. |
 | `ECCURT` | planned | Issue #47 | Equipment-capability interpolation module. |
+
+## Public API Export Policy
+
+The package exposes both stable module namespaces and selected direct
+top-level imports from `lyopronto`.
+
+- Module namespaces imported by `lyopronto.__init__`, such as
+  `lyopronto.typed`, `lyopronto.pikal`, `lyopronto.fitting`,
+  `lyopronto.cycle_time`, `lyopronto.physical_properties`, and
+  `lyopronto.vials`, are public entry points.
+- Direct top-level imports are reserved for stable typed workflow objects and
+  functions that are expected to be common end-user imports, for example
+  `PikalParams`, `PikalSolution`, `PrimaryDryFit`, `solve_pikal`,
+  fitting transforms, and `identify_pd_end`.
+- Domain utility families with several related helpers remain module-level
+  public APIs. The vial helpers are intentionally used as
+  `lyopronto.vials.get_vial_radii(...)` or `from lyopronto import vials`;
+  their exported names are governed by `lyopronto.vials.__all__`, not by
+  `lyopronto.__all__`.
+- `physical_properties` follows the same module-level policy because it
+  contains constants, aliases, and correlations that are easier to keep
+  coherent as one namespace.
+- Future RF names should start in `lyopronto.rf`. Once the API stabilizes,
+  direct top-level imports should be limited to the primary workflow objects
+  analogous to `RFParams`, `RFSolution`, `RFDiagnostics`, and `solve_rf`.
+  Lower-level RF heat and integration helpers should remain module-level
+  unless they become broadly used user-facing APIs.
+
+## RF Preflight Notes
+
+RF work in Issues #45 and #46 should follow the typed Pikal and fitting
+patterns already used in Python rather than extending the legacy dict-only
+interfaces.
+
+- `RFParams` should be a frozen dataclass parallel to `PikalParams`. It should
+  keep common fields such as `Rp`, `hf0`, `csolid`, `rho_solution`, `Kshf`,
+  `Av`, `Ap`, `pch`, and `Tsh`, then add RF-specific controls and material
+  properties explicitly rather than overloading the Pikal fields.
+- `RFSolution` should parallel `PikalSolution`: `t`, `y`, `diagnostics`,
+  `params`, optional raw solver segments, typed accessors, and any legacy table
+  adapter needed by callers.
+- Heat diagnostics should be explicit. Expected diagnostic fields include
+  shelf heat, RF heat, total heat, mass-flow rate, sublimation temperature,
+  product/frozen height, product temperature, chamber pressure, shelf
+  temperature, and product resistance.
+- Time-varying RF controls should accept `RampedVariable` or compatible
+  callables, and RF time stops should be merged with shelf and chamber-pressure
+  stops in the same style as `get_pikal_tstops`.
+- Plain floats should use the current Julia-facing canonical units: time in
+  hours, heights in centimeters, temperatures in kelvin, chamber pressure in
+  torr, areas in square centimeters, product resistance in
+  `cm^2*hr*Torr/g`, concentration in `g/mL`, and heat-transfer coefficient in
+  `cal/s/K/cm^2`.
+- RF heat diagnostics should use watts. The solver should define whether RF
+  power controls are per vial or total batch power before implementation; the
+  preferred solver-level convention is per-vial watts, with batch conversion
+  handled outside the RHS. Dielectric factors such as `eppf` are dimensionless.
+- Exact Julia parity should cover equations, event behavior, time-stop
+  handling, fitting objective weights, and transform semantics. Python-specific
+  corrections should be documented where they improve API safety, such as
+  explicit Pint unit handling, clear per-vial versus batch power conventions,
+  and non-mutating return values instead of Julia `!`-style APIs.
+
+## Parity Test Categories
+
+The existing tests mix three parity categories. New Julia-parity tests should
+make the category clear in the test name or assertion comments.
+
+- Exact Julia parity checks assert reference constants, formulas, table values,
+  and direct API behavior that should not drift. Current examples include
+  `test_rpformfit_matches_julia_formula_with_quantities`,
+  `test_constant_ramped_variable_matches_julia_cases`,
+  `test_get_vial_radii_matches_julia_table_for_6r`,
+  `test_get_vial_mass_and_thickness_match_julia_table_for_6r`, and
+  `test_physical_property_constants_match_julia_units_and_values`.
+- Bounded parity checks assert numerical behavior within tolerances where
+  SciPy solvers, interpolation, or fitting optimizers can differ slightly from
+  Julia. Current examples include the Pikal sucrose benchmark, direct
+  `calc_hRp_T` recovery tests, primary-drying fit recovery tests, and residual
+  weighting tests.
+- Intentional Python divergences cover safer Python API behavior and should
+  stay documented in tests. Current examples include corrected absolute-index
+  handling in `identify_pd_end`, explicit input validation for Pirani traces,
+  quantity-aware inputs and outputs, and non-mutating fitting functions in
+  place of Julia `!` APIs.
+
+## Static Checks
+
+Active CI workflows currently run pytest-based suites for PRs, main-branch
+pushes, and manual slow-test dispatches. The development extra includes
+`ruff` and `mypy`, but the active GitHub Actions workflows do not enforce
+either static checker yet.
+
+Ruff can continue to be run manually while a dedicated CI decision is pending.
+Mypy is not expected to be clean without follow-up work because SciPy stubs and
+some existing fitting annotations still need attention. A separate issue should
+track adding static-check CI or documenting why these checks remain manual.
 
 ## Non-Exported Julia Helpers
 
