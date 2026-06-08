@@ -585,21 +585,21 @@ output table shapes.</p>
 </tr>
 <tr>
 <td><code>end_drying_callback</code></td>
-<td>partially ported</td>
-<td><code>lyopronto.pikal.solve_pikal</code></td>
-<td>Conventional Pikal terminal event is ported; RF remains planned in Issue #45.</td>
+<td>ported</td>
+<td><code>lyopronto.pikal.solve_pikal</code>, <code>lyopronto.rf.solve_rf</code></td>
+<td>Conventional and RF solvers stop at drying completion.</td>
 </tr>
 <tr>
 <td><code>calc_u0</code></td>
-<td>partially ported</td>
-<td><code>lyopronto.pikal.calc_pikal_u0</code></td>
-<td>Pikal initial-state helper is ported; RF remains planned in Issue #45.</td>
+<td>ported</td>
+<td><code>lyopronto.pikal.calc_pikal_u0</code>, <code>lyopronto.rf.calc_rf_u0</code></td>
+<td>Initial-state helpers for Pikal and RF typed solvers.</td>
 </tr>
 <tr>
 <td><code>get_tstops</code></td>
-<td>partially ported</td>
-<td><code>lyopronto.pikal.get_pikal_tstops</code></td>
-<td>Pikal extracts stops from ramped shelf and pressure controls; RF remains planned in Issue #45.</td>
+<td>ported</td>
+<td><code>lyopronto.pikal.get_pikal_tstops</code>, <code>lyopronto.rf.get_rf_tstops</code></td>
+<td>Pikal and RF extract stops from ramped controls.</td>
 </tr>
 <tr>
 <td><code>lyo_1d_dae_f</code></td>
@@ -627,15 +627,15 @@ output table shapes.</p>
 </tr>
 <tr>
 <td><code>lumped_cap_rf!</code></td>
-<td>planned</td>
-<td>Issue #45</td>
-<td>RF/microwave RHS.</td>
+<td>ported</td>
+<td><code>lyopronto.rf.rf_rhs</code>, <code>lyopronto.rf.calc_rf_diagnostics</code></td>
+<td>RF/microwave RHS with heat diagnostics in Julia order.</td>
 </tr>
 <tr>
 <td><code>ParamObjRF</code></td>
-<td>planned</td>
-<td>Issue #45</td>
-<td>Typed RF parameter dataclass.</td>
+<td>ported</td>
+<td><code>lyopronto.rf.RFParams</code></td>
+<td>Typed RF parameter dataclass with tuple-of-tuples constructor.</td>
 </tr>
 <tr>
 <td><code>gen_sol_pd</code></td>
@@ -791,11 +791,10 @@ top-level imports from <code>lyopronto</code>.</p>
 <li><code>physical_properties</code> follows the same module-level policy because it
   contains constants, aliases, and correlations that are easier to keep
   coherent as one namespace.</li>
-<li>Future RF names should start in <code>lyopronto.rf</code>. Once the API stabilizes,
-  direct top-level imports should be limited to the primary workflow objects
-  analogous to <code>RFParams</code>, <code>RFSolution</code>, <code>RFDiagnostics</code>, and <code>solve_rf</code>.
-  Lower-level RF heat and integration helpers should remain module-level
-  unless they become broadly used user-facing APIs.</li>
+<li>RF names start in <code>lyopronto.rf</code>. The primary workflow objects and solver
+  are also available as direct top-level imports: <code>RFParams</code>, <code>RFSolution</code>,
+  <code>RFDiagnostics</code>, and <code>solve_rf</code>. Lower-level RF heat and integration helpers
+  remain module-level unless they become broadly used user-facing APIs.</li>
 </ul>
 <h2 id="rf-preflight-notes">RF Preflight Notes</h2>
 <p>RF work in Issues #45 and #46 should follow the typed Pikal and fitting
