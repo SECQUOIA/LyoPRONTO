@@ -628,7 +628,10 @@ def fit_rf_primary_drying(
     optimizer_method: str | None = None,
     **optimizer_options: Any,
 ) -> Any:
-    """Fit RF wall/product coupling and microwave absorption parameters."""
+    """Fit one RF experiment's wall/product coupling and absorption parameters.
+
+    Use :func:`fit_primary_drying` directly for multi-experiment RF fitting.
+    """
 
     return fit_primary_drying(
         params,

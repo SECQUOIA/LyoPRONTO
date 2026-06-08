@@ -2,12 +2,9 @@
 
 from dataclasses import replace
 import math
-from types import SimpleNamespace
-
 import numpy as np
 import pytest
 
-import lyopronto.fitting as fitting_module
 from lyopronto import (
     BoundedKBBTransform,
     KBBTransform,
@@ -188,8 +185,10 @@ def test_rf_scalar_callable_fallbacks_still_work(synthetic_rf_params):
     assert np.all(np.isfinite([term.to("watt").magnitude for term in terms]))
 
 
-def _rf_fit_data(params):
-    sol = solve_rf(params, t_span=(0.0, 80.0), save_at=np.linspace(0.0, 14.0, 5))
+def _rf_fit_data(params, save_at=None):
+    if save_at is None:
+        save_at = np.linspace(0.0, 14.0, 5)
+    sol = solve_rf(params, t_span=(0.0, 80.0), save_at=save_at)
     return PrimaryDryFit(sol.t_hours, sol.tf, Tvws=sol.tvw, t_end=sol.drying_time)
 
 
@@ -291,42 +290,34 @@ def test_fit_rf_primary_drying_least_squares_recovers_kbb(synthetic_rf_params):
     assert _ratio(fitted.Bvw, synthetic_rf_params.Bvw) == pytest.approx(1.0, rel=0.3)
 
 
-def test_fit_rf_primary_drying_minimize_attaches_rf_result(
-    monkeypatch,
-    synthetic_rf_params,
-):
-    fit = _rf_fit_data(synthetic_rf_params)
+def test_fit_rf_primary_drying_minimize_recovers_kbb(synthetic_rf_params):
+    fit = _rf_fit_data(synthetic_rf_params, save_at=np.array([0.0, 14.0]))
     transform = KBBTransform(
         synthetic_rf_params.Kvwf * 0.5,
         synthetic_rf_params.Bf * 0.5,
         synthetic_rf_params.Bvw * 0.5,
     )
-    exact = np.log([2.0, 2.0, 2.0])
-    captured = {}
-
-    def fake_minimize(fun, x0, method=None, **kwargs):
-        captured["method"] = method
-        captured["x0"] = np.asarray(x0, dtype=float)
-        assert math.isfinite(fun(exact))
-        return SimpleNamespace(x=exact, success=True)
-
-    monkeypatch.setattr(fitting_module, "minimize", fake_minimize)
+    rough_objective = obj_rf(np.zeros(3), transform, synthetic_rf_params, fit)
 
     result = fit_rf_primary_drying(
         synthetic_rf_params,
         fit,
         transform,
+        theta0=np.log([2.0, 2.0, 2.0]) + np.array([0.02, -0.01, 0.015]),
         method="minimize",
         optimizer_method="Nelder-Mead",
+        options={"maxiter": 20, "xatol": 5e-2, "fatol": 2e-2},
     )
 
-    assert captured["method"] == "Nelder-Mead"
-    np.testing.assert_allclose(captured["x0"], np.zeros(3))
+    fitted = result.fitted_params
+    assert result.success
     assert result.fit_method == "minimize"
-    assert _ratio(result.fitted_params.Kvwf, synthetic_rf_params.Kvwf) == pytest.approx(
-        1.0
+    assert result.nfev > transform.dimension
+    assert result.objective < rough_objective
+    assert _ratio(fitted.Kvwf, synthetic_rf_params.Kvwf) == pytest.approx(
+        1.0, rel=0.3
     )
-    assert _ratio(result.fitted_params.Bf, synthetic_rf_params.Bf) == pytest.approx(1.0)
-    assert _ratio(result.fitted_params.Bvw, synthetic_rf_params.Bvw) == pytest.approx(
-        1.0
+    assert _ratio(fitted.Bf, synthetic_rf_params.Bf) == pytest.approx(1.0, rel=0.5)
+    assert _ratio(fitted.Bvw, synthetic_rf_params.Bvw) == pytest.approx(
+        1.0, rel=0.3
     )
