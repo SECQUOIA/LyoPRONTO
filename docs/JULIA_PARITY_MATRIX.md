@@ -33,20 +33,20 @@ output table shapes.
 | `calc_hRp_T` | ported | `lyopronto.pikal.calc_hRp_T` | Direct Rp-vs-height estimate from temperature data; returns dried height in cm and Rp in `cm^2*hr*Torr/g`. |
 | `lumped_cap_rf!` | ported | `lyopronto.rf.rf_rhs`, `lyopronto.rf.calc_rf_diagnostics` | RF/microwave RHS with heat diagnostics in Julia order. |
 | `ParamObjRF` | ported | `lyopronto.rf.RFParams` | Typed RF parameter dataclass with tuple-of-tuples constructor. |
-| `gen_sol_pd` | partially ported | `lyopronto.fitting.gen_sol_pd` | Conventional Pikal solution generator is ported; RF remains planned in Issue #46. |
-| `obj_pd` | partially ported | `lyopronto.fitting.obj_pd` | Conventional Pikal scalar objective is ported; RF remains planned in Issue #46. |
-| `gen_nsol_pd` | partially ported | `lyopronto.fitting.gen_nsol_pd` | Multi-experiment conventional Pikal fitting helper with shared/separate groups; RF remains planned in Issue #46. |
-| `objn_pd` | partially ported | `lyopronto.fitting.objn_pd` | Multi-experiment conventional Pikal scalar objective; RF remains planned in Issue #46. |
+| `gen_sol_pd` | ported | `lyopronto.fitting.gen_sol_pd`, `lyopronto.fitting.gen_sol_rf` | Pikal and RF solution generators share the same fitting transform path. |
+| `obj_pd` | ported | `lyopronto.fitting.obj_pd`, `lyopronto.fitting.obj_rf` | Pikal and RF scalar objectives both reuse `PrimaryDryFit` and `obj_expT`. |
+| `gen_nsol_pd` | ported | `lyopronto.fitting.gen_nsol_pd` | Multi-experiment Pikal/RF fitting helper with shared/separate groups. |
+| `objn_pd` | ported | `lyopronto.fitting.objn_pd` | Multi-experiment Pikal/RF scalar objective. |
 | `KRp_transform_basic` | ported | `lyopronto.fitting.KRpTransform` | Conventional Kv/Rp log-space transform. |
 | `K_transform_basic` | ported | `lyopronto.fitting.KTransform` | Conventional Kv transform. |
 | `Rp_transform_basic` | ported | `lyopronto.fitting.RpTransform` | Product-resistance transform. |
-| `KBB_transform_basic` | planned | Issue #46 | RF fitting transform. |
-| `KBB_transform_bounded` | planned | Issue #46 | RF bounded transform. |
+| `KBB_transform_basic` | ported | `lyopronto.fitting.KBBTransform` | RF `Kvwf`, `Bf`, and `Bvw` log-space transform. |
+| `KBB_transform_bounded` | ported | `lyopronto.fitting.BoundedKBBTransform` | RF bounded logistic transform. |
 | `obj_expT` | ported | `lyopronto.fitting.obj_expT` | Temperature/end-time scalar objective. |
 | `err_expT` | ported | `lyopronto.fitting.err_expT` | Residual vector for SciPy least squares. |
 | `err_expT!` | intentionally unsupported | Python residual functions return arrays | Julia mutating API is not a Python public API target. |
 | `num_errs` | ported | `lyopronto.fitting.num_errs` | Residual-count helper. |
-| `nls_pd` | partially ported | `lyopronto.fitting.err_pd`, `lyopronto.fitting.errn_pd`, `lyopronto.fitting.fit_primary_drying` | Conventional Pikal residual wrappers and SciPy least-squares entry point are ported; RF remains planned in Issue #46. |
+| `nls_pd` | ported | `lyopronto.fitting.err_pd`, `lyopronto.fitting.err_rf`, `lyopronto.fitting.errn_pd`, `lyopronto.fitting.fit_primary_drying`, `lyopronto.fitting.fit_rf_primary_drying` | Pikal and RF residual wrappers and SciPy least-squares entry points. |
 | `nls_pd!` | intentionally unsupported | Python fitting functions return results | Julia mutating API is not a Python public API target. |
 | `qrf_integrate` | planned | Issue #45 | RF heat-term integration helper. |
 | `identify_pd_end` | ported | `lyopronto.cycle_time.identify_pd_end` | Pirani-based end-of-primary-drying detection. |
@@ -77,10 +77,13 @@ top-level imports from `lyopronto`.
 - `physical_properties` follows the same module-level policy because it
   contains constants, aliases, and correlations that are easier to keep
   coherent as one namespace.
-- RF names start in `lyopronto.rf`. The primary workflow objects and solver
-  are also available as direct top-level imports: `RFParams`, `RFSolution`,
-  `RFDiagnostics`, and `solve_rf`. Lower-level RF heat and integration helpers
-  remain module-level unless they become broadly used user-facing APIs.
+- RF names start in `lyopronto.rf` and RF fitting names start in
+  `lyopronto.fitting`. The primary workflow objects, solver, and fitting entry
+  points are also available as direct top-level imports: `RFParams`,
+  `RFSolution`, `RFDiagnostics`, `solve_rf`, `KBBTransform`,
+  `BoundedKBBTransform`, and `fit_rf_primary_drying`. Lower-level RF heat and
+  integration helpers remain module-level unless they become broadly used
+  user-facing APIs.
 
 ## RF Preflight Notes
 
