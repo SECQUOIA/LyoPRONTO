@@ -639,27 +639,27 @@ output table shapes.</p>
 </tr>
 <tr>
 <td><code>gen_sol_pd</code></td>
-<td>partially ported</td>
-<td><code>lyopronto.fitting.gen_sol_pd</code></td>
-<td>Conventional Pikal solution generator is ported; RF remains planned in Issue #46.</td>
+<td>ported</td>
+<td><code>lyopronto.fitting.gen_sol_pd</code>, <code>lyopronto.fitting.gen_sol_rf</code></td>
+<td>Pikal and RF solution generators share the same fitting transform path.</td>
 </tr>
 <tr>
 <td><code>obj_pd</code></td>
-<td>partially ported</td>
-<td><code>lyopronto.fitting.obj_pd</code></td>
-<td>Conventional Pikal scalar objective is ported; RF remains planned in Issue #46.</td>
+<td>ported</td>
+<td><code>lyopronto.fitting.obj_pd</code>, <code>lyopronto.fitting.obj_rf</code></td>
+<td>Pikal and RF scalar objectives both reuse <code>PrimaryDryFit</code> and <code>obj_expT</code>.</td>
 </tr>
 <tr>
 <td><code>gen_nsol_pd</code></td>
-<td>partially ported</td>
+<td>ported</td>
 <td><code>lyopronto.fitting.gen_nsol_pd</code></td>
-<td>Multi-experiment conventional Pikal fitting helper with shared/separate groups; RF remains planned in Issue #46.</td>
+<td>Multi-experiment Pikal/RF fitting helper with shared/separate groups.</td>
 </tr>
 <tr>
 <td><code>objn_pd</code></td>
-<td>partially ported</td>
+<td>ported</td>
 <td><code>lyopronto.fitting.objn_pd</code></td>
-<td>Multi-experiment conventional Pikal scalar objective; RF remains planned in Issue #46.</td>
+<td>Multi-experiment Pikal/RF scalar objective.</td>
 </tr>
 <tr>
 <td><code>KRp_transform_basic</code></td>
@@ -681,15 +681,15 @@ output table shapes.</p>
 </tr>
 <tr>
 <td><code>KBB_transform_basic</code></td>
-<td>planned</td>
-<td>Issue #46</td>
-<td>RF fitting transform.</td>
+<td>ported</td>
+<td><code>lyopronto.fitting.KBBTransform</code></td>
+<td>RF <code>Kvwf</code>, <code>Bf</code>, and <code>Bvw</code> log-space transform.</td>
 </tr>
 <tr>
 <td><code>KBB_transform_bounded</code></td>
-<td>planned</td>
-<td>Issue #46</td>
-<td>RF bounded transform.</td>
+<td>ported</td>
+<td><code>lyopronto.fitting.BoundedKBBTransform</code></td>
+<td>RF bounded logistic transform.</td>
 </tr>
 <tr>
 <td><code>obj_expT</code></td>
@@ -717,9 +717,9 @@ output table shapes.</p>
 </tr>
 <tr>
 <td><code>nls_pd</code></td>
-<td>partially ported</td>
-<td><code>lyopronto.fitting.err_pd</code>, <code>lyopronto.fitting.errn_pd</code>, <code>lyopronto.fitting.fit_primary_drying</code></td>
-<td>Conventional Pikal residual wrappers and SciPy least-squares entry point are ported; RF remains planned in Issue #46.</td>
+<td>ported</td>
+<td><code>lyopronto.fitting.err_pd</code>, <code>lyopronto.fitting.err_rf</code>, <code>lyopronto.fitting.errn_pd</code>, <code>lyopronto.fitting.fit_primary_drying</code>, <code>lyopronto.fitting.fit_rf_primary_drying</code></td>
+<td>Pikal and RF residual wrappers and SciPy least-squares entry points.</td>
 </tr>
 <tr>
 <td><code>nls_pd!</code></td>
@@ -791,10 +791,13 @@ top-level imports from <code>lyopronto</code>.</p>
 <li><code>physical_properties</code> follows the same module-level policy because it
   contains constants, aliases, and correlations that are easier to keep
   coherent as one namespace.</li>
-<li>RF names start in <code>lyopronto.rf</code>. The primary workflow objects and solver
-  are also available as direct top-level imports: <code>RFParams</code>, <code>RFSolution</code>,
-  <code>RFDiagnostics</code>, and <code>solve_rf</code>. Lower-level RF heat and integration helpers
-  remain module-level unless they become broadly used user-facing APIs.</li>
+<li>RF names start in <code>lyopronto.rf</code> and RF fitting names start in
+  <code>lyopronto.fitting</code>. The primary workflow objects, solver, and fitting entry
+  points are also available as direct top-level imports: <code>RFParams</code>,
+  <code>RFSolution</code>, <code>RFDiagnostics</code>, <code>solve_rf</code>, <code>KBBTransform</code>,
+  <code>BoundedKBBTransform</code>, and <code>fit_rf_primary_drying</code>. Lower-level RF heat and
+  integration helpers remain module-level unless they become broadly used
+  user-facing APIs.</li>
 </ul>
 <h2 id="rf-preflight-notes">RF Preflight Notes</h2>
 <p>RF work in Issues #45 and #46 should follow the typed Pikal and fitting
