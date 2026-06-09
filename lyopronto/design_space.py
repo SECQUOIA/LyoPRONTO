@@ -52,8 +52,10 @@ def _eq_cap_coefficients(eq_cap):
     if is_quantity(line.k) or is_quantity(line.b):
         return (
             line.b.to("kilogram / hour").magnitude,
+            # ECCURT slopes are per mTorr; legacy Pchamber setpoints are Torr.
             line.k.to("kilogram / hour / millitorr").magnitude * 1000.0,
         )
+    # ECCURT slopes are per mTorr; legacy Pchamber setpoints are Torr.
     return line.b, line.k * 1000.0
 
 
