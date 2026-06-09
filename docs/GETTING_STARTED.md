@@ -12,11 +12,8 @@ cd /home/bernalde/repos/LyoPRONTO
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Install package in development mode
-pip install -e .
-
-# Install development dependencies
-pip install -r requirements-dev.txt
+# Install package in development mode with development dependencies
+pip install -e ".[dev]"
 
 # Verify installation
 python -c "import lyopronto; print('LyoPRONTO installed successfully!')"
@@ -66,8 +63,8 @@ cat lyopronto/calc_knownRp.py | head -50
    - `README.md`: (existing) General project documentation
 
 3. **Code Quality Tools**
-   - pytest configuration (`pytest.ini`)
-   - Development dependencies (`requirements-dev.txt`)
+   - pytest configuration (`pyproject.toml`)
+   - Development dependencies (`pyproject.toml`)
    - Test fixtures and helpers (`tests/conftest.py`)
 
 ### What's Next ⏭️
@@ -267,7 +264,7 @@ git push origin feature/my-feature
 ### Import Errors
 ```bash
 # Make sure package is installed in development mode
-pip install -e .
+pip install -e ".[dev]"
 
 # Check Python path
 python -c "import sys; print('\n'.join(sys.path))"

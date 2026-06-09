@@ -221,8 +221,8 @@ python examples/example_parameter_estimation.py
 
 ### Prerequisites
 ```bash
-# Install dependencies
-pip install -r requirements.txt  # or requirements-dev.txt for development
+# Install example and test dependencies
+pip install -e ".[dev]"
 ```
 
 ### Run an Example
@@ -370,7 +370,7 @@ python examples/example_web_interface.py
 
 Or install in development mode:
 ```bash
-pip install -e .
+pip install -e ".[dev]"
 ```
 
 ### File Not Found: "temperature.txt"
