@@ -19,8 +19,45 @@ from scipy.optimize import fsolve
 import numpy as np
 from . import constant
 from . import functions
+from .eccurt import eq_cap_line_new
+from .typed import is_quantity
 
 ################# Primary drying at fixed set points ###############
+
+_ECCURT_GEOMETRY_KEYS = frozenset(
+    ("duct_diameter", "valve_thickness", "duct_length", "chamber_volume")
+)
+
+
+def _eq_cap_coefficients(eq_cap):
+    """Return legacy ``a``/``b`` equipment-capability coefficients."""
+
+    if "a" in eq_cap and "b" in eq_cap:
+        return eq_cap["a"], eq_cap["b"]
+
+    missing = _ECCURT_GEOMETRY_KEYS - set(eq_cap)
+    if missing:
+        missing_text = ", ".join(sorted(missing))
+        raise ValueError(
+            "eq_cap must contain either legacy keys 'a' and 'b' or ECCURT "
+            f"geometry keys; missing: {missing_text}"
+        )
+
+    line = eq_cap_line_new(
+        eq_cap["duct_diameter"],
+        eq_cap["valve_thickness"],
+        eq_cap["duct_length"],
+        eq_cap["chamber_volume"],
+    )
+    if is_quantity(line.k) or is_quantity(line.b):
+        return (
+            line.b.to("kilogram / hour").magnitude,
+            # ECCURT slopes are per mTorr; legacy Pchamber setpoints are Torr.
+            line.k.to("kilogram / hour / millitorr").magnitude * 1000.0,
+        )
+    # ECCURT slopes are per mTorr; legacy Pchamber setpoints are Torr.
+    return line.b, line.k * 1000.0
+
 
 # TODO: document this properly
 def dry(vial,product,ht,Pchamber,Tshelf,dt,eq_cap,nVial):
@@ -241,7 +278,8 @@ def dry(vial,product,ht,Pchamber,Tshelf,dt,eq_cap,nVial):
 
     ############  Equipment Capability ##########
 
-    dmdt_eq_cap = eq_cap['a'] + eq_cap['b']*np.array(Pchamber['setpt'])    # Sublimation rate [kg/hr]
+    eq_cap_a, eq_cap_b = _eq_cap_coefficients(eq_cap)
+    dmdt_eq_cap = eq_cap_a + eq_cap_b*np.array(Pchamber['setpt'])    # Sublimation rate [kg/hr]
     if np.any(dmdt_eq_cap < 0):
         warn("Equipment capability sublimation rate is negative for some chamber pressures; setting to nan.")
         # dmdt_eq_cap = np.maximum(dmdt_eq_cap, 0.0)
@@ -260,4 +298,3 @@ def dry(vial,product,ht,Pchamber,Tshelf,dt,eq_cap,nVial):
     return np.array([T_max,drying_time,sub_flux_avg,sub_flux_max,sub_flux_end]), \
         np.array([np.array([product['T_pr_crit'],product['T_pr_crit']]),drying_time_pr,sub_flux_avg_pr,sub_flux_min_pr,sub_flux_end_pr]), \
         np.array([T_max_eq_cap,drying_time_eq_cap,sub_flux_eq_cap])
-
