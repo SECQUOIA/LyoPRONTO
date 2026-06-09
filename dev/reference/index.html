@@ -1476,6 +1476,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#lyopronto.qrf_integrate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        qrf_integrate
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#lyopronto.read_inputs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3132,6 +3143,17 @@
     <span class="md-ellipsis">
       
         get_rf_tstops
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lyopronto.rf.qrf_integrate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        qrf_integrate
       
     </span>
   </a>
@@ -4595,6 +4617,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#lyopronto.qrf_integrate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        qrf_integrate
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#lyopronto.read_inputs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6251,6 +6284,17 @@
     <span class="md-ellipsis">
       
         get_rf_tstops
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lyopronto.rf.qrf_integrate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        qrf_integrate
       
     </span>
   </a>
@@ -13011,6 +13055,101 @@ in centimeters, and product resistance in <code>cm^2 * hr * Torr / g</code>.</p>
 </span><span id="__span-0-852"><a id="__codelineno-0-852" name="__codelineno-0-852"></a>            <span class="p">]</span>
 </span><span id="__span-0-853"><a id="__codelineno-0-853" name="__codelineno-0-853"></a>        <span class="p">)</span>
 </span><span id="__span-0-854"><a id="__codelineno-0-854" name="__codelineno-0-854"></a>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="lyopronto.qrf_integrate" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">qrf_integrate</span><span class="p">(</span><span class="n">solution</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Integrate each RF heat-transfer mode over a solved trajectory.</p>
+<p>Returns a dict with keys <code>Qsub</code>, <code>Qshf</code>, <code>Qvwf</code>, <code>QRFf</code>, and
+<code>QRFvw</code> as Pint energy quantities in watt-hours. Integration is
+trapezoidal over the solution time points (in hours). As in Julia
+<code>qrf_integrate</code>, the shelf-to-wall term <code>Q_shw</code> is not integrated.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>lyopronto/rf.py</code></summary>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-757">757</a></span>
+<span class="normal"><a href="#__codelineno-0-758">758</a></span>
+<span class="normal"><a href="#__codelineno-0-759">759</a></span>
+<span class="normal"><a href="#__codelineno-0-760">760</a></span>
+<span class="normal"><a href="#__codelineno-0-761">761</a></span>
+<span class="normal"><a href="#__codelineno-0-762">762</a></span>
+<span class="normal"><a href="#__codelineno-0-763">763</a></span>
+<span class="normal"><a href="#__codelineno-0-764">764</a></span>
+<span class="normal"><a href="#__codelineno-0-765">765</a></span>
+<span class="normal"><a href="#__codelineno-0-766">766</a></span>
+<span class="normal"><a href="#__codelineno-0-767">767</a></span>
+<span class="normal"><a href="#__codelineno-0-768">768</a></span>
+<span class="normal"><a href="#__codelineno-0-769">769</a></span>
+<span class="normal"><a href="#__codelineno-0-770">770</a></span>
+<span class="normal"><a href="#__codelineno-0-771">771</a></span>
+<span class="normal"><a href="#__codelineno-0-772">772</a></span>
+<span class="normal"><a href="#__codelineno-0-773">773</a></span>
+<span class="normal"><a href="#__codelineno-0-774">774</a></span>
+<span class="normal"><a href="#__codelineno-0-775">775</a></span>
+<span class="normal"><a href="#__codelineno-0-776">776</a></span>
+<span class="normal"><a href="#__codelineno-0-777">777</a></span>
+<span class="normal"><a href="#__codelineno-0-778">778</a></span>
+<span class="normal"><a href="#__codelineno-0-779">779</a></span>
+<span class="normal"><a href="#__codelineno-0-780">780</a></span>
+<span class="normal"><a href="#__codelineno-0-781">781</a></span>
+<span class="normal"><a href="#__codelineno-0-782">782</a></span>
+<span class="normal"><a href="#__codelineno-0-783">783</a></span>
+<span class="normal"><a href="#__codelineno-0-784">784</a></span>
+<span class="normal"><a href="#__codelineno-0-785">785</a></span>
+<span class="normal"><a href="#__codelineno-0-786">786</a></span>
+<span class="normal"><a href="#__codelineno-0-787">787</a></span>
+<span class="normal"><a href="#__codelineno-0-788">788</a></span>
+<span class="normal"><a href="#__codelineno-0-789">789</a></span>
+<span class="normal"><a href="#__codelineno-0-790">790</a></span>
+<span class="normal"><a href="#__codelineno-0-791">791</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-757"><a id="__codelineno-0-757" name="__codelineno-0-757"></a><span class="k">def</span> <span class="nf">qrf_integrate</span><span class="p">(</span><span class="n">solution</span><span class="p">:</span> <span class="n">RFSolution</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+</span><span id="__span-0-758"><a id="__codelineno-0-758" name="__codelineno-0-758"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Integrate each RF heat-transfer mode over a solved trajectory.</span>
+</span><span id="__span-0-759"><a id="__codelineno-0-759" name="__codelineno-0-759"></a>
+</span><span id="__span-0-760"><a id="__codelineno-0-760" name="__codelineno-0-760"></a><span class="sd">    Returns a dict with keys ``Qsub``, ``Qshf``, ``Qvwf``, ``QRFf``, and</span>
+</span><span id="__span-0-761"><a id="__codelineno-0-761" name="__codelineno-0-761"></a><span class="sd">    ``QRFvw`` as Pint energy quantities in watt-hours. Integration is</span>
+</span><span id="__span-0-762"><a id="__codelineno-0-762" name="__codelineno-0-762"></a><span class="sd">    trapezoidal over the solution time points (in hours). As in Julia</span>
+</span><span id="__span-0-763"><a id="__codelineno-0-763" name="__codelineno-0-763"></a><span class="sd">    ``qrf_integrate``, the shelf-to-wall term ``Q_shw`` is not integrated.</span>
+</span><span id="__span-0-764"><a id="__codelineno-0-764" name="__codelineno-0-764"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-765"><a id="__codelineno-0-765" name="__codelineno-0-765"></a>
+</span><span id="__span-0-766"><a id="__codelineno-0-766" name="__codelineno-0-766"></a>    <span class="n">t_hours</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">solution</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+</span><span id="__span-0-767"><a id="__codelineno-0-767" name="__codelineno-0-767"></a>    <span class="k">if</span> <span class="n">t_hours</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="__span-0-768"><a id="__codelineno-0-768" name="__codelineno-0-768"></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;solution has no time points to integrate&quot;</span><span class="p">)</span>
+</span><span id="__span-0-769"><a id="__codelineno-0-769" name="__codelineno-0-769"></a>    <span class="n">heat_watts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+</span><span id="__span-0-770"><a id="__codelineno-0-770" name="__codelineno-0-770"></a>        <span class="p">[</span><span class="n">diag</span><span class="o">.</span><span class="n">heat_terms_watts</span> <span class="k">for</span> <span class="n">diag</span> <span class="ow">in</span> <span class="n">solution</span><span class="o">.</span><span class="n">diagnostics</span><span class="p">],</span>
+</span><span id="__span-0-771"><a id="__codelineno-0-771" name="__codelineno-0-771"></a>        <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+</span><span id="__span-0-772"><a id="__codelineno-0-772" name="__codelineno-0-772"></a>    <span class="p">)</span>
+</span><span id="__span-0-773"><a id="__codelineno-0-773" name="__codelineno-0-773"></a>    <span class="k">if</span> <span class="n">heat_watts</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">t_hours</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+</span><span id="__span-0-774"><a id="__codelineno-0-774" name="__codelineno-0-774"></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;solution diagnostics do not match solution time points&quot;</span><span class="p">)</span>
+</span><span id="__span-0-775"><a id="__codelineno-0-775" name="__codelineno-0-775"></a>
+</span><span id="__span-0-776"><a id="__codelineno-0-776" name="__codelineno-0-776"></a>    <span class="n">n_keys</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">_QRF_INTEGRATE_KEYS</span><span class="p">)</span>
+</span><span id="__span-0-777"><a id="__codelineno-0-777" name="__codelineno-0-777"></a>    <span class="k">if</span> <span class="n">t_hours</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+</span><span id="__span-0-778"><a id="__codelineno-0-778" name="__codelineno-0-778"></a>        <span class="n">energies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_keys</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+</span><span id="__span-0-779"><a id="__codelineno-0-779" name="__codelineno-0-779"></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-0-780"><a id="__codelineno-0-780" name="__codelineno-0-780"></a>        <span class="n">trapezoid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">trapezoid</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">np</span><span class="p">,</span> <span class="s2">&quot;trapezoid&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">trapz</span>
+</span><span id="__span-0-781"><a id="__codelineno-0-781" name="__codelineno-0-781"></a>        <span class="n">energies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+</span><span id="__span-0-782"><a id="__codelineno-0-782" name="__codelineno-0-782"></a>            <span class="p">[</span>
+</span><span id="__span-0-783"><a id="__codelineno-0-783" name="__codelineno-0-783"></a>                <span class="nb">float</span><span class="p">(</span><span class="n">trapezoid</span><span class="p">(</span><span class="n">heat_watts</span><span class="p">[:,</span> <span class="n">index</span><span class="p">],</span> <span class="n">t_hours</span><span class="p">))</span>
+</span><span id="__span-0-784"><a id="__codelineno-0-784" name="__codelineno-0-784"></a>                <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_keys</span><span class="p">)</span>
+</span><span id="__span-0-785"><a id="__codelineno-0-785" name="__codelineno-0-785"></a>            <span class="p">],</span>
+</span><span id="__span-0-786"><a id="__codelineno-0-786" name="__codelineno-0-786"></a>            <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+</span><span id="__span-0-787"><a id="__codelineno-0-787" name="__codelineno-0-787"></a>        <span class="p">)</span>
+</span><span id="__span-0-788"><a id="__codelineno-0-788" name="__codelineno-0-788"></a>    <span class="k">return</span> <span class="p">{</span>
+</span><span id="__span-0-789"><a id="__codelineno-0-789" name="__codelineno-0-789"></a>        <span class="n">key</span><span class="p">:</span> <span class="n">Q_</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">energy</span><span class="p">),</span> <span class="s2">&quot;watt * hour&quot;</span><span class="p">)</span>
+</span><span id="__span-0-790"><a id="__codelineno-0-790" name="__codelineno-0-790"></a>        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">energy</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">_QRF_INTEGRATE_KEYS</span><span class="p">,</span> <span class="n">energies</span><span class="p">)</span>
+</span><span id="__span-0-791"><a id="__codelineno-0-791" name="__codelineno-0-791"></a>    <span class="p">}</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -24427,6 +24566,101 @@ per-vial RF power in watts, not total batch power.</p>
 </span><span id="__span-0-378"><a id="__codelineno-0-378" name="__codelineno-0-378"></a>    <span class="n">stops</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_extract_tstops</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">pch</span><span class="p">))</span>
 </span><span id="__span-0-379"><a id="__codelineno-0-379" name="__codelineno-0-379"></a>    <span class="n">stops</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_extract_tstops</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">P_per_vial</span><span class="p">))</span>
 </span><span id="__span-0-380"><a id="__codelineno-0-380" name="__codelineno-0-380"></a>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">stops</span> <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">t</span><span class="p">))))</span>
+</span></code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="lyopronto.rf.qrf_integrate" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">qrf_integrate</span><span class="p">(</span><span class="n">solution</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Integrate each RF heat-transfer mode over a solved trajectory.</p>
+<p>Returns a dict with keys <code>Qsub</code>, <code>Qshf</code>, <code>Qvwf</code>, <code>QRFf</code>, and
+<code>QRFvw</code> as Pint energy quantities in watt-hours. Integration is
+trapezoidal over the solution time points (in hours). As in Julia
+<code>qrf_integrate</code>, the shelf-to-wall term <code>Q_shw</code> is not integrated.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>lyopronto/rf.py</code></summary>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-757">757</a></span>
+<span class="normal"><a href="#__codelineno-0-758">758</a></span>
+<span class="normal"><a href="#__codelineno-0-759">759</a></span>
+<span class="normal"><a href="#__codelineno-0-760">760</a></span>
+<span class="normal"><a href="#__codelineno-0-761">761</a></span>
+<span class="normal"><a href="#__codelineno-0-762">762</a></span>
+<span class="normal"><a href="#__codelineno-0-763">763</a></span>
+<span class="normal"><a href="#__codelineno-0-764">764</a></span>
+<span class="normal"><a href="#__codelineno-0-765">765</a></span>
+<span class="normal"><a href="#__codelineno-0-766">766</a></span>
+<span class="normal"><a href="#__codelineno-0-767">767</a></span>
+<span class="normal"><a href="#__codelineno-0-768">768</a></span>
+<span class="normal"><a href="#__codelineno-0-769">769</a></span>
+<span class="normal"><a href="#__codelineno-0-770">770</a></span>
+<span class="normal"><a href="#__codelineno-0-771">771</a></span>
+<span class="normal"><a href="#__codelineno-0-772">772</a></span>
+<span class="normal"><a href="#__codelineno-0-773">773</a></span>
+<span class="normal"><a href="#__codelineno-0-774">774</a></span>
+<span class="normal"><a href="#__codelineno-0-775">775</a></span>
+<span class="normal"><a href="#__codelineno-0-776">776</a></span>
+<span class="normal"><a href="#__codelineno-0-777">777</a></span>
+<span class="normal"><a href="#__codelineno-0-778">778</a></span>
+<span class="normal"><a href="#__codelineno-0-779">779</a></span>
+<span class="normal"><a href="#__codelineno-0-780">780</a></span>
+<span class="normal"><a href="#__codelineno-0-781">781</a></span>
+<span class="normal"><a href="#__codelineno-0-782">782</a></span>
+<span class="normal"><a href="#__codelineno-0-783">783</a></span>
+<span class="normal"><a href="#__codelineno-0-784">784</a></span>
+<span class="normal"><a href="#__codelineno-0-785">785</a></span>
+<span class="normal"><a href="#__codelineno-0-786">786</a></span>
+<span class="normal"><a href="#__codelineno-0-787">787</a></span>
+<span class="normal"><a href="#__codelineno-0-788">788</a></span>
+<span class="normal"><a href="#__codelineno-0-789">789</a></span>
+<span class="normal"><a href="#__codelineno-0-790">790</a></span>
+<span class="normal"><a href="#__codelineno-0-791">791</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-757"><a id="__codelineno-0-757" name="__codelineno-0-757"></a><span class="k">def</span> <span class="nf">qrf_integrate</span><span class="p">(</span><span class="n">solution</span><span class="p">:</span> <span class="n">RFSolution</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+</span><span id="__span-0-758"><a id="__codelineno-0-758" name="__codelineno-0-758"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Integrate each RF heat-transfer mode over a solved trajectory.</span>
+</span><span id="__span-0-759"><a id="__codelineno-0-759" name="__codelineno-0-759"></a>
+</span><span id="__span-0-760"><a id="__codelineno-0-760" name="__codelineno-0-760"></a><span class="sd">    Returns a dict with keys ``Qsub``, ``Qshf``, ``Qvwf``, ``QRFf``, and</span>
+</span><span id="__span-0-761"><a id="__codelineno-0-761" name="__codelineno-0-761"></a><span class="sd">    ``QRFvw`` as Pint energy quantities in watt-hours. Integration is</span>
+</span><span id="__span-0-762"><a id="__codelineno-0-762" name="__codelineno-0-762"></a><span class="sd">    trapezoidal over the solution time points (in hours). As in Julia</span>
+</span><span id="__span-0-763"><a id="__codelineno-0-763" name="__codelineno-0-763"></a><span class="sd">    ``qrf_integrate``, the shelf-to-wall term ``Q_shw`` is not integrated.</span>
+</span><span id="__span-0-764"><a id="__codelineno-0-764" name="__codelineno-0-764"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-765"><a id="__codelineno-0-765" name="__codelineno-0-765"></a>
+</span><span id="__span-0-766"><a id="__codelineno-0-766" name="__codelineno-0-766"></a>    <span class="n">t_hours</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">solution</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+</span><span id="__span-0-767"><a id="__codelineno-0-767" name="__codelineno-0-767"></a>    <span class="k">if</span> <span class="n">t_hours</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="__span-0-768"><a id="__codelineno-0-768" name="__codelineno-0-768"></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;solution has no time points to integrate&quot;</span><span class="p">)</span>
+</span><span id="__span-0-769"><a id="__codelineno-0-769" name="__codelineno-0-769"></a>    <span class="n">heat_watts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+</span><span id="__span-0-770"><a id="__codelineno-0-770" name="__codelineno-0-770"></a>        <span class="p">[</span><span class="n">diag</span><span class="o">.</span><span class="n">heat_terms_watts</span> <span class="k">for</span> <span class="n">diag</span> <span class="ow">in</span> <span class="n">solution</span><span class="o">.</span><span class="n">diagnostics</span><span class="p">],</span>
+</span><span id="__span-0-771"><a id="__codelineno-0-771" name="__codelineno-0-771"></a>        <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+</span><span id="__span-0-772"><a id="__codelineno-0-772" name="__codelineno-0-772"></a>    <span class="p">)</span>
+</span><span id="__span-0-773"><a id="__codelineno-0-773" name="__codelineno-0-773"></a>    <span class="k">if</span> <span class="n">heat_watts</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">t_hours</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+</span><span id="__span-0-774"><a id="__codelineno-0-774" name="__codelineno-0-774"></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;solution diagnostics do not match solution time points&quot;</span><span class="p">)</span>
+</span><span id="__span-0-775"><a id="__codelineno-0-775" name="__codelineno-0-775"></a>
+</span><span id="__span-0-776"><a id="__codelineno-0-776" name="__codelineno-0-776"></a>    <span class="n">n_keys</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">_QRF_INTEGRATE_KEYS</span><span class="p">)</span>
+</span><span id="__span-0-777"><a id="__codelineno-0-777" name="__codelineno-0-777"></a>    <span class="k">if</span> <span class="n">t_hours</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+</span><span id="__span-0-778"><a id="__codelineno-0-778" name="__codelineno-0-778"></a>        <span class="n">energies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_keys</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+</span><span id="__span-0-779"><a id="__codelineno-0-779" name="__codelineno-0-779"></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-0-780"><a id="__codelineno-0-780" name="__codelineno-0-780"></a>        <span class="n">trapezoid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">trapezoid</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">np</span><span class="p">,</span> <span class="s2">&quot;trapezoid&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">trapz</span>
+</span><span id="__span-0-781"><a id="__codelineno-0-781" name="__codelineno-0-781"></a>        <span class="n">energies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+</span><span id="__span-0-782"><a id="__codelineno-0-782" name="__codelineno-0-782"></a>            <span class="p">[</span>
+</span><span id="__span-0-783"><a id="__codelineno-0-783" name="__codelineno-0-783"></a>                <span class="nb">float</span><span class="p">(</span><span class="n">trapezoid</span><span class="p">(</span><span class="n">heat_watts</span><span class="p">[:,</span> <span class="n">index</span><span class="p">],</span> <span class="n">t_hours</span><span class="p">))</span>
+</span><span id="__span-0-784"><a id="__codelineno-0-784" name="__codelineno-0-784"></a>                <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_keys</span><span class="p">)</span>
+</span><span id="__span-0-785"><a id="__codelineno-0-785" name="__codelineno-0-785"></a>            <span class="p">],</span>
+</span><span id="__span-0-786"><a id="__codelineno-0-786" name="__codelineno-0-786"></a>            <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+</span><span id="__span-0-787"><a id="__codelineno-0-787" name="__codelineno-0-787"></a>        <span class="p">)</span>
+</span><span id="__span-0-788"><a id="__codelineno-0-788" name="__codelineno-0-788"></a>    <span class="k">return</span> <span class="p">{</span>
+</span><span id="__span-0-789"><a id="__codelineno-0-789" name="__codelineno-0-789"></a>        <span class="n">key</span><span class="p">:</span> <span class="n">Q_</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">energy</span><span class="p">),</span> <span class="s2">&quot;watt * hour&quot;</span><span class="p">)</span>
+</span><span id="__span-0-790"><a id="__codelineno-0-790" name="__codelineno-0-790"></a>        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">energy</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">_QRF_INTEGRATE_KEYS</span><span class="p">,</span> <span class="n">energies</span><span class="p">)</span>
+</span><span id="__span-0-791"><a id="__codelineno-0-791" name="__codelineno-0-791"></a>    <span class="p">}</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>

@@ -450,6 +450,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#attribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attribution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#status-values" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -539,6 +550,15 @@ at commit <code>f452ad4</code>.</p>
 work. Existing dict-based calculators, optimizers, design-space generation,
 and web-style I/O remain supported and keep their legacy float units and
 output table shapes.</p>
+<p>See <code>docs/TYPED_API_GUIDE.md</code> for the legacy-vs-typed API distinction, the
+Pint unit conventions, and runnable examples in
+<code>examples/typed_api_examples.py</code>.</p>
+<h2 id="attribution">Attribution</h2>
+<p>Formulas, coefficients, and data tables ported here derive from the
+MIT-licensed Julia package <code>LyoHUB/LyoPronto.jl</code> at commit <code>f452ad4</code>. The
+relevant Python modules carry source-file and commit attribution in their
+module docstrings (for example <code>lyopronto/physical_properties.py</code>,
+<code>lyopronto/rf.py</code>, and <code>lyopronto/eccurt.py</code>).</p>
 <h2 id="status-values">Status Values</h2>
 <ul>
 <li><code>ported</code>: the Python API covers the Julia export's intended public behavior.</li>
@@ -729,9 +749,9 @@ output table shapes.</p>
 </tr>
 <tr>
 <td><code>qrf_integrate</code></td>
-<td>planned</td>
-<td>Issue #45</td>
-<td>RF heat-term integration helper.</td>
+<td>ported</td>
+<td><code>lyopronto.rf.qrf_integrate</code></td>
+<td>Trapezoidal time-integration of the RF heat-transfer modes over a solved trajectory; returns <code>Qsub</code>/<code>Qshf</code>/<code>Qvwf</code>/<code>QRFf</code>/<code>QRFvw</code> as Pint energies.</td>
 </tr>
 <tr>
 <td><code>identify_pd_end</code></td>
@@ -765,9 +785,9 @@ output table shapes.</p>
 </tr>
 <tr>
 <td><code>ECCURT</code></td>
-<td>planned</td>
-<td>Issue #47</td>
-<td>Equipment-capability interpolation module.</td>
+<td>ported</td>
+<td><code>lyopronto.eccurt</code></td>
+<td>Equipment-capability interpolation module with original/new line methods and pressure interpolation.</td>
 </tr>
 </tbody>
 </table>
@@ -795,9 +815,9 @@ top-level imports from <code>lyopronto</code>.</p>
   <code>lyopronto.fitting</code>. The primary workflow objects, solver, and fitting entry
   points are also available as direct top-level imports: <code>RFParams</code>,
   <code>RFSolution</code>, <code>RFDiagnostics</code>, <code>solve_rf</code>, <code>KBBTransform</code>,
-  <code>BoundedKBBTransform</code>, and <code>fit_rf_primary_drying</code>. Lower-level RF heat and
-  integration helpers remain module-level unless they become broadly used
-  user-facing APIs.</li>
+  <code>BoundedKBBTransform</code>, <code>fit_rf_primary_drying</code>, and <code>qrf_integrate</code>.
+  Lower-level RF heat diagnostics remain module-level unless they become
+  broadly used user-facing APIs.</li>
 </ul>
 <h2 id="rf-preflight-notes">RF Preflight Notes</h2>
 <p>RF work in Issues #45 and #46 should follow the typed Pikal and fitting

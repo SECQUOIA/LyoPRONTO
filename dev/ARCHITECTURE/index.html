@@ -1108,7 +1108,7 @@
 4. Tsh (°C)
 5. Pch (mTorr)
 6. flux (kg/hr/m²)
-7. frac_dried (0-1)</p>
+7. percent_dried (0-100%)</p>
 <p><strong>Method</strong>: Uses <code>scipy.integrate.solve_ivp</code> with BDF method to integrate the ODE:
 <div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>dL/dt = f(L, t)  where L is ice layer thickness
 </span></code></pre></div></p>
@@ -1307,11 +1307,12 @@
 </span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="c1"># self.Psub = self.calculate_vapor_pressure()</span>
 </span></code></pre></div></p>
 <h3 id="2-output-format-with-unit-conversions">2. Output Format with Unit Conversions</h3>
-<p><strong>Decision</strong>: Convert units in output (Pch → mTorr, dried → fraction)</p>
+<p><strong>Decision</strong>: Convert units in output (Pch → mTorr, dried → percent)</p>
 <p><strong>Rationale</strong>:
 - Internal calculations use Torr (cleaner equations)
 - Output uses mTorr (common in industry)
-- Fraction 0-1 is unambiguous (vs percentage)
+- Legacy calculators report dried progress as percent 0-100, matching web
+  interface CSV outputs and regression references.
 - All conversions in one place (<code>fill_output()</code>)</p>
 <p><strong>Trade-off</strong>: Requires careful attention to units when parsing output</p>
 <h3 id="3-ode-integration-with-events">3. ODE Integration with Events</h3>
