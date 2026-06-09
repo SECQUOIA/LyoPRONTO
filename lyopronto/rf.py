@@ -751,6 +751,46 @@ def solve_rf(
     )
 
 
+_QRF_INTEGRATE_KEYS = ("Qsub", "Qshf", "Qvwf", "QRFf", "QRFvw")
+
+
+def qrf_integrate(solution: RFSolution) -> dict[str, Any]:
+    """Integrate each RF heat-transfer mode over a solved trajectory.
+
+    Returns a dict with keys ``Qsub``, ``Qshf``, ``Qvwf``, ``QRFf``, and
+    ``QRFvw`` as Pint energy quantities in watt-hours. Integration is
+    trapezoidal over the solution time points (in hours). As in Julia
+    ``qrf_integrate``, the shelf-to-wall term ``Q_shw`` is not integrated.
+    """
+
+    t_hours = np.asarray(solution.t, dtype=float)
+    if t_hours.size == 0:
+        raise ValueError("solution has no time points to integrate")
+    heat_watts = np.asarray(
+        [diag.heat_terms_watts for diag in solution.diagnostics],
+        dtype=float,
+    )
+    if heat_watts.shape[0] != t_hours.size:
+        raise ValueError("solution diagnostics do not match solution time points")
+
+    n_keys = len(_QRF_INTEGRATE_KEYS)
+    if t_hours.size == 1:
+        energies = np.zeros(n_keys, dtype=float)
+    else:
+        trapezoid = np.trapezoid if hasattr(np, "trapezoid") else np.trapz
+        energies = np.array(
+            [
+                float(trapezoid(heat_watts[:, index], t_hours))
+                for index in range(n_keys)
+            ],
+            dtype=float,
+        )
+    return {
+        key: Q_(float(energy), "watt * hour")
+        for key, energy in zip(_QRF_INTEGRATE_KEYS, energies)
+    }
+
+
 __all__ = [
     "RFParams",
     "RFDiagnostics",
@@ -759,6 +799,7 @@ __all__ = [
     "calc_rf_heat_terms",
     "calc_rf_u0",
     "get_rf_tstops",
+    "qrf_integrate",
     "rf_rhs",
     "shape_factor",
     "solve_rf",

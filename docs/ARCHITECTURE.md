@@ -125,7 +125,7 @@ functions.py (depends on: constant)
 4. Tsh (°C)
 5. Pch (mTorr)
 6. flux (kg/hr/m²)
-7. frac_dried (0-1)
+7. percent_dried (0-100%)
 
 **Method**: Uses `scipy.integrate.solve_ivp` with BDF method to integrate the ODE:
 ```
@@ -391,12 +391,13 @@ Psub = Vapor_pressure(Tsub)
 
 ### 2. Output Format with Unit Conversions
 
-**Decision**: Convert units in output (Pch → mTorr, dried → fraction)
+**Decision**: Convert units in output (Pch → mTorr, dried → percent)
 
 **Rationale**:
 - Internal calculations use Torr (cleaner equations)
 - Output uses mTorr (common in industry)
-- Fraction 0-1 is unambiguous (vs percentage)
+- Legacy calculators report dried progress as percent 0-100, matching web
+  interface CSV outputs and regression references.
 - All conversions in one place (`fill_output()`)
 
 **Trade-off**: Requires careful attention to units when parsing output

@@ -2,6 +2,22 @@
 
 This directory contains example scripts demonstrating how to use LyoPRONTO.
 
+## Typed (Pint) API Examples
+
+`typed_api_examples.py` demonstrates the typed, Pint-aware Julia-parity API:
+typed conventional simulation, Kv/Rp fitting, direct Rp estimation, RF
+simulation and fitting, RF energy accounting, vial utilities, ECCURT
+equipment capability, and Pirani end-of-primary-drying detection.
+
+```bash
+python -m examples.typed_api_examples
+```
+
+Each example is also covered as a pytest smoke test in
+`tests/test_typed_examples.py`. See `docs/TYPED_API_GUIDE.md` for the
+legacy-vs-typed distinction and unit conventions. The dict-based examples
+below remain the supported legacy workflow.
+
 ## Available Examples
 
 ### `example_web_interface.py` ⭐ **Recommended Starting Point**

@@ -10,7 +10,9 @@ from lyopronto import (
     KBBTransform,
     PrimaryDryFit,
     Q_,
+    RFDiagnostics,
     RFParams,
+    RFSolution,
     RampedVariable,
     RpFormFit,
     calc_rf_heat_terms,
@@ -21,6 +23,7 @@ from lyopronto import (
     get_rf_tstops,
     obj_rf,
     physical_properties,
+    qrf_integrate,
     solve_rf,
     vials,
 )
@@ -90,7 +93,9 @@ def synthetic_rf_params():
 
 
 def test_rf_heat_terms_return_julia_order_and_units(synthetic_rf_params):
-    terms = calc_rf_heat_terms(calc_rf_u0(synthetic_rf_params), synthetic_rf_params, 0.0)
+    terms = calc_rf_heat_terms(
+        calc_rf_u0(synthetic_rf_params), synthetic_rf_params, 0.0
+    )
 
     assert len(terms) == 6
     for term in terms:
@@ -140,6 +145,56 @@ def test_solve_rf_accepts_ramped_power_control(synthetic_rf_params):
     assert sol.t[-1] == pytest.approx(sol.drying_time.to("hour").magnitude)
     assert np.all(np.isfinite(sol.y))
     assert sol.diagnostics[-1].heat_terms_watts.shape == (6,)
+
+
+def test_qrf_integrate_uses_trapezoids_julia_key_order_and_excludes_qshw(
+    synthetic_rf_params,
+):
+    def diagnostics(t_hr, q_sub, q_shf, q_vwf, q_rf_f, q_rf_vw, q_shw):
+        return RFDiagnostics(
+            t=Q_(t_hr, "hour"),
+            m_frozen=Q_(1.0, "gram"),
+            h_frozen=Q_(1.0, "centimeter"),
+            h_dried=Q_(0.0, "centimeter"),
+            tf=Q_(250.0, "kelvin"),
+            tvw=Q_(251.0, "kelvin"),
+            pch=Q_(100.0, "millitorr"),
+            tsh=Q_(260.0, "kelvin"),
+            rp=Q_(1.0, "centimeter ** 2 * hour * torr / gram"),
+            mflow=Q_(0.0, "gram / hour"),
+            dmfdt=Q_(0.0, "gram / hour"),
+            q_sub=Q_(q_sub, "watt"),
+            q_shf=Q_(q_shf, "watt"),
+            q_vwf=Q_(q_vwf, "watt"),
+            q_rf_f=Q_(q_rf_f, "watt"),
+            q_rf_vw=Q_(q_rf_vw, "watt"),
+            q_shw=Q_(q_shw, "watt"),
+        )
+
+    solution = RFSolution(
+        t=np.array([0.0, 1.0, 3.0]),
+        y=np.zeros((3, 3)),
+        diagnostics=(
+            diagnostics(0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 100.0),
+            diagnostics(1.0, 3.0, 4.0, 5.0, 6.0, 7.0, 200.0),
+            diagnostics(3.0, 5.0, 6.0, 7.0, 8.0, 9.0, 300.0),
+        ),
+        params=synthetic_rf_params,
+    )
+
+    energies = qrf_integrate(solution)
+
+    assert set(energies) == {"Qsub", "Qshf", "Qvwf", "QRFf", "QRFvw"}
+    expected_watt_hours = {
+        "Qsub": 10.0,
+        "Qshf": 13.0,
+        "Qvwf": 16.0,
+        "QRFf": 19.0,
+        "QRFvw": 22.0,
+    }
+    for key, expected in expected_watt_hours.items():
+        assert energies[key].check("[energy]")
+        assert energies[key].to("watt * hour").magnitude == pytest.approx(expected)
 
 
 def test_rf_length_callable_errors_are_not_masked(synthetic_rf_params):
@@ -216,9 +271,7 @@ def test_kbb_transforms_map_rf_guess_values(synthetic_rf_params):
         1.0
     )
     assert _ratio(bounded_updates["Bf"], synthetic_rf_params.Bf) == pytest.approx(1.0)
-    assert _ratio(bounded_updates["Bvw"], synthetic_rf_params.Bvw) == pytest.approx(
-        1.0
-    )
+    assert _ratio(bounded_updates["Bvw"], synthetic_rf_params.Bvw) == pytest.approx(1.0)
 
     high = bounded(np.full(3, 1000.0))
     assert _ratio(high["Kvwf"], synthetic_rf_params.Kvwf) <= 1e2
@@ -283,9 +336,7 @@ def test_fit_rf_primary_drying_least_squares_recovers_kbb(synthetic_rf_params):
     fitted = result.fitted_params
     assert result.success
     assert result.objective == pytest.approx(0.0, abs=1e-8)
-    assert _ratio(fitted.Kvwf, synthetic_rf_params.Kvwf) == pytest.approx(
-        1.0, rel=0.3
-    )
+    assert _ratio(fitted.Kvwf, synthetic_rf_params.Kvwf) == pytest.approx(1.0, rel=0.3)
     assert _ratio(fitted.Bf, synthetic_rf_params.Bf) == pytest.approx(1.0, rel=0.5)
     assert _ratio(fitted.Bvw, synthetic_rf_params.Bvw) == pytest.approx(1.0, rel=0.3)
 
@@ -314,10 +365,6 @@ def test_fit_rf_primary_drying_minimize_recovers_kbb(synthetic_rf_params):
     assert result.fit_method == "minimize"
     assert result.nfev > transform.dimension
     assert result.objective < rough_objective
-    assert _ratio(fitted.Kvwf, synthetic_rf_params.Kvwf) == pytest.approx(
-        1.0, rel=0.3
-    )
+    assert _ratio(fitted.Kvwf, synthetic_rf_params.Kvwf) == pytest.approx(1.0, rel=0.3)
     assert _ratio(fitted.Bf, synthetic_rf_params.Bf) == pytest.approx(1.0, rel=0.5)
-    assert _ratio(fitted.Bvw, synthetic_rf_params.Bvw) == pytest.approx(
-        1.0, rel=0.3
-    )
+    assert _ratio(fitted.Bvw, synthetic_rf_params.Bvw) == pytest.approx(1.0, rel=0.3)

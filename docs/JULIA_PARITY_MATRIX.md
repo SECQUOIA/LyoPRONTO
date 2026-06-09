@@ -8,6 +8,18 @@ work. Existing dict-based calculators, optimizers, design-space generation,
 and web-style I/O remain supported and keep their legacy float units and
 output table shapes.
 
+See `docs/TYPED_API_GUIDE.md` for the legacy-vs-typed API distinction, the
+Pint unit conventions, and runnable examples in
+`examples/typed_api_examples.py`.
+
+## Attribution
+
+Formulas, coefficients, and data tables ported here derive from the
+MIT-licensed Julia package `LyoHUB/LyoPronto.jl` at commit `f452ad4`. The
+relevant Python modules carry source-file and commit attribution in their
+module docstrings (for example `lyopronto/physical_properties.py`,
+`lyopronto/rf.py`, and `lyopronto/eccurt.py`).
+
 ## Status Values
 
 - `ported`: the Python API covers the Julia export's intended public behavior.
@@ -48,13 +60,13 @@ output table shapes.
 | `num_errs` | ported | `lyopronto.fitting.num_errs` | Residual-count helper. |
 | `nls_pd` | ported | `lyopronto.fitting.err_pd`, `lyopronto.fitting.err_rf`, `lyopronto.fitting.errn_pd`, `lyopronto.fitting.fit_primary_drying`, `lyopronto.fitting.fit_rf_primary_drying` | Pikal and RF residual wrappers and SciPy least-squares entry points. |
 | `nls_pd!` | intentionally unsupported | Python fitting functions return results | Julia mutating API is not a Python public API target. |
-| `qrf_integrate` | planned | Issue #45 | RF heat-term integration helper. |
+| `qrf_integrate` | ported | `lyopronto.rf.qrf_integrate` | Trapezoidal time-integration of the RF heat-transfer modes over a solved trajectory; returns `Qsub`/`Qshf`/`Qvwf`/`QRFf`/`QRFvw` as Pint energies. |
 | `identify_pd_end` | ported | `lyopronto.cycle_time.identify_pd_end` | Pirani-based end-of-primary-drying detection. |
 | `get_vial_radii` | ported | `lyopronto.vials.get_vial_radii` | SCHOTT vial metadata utility; module-level public API. |
 | `get_vial_mass` | ported | `lyopronto.vials.get_vial_mass` | SCHOTT vial metadata utility; module-level public API. |
 | `get_vial_shape` | ported | `lyopronto.vials.get_vial_shape` | SCHOTT vial shape utility; module-level public API. |
 | `make_outlines` | ported | `lyopronto.vials.make_outlines` | Vial/fill outline utility; module-level public API. |
-| `ECCURT` | planned | Issue #47 | Equipment-capability interpolation module. |
+| `ECCURT` | ported | `lyopronto.eccurt` | Equipment-capability interpolation module with original/new line methods and pressure interpolation. |
 
 ## Public API Export Policy
 
@@ -81,9 +93,9 @@ top-level imports from `lyopronto`.
   `lyopronto.fitting`. The primary workflow objects, solver, and fitting entry
   points are also available as direct top-level imports: `RFParams`,
   `RFSolution`, `RFDiagnostics`, `solve_rf`, `KBBTransform`,
-  `BoundedKBBTransform`, and `fit_rf_primary_drying`. Lower-level RF heat and
-  integration helpers remain module-level unless they become broadly used
-  user-facing APIs.
+  `BoundedKBBTransform`, `fit_rf_primary_drying`, and `qrf_integrate`.
+  Lower-level RF heat diagnostics remain module-level unless they become
+  broadly used user-facing APIs.
 
 ## RF Preflight Notes
 
