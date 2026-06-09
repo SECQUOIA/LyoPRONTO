@@ -93,9 +93,9 @@ top-level imports from `lyopronto`.
   `lyopronto.fitting`. The primary workflow objects, solver, and fitting entry
   points are also available as direct top-level imports: `RFParams`,
   `RFSolution`, `RFDiagnostics`, `solve_rf`, `KBBTransform`,
-  `BoundedKBBTransform`, and `fit_rf_primary_drying`. Lower-level RF heat and
-  integration helpers remain module-level unless they become broadly used
-  user-facing APIs.
+  `BoundedKBBTransform`, `fit_rf_primary_drying`, and `qrf_integrate`.
+  Lower-level RF heat diagnostics remain module-level unless they become
+  broadly used user-facing APIs.
 
 ## RF Preflight Notes
 
