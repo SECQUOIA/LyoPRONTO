@@ -34,6 +34,7 @@ from . import pikal
 from . import rf
 from . import fitting
 from . import cycle_time
+from . import eccurt
 
 from .typed import Q_, ureg, RpFormFit, ConstPhysProp, RampedVariable, PrimaryDryFit
 from .cycle_time import identify_pd_end
@@ -86,6 +87,13 @@ from .fitting import (
     gen_sol_rf,
     fit_rf_primary_drying,
 )
+from .eccurt import (
+    ECLine,
+    eq_cap_line,
+    eq_cap_line_new,
+    eq_cap_pressure,
+    eq_cap_pressures_new,
+)
 
 from .high_level import (
     execute_simulation,
@@ -114,6 +122,7 @@ __all__ = [
     "rf",
     "fitting",
     "cycle_time",
+    "eccurt",
     "Q_",
     "ureg",
     "RpFormFit",
@@ -161,6 +170,11 @@ __all__ = [
     "obj_rf",
     "fit_primary_drying",
     "fit_rf_primary_drying",
+    "ECLine",
+    "eq_cap_line",
+    "eq_cap_line_new",
+    "eq_cap_pressure",
+    "eq_cap_pressures_new",
     "err_expT",
     "num_errs",
     "obj_expT",
