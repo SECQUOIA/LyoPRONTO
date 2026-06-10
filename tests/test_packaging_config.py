@@ -39,7 +39,9 @@ def _requirements(path: Path) -> list[str]:
 def test_requirements_txt_mirrors_runtime_dependencies() -> None:
     project = _pyproject()["project"]
 
-    assert _requirements(ROOT / "requirements.txt") == project["dependencies"]
+    assert sorted(_requirements(ROOT / "requirements.txt")) == sorted(
+        project["dependencies"]
+    )
 
 
 def test_requirements_dev_delegates_to_dev_extra() -> None:
