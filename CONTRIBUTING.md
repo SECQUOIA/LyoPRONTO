@@ -55,11 +55,8 @@ cd LyoPRONTO
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Install in development mode
-pip install -e .
-
-# Install development dependencies
-pip install -r requirements-dev.txt
+# Install in development mode with development dependencies
+pip install -e ".[dev]"
 
 # Run tests to verify setup
 pytest tests/ -v
@@ -106,11 +103,9 @@ pytest tests/ -v --pdb
 ### 4. Code Quality Checks
 
 ```bash
-# Format code
-black lyopronto/ tests/
-
-# Check linting
-flake8 lyopronto/ tests/
+# Format and lint code
+ruff format lyopronto/ tests/
+ruff check lyopronto/ tests/
 
 # Type checking (optional but recommended)
 mypy lyopronto/
@@ -252,7 +247,7 @@ def test_with_fixtures(self, standard_vial, standard_product):
 Before submitting a PR, ensure:
 
 - [ ] All tests pass (`pytest tests/ -v`)
-- [ ] Code is formatted (`black lyopronto/ tests/`)
+- [ ] Code is formatted (`ruff format lyopronto/ tests/`)
 - [ ] Documentation is updated
 - [ ] Docstrings are complete
 - [ ] CHANGELOG.md is updated (if applicable)

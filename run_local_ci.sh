@@ -21,7 +21,7 @@ echo ""
 
 # Check if we're in the right directory
 echo "2. Checking repository structure..."
-if [ ! -f "pytest.ini" ] || [ ! -d "tests" ] || [ ! -d "lyopronto" ]; then
+if [ ! -f "pyproject.toml" ] || [ ! -d "tests" ] || [ ! -d "lyopronto" ]; then
     echo "   ❌ Error: Must run from repository root"
     exit 1
 fi
@@ -32,10 +32,8 @@ echo ""
 echo "3. Installing dependencies..."
 echo "   Upgrading pip..."
 python -m pip install --upgrade pip -q
-echo "   Installing core dependencies..."
-pip install -r requirements.txt -q
-echo "   Installing dev dependencies..."
-pip install -r requirements-dev.txt -q
+echo "   Installing package with development dependencies..."
+pip install -e ".[dev]" -q
 echo "   ✅ Dependencies installed"
 echo ""
 

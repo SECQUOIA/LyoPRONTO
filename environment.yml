@@ -17,36 +17,13 @@ channels:
 dependencies:
   # Python version (matching CI)
   - python=3.13
-  
-  # Core scientific computing (from requirements.txt)
-  - numpy>=1.24.0
-  - scipy>=1.10.0
-  - matplotlib>=3.7.0
-  - pandas>=2.0.0
-  - ruamel.yaml>=0.18.0
-  
-  # Testing framework (from requirements-dev.txt)
-  - pytest>=7.4.0
-  - pytest-cov>=4.1.0
-  - pytest-mock>=3
-  - pytest-xdist>=3.3.0
-  
-  # Property-based testing
-  - hypothesis>=6.82.0
-  
-  # Code formatting and linting
-  - black>=23.7.0
-  - flake8>=6.1.0
-  - mypy>=1.4.0
-  
+
   # Useful development tools (not required but recommended)
   - ipython
   - jupyter
   - jupyterlab
-  
-  # Pip (for any pip-only packages)
+
+  # Package and development dependencies are canonical in pyproject.toml.
   - pip
-  
-  # Optional: Install LyoPRONTO itself in development mode via pip
-  # - pip:
-  #   - -e .
+  - pip:
+      - -e .[dev]

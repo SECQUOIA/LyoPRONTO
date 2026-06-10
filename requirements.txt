@@ -1,6 +1,7 @@
-# Core scientific computing dependencies
+# Compatibility file for tooling that expects runtime requirements.
+# Canonical dependency metadata lives in pyproject.toml [project].dependencies.
 numpy>=1.24.0
 scipy>=1.10.0
 matplotlib>=3.7.0
-pandas>=2.0.0
+ruamel.yaml>=0.18.0
 pint>=0.24

@@ -244,8 +244,9 @@ pytest tests/test_functions.py::TestVaporPressure::test_vapor_pressure_at_freezi
 # Run with debugging
 pytest tests/ -v --pdb
 
-# Format code
-black lyopronto/ tests/
+# Format and lint code
+ruff format lyopronto/ tests/
+ruff check lyopronto/ tests/
 
 # Type checking
 mypy lyopronto/

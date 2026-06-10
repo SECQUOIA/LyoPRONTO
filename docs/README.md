@@ -70,7 +70,7 @@ LyoPRONTO uses Material for MkDocs with `mike` for versioning:
 
 ```bash
 # Install dependencies
-pip install mkdocs-material mike
+pip install .[docs]
 
 # Serve documentation locally
 mkdocs serve
