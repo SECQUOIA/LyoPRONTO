@@ -25,13 +25,69 @@ wheels/
 *.egg
 MANIFEST
 
-# Data files
-*.csv
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
 
-docs/build
+# Test, coverage, type-checker, and linter artifacts
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.pytest_cache/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+junit*.xml
 
-# for conda environment install, converted from pyproject.toml
-environment.yml 
+# Documentation and notebook build outputs
+docs/build/
+docs/examples/*_output.ipynb
+
+# Local simulation and example outputs
+/lyopronto_input_*.csv
+/lyopronto_output_*.csv
+/lyopronto_primary_drying_*.csv
+/lyopronto_design_space_*.csv
+/lyopronto_freezing_*.csv
+/lyopronto_parameter_estimation_*.csv
+/lyopronto_optimizer_*.csv
+/lyo_Rp_data_*.csv
+/lyo_*.pdf
+/primary_drying_results.png
+/design_space_results.png
+/freezing_results.png
+/parameter_estimation_results.png
+/optimizer_results.png
+/input_saved_*.csv
+/output_saved_*.csv
+examples/outputs/*
+!examples/outputs/.gitkeep
+!examples/outputs/README.md
+
+# Benchmark run outputs. Existing reference results are allowlisted below.
+benchmarks/results/*
+!benchmarks/results/archive/
+benchmarks/results/archive/*
+!benchmarks/results/archive/*.jsonl
+!benchmarks/results/archive/*.png
+!benchmarks/results/both_ramp_test/
+!benchmarks/results/both_ramp_test/**
+!benchmarks/results/both_test/
+!benchmarks/results/both_test/**
+!benchmarks/results/debug_fd/
+!benchmarks/results/debug_fd/**
+!benchmarks/results/pch_test/
+!benchmarks/results/pch_test/**
+!benchmarks/results/test/
+!benchmarks/results/test/**
+!benchmarks/results/test_validation/
+!benchmarks/results/test_validation/**
+
 # for local settings
 .vscode/
 ################################################################################
