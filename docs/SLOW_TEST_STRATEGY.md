@@ -1,114 +1,72 @@
-# Slow Test Strategy
+# Test Lane Strategy
 
-## Problem
-- Full test suite takes **37 minutes** on GitHub CI (2 cores)
-- Locally takes only **4 minutes** (18 parallel workers)
-- Slow optimization tests dominate runtime (~20 tests taking 20-200+ seconds each)
+## Purpose
 
-## Solution: Three-Tier Testing Strategy
+LyoPRONTO separates fast feedback from expensive validation with pytest
+markers. The active lanes are documented in `tests/README.md` and mirrored by
+GitHub Actions plus `run_local_ci.sh`.
 
-### 1. **PR Tests (Fast Feedback)** - `.github/workflows/pr-tests.yml`
-**Skips slow tests** for rapid iteration during PR development.
+## Lanes
 
-- **Draft PR**: Fast tests only (no coverage)
-- **Ready for Review**: Fast tests with coverage
-- **Runtime**: ~2-5 minutes on CI
-- **Command**: `pytest tests/ -m "not slow"`
-- **Tests excluded**: 20 slow optimization tests marked with `@pytest.mark.slow`
+### Fast PR Lane
 
-### 2. **Main Branch Tests (Complete Validation)** - `.github/workflows/tests.yml`
-**Runs ALL tests** including slow ones after merge to main/dev-pyomo.
+- **Workflow:** `.github/workflows/pr-tests.yml`
+- **Trigger:** Every pull request update
+- **Command:** `pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"`
+- **Purpose:** Keep ordinary PR feedback focused on tracked, non-notebook SciPy
+  behavior.
 
-- **Trigger**: Push to main or dev-pyomo branches (after PR merge)
-- **Runtime**: ~30-40 minutes on CI
-- **Command**: `pytest tests/` (no exclusions)
-- **Purpose**: Comprehensive validation of merged code
+### Full Non-Pyomo Lane
 
-### 3. **Manual Slow Tests** - `.github/workflows/slow-tests.yml`
-**On-demand testing** for slow tests before merge if needed.
+- **Workflows:** `.github/workflows/pr-tests.yml`,
+  `.github/workflows/tests.yml`
+- **Trigger:** Ready/non-draft PRs and pushes to `main`
+- **Command:** `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+- **Purpose:** Main confidence gate for tracked behavior while Pyomo remains a
+  planned optional stack.
 
-- **Trigger**: Manual workflow dispatch from GitHub Actions UI
-- **Options**:
-  - Run only slow tests: `pytest tests/ -m "slow"`
-  - Run all tests: `pytest tests/`
-- **Use cases**:
-  - Pre-merge validation of optimization changes
-  - Testing on feature branches without merging
-  - Debugging slow test failures
+### Slow Non-Pyomo Lane
 
-## Test Breakdown
+- **Workflow:** `.github/workflows/slow-tests.yml`
+- **Trigger:** Manual workflow dispatch
+- **Command:** `pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+- **Purpose:** Targeted optimizer-heavy validation when a change touches slow
+  scientific paths or when a reviewer wants focused evidence.
 
-### Fast Tests (174 tests) - ~50 seconds local, ~2-5 minutes CI
-- Core functionality tests
-- Quick validation tests
-- Edge case tests with simple scenarios
+### Notebook Lane
 
-### Slow Tests (20 tests) - ~3+ minutes local, ~30+ minutes CI
-- `test_opt_Pch_Tsh_coverage.py`: 17 slow tests (joint optimization)
-  - `test_narrow_optimization_ranges` - 207s
-  - `test_high_product_resistance` - 121s
-  - `test_tight_equipment_constraint` - 75s
-  - And 14 more optimization tests
-- `test_opt_Pch.py`: 3 slow tests (pressure-only optimization)
-  - `test_high_resistance_product` - 47s
-  - `test_low_critical_temperature` - 32s
-  - `test_consistent_results` - 24s
+- **Workflow:** `.github/workflows/rundocs.yml`
+- **Trigger:** Ready/non-draft PRs, pushes to `main`, or manual dispatch
+- **Command:** `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+- **Purpose:** Execute documentation notebooks separately from ordinary fast
+  tests.
 
-## Marking Tests as Slow
+### Pyomo Lane
 
-Tests are marked with the `@pytest.mark.slow` decorator:
+- **Workflow:** `.github/workflows/slow-tests.yml`
+- **Trigger:** Manual workflow dispatch
+- **Command:** `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+- **Purpose:** Optional future validation for Pyomo/IPOPT tests. Until tracked
+  Pyomo tests exist, exit code 5 from pytest is treated as a no-op.
 
-```python
-class TestOptPchTshEdgeCases:
-    @pytest.mark.slow
-    def test_narrow_optimization_ranges(self, conservative_setup):
-        """Test with narrow optimization ranges."""
-        # ... test code ...
-```
+## Marker Policy
 
-Criteria for marking tests as slow:
-- Takes > 20 seconds on local machine (8-18 cores)
-- Involves complex scipy optimization
-- Tests edge cases with difficult convergence
+- `slow`: Long-running or optimizer-heavy tests excluded from the fast PR lane.
+- `notebook`: Papermill/Jupyter tests for documentation examples.
+- `pyomo`: Optional future tests requiring Pyomo and solver dependencies.
+- `main`: Legacy `main.py` and high-level API behavior coverage.
+- `serial`: Tests that must be run without xdist, using `pytest -m serial -n 0`.
 
-## Usage
+## Local Usage
 
-### For Developers (Local)
 ```bash
-# Fast tests only (recommended for development)
-pytest tests/ -m "not slow"  # ~50s
-
-# All tests including slow
-pytest tests/  # ~4 minutes
-
-# Only slow tests
-pytest tests/ -m "slow"  # ~3+ minutes
+./run_local_ci.sh fast
+./run_local_ci.sh full
+./run_local_ci.sh slow
+./run_local_ci.sh notebook
+./run_local_ci.sh pyomo
 ```
 
-### For CI/CD
-
-**Automatic (no action needed):**
-- PR commits: Fast tests run automatically
-- Merge to main: All tests run automatically
-
-**Manual (when needed):**
-1. Go to GitHub Actions tab
-2. Select "Slow Tests (Manual)" workflow
-3. Click "Run workflow"
-4. Choose to run all tests or only slow tests
-
-## Benefits
-
-1. **Fast feedback**: PRs get results in ~2-5 minutes instead of 37 minutes
-2. **Complete validation**: Main branch still validates everything
-3. **Flexibility**: Manual trigger for slow tests when needed
-4. **Clear separation**: Developers know which tests are slow
-5. **Better CI utilization**: Don't waste CI minutes on every commit
-
-## References
-
-- Slow test markers already defined in `pytest.ini`
-- Tests marked using script: `mark_slow_tests.py`
-- PR workflow: `.github/workflows/pr-tests.yml`
-- Main workflow: `.github/workflows/tests.yml`
-- Manual workflow: `.github/workflows/slow-tests.yml`
+Use the fast lane before pushing routine changes. Use the full lane before
+marking a PR ready for review when practical. Use the slow or notebook lanes
+when the changed files make those paths relevant.

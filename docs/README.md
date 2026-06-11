@@ -5,21 +5,19 @@ This directory contains all technical documentation for the LyoPRONTO lyophiliza
 ## Core Documentation
 ## Testing & Continuous Integration
 
-LyoPRONTO uses a modern, robust CI/CD pipeline and a comprehensive test suite. The test suite is divided into fast and slow tests, with all code and documentation changes automatically validated via GitHub Actions.
+LyoPRONTO uses explicit pytest marker lanes for CI and local validation:
 
-- **Fast/Slow Test Separation:**
-    - Fast tests run on every PR and push (under 60 seconds).
-    - Slow tests (marked with `@pytest.mark.slow`) run nightly and on demand.
-- **Centralized Python Version Management:**
-    - All workflows use the Python version(s) specified in `.github/ci-config/ci-versions.yml`.
-- **CI Workflows:**
-    - PRs and pushes: Fast tests (`pr-tests.yml`)
-    - Main branch: Full suite (`tests.yml`)
-    - Nightly/manual: Slow tests (`slow-tests.yml`)
-    - Docs: Build and link check (`docs.yml`)
-- **Coverage & Linting:**
-    - Coverage is reported for all test runs.
-    - Linting and formatting are enforced in CI.
+- **Fast PR:** `pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"`
+- **Full non-Pyomo:** `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+- **Slow manual:** `pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+- **Notebook:** `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+- **Pyomo manual:** `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+
+The same lanes can be run locally with `./run_local_ci.sh fast`,
+`./run_local_ci.sh full`, `./run_local_ci.sh slow`,
+`./run_local_ci.sh notebook`, and `./run_local_ci.sh pyomo`. Python version is
+read from `.github/ci-config/ci-versions.yml`. Ruff formatting and linting are
+documented local checks, not current CI gates.
 
 See [`../tests/README.md`](../tests/README.md) for full details on running, writing, and debugging tests, as well as CI workflow explanations.
 

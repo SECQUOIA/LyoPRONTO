@@ -1,106 +1,90 @@
-name: Slow Tests (Manual)
-
-# Manual workflow for running slow optimization tests
-# Useful for:
-# - Testing before merge if concerned about slow test failures
-# - Running comprehensive tests on feature branches
-# - Validating optimization behavior changes
+name: Manual Validation Lanes
 
 on:
   workflow_dispatch:
     inputs:
-      run_all:
-        description: 'Run all tests (true) or only slow tests (false)'
-        required: false
-        default: 'false'
+      lane:
+        description: 'Validation lane to run'
+        required: true
+        default: 'slow-non-pyomo'
         type: choice
         options:
-          - 'true'
-          - 'false'
-      include_pyomo:
-        description: 'Include Pyomo tests (requires IPOPT)'
-        required: false
-        default: 'true'
-        type: choice
-        options:
-          - 'true'
-          - 'false'
+          - slow-non-pyomo
+          - full-non-pyomo
+          - pyomo
+
+permissions:
+  contents: read
 
 jobs:
-  slow-tests:
+  validation:
+    name: ${{ inputs.lane }}
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
+
     - name: Read CI version config
       id: versions
       uses: mikefarah/yq@v4.44.1
       with:
         cmd: yq eval '.python-version' .github/ci-config/ci-versions.yml
-    
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: ${{ steps.versions.outputs.result }}
         cache: 'pip'
-        cache-dependency-path: |
-          pyproject.toml
-    
+        cache-dependency-path: pyproject.toml
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip setuptools wheel
-        pip install .
-        pip install .[dev]
-        if [ "${{ inputs.include_pyomo }}" == "true" ]; then
-          pip install pyomo idaes-pse
-        fi
-        pip install -e . --no-build-isolation
-    
-    - name: Install IPOPT solver via IDAES (if Pyomo enabled)
-      if: inputs.include_pyomo == 'true'
+        pip install -e ".[dev]"
+
+    - name: Install optional Pyomo stack
+      if: inputs.lane == 'pyomo'
       run: |
-        echo "Installing IPOPT solver via IDAES extensions"
+        pip install pyomo idaes-pse
         idaes get-extensions --extra petsc
-    
-    - name: Run slow tests
+
+    - name: Run selected validation lane
       env:
         RUN_SLOW_TESTS: "1"
       run: |
-        # Helper: allow exit code 5 (no tests collected) to pass gracefully
-        run_pytest() { "$@" || { rc=$?; [ $rc -eq 5 ] && echo "No matching tests found (exit 5 is OK)" && return 0; return $rc; }; }
-        if [ "${{ inputs.run_all }}" == "true" ]; then
-          echo "Running ALL tests (including slow optimization tests)"
-          echo "This may take 30-40 minutes on CI"
-          if [ "${{ inputs.include_pyomo }}" == "true" ]; then
-            run_pytest pytest tests/ -n auto -v --cov=lyopronto --cov-report=xml --cov-report=term-missing
-          else
-            run_pytest pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml --cov-report=term-missing
-          fi
-        else
-          echo "Running ONLY slow tests (marked with @pytest.mark.slow)"
-          echo "This focuses on optimization tests that take minutes"
-          if [ "${{ inputs.include_pyomo }}" == "true" ]; then
-            run_pytest pytest tests/ -n auto -v -m "slow" --cov=lyopronto --cov-report=xml --cov-report=term-missing
-          else
-            run_pytest pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml --cov-report=term-missing
-          fi
-        fi
-    
+        run_pytest_allow_empty() {
+          "$@" || {
+            rc=$?
+            if [ "$rc" -eq 5 ]; then
+              echo "No tests collected for selected lane; treating this as a no-op."
+              return 0
+            fi
+            return $rc
+          }
+        }
+
+        case "${{ inputs.lane }}" in
+          slow-non-pyomo)
+            pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+            ;;
+          full-non-pyomo)
+            pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+            ;;
+          pyomo)
+            run_pytest_allow_empty pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+            ;;
+          *)
+            echo "Unknown lane: ${{ inputs.lane }}"
+            exit 2
+            ;;
+        esac
+
     - name: Upload coverage
+      if: ${{ always() && hashFiles('coverage.xml') != '' }}
       uses: codecov/codecov-action@v4
       with:
         file: ./coverage.xml
-        flags: slow-tests
-        name: slow-tests-coverage
+        flags: manual-validation
+        name: manual-validation-coverage
         fail_ci_if_error: false
         token: ${{ secrets.CODECOV_TOKEN }}
-    
-    - name: Test Summary
-      if: always()
-      run: |
-        if [ "${{ inputs.run_all }}" == "true" ]; then
-          echo "Complete test suite finished"
-        else
-          echo "Slow tests completed"
-        fi
-        echo "Coverage uploaded to Codecov"
