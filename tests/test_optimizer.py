@@ -12,6 +12,7 @@ import os
 from lyopronto import opt_Tsh
 
 
+@pytest.mark.slow
 class TestOptimizerWebInterface:
     """Test optimizer functionality matching web interface examples."""
     
@@ -266,6 +267,7 @@ class TestOptimizerWebInterface:
         assert results[-1, 6] >= 0.99  # Drying complete
 
 
+@pytest.mark.slow
 class TestOptimizerEdgeCases:
     """Test edge cases and error handling for optimizer."""
     

@@ -282,6 +282,7 @@ def test_kbb_transforms_map_rf_guess_values(synthetic_rf_params):
         BoundedKBBTransform(synthetic_rf_params, Kvwf_scalefac=1.0)
 
 
+@pytest.mark.slow
 def test_rf_solution_objective_and_residuals_use_primary_dry_fit(
     synthetic_rf_params,
 ):
@@ -315,6 +316,7 @@ def test_rf_solution_objective_and_residuals_use_primary_dry_fit(
     assert np.any(np.abs(residuals[n_tf : n_tf + n_tvw]) > 0.0)
 
 
+@pytest.mark.slow
 def test_fit_rf_primary_drying_least_squares_recovers_kbb(synthetic_rf_params):
     fit = _rf_fit_data(synthetic_rf_params)
     transform = KBBTransform(
@@ -341,6 +343,7 @@ def test_fit_rf_primary_drying_least_squares_recovers_kbb(synthetic_rf_params):
     assert _ratio(fitted.Bvw, synthetic_rf_params.Bvw) == pytest.approx(1.0, rel=0.3)
 
 
+@pytest.mark.slow
 def test_fit_rf_primary_drying_minimize_recovers_kbb(synthetic_rf_params):
     fit = _rf_fit_data(synthetic_rf_params, save_at=np.array([0.0, 14.0]))
     transform = KBBTransform(

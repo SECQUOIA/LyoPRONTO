@@ -124,6 +124,7 @@ def test_fitting_generators_return_nan_for_transform_overflow(
     assert np.isnan(sols[0])
 
 
+@pytest.mark.slow
 def test_fit_primary_drying_recovers_k_and_rp(primary_drying_fit_case):
     params, fit, values = primary_drying_fit_case
     transform = _krp_transform(values)
@@ -155,6 +156,7 @@ def test_fit_primary_drying_recovers_k_and_rp(primary_drying_fit_case):
     )
 
 
+@pytest.mark.slow
 def test_fit_primary_drying_minimize_recovers_heat_transfer(
     primary_drying_fit_case,
 ):
@@ -205,6 +207,7 @@ def test_fit_primary_drying_forwards_least_squares_optimizer_method(
     assert result.fit_method == "least_squares"
 
 
+@pytest.mark.slow
 def test_rp_only_fit_recovers_product_resistance(primary_drying_fit_case):
     params, fit, values = primary_drying_fit_case
     transform = _rp_transform(values)
@@ -232,6 +235,7 @@ def test_rp_only_fit_recovers_product_resistance(primary_drying_fit_case):
     )
 
 
+@pytest.mark.slow
 def test_shared_k_and_separate_rp_multi_experiment_objective(
     primary_drying_fit_case,
 ):

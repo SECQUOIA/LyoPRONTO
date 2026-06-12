@@ -128,6 +128,7 @@ def standard_opt_pch_inputs():
     return vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial
 
 
+@pytest.mark.slow
 class TestOptPchBasic:
     """Basic functionality tests for opt_Pch module."""
 
@@ -157,6 +158,7 @@ class TestOptPchBasic:
         assert_complete_drying(output)
 
 
+@pytest.mark.slow
 class TestOptPchEdgeCases:
     """Edge case tests for opt_Pch module."""
 
@@ -306,6 +308,7 @@ class TestOptPchEdgeCases:
         np.testing.assert_array_almost_equal(output1, output2, decimal=6)
 
 
+@pytest.mark.slow
 class TestOptPchReference:
     @pytest.fixture
     def opt_pch_reference_inputs(self):

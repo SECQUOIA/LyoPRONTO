@@ -75,6 +75,7 @@ def opt_tsh_consistency(output, setup):
     )
 
 
+@pytest.mark.slow
 class TestOptTsh:
     """Test optimizer functionality matching web interface examples."""
 
@@ -250,6 +251,7 @@ class TestOptTsh:
         pass
 
 
+@pytest.mark.slow
 class TestOptimizerEdgeCases:
     """Test edge cases and error handling for optimizer."""
 
