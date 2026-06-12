@@ -96,6 +96,7 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert 'pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto' in manual_tests
     assert 'rc" -eq 5' in manual_tests
     assert "pip install pyomo idaes-pse" in manual_tests
+    assert "RUN_SLOW_TESTS" not in manual_tests
 
     assert 'pytest tests/ -n auto -v -m "notebook" --cov=lyopronto' in notebook_tests
     assert "github.event.pull_request.draft == false" in notebook_tests

@@ -49,8 +49,6 @@ jobs:
         idaes get-extensions --extra petsc
 
     - name: Run selected validation lane
-      env:
-        RUN_SLOW_TESTS: "1"
       run: |
         run_pytest_allow_empty() {
           "$@" || {
