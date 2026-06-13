@@ -394,7 +394,7 @@ If test speed becomes an issue:
 | **Test Organization** | ⭐⭐⭐⭐⭐ | Clear separation, good naming |
 | **CI Integration** | ⭐⭐⭐⭐⭐ | Properly configured |
 | **Performance** | ⭐⭐⭐⭐☆ | Good, appropriate for complexity |
-| **Warnings** | ⭐⭐⭐⭐☆ | Suppressed, not a real issue |
+| **Warnings** | ⭐⭐⭐⭐☆ | Policy-managed; visible by default with expected warnings asserted |
 | **Overall** | ⭐⭐⭐⭐⭐ | **Professional, production-ready** |
 
 ### Key Takeaways
