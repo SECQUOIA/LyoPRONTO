@@ -450,10 +450,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#problem" class="md-nav__link">
+  <a href="#current-approach" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Problem
+        Current Approach
       
     </span>
   </a>
@@ -461,10 +461,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#root-causes" class="md-nav__link">
+  <a href="#commands" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Root Causes
+        Commands
       
     </span>
   </a>
@@ -472,49 +472,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#solution-dual-workflow-strategy" class="md-nav__link">
+  <a href="#why-this-helps" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Solution: Dual Workflow Strategy
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Solution: Dual Workflow Strategy">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#for-pull-requests-fast-feedback-githubworkflowspr-testsyml" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        For Pull Requests: Fast Feedback (.github/workflows/pr-tests.yml)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#for-main-branch-full-quality-githubworkflowstestsyml" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        For Main Branch: Full Quality (.github/workflows/tests.yml)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#performance-comparison" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Performance Comparison
+        Why This Helps
       
     </span>
   </a>
@@ -522,126 +483,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#optimizations-applied" class="md-nav__link">
+  <a href="#maintenance-notes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Optimizations Applied
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Optimizations Applied">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-split-pr-and-main-workflows" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Split PR and Main Workflows
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-improved-pip-caching" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Improved Pip Caching
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-parallel-test-execution" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Parallel Test Execution
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-optimized-dependency-installation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Optimized Dependency Installation
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#is-11-minutes-acceptable" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Is 11 Minutes Acceptable?
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#industry-benchmarks" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Industry Benchmarks
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#expected-results" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Expected Results
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#further-optimization-options-if-needed" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Further Optimization Options (If Needed)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#monitoring" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Monitoring
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#references" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        References
+        Maintenance Notes
       
     </span>
   </a>
@@ -666,192 +511,50 @@
 
 
 <h1 id="ci-performance-optimization">CI Performance Optimization</h1>
-<h2 id="problem">Problem</h2>
-<p>The original CI configuration was taking <strong>~11 minutes</strong> to run 128 tests, which is excessive for a test suite that completes in <strong>1-2 minutes locally</strong>.</p>
-<h2 id="root-causes">Root Causes</h2>
-<ol>
-<li><strong>Coverage overhead</strong>: Running coverage analysis adds ~2x overhead (1 minute → 2 minutes)</li>
-<li><strong>Limited CPU cores</strong>: GitHub free tier runners have only 2 cores (vs 36+ locally)</li>
-<li><strong>Dependency installation</strong>: Installing packages can take 2-3 minutes without effective caching</li>
-<li><strong>Running coverage on every PR</strong>: Unnecessary for development feedback loop</li>
-</ol>
-<h2 id="solution-dual-workflow-strategy">Solution: Dual Workflow Strategy</h2>
-<h3 id="for-pull-requests-fast-feedback-githubworkflowspr-testsyml">For Pull Requests: Fast Feedback (<code>.github/workflows/pr-tests.yml</code>)</h3>
+<h2 id="current-approach">Current Approach</h2>
+<p>CI performance is managed with marker-based lanes:</p>
 <ul>
-<li><strong>No coverage</strong> - tests only</li>
-<li><strong>Target time</strong>: 3-5 minutes</li>
-<li><strong>Purpose</strong>: Quick feedback for developers during PR review</li>
-<li><strong>Runs on</strong>: Pull requests only</li>
+<li>Fast PR feedback excludes <code>slow</code>, <code>notebook</code>, and <code>pyomo</code>.</li>
+<li>Ready/non-draft PRs and <code>main</code> runs execute the full non-Pyomo lane with
+  coverage.</li>
+<li>Slow optimizer-heavy validation is available through manual dispatch.</li>
+<li>Notebook tests run in their own explicit workflow.</li>
+<li>Pyomo validation is manual and optional until tracked Pyomo tests exist.</li>
 </ul>
-<h3 id="for-main-branch-full-quality-githubworkflowstestsyml">For Main Branch: Full Quality (<code>.github/workflows/tests.yml</code>)</h3>
-<ul>
-<li><strong>With coverage</strong> - full analysis</li>
-<li><strong>Target time</strong>: 5-7 minutes  </li>
-<li><strong>Purpose</strong>: Complete quality metrics for merged code</li>
-<li><strong>Runs on</strong>: Pushes to <code>main</code> and <code>dev-pyomo</code> branches</li>
-</ul>
-<h2 id="performance-comparison">Performance Comparison</h2>
-<table>
-<thead>
-<tr>
-<th>Scenario</th>
-<th>Before</th>
-<th>After</th>
-<th>Improvement</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>PR Tests</strong></td>
-<td>~11 min</td>
-<td>~3-5 min</td>
-<td><strong>55-73% faster</strong></td>
-</tr>
-<tr>
-<td><strong>Main Branch</strong></td>
-<td>~11 min</td>
-<td>~5-7 min</td>
-<td><strong>36-55% faster</strong></td>
-</tr>
-<tr>
-<td><strong>Local (no coverage)</strong></td>
-<td>5.3 min</td>
-<td>1.0 min</td>
-<td><strong>81% faster</strong> (with <code>-n auto</code>)</td>
-</tr>
-<tr>
-<td><strong>Local (with coverage)</strong></td>
-<td>-</td>
-<td>2.0 min</td>
-<td>(reference)</td>
-</tr>
-</tbody>
-</table>
-<h2 id="optimizations-applied">Optimizations Applied</h2>
-<h3 id="1-split-pr-and-main-workflows">1. <strong>Split PR and Main Workflows</strong></h3>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># pr-tests.yml - Fast feedback for PRs</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="l l-Scalar l-Scalar-Plain">pytest tests/ -n auto -v</span><span class="w">  </span><span class="c1"># No coverage</span>
+<h2 id="commands">Commands</h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Fast PR feedback</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not slow and not notebook and not pyomo&quot;</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># tests.yml - Full analysis for main</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="l l-Scalar l-Scalar-Plain">pytest tests/ -n auto -v --cov=lyopronto</span><span class="w">  </span><span class="c1"># With coverage</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Full non-Pyomo validation with coverage</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not pyomo&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-report<span class="o">=</span>xml:coverage.xml<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># Manual slow validation</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;slow and not pyomo&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-report<span class="o">=</span>xml:coverage.xml<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="c1"># Explicit notebook validation</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;notebook&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-report<span class="o">=</span>xml:coverage.xml<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
 </span></code></pre></div>
-<h3 id="2-improved-pip-caching">2. <strong>Improved Pip Caching</strong></h3>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actions/setup-python@v5</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">with</span><span class="p">:</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="nt">cache</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;pip&#39;</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="nt">cache-dependency-path</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">      </span><span class="no">requirements.txt</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">      </span><span class="no">requirements-dev.txt</span>
-</span></code></pre></div>
-<h3 id="3-parallel-test-execution">3. <strong>Parallel Test Execution</strong></h3>
-<p>Already enabled with <code>-n auto</code> (uses all available cores)</p>
-<h3 id="4-optimized-dependency-installation">4. <strong>Optimized Dependency Installation</strong></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Combined installation (faster)</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt<span class="w"> </span>-r<span class="w"> </span>requirements-dev.txt
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># vs separate installs (slower)</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements-dev.txt
-</span></code></pre></div>
-<h2 id="is-11-minutes-acceptable">Is 11 Minutes Acceptable?</h2>
-<p><strong>No.</strong> For a project with:
-- 128 tests
-- ~1 minute execution time locally (parallel, no coverage)
-- ~2 minutes with coverage locally</p>
-<p><strong>Acceptable CI times:</strong>
-- ✅ <strong>3-5 minutes</strong> for PR tests (no coverage) - <strong>GOOD</strong>
-- ✅ <strong>5-7 minutes</strong> for main branch (with coverage) - <strong>ACCEPTABLE</strong>
-- ⚠️ <strong>8-10 minutes</strong> - <strong>BORDERLINE</strong> (consider further optimization)
-- ❌ <strong>11+ minutes</strong> - <strong>TOO SLOW</strong> (poor developer experience)</p>
-<h2 id="industry-benchmarks">Industry Benchmarks</h2>
-<table>
-<thead>
-<tr>
-<th>Project Size</th>
-<th>Tests</th>
-<th>Target CI Time</th>
-<th>Our Project</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Small</strong></td>
-<td>&lt;50</td>
-<td>&lt;2 min</td>
-<td>-</td>
-</tr>
-<tr>
-<td><strong>Medium</strong></td>
-<td>50-200</td>
-<td>3-7 min</td>
-<td>✅ 128 tests</td>
-</tr>
-<tr>
-<td><strong>Large</strong></td>
-<td>200-1000</td>
-<td>7-15 min</td>
-<td>-</td>
-</tr>
-<tr>
-<td><strong>Very Large</strong></td>
-<td>1000+</td>
-<td>15-30 min</td>
-<td>-</td>
-</tr>
-</tbody>
-</table>
-<h2 id="expected-results">Expected Results</h2>
-<p>After these optimizations, typical CI runs should be:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Pull Request CI:
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>├── Checkout &amp; Setup: ~30s
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>├── Install deps (cached): ~1-2m
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>├── Run tests (no coverage): ~1-2m
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>└── Total: ~3-5 minutes ✅
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>Main Branch CI:
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>├── Checkout &amp; Setup: ~30s
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>├── Install deps (cached): ~1-2m
-</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>├── Run tests (with coverage): ~2-3m
-</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>├── Upload coverage: ~30s
-</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>└── Total: ~5-7 minutes ✅
-</span></code></pre></div>
-<h2 id="further-optimization-options-if-needed">Further Optimization Options (If Needed)</h2>
-<p>If CI times are still too slow, consider:</p>
-<ol>
-<li>
-<p><strong>Test sharding</strong> - Split tests across multiple jobs
-   <div class="language-yaml highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">strategy</span><span class="p">:</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">matrix</span><span class="p">:</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="nt">shard</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">3</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">4</span><span class="p p-Indicator">]</span>
-</span></code></pre></div></p>
-</li>
-<li>
-<p><strong>Conditional test execution</strong> - Skip tests for doc-only changes
-   <div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">paths-ignore</span><span class="p">:</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;docs/**&#39;</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;*.md&#39;</span>
-</span></code></pre></div></p>
-</li>
-<li>
-<p><strong>Caching test results</strong> - Skip unchanged tests
-   <div class="language-yaml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="l l-Scalar l-Scalar-Plain">pytest --lf --ff</span><span class="w">  </span><span class="c1"># Last failed, then failed first</span>
-</span></code></pre></div></p>
-</li>
-<li>
-<p><strong>Upgrade to GitHub Team</strong> - Get 4 cores instead of 2</p>
-</li>
-</ol>
-<h2 id="monitoring">Monitoring</h2>
-<p>Track CI performance over time:
-1. Check workflow run times in GitHub Actions
-2. Compare PR tests vs main branch tests
-3. Alert if times exceed 10 minutes consistently
-4. Review and optimize slow tests quarterly</p>
-<h2 id="references">References</h2>
+<h2 id="why-this-helps">Why This Helps</h2>
 <ul>
-<li><a href="https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows">GitHub Actions: Caching dependencies</a></li>
-<li><a href="https://pytest-xdist.readthedocs.io/">pytest-xdist: Parallel execution</a></li>
-<li><a href="https://pytest-cov.readthedocs.io/">pytest-cov: Coverage overhead</a></li>
+<li>PR updates get quick signal from tracked non-notebook SciPy behavior.</li>
+<li>Coverage work is reserved for ready PRs and <code>main</code>.</li>
+<li>Optimizer-heavy slow tests remain available without forcing every draft PR to
+  pay that cost.</li>
+<li>Notebook execution is visible as its own lane instead of being hidden inside
+  ordinary fast tests.</li>
+<li>The optional Pyomo lane can be exercised manually without failing only because
+  no Pyomo tests have been added yet.</li>
+</ul>
+<h2 id="maintenance-notes">Maintenance Notes</h2>
+<ul>
+<li>Prefer changing marker expressions in one focused PR with matching updates to
+  workflows, <code>run_local_ci.sh</code>, and <code>tests/README.md</code>.</li>
+<li>Keep <code>-n auto</code> explicit in CI lane commands so parallel execution remains a
+  deliberate workflow choice.</li>
+<li>Do not use <code>--dist loadgroup</code> unless tests are grouped with xdist group
+  markers and the behavior has been measured.</li>
+<li>If fast PR runtime grows unexpectedly, first inspect newly added <code>slow</code> or
+  <code>notebook</code> candidates before broadening the fast lane exclusions.</li>
 </ul>
 
 

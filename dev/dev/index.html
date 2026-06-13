@@ -621,34 +621,44 @@
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip install .[dev]
 </span></code></pre></div>
 inside the LyoPRONTO directory (next to <code>pyproject.toml</code>).</p>
-<p>Execute 
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pytest ./tests
+<p>For fast PR-style feedback, execute
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>./run_local_ci.sh fast
 </span></code></pre></div>
-to run all the tests; some that use <code>papermill</code> to generate documentation notebooks are marked, and you can exclude those with
-<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pytest ./tests -m &quot;not notebook&quot;
+which runs
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pytest tests/ -n auto -v -m &quot;not slow and not notebook and not pyomo&quot;
 </span></code></pre></div></p>
+<p>Before marking a PR ready for review, run the full non-Pyomo lane when
+practical:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>./run_local_ci.sh full
+</span></code></pre></div>
+which runs
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pytest tests/ -n auto -v -m &quot;not pyomo&quot; --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+</span></code></pre></div></p>
+<p>Notebook, slow, and optional Pyomo validation are separate lanes:
+<code>./run_local_ci.sh notebook</code>, <code>./run_local_ci.sh slow</code>, and
+<code>./run_local_ci.sh pyomo</code>.</p>
 <h2 id="documentation">Documentation</h2>
 <p>Documentation build has different dependencies, installable by
-<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>pip install .[docs]
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>pip install .[docs]
 </span></code></pre></div></p>
 <p>Run
-<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>mike deploy [name]
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>mike deploy [name]
 </span></code></pre></div>
 to deploy a docs version with ID <code>[name]</code>, which could be e.g. <code>v1.1.0</code> or <code>pr-10</code>, etc. Preview locally by navigating to <code>LyoPRONTO_folder/site</code>, then running
-<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>python -m http.server --bind localhost
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>python -m http.server --bind localhost
 </span></code></pre></div>
 to spin up a local HTTP server on your own machine. </p>
 <p>On pushing to master, GitHub actions will run
-<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>mike deploy dev
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>mike deploy dev
 </span></code></pre></div>
 and on each tagged release will <code>mike deploy</code> the version number.</p>
 <p>On the off chance that the documentation gets really broken, you can do the following to deploy a new version of it to GitHub Pages:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>git fetch
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>git switch [branch with desired docs]
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>mike delete [broken docs version] # if necessary
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>mike deploy [new docs version] # if necessary
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>git switch gh-pages
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>git push origin gh-pages
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>git fetch
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>git switch [branch with desired docs]
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>mike delete [broken docs version] # if necessary
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>mike deploy [new docs version] # if necessary
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>git switch gh-pages
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>git push origin gh-pages
 </span></code></pre></div>
 <h3 id="helpful-references-for-how-to-get-documentation-generated">Helpful references for how to get documentation generated</h3>
 <p>https://realpython.com/python-project-documentation-with-mkdocs/ for a tutorial on MkDocs</p>

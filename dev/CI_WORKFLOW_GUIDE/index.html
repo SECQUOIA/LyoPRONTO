@@ -461,22 +461,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#workflow-stages" class="md-nav__link">
+  <a href="#workflows" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Workflow Stages
+        Workflows
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Workflow Stages">
+    <nav class="md-nav" aria-label="Workflows">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#stage-1-development-review-fast-tests" class="md-nav__link">
+  <a href="#githubworkflowspr-testsyml" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Stage 1: Development &amp; Review (Fast Tests)
+        .github/workflows/pr-tests.yml
       
     </span>
   </a>
@@ -484,10 +484,32 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#stage-2-pre-merge-verification-full-coverage" class="md-nav__link">
+  <a href="#githubworkflowstestsyml" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Stage 2: Pre-Merge Verification (Full Coverage)
+        .github/workflows/tests.yml
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#githubworkflowsrundocsyml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        .github/workflows/rundocs.yml
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#githubworkflowsslow-testsyml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        .github/workflows/slow-tests.yml
       
     </span>
   </a>
@@ -500,10 +522,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#visual-flow" class="md-nav__link">
+  <a href="#local-equivalents" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Visual Flow
+        Local Equivalents
       
     </span>
   </a>
@@ -511,99 +533,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#github-actions-triggers" class="md-nav__link">
+  <a href="#expected-pull-request-flow" class="md-nav__link">
     <span class="md-ellipsis">
       
-        GitHub Actions Triggers
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="GitHub Actions Triggers">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#pr-tests-fast" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        PR Tests (Fast)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#coverage-tests-full" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Coverage Tests (Full)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#benefits-of-this-approach" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Benefits of This Approach
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Benefits of This Approach">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#for-developers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        For Developers
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#for-reviewers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        For Reviewers
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#for-project-maintainers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        For Project Maintainers
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#comparison-with-other-strategies" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Comparison with Other Strategies
+        Expected Pull Request Flow
       
     </span>
   </a>
@@ -611,232 +544,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#example-timeline" class="md-nav__link">
+  <a href="#maintenance-notes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example Timeline
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Example Timeline">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#scenario-pr-with-3-commits-before-approval" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Scenario: PR with 3 commits before approval
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#monitoring-troubleshooting" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Monitoring &amp; Troubleshooting
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Monitoring &amp; Troubleshooting">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#check-workflow-status" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Check Workflow Status
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#if-fast-tests-fail" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        If Fast Tests Fail
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#if-coverage-tests-fail-after-approval" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        If Coverage Tests Fail After Approval
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#expected-behavior" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Expected Behavior
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#manual-override-if-needed" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Manual Override (If Needed)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#configuration-files" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Configuration Files
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#best-practices" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Best Practices
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Best Practices">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#for-contributors" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        For Contributors
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#for-reviewers_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        For Reviewers
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#for-maintainers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        For Maintainers
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#troubleshooting" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Troubleshooting
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Troubleshooting">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#coverage-tests-didnt-run-after-approval" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        "Coverage tests didn't run after approval"
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fast-tests-taking-too-long" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        "Fast tests taking too long"
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#coverage-decreased-after-merge" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        "Coverage decreased after merge"
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#future-enhancements" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Future Enhancements
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#references" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        References
+        Maintenance Notes
       
     </span>
   </a>
@@ -862,333 +573,79 @@
 
 <h1 id="ci-workflow-guide">CI Workflow Guide</h1>
 <h2 id="overview">Overview</h2>
-<p>The LyoPRONTO project uses a <strong>smart, draft-aware CI workflow</strong> for optimal developer experience and quality assurance:</p>
+<p>LyoPRONTO uses explicit pytest marker lanes instead of a single ambiguous test
+suite. The workflows are designed around five lanes:</p>
 <ol>
-<li><strong>Draft PRs</strong>: Fast tests only (3-5 minutes) - rapid iteration</li>
-<li><strong>Ready for Review</strong>: Full coverage (5-7 minutes) - quality verification</li>
-<li><strong>Main Branch</strong>: Full coverage (5-7 minutes) - maintain metrics</li>
+<li>Fast PR feedback</li>
+<li>Full non-Pyomo validation</li>
+<li>Manual slow non-Pyomo validation</li>
+<li>Explicit notebook validation</li>
+<li>Manual optional Pyomo validation</li>
 </ol>
-<p>This approach provides quick feedback during development while ensuring thorough quality checks when PR is ready for review.</p>
-<h2 id="workflow-stages">Workflow Stages</h2>
-<h3 id="stage-1-development-review-fast-tests">Stage 1: Development &amp; Review (Fast Tests)</h3>
-<p><strong>Workflow</strong>: <code>.github/workflows/pr-tests.yml</code></p>
-<p><strong>Triggers</strong>: Every commit pushed to a pull request
-- PR opened
-- New commits pushed (synchronize)
-- PR reopened</p>
-<p><strong>What runs</strong>:
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w">  </span><span class="c1"># No coverage</span>
-</span></code></pre></div></p>
-<p><strong>Duration</strong>: ~3-5 minutes</p>
-<p><strong>Purpose</strong>:
-- ✅ Quick feedback for developers
-- ✅ Catch breaking changes immediately
-- ✅ Allow rapid iteration
-- ❌ No coverage analysis (saves ~2 minutes)</p>
-<p><strong>When it runs</strong>:
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Developer pushes code → Fast tests run automatically
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>↓
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>Tests pass → Ready for review
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Tests fail → Developer fixes and pushes again → Fast tests re-run
-</span></code></pre></div></p>
-<h3 id="stage-2-pre-merge-verification-full-coverage">Stage 2: Pre-Merge Verification (Full Coverage)</h3>
-<p><strong>Workflow</strong>: <code>.github/workflows/tests.yml</code></p>
-<p><strong>Triggers</strong>: 
-1. PR approved by reviewer
-2. Direct pushes to <code>main</code> or <code>dev-pyomo</code> branches</p>
-<p><strong>What runs</strong>:
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-report<span class="o">=</span>xml
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1"># + Upload to Codecov</span>
-</span></code></pre></div></p>
-<p><strong>Duration</strong>: ~5-7 minutes</p>
-<p><strong>Purpose</strong>:
-- ✅ Full quality verification before merge
-- ✅ Coverage analysis and reporting
-- ✅ Final confirmation PR is merge-ready
-- ✅ Maintain quality metrics on main branch</p>
-<p><strong>When it runs</strong>:
-<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Developer pushes code → Fast tests pass → Reviewer approves PR
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>↓
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>Full coverage tests run automatically
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>↓
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>Coverage tests pass → Safe to merge
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>Coverage tests fail → Address issues before merge
-</span></code></pre></div></p>
-<h2 id="visual-flow">Visual Flow</h2>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>┌─────────────────────────────────────────────────────────────┐
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>│                    Pull Request Lifecycle                    │
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>└─────────────────────────────────────────────────────────────┘
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>1. Developer Creates PR
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>   └─&gt; Fast Tests Run (pr-tests.yml)
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>       ├─ Duration: ~3-5 min
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>       ├─ No coverage
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>       └─ Result: ✅ or ❌
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>2. Developer Pushes More Commits
-</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>   └─&gt; Fast Tests Re-run (pr-tests.yml)
-</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>       └─ Every commit triggers new run
-</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>
-</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>3. Reviewer Approves PR
-</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>   └─&gt; Full Coverage Tests Run (tests.yml)
-</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>       ├─ Duration: ~5-7 min
-</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>       ├─ With coverage
-</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>       ├─ Upload to Codecov
-</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>       └─ Result: ✅ or ❌
-</span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>
-</span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>4. Merge to Main
-</span><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>   └─&gt; Full Coverage Tests Run Again (tests.yml)
-</span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>       └─&gt; Updates coverage metrics for main branch
+<p>The marker policy and local commands are also documented in <code>tests/README.md</code>.</p>
+<h2 id="workflows">Workflows</h2>
+<h3 id="githubworkflowspr-testsyml"><code>.github/workflows/pr-tests.yml</code></h3>
+<p>Runs on pull requests targeting <code>main</code>.</p>
+<ul>
+<li><code>fast-scipy</code> runs on every PR update:
+  <code>pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"</code></li>
+<li><code>full-non-pyomo</code> runs only for ready/non-draft PRs:
+  <code>pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing</code></li>
+</ul>
+<h3 id="githubworkflowstestsyml"><code>.github/workflows/tests.yml</code></h3>
+<p>Runs on pushes to <code>main</code>.</p>
+<ul>
+<li><code>full-non-pyomo</code> runs the main confidence gate:
+  <code>pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing</code></li>
+</ul>
+<h3 id="githubworkflowsrundocsyml"><code>.github/workflows/rundocs.yml</code></h3>
+<p>Runs notebook validation for ready/non-draft PRs, pushes to <code>main</code>, and manual
+dispatch.</p>
+<ul>
+<li><code>notebook-tests</code> runs:
+  <code>pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing</code></li>
+</ul>
+<h3 id="githubworkflowsslow-testsyml"><code>.github/workflows/slow-tests.yml</code></h3>
+<p>Manual dispatch workflow with three lane choices:</p>
+<ul>
+<li><code>slow-non-pyomo</code>:
+  <code>pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing</code></li>
+<li><code>full-non-pyomo</code>:
+  <code>pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing</code></li>
+<li><code>pyomo</code>:
+  <code>pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing</code></li>
+</ul>
+<p>The Pyomo lane installs the optional Pyomo/IDAES stack and treats pytest exit
+code 5 as a no-op because the repository does not currently track Pyomo tests.</p>
+<h2 id="local-equivalents">Local Equivalents</h2>
+<p>Use <code>run_local_ci.sh</code> to run the same commands locally:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>./run_local_ci.sh<span class="w"> </span>fast
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>./run_local_ci.sh<span class="w"> </span>full
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>./run_local_ci.sh<span class="w"> </span>slow
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>./run_local_ci.sh<span class="w"> </span>notebook
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>./run_local_ci.sh<span class="w"> </span>pyomo
 </span></code></pre></div>
-<h2 id="github-actions-triggers">GitHub Actions Triggers</h2>
-<h3 id="pr-tests-fast">PR Tests (Fast)</h3>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">on</span><span class="p">:</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">pull_request</span><span class="p">:</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="nt">branches</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">main</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">dev-pyomo</span><span class="w"> </span><span class="p p-Indicator">]</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="nt">types</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">opened</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">synchronize</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">reopened</span><span class="w"> </span><span class="p p-Indicator">]</span>
+<p>Set <code>SKIP_INSTALL=1</code> when dependencies are already installed:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nv">SKIP_INSTALL</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>./run_local_ci.sh<span class="w"> </span>fast
 </span></code></pre></div>
-<h3 id="coverage-tests-full">Coverage Tests (Full)</h3>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">on</span><span class="p">:</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">push</span><span class="p">:</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="nt">branches</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">main</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">dev-pyomo</span><span class="w"> </span><span class="p p-Indicator">]</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span><span class="nt">pull_request_review</span><span class="p">:</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">    </span><span class="nt">types</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">submitted</span><span class="w"> </span><span class="p p-Indicator">]</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="nt">jobs</span><span class="p">:</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">  </span><span class="nt">test</span><span class="p">:</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">      </span><span class="no">github.event_name == &#39;push&#39; || </span>
-</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">      </span><span class="no">(github.event_name == &#39;pull_request_review&#39; &amp;&amp; github.event.review.state == &#39;approved&#39;)</span>
-</span></code></pre></div>
-<h2 id="benefits-of-this-approach">Benefits of This Approach</h2>
-<h3 id="for-developers">For Developers</h3>
-<ul>
-<li>⚡ <strong>Fast feedback</strong> (3-5 min instead of 11+ min)</li>
-<li>🔄 <strong>Quick iterations</strong> during development</li>
-<li>🎯 <strong>Focus on functionality</strong> first, coverage later</li>
-<li>💰 <strong>Saves CI minutes</strong> (reduced by 55-73% per commit)</li>
-</ul>
-<h3 id="for-reviewers">For Reviewers</h3>
-<ul>
-<li>✅ <strong>Immediate test status</strong> when reviewing code</li>
-<li>📊 <strong>Full coverage</strong> before approving merge</li>
-<li>🔒 <strong>Quality gate</strong> at approval time</li>
-<li>🚦 <strong>Clear merge readiness</strong> signals</li>
-</ul>
-<h3 id="for-project-maintainers">For Project Maintainers</h3>
-<ul>
-<li>📈 <strong>Maintain high coverage</strong> on main branch</li>
-<li>💸 <strong>Reduce CI costs</strong> (fewer coverage runs)</li>
-<li>⚙️ <strong>Optimize resource usage</strong></li>
-<li>📊 <strong>Accurate coverage metrics</strong> for merged code</li>
-</ul>
-<h2 id="comparison-with-other-strategies">Comparison with Other Strategies</h2>
-<table>
-<thead>
-<tr>
-<th>Strategy</th>
-<th>PR Commits</th>
-<th>After Approval</th>
-<th>Total CI Time</th>
-<th>Pros</th>
-<th>Cons</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Our Approach</strong></td>
-<td>Fast (3-5m)</td>
-<td>Full (5-7m)</td>
-<td><strong>8-12m total</strong></td>
-<td>✅ Fast iteration<br>✅ Full verification</td>
-<td>Requires approval workflow</td>
-</tr>
-<tr>
-<td>Run coverage every time</td>
-<td>Full (11m)</td>
-<td>-</td>
-<td><strong>11m × commits</strong></td>
-<td>Simple setup</td>
-<td>❌ Slow feedback<br>❌ Expensive</td>
-</tr>
-<tr>
-<td>No coverage on PRs</td>
-<td>Fast (3-5m)</td>
-<td>-</td>
-<td><strong>3-5m total</strong></td>
-<td>✅ Very fast</td>
-<td>❌ No coverage check</td>
-</tr>
-<tr>
-<td>Coverage on merge only</td>
-<td>-</td>
-<td>Full (5-7m)</td>
-<td><strong>5-7m</strong></td>
-<td>Minimal runs</td>
-<td>❌ Late discovery</td>
-</tr>
-</tbody>
-</table>
-<h2 id="example-timeline">Example Timeline</h2>
-<h3 id="scenario-pr-with-3-commits-before-approval">Scenario: PR with 3 commits before approval</h3>
-<p><strong>Before optimization</strong> (coverage on every commit):
-<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Commit 1: 11 min
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>Commit 2: 11 min  
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>Commit 3: 11 min
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>Approval: -
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>Merge:    11 min
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>────────────────
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>Total:    44 minutes
-</span></code></pre></div></p>
-<p><strong>After optimization</strong> (our approach):
-<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>Commit 1: 3 min (fast)
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>Commit 2: 3 min (fast)
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>Commit 3: 3 min (fast)
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>Approval: 7 min (full coverage)
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>Merge:    7 min (full coverage)
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>────────────────
-</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>Total:    23 minutes (47% reduction! 🎉)
-</span></code></pre></div></p>
-<h2 id="monitoring-troubleshooting">Monitoring &amp; Troubleshooting</h2>
-<h3 id="check-workflow-status">Check Workflow Status</h3>
-<p>In GitHub UI:
-1. Go to "Actions" tab
-2. See "PR Tests (Fast)" for development feedback
-3. See "Tests (with Coverage)" after approval/merge</p>
-<h3 id="if-fast-tests-fail">If Fast Tests Fail</h3>
-<ul>
-<li>Fix the code</li>
-<li>Push new commit</li>
-<li>Fast tests re-run automatically</li>
-</ul>
-<h3 id="if-coverage-tests-fail-after-approval">If Coverage Tests Fail After Approval</h3>
-<ul>
-<li>Review coverage report</li>
-<li>Add missing tests</li>
-<li>Push new commit</li>
-<li>Fast tests run again</li>
-<li>Request re-approval</li>
-<li>Coverage tests run again</li>
-</ul>
-<h3 id="expected-behavior">Expected Behavior</h3>
-<table>
-<thead>
-<tr>
-<th>Event</th>
-<th>Fast Tests</th>
-<th>Coverage Tests</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Open PR</td>
-<td>✅ Run</td>
-<td>❌ Skip</td>
-</tr>
-<tr>
-<td>Push to PR</td>
-<td>✅ Run</td>
-<td>❌ Skip</td>
-</tr>
-<tr>
-<td>Request changes</td>
-<td>✅ Continue</td>
-<td>❌ Skip</td>
-</tr>
-<tr>
-<td>Approve PR</td>
-<td>✅ Already ran</td>
-<td>✅ Run</td>
-</tr>
-<tr>
-<td>Merge to main</td>
-<td>❌ Skip</td>
-<td>✅ Run</td>
-</tr>
-</tbody>
-</table>
-<h2 id="manual-override-if-needed">Manual Override (If Needed)</h2>
-<p>To manually trigger full coverage tests without approval:</p>
+<h2 id="expected-pull-request-flow">Expected Pull Request Flow</h2>
 <ol>
-<li>Go to Actions tab</li>
-<li>Select "Tests (with Coverage)" workflow</li>
-<li>Click "Run workflow"</li>
-<li>Select branch</li>
+<li>Open or update a PR: fast lane runs.</li>
+<li>Convert the PR out of draft: full non-Pyomo lane runs with coverage.</li>
+<li>Notebook lane runs separately for ready PRs.</li>
+<li>Reviewers can request manual slow or Pyomo lanes when relevant.</li>
+<li>Merge to <code>main</code>: full non-Pyomo lane runs again.</li>
 </ol>
-<p>Or add a comment to trigger (if you set up comment triggers):
-<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>/run-coverage
-</span></code></pre></div></p>
-<h2 id="configuration-files">Configuration Files</h2>
+<h2 id="maintenance-notes">Maintenance Notes</h2>
 <ul>
-<li><code>.github/workflows/pr-tests.yml</code> - Fast tests for PRs</li>
-<li><code>.github/workflows/tests.yml</code> - Full coverage tests</li>
-<li><code>pytest.ini</code> - Test configuration</li>
-<li><code>.coveragerc</code> - Coverage configuration (if present)</li>
-</ul>
-<h2 id="best-practices">Best Practices</h2>
-<h3 id="for-contributors">For Contributors</h3>
-<ol>
-<li>✅ Run tests locally before pushing: <code>pytest tests/ -n auto</code></li>
-<li>✅ Push small, focused commits</li>
-<li>✅ Wait for fast tests to pass before requesting review</li>
-<li>✅ Address any coverage gaps when requested</li>
-</ol>
-<h3 id="for-reviewers_1">For Reviewers</h3>
-<ol>
-<li>✅ Check that fast tests passed</li>
-<li>✅ Review code quality and logic</li>
-<li>✅ Approve when ready to trigger full coverage</li>
-<li>✅ Wait for coverage tests to pass before merging</li>
-</ol>
-<h3 id="for-maintainers">For Maintainers</h3>
-<ol>
-<li>✅ Monitor CI run times in Actions tab</li>
-<li>✅ Review coverage trends in Codecov</li>
-<li>✅ Adjust coverage thresholds as needed</li>
-<li>✅ Update workflows if patterns change</li>
-</ol>
-<h2 id="troubleshooting">Troubleshooting</h2>
-<h3 id="coverage-tests-didnt-run-after-approval">"Coverage tests didn't run after approval"</h3>
-<p><strong>Possible causes</strong>:
-1. Review was "Comment" or "Request changes" (not "Approve")
-2. Workflow condition may need adjustment
-3. Check Actions tab for workflow status</p>
-<p><strong>Solution</strong>: 
-- Ensure reviewer clicked "Approve" (not just comment)
-- Check workflow logs for condition evaluation</p>
-<h3 id="fast-tests-taking-too-long">"Fast tests taking too long"</h3>
-<p><strong>Expected</strong>: 3-5 minutes<br />
-<strong>Investigate if</strong>: &gt;7 minutes</p>
-<p><strong>Possible causes</strong>:
-1. Package installation not cached
-2. Too many tests running
-3. GitHub runner performance issues</p>
-<p><strong>Solution</strong>:
-- Check cache hit rate in workflow logs
-- Consider test sharding if &gt;200 tests
-- Report if consistently slow</p>
-<h3 id="coverage-decreased-after-merge">"Coverage decreased after merge"</h3>
-<p><strong>This is expected</strong> during development.</p>
-<p><strong>Actions</strong>:
-1. Review uncovered lines in Codecov
-2. Add tests in follow-up PR
-3. Set coverage thresholds in <code>.coveragerc</code></p>
-<h2 id="future-enhancements">Future Enhancements</h2>
-<p>Potential improvements to consider:</p>
-<ol>
-<li><strong>Test Sharding</strong> - Split tests across parallel jobs for &gt;200 tests</li>
-<li><strong>Selective Testing</strong> - Only run tests for changed modules</li>
-<li><strong>Comment Triggers</strong> - Manual <code>/run-coverage</code> command</li>
-<li><strong>Draft PR Handling</strong> - Skip CI for draft PRs</li>
-<li><strong>Coverage Diff</strong> - Show coverage change in PR comments</li>
-</ol>
-<h2 id="references">References</h2>
-<ul>
-<li><a href="https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows">GitHub Actions: Workflow triggers</a></li>
-<li><a href="https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request_review">pull_request_review event</a></li>
-<li><a href="https://pytest-xdist.readthedocs.io/">pytest-xdist</a> - Parallel testing</li>
-<li><a href="https://pytest-cov.readthedocs.io/">pytest-cov</a> - Coverage plugin</li>
-<li><a href="https://about.codecov.io/">Codecov</a> - Coverage reporting</li>
+<li>Keep marker expressions synchronized between workflows, <code>run_local_ci.sh</code>,
+  and <code>tests/README.md</code>.</li>
+<li>Do not add Pyomo validation to automatic PR/main workflows until tracked
+  Pyomo implementation and tests exist.</li>
+<li>Do not broaden fast PR deselection beyond <code>slow</code>, <code>notebook</code>, and <code>pyomo</code>
+  without documenting the reason.</li>
+<li>Ruff formatting and linting are local checks documented in
+  <code>CONTRIBUTING.md</code>; they are not active CI gates.</li>
 </ul>
 
 
