@@ -85,17 +85,16 @@ addopts = [
     "--maxfail=5",
     "-n",
     "auto",
-    "--dist=loadgroup",
 ]
 markers = [
     "unit: Unit tests for individual functions",
     "integration: Integration tests for calculators",
     "regression: Regression tests against known results",
-    "slow: Tests that take a long time to run",
+    "slow: Optimizer-heavy or long-running tests excluded from the fast PR lane",
     "parametric: Parametric tests across multiple scenarios",
     "fast: Quick tests that run in under 1 second",
-    "serial: Tests intended to be run serially; enforce with 'pytest -m serial -n 0'",
-    "pyomo: Tests requiring Pyomo and IPOPT solver (deselect with '-m not pyomo')",
-    "notebook: Tests that execute Jupyter notebooks for documentation",
-    "main: Tests that cover functionality previously included in main.py",
+    "serial: Tests that must run without xdist parallelism; run with 'pytest -m serial -n 0'",
+    "pyomo: Optional future Pyomo/IPOPT tests; deselect with '-m not pyomo'",
+    "notebook: Papermill/Jupyter notebook execution tests run in the notebook lane",
+    "main: Legacy main.py and high-level API behavior tests",
 ]

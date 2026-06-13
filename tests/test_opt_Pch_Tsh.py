@@ -130,6 +130,7 @@ def opt_both_consistency(output, setup):
     )
 
 
+@pytest.mark.slow
 class TestOptPchTshBasic:
     """Basic functionality tests for opt_Pch_Tsh module."""
 
@@ -170,6 +171,7 @@ class TestOptPchTshBasic:
         assert_complete_drying(output)
 
 
+@pytest.mark.slow
 class TestOptPchTshEdgeCases:
     """Edge case tests for opt_Pch_Tsh module."""
 
@@ -262,6 +264,7 @@ class TestOptPchTshEdgeCases:
         )
 
 
+@pytest.mark.slow
 class TestOptPchTshValidation:
     """Validation tests comparing opt_Pch_Tsh behavior."""
 

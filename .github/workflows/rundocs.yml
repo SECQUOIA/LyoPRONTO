@@ -1,20 +1,25 @@
-name: Run doc notebooks as tests
+name: Notebook Tests
+
 on:
-  # For drafting purposes, build a docs version for each new PR.
-  # Will have to be manually deleted later with `mike delete pr-####` from a local CLI
   pull_request:
-  # On pushing to master, rebuild docs with current version number and push as "dev"
+    branches: [ main ]
+    types: [ opened, synchronize, reopened, ready_for_review ]
   push:
-    branches:
-      - main
-    
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
 jobs:
-  doctests:
+  notebook-tests:
+    name: Notebook lane
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Read CI version config
       id: versions
       uses: mikefarah/yq@v4.44.1
@@ -26,38 +31,23 @@ jobs:
       with:
         python-version: ${{ steps.versions.outputs.result }}
         cache: 'pip'
-        cache-dependency-path: |
-          pyproject.toml
-    
+        cache-dependency-path: pyproject.toml
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip setuptools wheel
-        pip install .
-        pip install .[dev]
-        pip install -e . --no-build-isolation
-    
-    - name: Run tests (draft = fast, ready = coverage)
-      run: pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml --cov-report=term-missing
-# jobs:
-#   doctests:
-#     # env:
-#     #   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#     #   GIT_COMMITTER_NAME: ${{ github.actor }}
-#     #   GIT_COMMITTER_EMAIL: ${{ github.actor }}@users.noreply.github.com
-#     name: Notebook
-#     runs-on: ubuntu-latest
-#     defaults:
-#       run:
-#         working-directory: ./docs/examples
-#     strategy:
-#       matrix:
-#         notebook: 
-#          - knownRp_PD.ipynb
-#          - unknownRp_PD.ipynb
-#     steps:
-#       - uses: actions/checkout@v5
-#       - name: Set up Python
-#         uses: actions/setup-python@v4
-#       - run: pip install ruamel.yaml scipy numpy matplotlib papermill ipykernel
-#       - name: Run notebooks
-#         run: papermill ${{ matrix.notebook }} ${{ matrix.notebook }} -k python
+        pip install -e ".[dev]"
+
+    - name: Run notebook tests
+      run: |
+        echo "Running explicit notebook validation lane"
+        pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+
+    - name: Upload coverage
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.xml
+        flags: notebooks
+        name: notebook-coverage
+        fail_ci_if_error: false
+        token: ${{ secrets.CODECOV_TOKEN }}

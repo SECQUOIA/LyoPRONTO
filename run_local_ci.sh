@@ -1,67 +1,117 @@
-#!/bin/bash
-# Local CI simulation script
-# This script replicates the GitHub Actions CI environment locally
+#!/usr/bin/env bash
+# Local CI lane runner for LyoPRONTO.
 
-set -e  # Exit on error
+set -euo pipefail
+
+LANE="${1:-fast}"
+
+FAST_EXPR="not slow and not notebook and not pyomo"
+FULL_EXPR="not pyomo"
+SLOW_EXPR="slow and not pyomo"
+NOTEBOOK_EXPR="notebook"
+PYOMO_EXPR="pyomo"
+
+usage() {
+    cat <<'USAGE'
+Usage: ./run_local_ci.sh [fast|full|slow|notebook|pyomo]
+
+Lanes:
+  fast      PR feedback lane: excludes slow, notebook, and Pyomo tests.
+  full      Full non-Pyomo validation with coverage.
+  slow      Manual slow optimizer-heavy validation with coverage.
+  notebook  Explicit notebook validation with coverage.
+  pyomo     Optional future Pyomo lane; no collected tests is a no-op.
+
+Set SKIP_INSTALL=1 to skip dependency installation.
+USAGE
+}
+
+run_pytest_allow_empty() {
+    "$@" || {
+        rc=$?
+        if [[ "$rc" -eq 5 ]]; then
+            echo "No tests collected for selected lane; treating this as a no-op."
+            return 0
+        fi
+        return "$rc"
+    }
+}
+
+if [[ "$LANE" == "-h" || "$LANE" == "--help" ]]; then
+    usage
+    exit 0
+fi
+
+case "$LANE" in
+    fast|full|slow|notebook|pyomo)
+        ;;
+    *)
+        echo "Unknown lane: $LANE"
+        usage
+        exit 2
+        ;;
+esac
 
 echo "=========================================="
-echo "LyoPRONTO Local CI Simulation"
+echo "LyoPRONTO Local CI: $LANE"
 echo "=========================================="
 echo ""
 
-# Check Python version
 echo "1. Checking Python version..."
-PYTHON_VERSION=$(python --version 2>&1 | grep -oP '\d+\.\d+')
+PYTHON_VERSION=$(python -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
 echo "   Current Python: $(python --version)"
 if [[ "$PYTHON_VERSION" != "3.13" ]]; then
-    echo "   ⚠️  Warning: CI uses Python 3.13, you have $PYTHON_VERSION"
-    echo "   Consider using: conda create -n LyoPRONTO python=3.13"
+    echo "   Warning: GitHub Actions uses Python 3.13; current Python is $PYTHON_VERSION"
 fi
 echo ""
 
-# Check if we're in the right directory
 echo "2. Checking repository structure..."
-if [ ! -f "pyproject.toml" ] || [ ! -d "tests" ] || [ ! -d "lyopronto" ]; then
-    echo "   ❌ Error: Must run from repository root"
+if [[ ! -f "pyproject.toml" || ! -d "tests" || ! -d "lyopronto" ]]; then
+    echo "   Error: run this script from the repository root"
     exit 1
 fi
-echo "   ✅ Repository structure OK"
+echo "   Repository structure OK"
 echo ""
 
-# Install/update dependencies
-echo "3. Installing dependencies..."
-echo "   Upgrading pip..."
-python -m pip install --upgrade pip -q
-echo "   Installing package with development dependencies..."
-pip install -e ".[dev]" -q
-echo "   ✅ Dependencies installed"
-echo ""
-
-# Run tests with coverage (matching CI)
-echo "4. Running test suite (matching CI configuration)..."
-echo "   Using parallel execution with 8 workers (optimal for this system)..."
-echo "   Command: pytest tests/ -n 8 -v --cov=lyopronto --cov-report=xml --cov-report=term-missing"
-echo ""
-pytest tests/ -n 8 -v --cov=lyopronto --cov-report=xml --cov-report=term-missing
-
-# Check exit code
-if [ $? -eq 0 ]; then
-    echo ""
-    echo "=========================================="
-    echo "✅ All tests passed!"
-    echo "=========================================="
-    echo ""
-    echo "Coverage report saved to: coverage.xml"
-    echo "You can view detailed coverage with: coverage html && open htmlcov/index.html"
-    echo ""
-    echo "Note: Tests run in parallel for speed. For debugging, use: pytest tests/ -v"
-    echo "This matches the CI environment. You're ready to push!"
+if [[ "${SKIP_INSTALL:-0}" != "1" ]]; then
+    echo "3. Installing dependencies..."
+    python -m pip install --upgrade pip setuptools wheel -q
+    pip install -e ".[dev]" -q
+    if [[ "$LANE" == "pyomo" ]]; then
+        pip install pyomo idaes-pse -q
+        idaes get-extensions --extra petsc
+    fi
+    echo "   Dependencies installed"
 else
-    echo ""
-    echo "=========================================="
-    echo "❌ Tests failed!"
-    echo "=========================================="
-    echo ""
-    echo "Fix the failing tests before pushing to trigger CI."
-    exit 1
+    echo "3. Skipping dependency installation because SKIP_INSTALL=1"
 fi
+echo ""
+
+echo "4. Running $LANE lane..."
+case "$LANE" in
+    fast)
+        echo "   Command: pytest tests/ -n auto -v -m \"$FAST_EXPR\""
+        pytest tests/ -n auto -v -m "$FAST_EXPR"
+        ;;
+    full)
+        echo "   Command: pytest tests/ -n auto -v -m \"$FULL_EXPR\" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing"
+        pytest tests/ -n auto -v -m "$FULL_EXPR" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+        ;;
+    slow)
+        echo "   Command: pytest tests/ -n auto -v -m \"$SLOW_EXPR\" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing"
+        pytest tests/ -n auto -v -m "$SLOW_EXPR" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+        ;;
+    notebook)
+        echo "   Command: pytest tests/ -n auto -v -m \"$NOTEBOOK_EXPR\" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing"
+        pytest tests/ -n auto -v -m "$NOTEBOOK_EXPR" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+        ;;
+    pyomo)
+        echo "   Command: pytest tests/ -n auto -v -m \"$PYOMO_EXPR\" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing"
+        run_pytest_allow_empty pytest tests/ -n auto -v -m "$PYOMO_EXPR" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+        ;;
+esac
+
+echo ""
+echo "=========================================="
+echo "Lane completed successfully: $LANE"
+echo "=========================================="

@@ -177,6 +177,7 @@ class TestHighLevelAPI:
     
     
     @pytest.mark.main
+    @pytest.mark.slow
     def test_opt_tsh_fullstack(self, mocker, repo_root, tmp_path, capsys):
         input_file = repo_root / "test_data" / "example_opt_tsh.yaml"
         mocked_func = mocker.patch("lyopronto.opt_Tsh.dry", wraps=opt_Tsh.dry, autospec=True)
@@ -200,6 +201,7 @@ class TestHighLevelAPI:
             assert (tmp_path / "lyo_DryingProgress_testtime.pdf").exists()
 
     @pytest.mark.main
+    @pytest.mark.slow
     def test_opt_pch_tsh_fullstack(self, mocker, repo_root, tmp_path, capsys):
         input_file = repo_root / "test_data" / "example_opt_pch_tsh.yaml"
         mocked_func = mocker.patch("lyopronto.opt_Pch_Tsh.dry", wraps=opt_Pch_Tsh.dry, autospec=True)
@@ -223,6 +225,7 @@ class TestHighLevelAPI:
             assert (tmp_path / "lyo_DryingProgress_testtime.pdf").exists()
 
     @pytest.mark.main
+    @pytest.mark.slow
     def test_opt_pch_fullstack(self, mocker, repo_root, tmp_path, capsys):
         input_file = repo_root / "test_data" / "example_opt_pch.yaml"
         mocked_func = mocker.patch("lyopronto.opt_Pch.dry", wraps=opt_Pch.dry, autospec=True)

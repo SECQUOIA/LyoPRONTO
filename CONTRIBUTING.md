@@ -4,27 +4,32 @@ Thank you for your interest in contributing to LyoPRONTO! This document provides
 
 ## Testing & Continuous Integration (CI)
 
-LyoPRONTO uses a modern, robust CI/CD pipeline and a comprehensive test suite. All contributions must pass automated tests and follow the project's testing strategy:
+LyoPRONTO uses explicit pytest marker lanes so contributors and reviewers can
+choose the right feedback level:
 
-- **Fast/Slow Test Separation:**
-    - Fast tests run on every PR and push (under 60 seconds).
-    - Slow tests (marked with `@pytest.mark.slow`) run nightly and on demand.
-- **Centralized Python Version Management:**
-    - All workflows use the Python version(s) specified in `.github/ci-config/ci-versions.yml`.
-- **CI Workflows:**
-    - PRs and pushes: Fast tests (`pr-tests.yml`)
-    - Main branch: Full suite (`tests.yml`)
-    - Nightly/manual: Slow tests (`slow-tests.yml`)
-    - Docs: Build and link check (`docs.yml`)
-- **Coverage & Linting:**
-    - Coverage is reported for all test runs.
-    - Linting and formatting are enforced in CI.
+- **Fast PR lane:** `pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"`
+- **Full non-Pyomo lane:** `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+- **Slow manual lane:** `pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+- **Notebook lane:** `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+- **Pyomo lane:** `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+
+The same commands are available locally through `./run_local_ci.sh fast`,
+`./run_local_ci.sh full`, `./run_local_ci.sh slow`,
+`./run_local_ci.sh notebook`, and `./run_local_ci.sh pyomo`.
+
+Active GitHub workflows use the Python version in
+`.github/ci-config/ci-versions.yml`. PRs always run the fast lane; ready
+non-draft PRs and pushes to `main` run the full non-Pyomo lane with coverage;
+notebook tests run in an explicit notebook workflow; slow and Pyomo validation
+are available through the manual validation workflow. Ruff formatting and
+linting commands are documented local checks but are not currently CI gates.
 
 **Contributor Checklist:**
 
 - Mark slow tests with `@pytest.mark.slow`.
 - Add or update tests for all new features and bugfixes.
-- Ensure all tests pass locally before submitting a PR (`pytest tests/ -v`).
+- Run `./run_local_ci.sh fast` for quick feedback before pushing.
+- Run `./run_local_ci.sh full` before marking a PR ready for review when practical.
 - Review [`tests/README.md`](tests/README.md) for full details on running, writing, and debugging tests, as well as CI workflow explanations.
 
 ---
@@ -87,11 +92,11 @@ git checkout -b bugfix/issue-description
 ### 3. Test Your Changes
 
 ```bash
-# Run all tests
-pytest tests/ -v
+# Fast PR feedback lane
+./run_local_ci.sh fast
 
-# Run with coverage
-pytest tests/ --cov=lyopronto --cov-report=html
+# Full non-Pyomo lane with coverage
+./run_local_ci.sh full
 
 # Check specific test
 pytest tests/test_functions.py -v
@@ -271,8 +276,10 @@ def test_with_fixtures(self, standard_vial, standard_product):
 
 Before submitting a PR, ensure:
 
-- [ ] All tests pass (`pytest tests/ -v`)
+- [ ] Fast lane passes (`./run_local_ci.sh fast`)
+- [ ] Full lane passes before review when practical (`./run_local_ci.sh full`)
 - [ ] Code is formatted (`ruff format lyopronto/ tests/`)
+- [ ] Ruff checks pass locally (`ruff check lyopronto/ tests/`)
 - [ ] Documentation is updated
 - [ ] Docstrings are complete
 - [ ] CHANGELOG.md is updated (if applicable)

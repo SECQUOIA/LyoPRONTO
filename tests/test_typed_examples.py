@@ -45,6 +45,7 @@ def test_typed_conventional_simulation(examples):
     assert 200.0 < result["final_tf_K"] < 320.0
 
 
+@pytest.mark.slow
 def test_conventional_kv_rp_fitting(examples):
     result = examples.run_conventional_kv_rp_fitting()
     assert result["success"]
@@ -74,6 +75,7 @@ def test_rf_energy_accounting(examples):
     assert result["QRFf"] > 0.0
 
 
+@pytest.mark.slow
 def test_rf_fitting(examples):
     result = examples.run_rf_fitting()
     assert result["success"]

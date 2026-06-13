@@ -8,14 +8,28 @@ pip install .[dev]
 ```
 inside the LyoPRONTO directory (next to `pyproject.toml`).
 
-Execute 
+For fast PR-style feedback, execute
 ```
-pytest ./tests
+./run_local_ci.sh fast
 ```
-to run all the tests; some that use `papermill` to generate documentation notebooks are marked, and you can exclude those with
+which runs
 ```
-pytest ./tests -m "not notebook"
+pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"
 ```
+
+Before marking a PR ready for review, run the full non-Pyomo lane when
+practical:
+```
+./run_local_ci.sh full
+```
+which runs
+```
+pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+```
+
+Notebook, slow, and optional Pyomo validation are separate lanes:
+`./run_local_ci.sh notebook`, `./run_local_ci.sh slow`, and
+`./run_local_ci.sh pyomo`.
 
 ## Documentation
 

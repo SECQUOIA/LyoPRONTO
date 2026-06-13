@@ -1,75 +1,79 @@
 # LyoPRONTO Test Suite
 
-This document describes the testing strategy, usage, and best practices for the LyoPRONTO project.
+This document describes the supported pytest markers, local commands, and CI
+lanes for LyoPRONTO.
 
-## Test Strategy
+## Test Lanes
 
-LyoPRONTO uses a three-tier testing approach to balance rapid feedback and comprehensive validation:
+| Lane | Marker expression | Where it runs | Purpose |
+| --- | --- | --- | --- |
+| Fast PR | `not slow and not notebook and not pyomo` | Every PR update in `.github/workflows/pr-tests.yml` | Quick contributor feedback without solver-heavy, notebook, or future Pyomo tests. |
+| Full non-Pyomo | `not pyomo` | Ready/non-draft PRs and pushes to `main` | Main confidence gate with coverage for the tracked SciPy implementation. |
+| Slow non-Pyomo | `slow and not pyomo` | Manual validation workflow | Targeted optimizer-heavy validation. |
+| Notebook | `notebook` | Explicit notebook workflow | Executes documentation notebooks separately from ordinary fast tests. |
+| Pyomo | `pyomo` | Manual validation workflow | Optional future lane. No collected tests is treated as a no-op until tracked Pyomo tests exist. |
 
-- **Fast tests**: Run on every pull request (PR) for quick feedback. These skip slow optimization tests.
-- **Full test suite**: Runs on merge to `main`/`dev-pyomo` branches, including all slow tests.
-- **Manual slow tests**: Can be triggered on demand via GitHub Actions for pre-merge or feature branch validation.
+## Marker Policy
+
+- `slow`: Long-running or optimizer-heavy tests. These are excluded from the
+  fast PR lane and covered by full/manual validation.
+- `notebook`: Papermill or Jupyter execution tests for documentation examples.
+  Keep these in the explicit notebook lane.
+- `pyomo`: Tests that require Pyomo, IPOPT, or the Pyomo optimization stack.
+  There are currently no tracked Pyomo tests; the manual lane may no-op.
+- `main`: Tests covering behavior that was historically reachable through
+  `main.py` or the high-level API. This is a coverage label, not a CI lane.
+- `serial`: Tests that must not run under xdist parallelism. Run them with
+  `pytest -m serial -n 0`.
 
 ## Running Tests Locally
 
-- **Fast tests only** (recommended for development):
-  ```bash
-  pytest tests/ -m "not slow"
-  ```
-- **All tests** (including slow optimization tests):
-  ```bash
-  pytest tests/
-  ```
-- **Only slow tests**:
-  ```bash
-  pytest tests/ -m "slow"
-  ```
+Use the local CI wrapper when you want the same commands used by GitHub Actions:
 
-## Marking Slow Tests
+```bash
+./run_local_ci.sh fast
+./run_local_ci.sh full
+./run_local_ci.sh slow
+./run_local_ci.sh notebook
+./run_local_ci.sh pyomo
+```
 
-- Slow tests are marked with `@pytest.mark.slow` in the code.
-- Criteria: Any test that takes >20 seconds or involves heavy optimization (e.g., joint/edge-case optimizers).
-- This allows CI and developers to easily include/exclude slow tests as needed.
+The underlying pytest commands are:
 
-## CI/CD Integration
+```bash
+pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"
+pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+```
 
-- **Python version** for all workflows is set in `.github/ci-config/ci-versions.yml` and read dynamically by all workflows.
-- **Workflows**:
-  - PRs: Run only fast tests for rapid feedback (~2-5 min on CI).
-  - Main/dev-pyomo: Run full suite after merge (~30-40 min on CI).
-  - Manual: "Slow Tests (Manual)" workflow available in GitHub Actions for on-demand slow test runs.
-- **Coverage**: All test runs report coverage using `pytest-cov` and upload to Codecov.
+For quick debugging, it is still fine to run a single file or test directly:
+
+```bash
+pytest tests/test_functions.py -v
+pytest tests/test_functions.py::TestClassName::test_case_name -v
+```
+
+## CI Integration
+
+- `.github/workflows/pr-tests.yml` runs the fast lane for all PR updates and
+  the full non-Pyomo lane with coverage once the PR is ready for review.
+- `.github/workflows/tests.yml` runs the full non-Pyomo lane with coverage on
+  pushes to `main`.
+- `.github/workflows/rundocs.yml` runs notebook-marked tests as an explicit
+  notebook lane for ready PRs, `main`, and manual dispatch.
+- `.github/workflows/slow-tests.yml` provides manual `slow-non-pyomo`,
+  `full-non-pyomo`, and `pyomo` lanes.
+- Python version is read from `.github/ci-config/ci-versions.yml`.
 
 ## Best Practices
 
-- Add `@pytest.mark.slow` to any new test that takes >20s or is optimization-heavy.
-- Use `[unit]` format for all unit comments in code (e.g., `[cm]`, `[degC]`).
+- Mark optimizer-heavy or long-running tests with `@pytest.mark.slow`.
+- Mark papermill/Jupyter execution tests with `@pytest.mark.notebook`.
+- Mark future Pyomo/IPOPT tests with `@pytest.mark.pyomo`.
+- Mark tests that cannot run under xdist with `@pytest.mark.serial`.
+- Do not use broad marker deselection to hide a failure. If a lane excludes a
+  marker, document the reason in this file and in the workflow command.
 - Keep test output and error messages clear and physically meaningful.
 - Use fixtures and helper functions from `conftest.py` for consistency.
-- Check physical reasonableness of simulation results using provided helpers.
-
-## Updating Python Version for CI
-
-- Edit `.github/ci-config/ci-versions.yml` to change the Python version for all CI workflows.
-- No need to update each workflow file individually.
-
-## Example Commands
-
-- **Run a specific test file:**
-  ```bash
-  pytest tests/test_opt_Pch.py -v
-  ```
-- **Run with coverage:**
-  ```bash
-  pytest tests/ --cov=lyopronto --cov-report=html
-  ```
-- **Run with debugging:**
-  ```bash
-  pytest tests/ -v --pdb
-  ```
-
-## Additional Resources
-
-- See `docs/SLOW_TEST_STRATEGY.md` for details on the slow test policy and CI/CD approach.
-- See `lyopronto/constant.py` and `lyopronto/functions.py` for physics and unit conventions.
-- For questions, check the main project README or ask in the project discussions.
