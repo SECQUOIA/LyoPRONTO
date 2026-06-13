@@ -8,7 +8,11 @@ Tests based on working example_optimizer.py structure.
 import pytest
 import numpy as np
 from lyopronto import opt_Pch_Tsh, opt_Pch, constant, opt_Tsh
-from .utils import assert_physically_reasonable_output, assert_complete_drying
+from .utils import (
+    assert_physically_reasonable_output,
+    assert_complete_drying,
+    assert_warning_messages,
+)
 
 # Constants for test assertions
 MAX_AGGRESSIVE_OPTIMIZATION_TIME = (
@@ -290,9 +294,11 @@ class TestOptPchTshValidation:
             "dt_setpt": [3600],  # Long time at fixed temperature
             "ramp_rate": 1.0,
         }
-        output_pressure_only = opt_Pch.dry(
-            vial, product, ht, Pchamber, Tshelf_fixed, dt, eq_cap, nVial
-        )
+        with pytest.warns(Warning) as warning_record:
+            output_pressure_only = opt_Pch.dry(
+                vial, product, ht, Pchamber, Tshelf_fixed, dt, eq_cap, nVial
+            )
+        assert_warning_messages(warning_record, ["Optimization failed"])
         Pchamber_fixed = {
             "setpt": [0.5],  # Fixed pressure at 0.5 Torr
             "dt_setpt": [3600],  # Long time at fixed pressure

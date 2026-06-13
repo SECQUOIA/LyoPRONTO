@@ -3,6 +3,20 @@
 import numpy as np
 from pytest import approx
 
+
+def assert_warning_messages(warning_record, allowed_messages):
+    """Assert that a pytest warning record contains only expected messages."""
+    messages = [str(warning.message) for warning in warning_record]
+
+    assert messages, "Expected at least one warning"
+    unexpected = [
+        message
+        for message in messages
+        if not any(allowed in message for allowed in allowed_messages)
+    ]
+    assert unexpected == [], unexpected
+
+
 def assert_physically_reasonable_output(output, Tmax=60):
     """
     Assert that simulation output is physically reasonable.

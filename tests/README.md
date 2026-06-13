@@ -55,6 +55,29 @@ pytest tests/test_functions.py -v
 pytest tests/test_functions.py::TestClassName::test_case_name -v
 ```
 
+## Warning Policy
+
+The shared pytest configuration keeps warnings visible by default and does not
+use `--disable-warnings`. Expected scientific or runtime warnings should be
+asserted in the tests that intentionally exercise those paths, normally with
+`pytest.warns` plus a message check. Do not add a global warning ignore for
+`lyopronto` modules.
+
+Only add `filterwarnings` entries for understood third-party noise, and scope
+them as narrowly as possible by warning type, message, and module. Document the
+reason when adding a new filter.
+
+The current top warning sources audited for this policy are:
+
+- `calc_unknownRp`: expected "No sublimation" warnings in experimental and
+  short-series edge-case coverage tests.
+- `design_space`: infeasible sublimation, too-low shelf temperature, and
+  single-timestep completion warnings from edge-case coverage tests.
+- `opt_Pch`: total-time-exceeded and narrow-pressure optimization failure
+  warnings from optimizer edge-case coverage tests.
+- `calc_knownRp`: low-temperature chamber-pressure feasibility warnings from
+  edge-case calculator tests.
+
 ## CI Integration
 
 - `.github/workflows/pr-tests.yml` runs the fast lane for all PR updates and
