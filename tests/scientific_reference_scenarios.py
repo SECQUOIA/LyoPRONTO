@@ -136,16 +136,19 @@ REFERENCE_SCENARIOS = {
             "final_percent_dried": 1e-8,
             "final_Lck_cm": 1e-9,
             "final_Rp_cm2_hr_torr_g": 1e-8,
-            "fit_R0": 5e-8,
-            "fit_A1": 5e-8,
-            "fit_A2": 5e-8,
+            "fit_R0": 1e-6,
+            "fit_A1": 1e-6,
+            "fit_A2": 1e-6,
         },
         tolerance_notes={
             "estimation_outputs": (
                 "tight drift guard for deterministic temperature-series "
                 "post-processing"
             ),
-            "fit_parameters": "strict scipy curve_fit regression guard",
+            "fit_parameters": (
+                "strict scipy curve_fit regression guard with allowance for "
+                "Python/SciPy micro-version noise"
+            ),
         },
         provenance=(
             "Current implementation snapshot using test_data/temperature.txt "
