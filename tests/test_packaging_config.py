@@ -58,7 +58,9 @@ def test_pytest_configuration_has_single_source() -> None:
     assert not (ROOT / "pytest.ini").exists()
     assert config["testpaths"] == ["tests"]
     assert "--strict-markers" in config["addopts"]
+    assert "--disable-warnings" not in config["addopts"]
     assert "--dist=loadgroup" not in config["addopts"]
+    assert config["filterwarnings"] == ["default"]
     assert any(marker.startswith("pyomo:") for marker in config["markers"])
 
 
@@ -129,6 +131,9 @@ def test_contributor_docs_include_fast_and_full_lane_commands() -> None:
     assert 'pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto' in docs
     assert "Ruff formatting and linting" in docs
     assert "not currently CI gates" in docs
+    assert "Warning Policy" in docs
+    assert "pytest.warns" in docs
+    assert "--disable-warnings" in docs
 
 
 def test_legacy_setup_py_metadata_removed() -> None:

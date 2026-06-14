@@ -4,6 +4,13 @@
 **Implementation**: pytest-xdist for parallel test execution  
 **Speedup**: 2-4x faster test suite execution
 
+> Historical status: the parallel execution notes remain useful, but the
+> warning-suppression guidance in the original report has been superseded by
+> the issue #70 warning policy. Current tests keep warnings visible by default,
+> assert expected project warnings with `pytest.warns`, and reserve
+> `filterwarnings` for narrowly scoped third-party noise. See
+> [`docs/README.md`](README.md) and [`tests/README.md`](../tests/README.md).
+
 ## Summary
 
 Successfully implemented parallel testing across the LyoPRONTO test suite using pytest-xdist. This provides significant performance improvements while maintaining 100% test compatibility and requiring no changes to existing tests.
@@ -148,10 +155,11 @@ pytest-xdist uses intelligent scheduling:
 - pytest-cov handles parallel execution automatically
 - Slight performance penalty (~10%) vs parallel without coverage
 
-### 3. Warnings Suppression ✅
-- 188,823 warnings still suppressed (see TESTING_INFRASTRUCTURE_ASSESSMENT.md)
-- `--disable-warnings` flag works with parallel execution
-- No impact on parallel performance
+### 3. Warning Handling ✅
+- Warnings remain visible under the current default pytest configuration
+- Expected project warnings should be asserted with `pytest.warns`
+- Narrow third-party `filterwarnings` entries can still be used when justified
+- Parallel execution has no special warning-policy exception
 
 ### 4. Reproducibility ✅
 - Test order is deterministic within each worker

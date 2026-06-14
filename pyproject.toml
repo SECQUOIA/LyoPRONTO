@@ -81,10 +81,12 @@ addopts = [
     "-v",
     "--tb=short",
     "--strict-markers",
-    "--disable-warnings",
     "--maxfail=5",
     "-n",
     "auto",
+]
+filterwarnings = [
+    "default",
 ]
 markers = [
     "unit: Unit tests for individual functions",

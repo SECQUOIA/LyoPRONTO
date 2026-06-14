@@ -24,10 +24,19 @@ notebook tests run in an explicit notebook workflow; slow and Pyomo validation
 are available through the manual validation workflow. Ruff formatting and
 linting commands are documented local checks but are not currently CI gates.
 
+Warnings are part of the test signal. The default pytest configuration keeps
+warnings visible instead of using `--disable-warnings`. When a test deliberately
+drives an expected scientific or runtime warning, assert it with `pytest.warns`
+and check the message. Add `filterwarnings` entries only for understood
+third-party noise, scoped narrowly by category, message, and module; do not
+blanket-ignore warnings from `lyopronto`.
+
 **Contributor Checklist:**
 
 - Mark slow tests with `@pytest.mark.slow`.
 - Add or update tests for all new features and bugfixes.
+- Assert expected project warnings with `pytest.warns`; investigate unexpected
+  warning summaries before adding filters.
 - Run `./run_local_ci.sh fast` for quick feedback before pushing.
 - Run `./run_local_ci.sh full` before marking a PR ready for review when practical.
 - Review [`tests/README.md`](tests/README.md) for full details on running, writing, and debugging tests, as well as CI workflow explanations.

@@ -19,6 +19,10 @@ The same lanes can be run locally with `./run_local_ci.sh fast`,
 read from `.github/ci-config/ci-versions.yml`. Ruff formatting and linting are
 documented local checks, not current CI gates.
 
+Warnings remain visible in the default pytest configuration. Expected
+scientific warnings should be asserted in tests with `pytest.warns`; warning
+filters should be reserved for narrowly scoped, understood third-party noise.
+
 See [`../tests/README.md`](../tests/README.md) for full details on running, writing, and debugging tests, as well as CI workflow explanations.
 
 ### For Developers

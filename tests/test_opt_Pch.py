@@ -12,6 +12,7 @@ from .utils import (
     assert_physically_reasonable_output,
     assert_complete_drying,
     assert_incomplete_drying,
+    assert_warning_messages,
 )
 
 
@@ -272,7 +273,10 @@ class TestOptPchEdgeCases:
         product["T_pr_crit"] = -30.0  # Lower critical temperature to challenge
         Tshelf["setpt"] = [-20.0]  # Lower shelf temperature to make feasible
 
-        output = opt_Pch.dry(vial, product, ht, new_Pch, Tshelf, dt, eq_cap, nVial)
+        with pytest.warns(Warning) as warning_record:
+            output = opt_Pch.dry(vial, product, ht, new_Pch, Tshelf, dt, eq_cap, nVial)
+
+        assert_warning_messages(warning_record, ["Optimization failed"])
 
         opt_pch_consistency(
             output, (vial, product, ht, new_Pch, Tshelf, dt, eq_cap, nVial)
