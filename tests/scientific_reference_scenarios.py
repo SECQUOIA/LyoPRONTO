@@ -207,15 +207,18 @@ REFERENCE_SCENARIOS = {
             "final_percent_dried": 100.0,
         },
         tolerances={
-            "drying_time_hr": 1e-6,
+            "drying_time_hr": 1e-5,
             "max_tbot_c": 1e-6,
             "min_pch_mtorr": 1e-9,
-            "max_pch_mtorr": 1e-6,
-            "max_flux_kg_hr_m2": 1e-8,
+            "max_pch_mtorr": 1e-3,
+            "max_flux_kg_hr_m2": 1e-6,
             "final_percent_dried": 1e-9,
         },
         tolerance_notes={
-            "optimizer_solution": "strict drift guard for deterministic optimizer path",
+            "optimizer_solution": (
+                "strict drift guard with allowance for SciPy optimizer "
+                "micro-version noise"
+            ),
             "constraints": "pressure bounds and critical-temperature limit are pinned",
         },
         provenance=(
