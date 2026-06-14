@@ -706,10 +706,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-warnings-suppression" class="md-nav__link">
+  <a href="#3-warning-handling" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Warnings Suppression ✅
+        3. Warning Handling ✅
       
     </span>
   </a>
@@ -942,6 +942,14 @@
 <p><strong>Date</strong>: 2025-01-17<br />
 <strong>Implementation</strong>: pytest-xdist for parallel test execution<br />
 <strong>Speedup</strong>: 2-4x faster test suite execution</p>
+<blockquote>
+<p>Historical status: the parallel execution notes remain useful, but the
+warning-suppression guidance in the original report has been superseded by
+the issue #70 warning policy. Current tests keep warnings visible by default,
+assert expected project warnings with <code>pytest.warns</code>, and reserve
+<code>filterwarnings</code> for narrowly scoped third-party noise. See
+<a href="README.md"><code>docs/README.md</code></a> and <a href="../tests/README.md"><code>tests/README.md</code></a>.</p>
+</blockquote>
 <h2 id="summary">Summary</h2>
 <p>Successfully implemented parallel testing across the LyoPRONTO test suite using pytest-xdist. This provides significant performance improvements while maintaining 100% test compatibility and requiring no changes to existing tests.</p>
 <h2 id="changes-made">Changes Made</h2>
@@ -1117,11 +1125,12 @@
 <li>pytest-cov handles parallel execution automatically</li>
 <li>Slight performance penalty (~10%) vs parallel without coverage</li>
 </ul>
-<h3 id="3-warnings-suppression">3. Warnings Suppression ✅</h3>
+<h3 id="3-warning-handling">3. Warning Handling ✅</h3>
 <ul>
-<li>188,823 warnings still suppressed (see TESTING_INFRASTRUCTURE_ASSESSMENT.md)</li>
-<li><code>--disable-warnings</code> flag works with parallel execution</li>
-<li>No impact on parallel performance</li>
+<li>Warnings remain visible under the current default pytest configuration</li>
+<li>Expected project warnings should be asserted with <code>pytest.warns</code></li>
+<li>Narrow third-party <code>filterwarnings</code> entries can still be used when justified</li>
+<li>Parallel execution has no special warning-policy exception</li>
 </ul>
 <h3 id="4-reproducibility">4. Reproducibility ✅</h3>
 <ul>

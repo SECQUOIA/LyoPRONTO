@@ -19,7 +19,7 @@
     
     
       
-        <title>Testing Infrastructure Assessment - October 2, 2025 - LyoPRONTO Documentation</title>
+        <title>Testing Infrastructure Assessment - October 2, 2025 (Historical) - LyoPRONTO Documentation</title>
       
     
     
@@ -62,7 +62,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#testing-infrastructure-assessment-october-2-2025" class="md-skip">
+        <a href="#testing-infrastructure-assessment-october-2-2025-historical" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Testing Infrastructure Assessment - October 2, 2025
+              Testing Infrastructure Assessment - October 2, 2025 (Historical)
             
           </span>
         </div>
@@ -523,15 +523,15 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-the-warning-investigation" class="md-nav__link">
+  <a href="#3-the-warning-investigation-historical" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. The Warning Investigation
+        3. The Warning Investigation (Historical)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="3. The Warning Investigation">
+    <nav class="md-nav" aria-label="3. The Warning Investigation (Historical)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -596,10 +596,21 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#no-heres-why" class="md-nav__link">
+  <a href="#superseded-policy-note" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ❌ NO - Here's Why:
+        Superseded policy note
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#historical-context-retained" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Historical context retained:
       
     </span>
   </a>
@@ -779,10 +790,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#priority-1-keep-current-approach" class="md-nav__link">
+  <a href="#priority-1-use-the-current-warning-policy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🎯 Priority 1: Keep Current Approach ✅
+        🎯 Priority 1: Use the Current Warning Policy ✅
       
     </span>
   </a>
@@ -813,10 +824,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#option-b-filter-specific-warnings-moderate" class="md-nav__link">
+  <a href="#option-b-filter-narrow-third-party-warnings-moderate" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Option B: Filter Specific Warnings (Moderate)
+        Option B: Filter Narrow Third-Party Warnings (Moderate)
       
     </span>
   </a>
@@ -944,18 +955,26 @@
 
 
 
-<h1 id="testing-infrastructure-assessment-october-2-2025">Testing Infrastructure Assessment - October 2, 2025</h1>
+<h1 id="testing-infrastructure-assessment-october-2-2025-historical">Testing Infrastructure Assessment - October 2, 2025 (Historical)</h1>
+<blockquote>
+<p>Historical status: this assessment predates the warning policy adopted for
+issue #70. Its original warning-suppression conclusions are retained only as
+historical context. Current policy keeps warnings visible by default, asserts
+expected project warnings with <code>pytest.warns</code>, and reserves <code>filterwarnings</code>
+for narrowly scoped third-party noise. See <a href="README.md"><code>docs/README.md</code></a> and
+<a href="../tests/README.md"><code>tests/README.md</code></a>.</p>
+</blockquote>
 <h2 id="executive-summary">Executive Summary</h2>
-<p><strong>Overall Assessment</strong>: ✅ <strong>Excellent test infrastructure with one cosmetic issue</strong></p>
+<p><strong>Overall Assessment</strong>: ✅ <strong>Excellent historical test infrastructure assessment with superseded warning guidance</strong></p>
 <h3 id="the-warning-issue">The Warning "Issue"</h3>
 <p><strong>Observation</strong>: 188,823 warnings in 8.5 minutes (513.67s)
-<strong>Verdict</strong>: ⚠️  <strong>Not a real problem</strong> - warnings are suppressed and don't affect functionality</p>
+<strong>Verdict</strong>: ⚠️  <strong>Historical finding, now superseded</strong> - warning suppression was later replaced by the targeted policy from issue #70</p>
 <h3 id="key-findings">Key Findings</h3>
 <ol>
 <li>✅ <strong>Test Coverage</strong>: 93% - Excellent</li>
 <li>✅ <strong>Test Count</strong>: 128 tests - Comprehensive  </li>
 <li>✅ <strong>Pass Rate</strong>: 100% - Perfect</li>
-<li>⚠️  <strong>Warnings</strong>: 188k warnings - Suppressed but numerous</li>
+<li>⚠️  <strong>Warnings</strong>: 188k warnings - Previously suppressed; current policy keeps warnings visible and asserts expected warnings</li>
 <li>✅ <strong>Test Speed</strong>: ~5-8 minutes - Reasonable for optimization tests</li>
 <li>✅ <strong>Test Quality</strong>: Well-structured, documented, maintainable</li>
 </ol>
@@ -998,13 +1017,16 @@
 </span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>    └── test_example_scripts.py   3 tests - Legacy script smoke tests
 </span></code></pre></div>
 <p><strong>Assessment</strong>: ✅ Excellent organization with clear separation of concerns</p>
-<h3 id="3-the-warning-investigation">3. The Warning Investigation</h3>
+<h3 id="3-the-warning-investigation-historical">3. The Warning Investigation (Historical)</h3>
 <h4 id="whats-happening">What's Happening?</h4>
-<p>The 188,823 warnings are:
-1. <strong>Currently suppressed</strong> by <code>--disable-warnings</code> in <code>pytest.ini</code>
+<p>At the time of this assessment, the 188,823 warnings were:
+1. <strong>Suppressed</strong> by the old global pytest warning configuration
 2. <strong>Not causing test failures</strong>
-3. <strong>Not visible to developers</strong> (by design)
+3. <strong>Not visible to developers</strong> under that historical configuration
 4. <strong>Mostly from scipy.optimize internal iterations</strong></p>
+<p>That suppression strategy is no longer the project policy. The current pytest
+configuration keeps warnings visible by default so new LyoPRONTO-origin warnings
+remain part of the test signal.</p>
 <h4 id="warning-breakdown">Warning Breakdown</h4>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">Total</span> <span class="n">Warnings</span><span class="p">:</span> <span class="mi">188</span><span class="p">,</span><span class="mi">823</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">Total</span> <span class="n">Tests</span><span class="p">:</span> <span class="mi">128</span>
@@ -1044,17 +1066,37 @@
 5. Each time step generates warnings</p>
 <p><strong>Math</strong>: 200 iterations × 150 time steps × 0.5 warnings = 15,000 warnings per optimization test</p>
 <h3 id="4-is-this-a-problem">4. Is This a Problem?</h3>
-<h4 id="no-heres-why">❌ <strong>NO</strong> - Here's Why:</h4>
+<h4 id="superseded-policy-note">Superseded policy note</h4>
+<p>The original conclusion below treated warning suppression as acceptable current
+practice. That conclusion has been superseded. Current guidance is:</p>
 <ol>
 <li>
-<p><strong>Warnings are suppressed</strong>
-   <div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># pytest.ini</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">addopts</span> <span class="o">=</span> <span class="o">--</span><span class="n">disable</span><span class="o">-</span><span class="n">warnings</span>  <span class="c1"># ✅ Working as intended</span>
+<p><strong>Warnings remain visible by default</strong>
+   <div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># pyproject.toml</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">filterwarnings</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">]</span>
 </span></code></pre></div></p>
 </li>
 <li>
-<p><strong>Tests pass 100%</strong></p>
+<p><strong>Expected project warnings are asserted</strong></p>
 </li>
+<li>Use <code>pytest.warns</code> for intentional scientific or runtime warnings</li>
+<li>Check the message so the test documents the expected condition</li>
+<li>
+<p>Investigate unexpected warning summaries before adding filters</p>
+</li>
+<li>
+<p><strong>Filters are narrow</strong></p>
+</li>
+<li>Use <code>filterwarnings</code> only for understood third-party noise</li>
+<li>Scope filters by category, message, and module</li>
+<li>Do not blanket-ignore warnings from <code>lyopronto</code></li>
+</ol>
+<p>The historical observations that the tests passed and that many warnings came
+from scientific-computing paths remain useful context, but they do not justify
+global suppression.</p>
+<h4 id="historical-context-retained">Historical context retained:</h4>
+<ol>
+<li><strong>Tests pass 100%</strong></li>
 <li>No actual errors</li>
 <li>Correct numerical results</li>
 <li>
@@ -1067,7 +1109,7 @@
 <li>numpy 2.x + Python 3.13 has many deprecations</li>
 <li>matplotlib has backend warnings</li>
 <li>
-<p><strong>This is normal</strong></p>
+<p>These still need explicit handling when they appear in project tests</p>
 </li>
 <li>
 <p><strong>Performance is acceptable</strong></p>
@@ -1078,7 +1120,7 @@
 </ol>
 <h4 id="whats-actually-good">✅ What's Actually Good:</h4>
 <ol>
-<li><strong>Warnings are handled</strong> - <code>--disable-warnings</code> prevents noise</li>
+<li><strong>Warnings are handled explicitly</strong> - expected warnings should be asserted in tests</li>
 <li><strong>Tests are thorough</strong> - Running complex optimizations</li>
 <li><strong>No actual bugs</strong> - All tests passing</li>
 <li><strong>Coverage excellent</strong> - 93% overall</li>
@@ -1116,17 +1158,21 @@
 </span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="k">def</span> <span class="nf">test_optimizer_respects_critical_temperature</span><span class="p">():</span>
 </span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Product temperature never exceeds critical temperature.&quot;&quot;&quot;</span>
 </span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1"># 2. Good documentation</span>
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="sd">&quot;&quot;&quot;Test optimizer functionality matching web interface examples.&quot;&quot;&quot;</span>
-</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>
-</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="c1"># 3. Fixtures for reusability</span>
-</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
-</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="k">def</span> <span class="nf">optimizer_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Optimizer parameters from web interface screenshot.&quot;&quot;&quot;</span>
-</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>
-</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="c1"># 4. Assertion messages</span>
-</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="k">assert</span> <span class="n">Tbot</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">product</span><span class="p">[</span><span class="s1">&#39;T_pr_crit&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">,</span> \
-</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>    <span class="sa">f</span><span class="s2">&quot;Final temp </span><span class="si">{</span><span class="n">Tbot</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> exceeds critical </span><span class="si">{</span><span class="n">product</span><span class="p">[</span><span class="s1">&#39;T_pr_crit&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="c1"># 2. Good documentation</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="sd">&quot;&quot;&quot;Test optimizer functionality matching web interface examples.&quot;&quot;&quot;</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="c1"># 3. Fixtures for reusability</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="k">def</span> <span class="nf">optimizer_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Optimizer parameters from web interface screenshot.&quot;&quot;&quot;</span>
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>
+</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>
+</span><span id="__span-7-18"><a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="c1"># 4. Assertion messages</span>
+</span><span id="__span-7-19"><a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="k">assert</span> <span class="n">Tbot</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">product</span><span class="p">[</span><span class="s2">&quot;T_pr_crit&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">,</span> <span class="p">(</span>
+</span><span id="__span-7-20"><a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a>    <span class="sa">f</span><span class="s2">&quot;Final temp </span><span class="si">{</span><span class="n">Tbot</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> exceeds critical </span><span class="si">{</span><span class="n">product</span><span class="p">[</span><span class="s1">&#39;T_pr_crit&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-7-21"><a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a><span class="p">)</span>
 </span></code></pre></div>
 <h4 id="test-coverage-comprehensive">Test Coverage: ✅ Comprehensive</h4>
 <ul>
@@ -1196,10 +1242,10 @@
 <p><strong>Conclusion</strong>: LyoPRONTO's testing infrastructure is <strong>above industry standards</strong> for scientific computing.</p>
 <h3 id="8-the-warnings-in-context">8. The "Warnings" in Context</h3>
 <h4 id="similar-projects-warning-counts">Similar Projects' Warning Counts</h4>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>NumPy test suite:       ~500,000 warnings (suppressed)
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>SciPy test suite:       ~1,000,000 warnings (suppressed)
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>Pandas test suite:      ~200,000 warnings (suppressed)
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>LyoPRONTO test suite:   ~188,000 warnings (suppressed)
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>NumPy test suite:       ~500,000 warnings reported
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>SciPy test suite:       ~1,000,000 warnings reported
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>Pandas test suite:      ~200,000 warnings reported
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>LyoPRONTO test suite:   ~188,000 warnings historically reported
 </span></code></pre></div>
 <p><strong>Observation</strong>: LyoPRONTO is in good company. All major scientific Python packages have massive warning counts.</p>
 <h4 id="why-scientific-computing-has-many-warnings">Why Scientific Computing Has Many Warnings</h4>
@@ -1209,16 +1255,21 @@
 <li><strong>Optimization algorithms</strong> - Internal iteration warnings</li>
 <li><strong>Backend issues</strong> - Matplotlib, etc.</li>
 </ol>
-<p><strong>These are all suppressed for good reason</strong>.</p>
+<p>These sources explain why scientific-computing suites can generate many
+warnings, but they do not justify blanket suppression in LyoPRONTO tests.</p>
 <h2 id="recommendations">Recommendations</h2>
-<h3 id="priority-1-keep-current-approach">🎯 Priority 1: Keep Current Approach ✅</h3>
-<p><strong>No changes needed</strong> - The current setup is working well:
+<h3 id="priority-1-use-the-current-warning-policy">🎯 Priority 1: Use the Current Warning Policy ✅</h3>
+<p>The warning-suppression recommendation from the original assessment is
+superseded. Current setup expectations:
 - Tests are comprehensive
 - Coverage is excellent
-- Warnings are properly suppressed
+- Warnings remain visible by default
+- Expected project warnings are asserted with <code>pytest.warns</code>
+- Third-party filters are narrow and documented
 - CI is configured</p>
 <h3 id="priority-2-optional-improvements-low-priority">📊 Priority 2: Optional Improvements (Low Priority)</h3>
-<p>If you want to reduce warning count (cosmetic only):</p>
+<p>If warning count grows unexpectedly, investigate the source before adding any
+filter:</p>
 <h4 id="option-a-update-dependencies-minimal-impact">Option A: Update Dependencies (Minimal Impact)</h4>
 <p><div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># Try newer/older versions that might have fewer warnings</span>
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>scipy<span class="w"> </span>matplotlib
@@ -1226,27 +1277,26 @@
 <strong>Expected reduction</strong>: 10-20%
 <strong>Effort</strong>: Low
 <strong>Benefit</strong>: Minimal</p>
-<h4 id="option-b-filter-specific-warnings-moderate">Option B: Filter Specific Warnings (Moderate)</h4>
-<p><div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># pytest.ini</span>
+<h4 id="option-b-filter-narrow-third-party-warnings-moderate">Option B: Filter Narrow Third-Party Warnings (Moderate)</h4>
+<p><div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># pyproject.toml</span>
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">filterwarnings</span> <span class="o">=</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>    <span class="n">ignore</span><span class="p">::</span><span class="ne">DeprecationWarning</span><span class="p">:</span><span class="n">numpy</span><span class="o">.*</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>    <span class="n">ignore</span><span class="p">::</span><span class="ne">FutureWarning</span><span class="p">:</span><span class="n">scipy</span><span class="o">.*</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>    <span class="n">ignore</span><span class="p">::</span><span class="ne">UserWarning</span><span class="p">:</span><span class="n">matplotlib</span><span class="o">.*</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>    <span class="n">default</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>    <span class="n">ignore</span><span class="p">:</span><span class="n">known</span> <span class="n">third</span><span class="o">-</span><span class="n">party</span> <span class="n">message</span><span class="p">:</span><span class="ne">DeprecationWarning</span><span class="p">:</span><span class="n">third_party_module</span>
 </span></code></pre></div>
-<strong>Expected reduction</strong>: 50-70%
+<strong>Expected reduction</strong>: Depends on the third-party warning
 <strong>Effort</strong>: Medium
-<strong>Benefit</strong>: Cosmetic only</p>
+<strong>Benefit</strong>: Keeps project warnings visible while avoiding understood external noise</p>
 <h4 id="option-c-investigate-and-fix-source-high-effort">Option C: Investigate and Fix Source (High Effort)</h4>
 <p><div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Example: If functions.py line 33 can be updated</span>
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="c1"># Current:</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="n">p</span> <span class="o">=</span> <span class="mf">2.698e10</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">6144.96</span><span class="o">/</span><span class="p">(</span><span class="mf">273.15</span><span class="o">+</span><span class="n">T_sub</span><span class="p">))</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="n">p</span> <span class="o">=</span> <span class="mf">2.698e10</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">6144.96</span> <span class="o">/</span> <span class="p">(</span><span class="mf">273.15</span> <span class="o">+</span> <span class="n">T_sub</span><span class="p">))</span>
 </span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
 </span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="c1"># Might become:</span>
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">2.698e10</span><span class="p">)</span> <span class="o">-</span> <span class="mf">6144.96</span><span class="o">/</span><span class="p">(</span><span class="mf">273.15</span><span class="o">+</span><span class="n">T_sub</span><span class="p">))</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">2.698e10</span><span class="p">)</span> <span class="o">-</span> <span class="mf">6144.96</span> <span class="o">/</span> <span class="p">(</span><span class="mf">273.15</span> <span class="o">+</span> <span class="n">T_sub</span><span class="p">))</span>
 </span></code></pre></div>
 <strong>Expected reduction</strong>: 30-40%
 <strong>Effort</strong>: High
-<strong>Benefit</strong>: Minimal (warnings already suppressed)</p>
+<strong>Benefit</strong>: Can remove real warning noise without hiding project warnings</p>
 <h3 id="priority-3-performance-optimization-optional">🔧 Priority 3: Performance Optimization (Optional)</h3>
 <p>If test speed becomes an issue:</p>
 <ol>
@@ -1268,8 +1318,8 @@
 <li>
 <p><strong>Reduce iterations in slow tests</strong> (trade accuracy for speed)
    <div class="language-python highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1"># For development only, not CI</span>
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;FAST_TESTS&#39;</span><span class="p">):</span>
-</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>    <span class="n">options</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;maxiter&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">}</span>  <span class="c1"># Reduced from 200</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;FAST_TESTS&quot;</span><span class="p">):</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>    <span class="n">options</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;maxiter&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">}</span>  <span class="c1"># Reduced from 200</span>
 </span></code></pre></div></p>
 </li>
 </ol>
@@ -1313,7 +1363,7 @@
 <tr>
 <td><strong>Warnings</strong></td>
 <td>⭐⭐⭐⭐☆</td>
-<td>Suppressed, not a real issue</td>
+<td>Policy-managed; visible by default with expected warnings asserted</td>
 </tr>
 <tr>
 <td><strong>Overall</strong></td>
@@ -1325,35 +1375,35 @@
 <h3 id="key-takeaways">Key Takeaways</h3>
 <ol>
 <li>✅ <strong>188k warnings are normal</strong> for scientific computing tests</li>
-<li>✅ <strong>Warnings are properly suppressed</strong> - not affecting functionality</li>
+<li>✅ <strong>Warnings are policy-managed</strong> - visible by default, with expected warnings asserted</li>
 <li>✅ <strong>Test coverage is excellent</strong> - 93% overall</li>
 <li>✅ <strong>Test quality is high</strong> - well-structured, documented</li>
 <li>✅ <strong>Performance is appropriate</strong> - optimization tests are slow by nature</li>
-<li>✅ <strong>No action required</strong> - infrastructure is production-ready</li>
+<li>✅ <strong>Warning policy updated after this report</strong> - use the current targeted policy</li>
 </ol>
 <h3 id="the-warning-count-is-not-a-problem-because">The Warning Count is Not a Problem Because:</h3>
 <ol>
-<li><strong>Suppressed</strong> - <code>--disable-warnings</code> in pytest.ini</li>
-<li><strong>Expected</strong> - Scientific computing generates many warnings</li>
+<li><strong>Visible by default</strong> - current pytest configuration uses default warning behavior</li>
+<li><strong>Expected warnings asserted</strong> - scientific warnings should be documented in tests</li>
 <li><strong>Not errors</strong> - All tests pass 100%</li>
 <li><strong>Industry standard</strong> - NumPy/SciPy have similar counts</li>
-<li><strong>Properly managed</strong> - Infrastructure handles them correctly</li>
+<li><strong>Properly managed</strong> - Infrastructure keeps project warnings in the test signal</li>
 </ol>
 <h3 id="if-you-really-want-to-reduce-warnings">If You Really Want to Reduce Warnings:</h3>
-<p><strong>Priority</strong>: ❌ <strong>DON'T</strong> - It's not worth the effort</p>
+<p><strong>Priority</strong>: Investigate first, then use the current policy</p>
 <p><strong>Reason</strong>: 
-- Warnings are already suppressed
 - Tests pass perfectly
-- Time better spent on features or Pyomo integration
-- Common in scientific computing</p>
+- Common in scientific computing
+- Expected project warnings can be asserted
+- Narrow third-party filters are available when justified</p>
 <h2 id="final-verdict">Final Verdict</h2>
 <p><strong>Testing Infrastructure Grade</strong>: <strong>A+ (Excellent)</strong></p>
-<p>The 188,823 warnings are a <strong>cosmetic artifact</strong> of:
+<p>The 188,823 warnings reported here were a <strong>historical artifact</strong> of:
 - Comprehensive testing (128 tests)
 - Complex optimizations (scipy.optimize)
 - Modern libraries (NumPy 2.x, Python 3.13)
-- Proper suppression (--disable-warnings)</p>
-<p><strong>Recommendation</strong>: ✅ <strong>Keep current approach, focus on Pyomo integration</strong></p>
+- The prior global suppression configuration, which has since been replaced</p>
+<p><strong>Recommendation</strong>: ✅ <strong>Follow the current targeted warning policy in <code>tests/README.md</code></strong></p>
 <hr />
 <p><em>Assessment completed: October 2, 2025</em>
 <em>Test suite: 128 tests, 100% passing, 93% coverage</em>
