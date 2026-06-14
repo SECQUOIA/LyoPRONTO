@@ -26,6 +26,15 @@ lanes for LyoPRONTO.
 - `serial`: Tests that must not run under xdist parallelism. Run them with
   `pytest -m serial -n 0`.
 
+## Scientific Reference Scenarios
+
+`tests/scientific_reference_scenarios.py` records the pinned scientific
+reference cases used by `tests/test_scientific_references.py`. Each case names
+its workflow category, input units, output units, expected summary values,
+explicit tolerances, tolerance rationale, and provenance. These tests are
+regression guards for future numerical refactors; they should not be updated
+without documenting why the scientific reference changed.
+
 ## Running Tests Locally
 
 Use the local CI wrapper when you want the same commands used by GitHub Actions:
