@@ -75,6 +75,28 @@ def test_required_test_lane_markers_have_policy_descriptions() -> None:
     assert "high-level API" in markers["main"]
 
 
+def test_static_tooling_configuration_is_staged_and_scoped() -> None:
+    config = _pyproject()["tool"]
+    ruff = config["ruff"]
+    mypy = config["mypy"]
+
+    assert ruff["lint"]["select"] == ["F"]
+    assert ruff["target-version"] == "py38"
+    assert sorted(ruff["lint"]["per-file-ignores"]) == [
+        "examples/legacy/ex_knownRp_PD.py",
+        "examples/legacy/ex_unknownRp_PD.py",
+    ]
+
+    assert mypy["files"] == ["lyopronto"]
+    assert "ignore_errors" not in mypy
+    assert "ignore_missing_imports" not in mypy
+    assert any(
+        override["module"] == ["scipy", "scipy.*"]
+        and override["ignore_missing_imports"] is True
+        for override in mypy["overrides"]
+    )
+
+
 def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     pr_tests = _text(".github/workflows/pr-tests.yml")
     main_tests = _text(".github/workflows/tests.yml")
@@ -90,6 +112,12 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert 'pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto' in main_tests
     assert "pip install pyomo" not in pr_tests
     assert "pip install pyomo" not in main_tests
+    assert "python -m ruff check lyopronto tests examples main.py" in pr_tests
+    assert "python -m ruff check lyopronto tests examples main.py" in main_tests
+    assert "python -m mypy lyopronto" in pr_tests
+    assert "python -m mypy lyopronto" in main_tests
+    assert "continue-on-error: true" in pr_tests
+    assert "continue-on-error: true" in main_tests
 
     assert (
         'pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto'
@@ -129,8 +157,10 @@ def test_contributor_docs_include_fast_and_full_lane_commands() -> None:
         'pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"' in docs
     )
     assert 'pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto' in docs
-    assert "Ruff formatting and linting" in docs
-    assert "not currently CI gates" in docs
+    assert "Ruff linting" in docs
+    assert "python -m ruff check lyopronto tests examples main.py" in docs
+    assert "python -m mypy lyopronto" in docs
+    assert "mypy is advisory" in docs
     assert "Warning Policy" in docs
     assert "pytest.warns" in docs
     assert "--disable-warnings" in docs

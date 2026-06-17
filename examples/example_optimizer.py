@@ -6,7 +6,6 @@ This example demonstrates using the LyoPRONTO optimizers to find
 optimal chamber pressure and shelf temperature trajectories.
 """
 
-import numpy as np
 from lyopronto import opt_Pch_Tsh
 
 
@@ -67,6 +66,6 @@ def run_optimizer_example():
 
 if __name__ == '__main__':
     results = run_optimizer_example()
-    print(f"Optimization complete!")
+    print("Optimization complete!")
     print(f"Final time: {results[-1, 0]:.2f} hours")
     print(f"Final fraction dried: {results[-1, 6]:.4f}")

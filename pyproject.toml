@@ -70,6 +70,27 @@ Documentation = "https://lyohub.github.io/LyoPRONTO/"
 [tool.setuptools.packages.find]
 include = ["lyopronto*"]
 
+[tool.ruff]
+line-length = 100
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["F"]
+
+[tool.ruff.lint.per-file-ignores]
+# These legacy scripts rely on package star imports and script-local globals.
+# Keep the initial Ruff gate enforceable without rewriting old examples here.
+"examples/legacy/ex_knownRp_PD.py" = ["F403", "F405"]
+"examples/legacy/ex_unknownRp_PD.py" = ["F403", "F405"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["lyopronto"]
+
+[[tool.mypy.overrides]]
+module = ["scipy", "scipy.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 minversion = "3.8"
 pythonpath = "."

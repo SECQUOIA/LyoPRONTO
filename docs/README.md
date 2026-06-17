@@ -16,8 +16,13 @@ LyoPRONTO uses explicit pytest marker lanes for CI and local validation:
 The same lanes can be run locally with `./run_local_ci.sh fast`,
 `./run_local_ci.sh full`, `./run_local_ci.sh slow`,
 `./run_local_ci.sh notebook`, and `./run_local_ci.sh pyomo`. Python version is
-read from `.github/ci-config/ci-versions.yml`. Ruff formatting and linting are
-documented local checks, not current CI gates.
+read from `.github/ci-config/ci-versions.yml`. Static analysis runs in CI with
+enforced Ruff linting and advisory mypy:
+
+```bash
+python -m ruff check lyopronto tests examples main.py
+python -m mypy lyopronto
+```
 
 Warnings remain visible in the default pytest configuration. Expected
 scientific warnings should be asserted in tests with `pytest.warns`; warning
