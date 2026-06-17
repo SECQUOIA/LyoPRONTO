@@ -287,8 +287,8 @@ Before submitting a PR, ensure:
 
 - [ ] Fast lane passes (`./run_local_ci.sh fast`)
 - [ ] Full lane passes before review when practical (`./run_local_ci.sh full`)
-- [ ] Code is formatted (`ruff format lyopronto/ tests/`)
-- [ ] Ruff checks pass locally (`ruff check lyopronto/ tests/`)
+- [ ] Ruff lint passes (`python -m ruff check lyopronto tests examples main.py`)
+- [ ] Advisory mypy output is reviewed (`python -m mypy lyopronto`)
 - [ ] Documentation is updated
 - [ ] Docstrings are complete
 - [ ] CHANGELOG.md is updated (if applicable)

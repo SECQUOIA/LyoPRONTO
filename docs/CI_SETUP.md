@@ -16,8 +16,8 @@ The detailed workflow behavior is documented in `docs/CI_WORKFLOW_GUIDE.md`.
 
 | Workflow | Trigger | Lane |
 | --- | --- | --- |
-| `.github/workflows/pr-tests.yml` | Pull requests to `main` | Fast PR lane for all PR updates; full non-Pyomo lane for ready/non-draft PRs |
-| `.github/workflows/tests.yml` | Pushes to `main` | Full non-Pyomo lane |
+| `.github/workflows/pr-tests.yml` | Pull requests to `main` | Static analysis and fast PR lane for all PR updates; full non-Pyomo lane for ready/non-draft PRs |
+| `.github/workflows/tests.yml` | Pushes to `main` | Static analysis and full non-Pyomo lane |
 | `.github/workflows/rundocs.yml` | Ready PRs, pushes to `main`, manual dispatch | Notebook lane |
 | `.github/workflows/slow-tests.yml` | Manual dispatch | Slow non-Pyomo, full non-Pyomo, or optional Pyomo lane |
 | `.github/workflows/docs.yml` | Docs publish events | Documentation deployment |
@@ -50,6 +50,8 @@ SKIP_INSTALL=1 ./run_local_ci.sh fast
 ## Lane Commands
 
 ```bash
+python -m ruff check lyopronto tests examples main.py
+python -m mypy lyopronto
 pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"
 pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
 pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
@@ -68,5 +70,7 @@ pytest exit code 5 as a no-op until tracked Pyomo tests exist.
   exist.
 - Keep notebook tests in the explicit notebook lane.
 - Keep slow optimizer-heavy tests out of the fast PR lane.
-- Ruff formatting and linting are documented local checks in
-  `CONTRIBUTING.md`; they are not active CI gates.
+- Ruff linting is enforced in CI with the narrow Pyflakes rule set configured
+  in `pyproject.toml`.
+- mypy is advisory in CI until the remaining real project type errors are fixed;
+  do not add blanket package-wide ignores to silence those errors.

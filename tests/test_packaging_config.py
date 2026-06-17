@@ -88,6 +88,7 @@ def test_static_tooling_configuration_is_staged_and_scoped() -> None:
     ]
 
     assert mypy["files"] == ["lyopronto"]
+    assert mypy["python_version"] == "3.9"
     assert "ignore_errors" not in mypy
     assert "ignore_missing_imports" not in mypy
     assert any(
@@ -144,12 +145,15 @@ def test_local_ci_script_matches_documented_lane_expressions() -> None:
     assert "SKIP_INSTALL=1" in script
 
 
-def test_contributor_docs_include_fast_and_full_lane_commands() -> None:
+def test_contributor_docs_include_ci_and_static_analysis_commands() -> None:
     docs = "\n".join(
         [
             _text("tests/README.md"),
             _text("CONTRIBUTING.md"),
             _text("docs/CI_WORKFLOW_GUIDE.md"),
+            _text("docs/CI_SETUP.md"),
+            _text("docs/CI_QUICK_REFERENCE.md"),
+            _text("docs/JULIA_PARITY_MATRIX.md"),
         ]
     )
 
@@ -161,6 +165,10 @@ def test_contributor_docs_include_fast_and_full_lane_commands() -> None:
     assert "python -m ruff check lyopronto tests examples main.py" in docs
     assert "python -m mypy lyopronto" in docs
     assert "mypy is advisory" in docs
+    assert "Ruff formatting and linting are documented local checks" not in docs
+    assert "not active CI gates" not in docs
+    assert "do not enforce" not in docs
+    assert "dedicated CI decision is pending" not in docs
     assert "Warning Policy" in docs
     assert "pytest.warns" in docs
     assert "--disable-warnings" in docs

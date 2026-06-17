@@ -84,7 +84,7 @@ select = ["F"]
 "examples/legacy/ex_unknownRp_PD.py" = ["F403", "F405"]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.9"
 files = ["lyopronto"]
 
 [[tool.mypy.overrides]]
