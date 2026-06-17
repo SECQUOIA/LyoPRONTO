@@ -291,7 +291,7 @@ To add a new example:
 3. **Add docstring**: Explain purpose and usage
 4. **Test it**: Ensure it runs successfully
 5. **Document here**: Add section to this README
-6. **Add tests**: Create tests in `tests/test_examples.py` (if needed)
+6. **Add tests**: Add focused smoke or regression coverage under `tests/`
 
 ### Example Template
 
@@ -330,10 +330,11 @@ if __name__ == "__main__":
 
 Future examples to add:
 
-### `example_pyomo_optimization.py` (Future)
-- Use Pyomo-based simultaneous optimization
-- Compare with scipy approach
-- Demonstrate coexistence of scipy and Pyomo methods
+### `example_pyomo_optimization.py` (planned)
+
+Pyomo optimization is not tracked on `main`. Add this example only after a
+future PR adds Pyomo implementation, optional dependency documentation, and
+Pyomo-marked tests.
 
 ---
 
@@ -386,7 +387,7 @@ ls test_data/temperature.txt
 
 ## Questions?
 
-- 📖 See [GETTING_STARTED.md](../GETTING_STARTED.md) for general usage guide
-- 🧪 See [README_TESTING.md](../README_TESTING.md) for testing information
-- 🏗️ See [ARCHITECTURE.md](../ARCHITECTURE.md) for code structure
-- 💡 See [.github/copilot-examples.md](../.github/copilot-examples.md) for code snippets
+- See [GETTING_STARTED.md](../docs/GETTING_STARTED.md) for local setup.
+- See [tests/README.md](../tests/README.md) for testing and CI lanes.
+- See [ARCHITECTURE.md](../docs/ARCHITECTURE.md) for current code structure.
+- See [.github/copilot-examples.md](../.github/copilot-examples.md) for code snippets.

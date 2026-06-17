@@ -8,8 +8,8 @@
 > warning-suppression guidance in the original report has been superseded by
 > the issue #70 warning policy. Current tests keep warnings visible by default,
 > assert expected project warnings with `pytest.warns`, and reserve
-> `filterwarnings` for narrowly scoped third-party noise. See
-> [`docs/README.md`](README.md) and [`tests/README.md`](../tests/README.md).
+> `filterwarnings` for narrowly scoped third-party noise. See `docs/README.md`
+> and `tests/README.md`.
 
 ## Summary
 

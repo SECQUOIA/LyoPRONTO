@@ -5,11 +5,11 @@
 LyoPRONTO is a vial-scale lyophilization (freeze-drying) process simulator written in Python. It models the freezing and primary drying phases using heat and mass transfer equations.
 
 ### Current State
-- **Status**: Ready for Pyomo integration (scipy baseline complete)
-- **Branch**: `dev-pyomo` for Pyomo development
-- **Test Coverage**: 85 tests, 100% passing, 32% code coverage
+- **Status**: Current tracked implementation is SciPy-based; Pyomo is planned/manual.
+- **Branch**: `main` is the default integration branch.
+- **Testing**: Use the marker lanes in `tests/README.md`; do not rely on fixed historical test-count or coverage snapshots.
 - **Python Version**: 3.8+
-- **Key Principle**: Coexistence, not replacement - both scipy and Pyomo will be available
+- **Key Principle**: Preserve legacy dict APIs while keeping typed Pint APIs additive.
 
 ## Code Style and Conventions
 
@@ -71,14 +71,24 @@ dmdt  # Sublimation rate (kg/hr)
 - `lyopronto/calc_unknownRp.py` - Primary drying with unknown resistance
 - `lyopronto/freezing.py` - Freezing phase calculations
 
-### Optimizers (scipy-based, will remain alongside Pyomo)
+### Optimizers (SciPy-based)
 - `lyopronto/opt_Pch_Tsh.py` - Optimize both pressure and temperature
 - `lyopronto/opt_Pch.py` - Optimize pressure only
 - `lyopronto/opt_Tsh.py` - Optimize temperature only
 
-### Pyomo Models (planned, to be added)
-- `lyopronto/pyomo_models/single_step.py` - Single time-step optimization
-- `lyopronto/pyomo_models/multi_period.py` - Full trajectory optimization
+### Typed API Modules
+- `lyopronto/typed.py` - Pint-aware typed helpers
+- `lyopronto/physical_properties.py` - Typed physical-property utilities
+- `lyopronto/pikal.py` - Typed Pikal primary-drying workflow
+- `lyopronto/rf.py` - Typed RF workflow
+- `lyopronto/fitting.py` - SciPy fitting helpers
+- `lyopronto/cycle_time.py` - End-of-primary-drying detection
+- `lyopronto/eccurt.py` - Equipment capability utilities
+- `lyopronto/vials.py` - Vial metadata and geometry helpers
+
+### Pyomo Models
+No `lyopronto/pyomo_models/` package is tracked on `main`. Treat Pyomo model
+examples as roadmap material until implementation and tests are added.
 
 ### Testing
 - `tests/test_functions.py` - Unit tests for physics functions
@@ -100,14 +110,14 @@ output[:, 2]  # Tbot - vial bottom temperature [degC]
 output[:, 3]  # Tsh - shelf temperature [degC]
 output[:, 4]  # Pch - chamber pressure mTorr, NOT Torr!)
 output[:, 5]  # flux - sublimation flux [kg/hr/m**2]
-output[:, 6]  # frac_dried - fraction dried (0-1, NOT percentage!)
+output[:, 6]  # percent_dried - percent dried (0-100)
 ```
 
 ## Common Pitfalls to Avoid
 
 1. **Unit Confusion**
    - ❌ Don't assume Pch is in Torr (it's in mTorr in output)
-   - ❌ Don't assume dried is percentage (it's a fraction 0-1)
+   - ❌ Don't assume dried is a fraction (legacy output uses percent 0-100)
    - ❌ Don't forget flux is normalized by area (kg/hr/m²)
 
 2. **Physics Behavior**
@@ -232,11 +242,11 @@ git push origin feature/descriptive-name
 ## Useful Commands
 
 ```bash
-# Run all tests
-pytest tests/ -v
+# Run fast PR-style tests
+pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"
 
 # Run with coverage
-pytest tests/ --cov=lyopronto --cov-report=html
+pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
 
 # Run specific test
 pytest tests/test_functions.py::TestVaporPressure::test_vapor_pressure_at_freezing_point -v
@@ -245,11 +255,10 @@ pytest tests/test_functions.py::TestVaporPressure::test_vapor_pressure_at_freezi
 pytest tests/ -v --pdb
 
 # Format and lint code
-ruff format lyopronto/ tests/
-ruff check lyopronto/ tests/
+python -m ruff check lyopronto tests examples main.py
 
 # Type checking
-mypy lyopronto/
+python -m mypy lyopronto
 ```
 
 ## Key Physics Equations
@@ -279,16 +288,14 @@ Q_sub = dmdt * dHs  # Heat for sublimation
 ## References
 
 ### Core Documentation
-- **Coexistence**: See `docs/COEXISTENCE_PHILOSOPHY.md` for scipy/Pyomo coexistence model
-- **Roadmap**: See `docs/PYOMO_ROADMAP.md` for Pyomo integration plan
 - **Architecture**: See `docs/ARCHITECTURE.md` for system design
 - **Physics**: See `docs/PHYSICS_REFERENCE.md` for equations and models
 - **Getting Started**: See `docs/GETTING_STARTED.md` for developer guide
 
 ### Examples and Tests
 - **Examples**: See `examples/README.md` for web interface examples (4 modes)
-- **Testing**: See `tests/README.md` for test suite (85 tests, 100% passing)
-- **Development Log**: See `docs/DEVELOPMENT_LOG.md` for change history
+- **Testing**: See `tests/README.md` for current test lanes and marker policy
+- **Historical logs**: See `docs/archive/` for development history
 
 ### Historical Reference
 - **Archive**: See `docs/archive/` for detailed session summaries and historical context
@@ -298,16 +305,16 @@ Q_sub = dmdt * dHs  # Heat for sublimation
 When unsure:
 1. Check existing tests in `tests/` for examples
 2. Review `lyopronto/functions.py` for physics implementation
-3. See `docs/PYOMO_ROADMAP.md` for architecture decisions
-4. Run tests with `pytest tests/ -v` to validate changes
+3. See `docs/ARCHITECTURE.md` for current module boundaries
+4. Run the relevant lane from `tests/README.md` to validate changes
 5. Check `examples/` for working code examples
 
 ## Current Focus
 
-🎯 **Ready for Pyomo Integration**
-- All 4 web interface modes complete (primary drying, optimizer, freezing, design space)
-- 85 tests passing (100% pass rate)
-- Scipy baseline fully validated
-- Adding Pyomo as parallel optimization method (scipy remains)
-- **Remember**: Coexistence, not replacement - both scipy and Pyomo available
-- See `docs/PYOMO_ROADMAP.md` and `docs/COEXISTENCE_PHILOSOPHY.md` for details
+Current focus:
+
+- Keep legacy dict APIs and typed Pint APIs documented separately.
+- Keep CI lane documentation synchronized with workflows and `run_local_ci.sh`.
+- Treat Pyomo as planned until tracked implementation and tests are added.
+- Use GitHub issues and milestones for Pyomo roadmap planning; keep current
+  implementation status in `docs/ARCHITECTURE.md`.

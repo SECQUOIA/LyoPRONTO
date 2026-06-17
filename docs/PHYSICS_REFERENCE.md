@@ -367,7 +367,7 @@ This is a **nonlinear equation** in Tsub:
 - Sublimation ceases (no more ice)
 - No latent heat consumption
 - Vial bottom heats up toward shelf temperature
-- Termination criterion: `L ≤ 0` or `frac_dried ≥ 0.99`
+- Termination criterion: fully dried cake length or `percent_dried >= 99`
 
 ---
 
@@ -490,12 +490,12 @@ opt.solve(model)
 - Output converted for historical reasons
 - Always check units!
 
-### ❌ "dried column is percentage 0-100"
+### ❌ "dried column is fraction 0-1"
 
-**Reality**: `output[:, 6]` is **fraction 0-1**
-- 0.5 means 50% dried
-- 0.99 means 99% dried
-- NOT 99 (which would be 9900%!)
+**Reality**: `output[:, 6]` is **percent dried from 0 to 100**
+- 50 means 50% dried
+- 99 means 99% dried
+- NOT 0.99 for 99% dried
 
 ### ❌ "Mass balance must be exact"
 
@@ -542,12 +542,12 @@ def check_physics(output):
     # Flux should be non-negative
     assert np.all(flux >= 0)
     
-    # Dried fraction should be 0-1 and increasing
-    assert np.all(dried >= 0) and np.all(dried <= 1)
+    # Percent dried should be 0-100 and increasing
+    assert np.all(dried >= 0) and np.all(dried <= 100)
     assert np.all(np.diff(dried) >= 0)  # monotonic increase
     
-    # Final dried should be close to 1
-    assert dried[-1] >= 0.99
+    # Final dried should be close to complete
+    assert dried[-1] >= 99
     
     print("✅ Output is physically reasonable")
 ```

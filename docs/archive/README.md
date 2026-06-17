@@ -1,62 +1,70 @@
 # Documentation Archive
 
-This directory contains detailed session summaries and historical documentation from the development process.
+This directory contains historical development reports, completion summaries,
+and superseded status snapshots. These files are preserved for context, but
+current repository status lives in the parent `docs/` directory, `tests/README.md`,
+`examples/README.md`, `CONTRIBUTING.md`, and the root `README.md`.
 
-## Archived Files
+## Why These Files Are Archived
 
-These files document the step-by-step development process but have been superseded by more concise documentation in the parent directory.
+Archived documents commonly contain:
 
-### Session Summaries
-- `TESTING_SUMMARY.md` - Initial testing infrastructure setup
-- `TEST_FIXES_SUMMARY.md` - Bug fixes and debugging during testing
-- `TESTING_AND_EXAMPLES_SUMMARY.md` - Web interface implementation progress
-- `OPTIMIZER_TESTING_SUMMARY.md` - Detailed optimizer testing documentation
-- `OPTIMIZER_COMPLETE.md` - Optimizer implementation completion summary
-- `DESIGN_SPACE_COMPLETE.md` - Design space generator completion summary
-- `TESTING_AND_EXAMPLES_COMPLETE.md` - Overall testing completion
-- `WEB_INTERFACE_COMPLETE.md` - Final web interface parity summary
+- fixed test counts from earlier repository states
+- fixed coverage percentages from earlier local runs
+- old CI timing assumptions
+- planned Pyomo structure described before implementation existed
+- completed-session narratives that are useful history but not current docs
 
-### Organization Documents
-- `REORGANIZATION_COMPLETE.md` - Repository cleanup and organization
-- `REPOSITORY_ORGANIZATION.md` - File structure organization
-- `CODE_STRUCTURE.md` - Code organization (superseded by ARCHITECTURE.md)
-- `README_TESTING.md` - Testing documentation (superseded by tests/README.md)
+Do not use archived files as the source of truth for current commands, tracked
+modules, Pyomo implementation status, or coverage numbers.
 
-## Why Archived?
+## Current Replacements
 
-These documents were created during iterative development sessions and contain:
-- Detailed chronological progress logs
-- Step-by-step debugging narratives  
-- Session-specific context and decisions
-- Redundant information across multiple files
+- Current setup: `../GETTING_STARTED.md`
+- Current architecture: `../ARCHITECTURE.md`
+- Current CI behavior: `../CI_WORKFLOW_GUIDE.md`
+- Current CI quick reference: `../CI_QUICK_REFERENCE.md`
+- Current test policy: `../../tests/README.md`
+- Current examples: `../../examples/README.md`
+- Current Pyomo status: `../ARCHITECTURE.md`; roadmap ownership should live in
+  GitHub issues and milestones.
 
-While valuable for understanding the development process, they made the repository cluttered with too many top-level documentation files.
+## Archived Development Summaries
 
-## Current Documentation
+- `CALC_UNKNOWNRP_TESTS_COMPLETE.md`
+- `CLEANUP_COMPLETE.md`
+- `DESIGN_SPACE_COMPLETE.md`
+- `DEVELOPMENT_LOG.md`
+- `EXAMPLE_INTEGRATION_COMPLETE.md`
+- `OPTIMIZER_COMPLETE.md`
+- `OPTIMIZER_TESTING_SUMMARY.md`
+- `OPTIMIZER_TESTS_COMPLETE.md`
+- `REORGANIZATION_COMPLETE.md`
+- `REPOSITORY_CLEANUP.md`
+- `REPOSITORY_ORGANIZATION.md`
+- `TEST_DIRECTORY_REVIEW.md`
+- `TEST_FIXES_SUMMARY.md`
+- `TEST_RENAME_COMPLETE.md`
+- `TESTING_AND_EXAMPLES_COMPLETE.md`
+- `TESTING_AND_EXAMPLES_SUMMARY.md`
+- `TESTING_INFRASTRUCTURE_ASSESSMENT.md`
+- `TESTING_STRATEGY.md`
+- `TESTING_SUMMARY.md`
+- `WEB_INTERFACE_COMPLETE.md`
 
-For current, consolidated documentation, see the parent `docs/` directory:
-- `DEVELOPMENT_LOG.md` - High-level chronological summary (replaces session summaries)
-- `ARCHITECTURE.md` - System architecture
-- `PHYSICS_REFERENCE.md` - Physics equations and models
-- `COEXISTENCE_PHILOSOPHY.md` - Scipy/Pyomo coexistence strategy
-- `PYOMO_ROADMAP.md` - Pyomo integration plan
-- `GETTING_STARTED.md` - Developer onboarding
+## Archived CI and Coverage Notes
 
-And in the repository root:
-- `README.md` - Main entry point
-- `CONTRIBUTING.md` - Contribution guidelines
+- `CI_SETUP_COMPLETE.md`
+- `CI_WORKFLOW_RECOMMENDATION.md`
+- `LOW_COVERAGE_ANALYSIS.md`
+- `PARALLEL_TESTING.md`
+- `PARALLEL_TESTING_COMPLETE.md`
+- `README_TESTING.md`
 
-## Using These Files
+## Archived Structure Notes
 
-These archived files are kept for:
-1. **Historical reference** - Understanding why decisions were made
-2. **Detailed examples** - More verbose explanations of features
-3. **Troubleshooting** - Similar issues encountered during development
+- `CODE_STRUCTURE.md`
 
-If you need very detailed information about a specific implementation (optimizer, design space, etc.), these files contain extensive step-by-step documentation.
-
----
-
-**Archived**: October 2, 2025  
-**Reason**: Repository documentation consolidation  
-**Replacement**: `docs/DEVELOPMENT_LOG.md` + core documentation files
+These files remain useful when reconstructing how earlier repository decisions
+were made. They intentionally retain their original wording unless a later edit
+adds a clear historical-status note.

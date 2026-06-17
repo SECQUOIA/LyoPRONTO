@@ -148,9 +148,9 @@ class TestPrimaryDrying:
         assert_physically_reasonable_output(output)
         
         # Check drying completion
-        final_dried = output[-1, 6]  # fraction dried at end
-        assert final_dried >= 0.99, \
-            f"Expected at least 99% dried, got {final_dried*100:.1f}%"
+        final_dried = output[-1, 6]  # percent dried at end
+        assert final_dried >= 99, \
+            f"Expected at least 99% dried, got {final_dried:.1f}%"
     
     def test_mass_balance(self, standard_setup):
         """Verify mass balance between sublimation and product consumption."""
@@ -224,11 +224,10 @@ Tbot = output[:, 2]           # °C
 Tsh = output[:, 3]            # °C (shelf setpoint)
 Pch = output[:, 4]            # mTorr (NOT Torr!)
 flux = output[:, 5]           # kg/hr/m²
-frac_dried = output[:, 6]     # 0-1 (NOT percentage!)
+percent_dried = output[:, 6]  # percent dried, 0-100
 
 # Convert units for plotting
-Pch_torr = Pch / 1000         # Convert mTorr → Torr
-percent_dried = frac_dried * 100  # Convert fraction → percentage
+Pch_torr = Pch / 1000         # Convert mTorr to Torr
 
 # Create plots
 fig, axes = plt.subplots(2, 2, figsize=(12, 8))
@@ -280,7 +279,7 @@ def analyze_drying_output(output):
     
     # Time metrics
     metrics['total_time'] = output[-1, 0]  # hours
-    time_90 = np.interp(0.90, output[:, 6], output[:, 0])
+    time_90 = np.interp(90.0, output[:, 6], output[:, 0])
     metrics['time_to_90pct'] = time_90
     
     # Temperature metrics
@@ -295,7 +294,7 @@ def analyze_drying_output(output):
     # Find when flux peaks
     idx_max_flux = np.argmax(output[:, 5])
     metrics['time_peak_flux'] = output[idx_max_flux, 0]  # hours
-    metrics['frac_dried_at_peak_flux'] = output[idx_max_flux, 6]  # 0-1
+    metrics['percent_dried_at_peak_flux'] = output[idx_max_flux, 6]
     
     return metrics
 

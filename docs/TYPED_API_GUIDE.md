@@ -82,8 +82,9 @@ smoke tests remain in `tests/test_example_scripts.py`.
   (frozen/dried height, frozen mass) rather than a percent field.
 - Optimization backend: the shipping optimizers (`opt_Pch`, `opt_Tsh`,
   `opt_Pch_Tsh`) and `fit_primary_drying`/`fit_rf_primary_drying` use SciPy.
-  Pyomo-based simultaneous optimization remains planned and is not implemented;
-  see `docs/PYOMO_ROADMAP.md` and `docs/ARCHITECTURE.md`.
+  Pyomo-based simultaneous optimization is not tracked on `main`; current
+  status is summarized in `docs/ARCHITECTURE.md`, and roadmap planning should
+  live in GitHub issues.
 
 ## Attribution
 

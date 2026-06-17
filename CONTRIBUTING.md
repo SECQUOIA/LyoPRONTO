@@ -325,71 +325,20 @@ Closes #123
 Relates to #456
 ```
 
-## Pyomo Development
+## Pyomo Status
 
-### Special Considerations for Pyomo Code
+Pyomo simultaneous optimization is not tracked on `main` today. Do not add
+documentation that describes Pyomo models as implemented unless the same PR
+adds the implementation, optional dependency handling, and Pyomo-marked tests.
 
-When contributing Pyomo-based optimization code:
-
-1. **Create Comparison Tests**
-   ```python
-   def test_pyomo_matches_scipy():
-       """Verify Pyomo results match scipy baseline."""
-       scipy_result = scipy_optimize(...)
-       pyomo_result = pyomo_optimize(...)
-       np.testing.assert_allclose(scipy_result, pyomo_result, rtol=1e-3)
-   ```
-
-2. **Use Proper Initialization**
-   - Always warmstart with scipy solution
-   - Document initialization strategy
-
-3. **Handle Numerical Issues**
-   - Use log-transforms for exponentials
-   - Add scaling to improve conditioning
-   - Document solver options
-
-4. **Benchmark Performance**
-   - Compare timing against scipy
-   - Aim for <3x scipy performance
-   - Profile bottlenecks
-
-### Pyomo Model Structure
-
-Follow this structure for new Pyomo models:
-
-```python
-def create_model(params):
-    """Create Pyomo model for [description].
-    
-    Args:
-        params: Model parameters
-        
-    Returns:
-        Concrete Pyomo model ready to solve
-    """
-    model = pyo.ConcreteModel()
-    
-    # 1. Sets
-    # 2. Parameters  
-    # 3. Variables with bounds
-    # 4. Constraints
-    # 5. Objective
-    
-    return model
-
-def solve_model(model, solver='ipopt'):
-    """Solve Pyomo model and extract results."""
-    # Solve
-    # Check status
-    # Extract results
-    # Return formatted output
-```
+Use GitHub issues and milestones for roadmap planning, starting from the
+parent roadmap issue #63. Current repository status is summarized in
+`docs/ARCHITECTURE.md`.
 
 ## Questions or Issues?
 
 - Check existing documentation in `docs/` and `*.md` files
-- Review `PYOMO_ROADMAP.md` for architecture decisions
+- Review `docs/ARCHITECTURE.md` for current module boundaries
 - Search existing issues on GitHub
 - Ask questions by opening a new issue
 
