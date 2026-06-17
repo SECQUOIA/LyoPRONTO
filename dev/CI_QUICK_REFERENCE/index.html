@@ -523,11 +523,13 @@
 
 <h1 id="github-actions-ci-quick-reference">GitHub Actions CI Quick Reference</h1>
 <h2 id="local-commands">Local Commands</h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>./run_local_ci.sh<span class="w"> </span>fast
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>./run_local_ci.sh<span class="w"> </span>full
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>./run_local_ci.sh<span class="w"> </span>slow
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>./run_local_ci.sh<span class="w"> </span>notebook
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>./run_local_ci.sh<span class="w"> </span>pyomo
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>python<span class="w"> </span>-m<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>lyopronto<span class="w"> </span>tests<span class="w"> </span>examples<span class="w"> </span>main.py
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>python<span class="w"> </span>-m<span class="w"> </span>mypy<span class="w"> </span>lyopronto
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>./run_local_ci.sh<span class="w"> </span>fast
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>./run_local_ci.sh<span class="w"> </span>full
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>./run_local_ci.sh<span class="w"> </span>slow
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>./run_local_ci.sh<span class="w"> </span>notebook
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>./run_local_ci.sh<span class="w"> </span>pyomo
 </span></code></pre></div>
 <p>Use <code>SKIP_INSTALL=1</code> to skip dependency installation when your environment is
 already ready:</p>
@@ -543,6 +545,11 @@ already ready:</p>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>Static analysis</td>
+<td><code>python -m ruff check lyopronto tests examples main.py</code>; advisory <code>python -m mypy lyopronto</code></td>
+<td><code>.github/workflows/pr-tests.yml</code>, <code>.github/workflows/tests.yml</code></td>
+</tr>
 <tr>
 <td>Fast PR</td>
 <td><code>pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"</code></td>
@@ -572,9 +579,9 @@ already ready:</p>
 </table>
 <h2 id="triggers">Triggers</h2>
 <ul>
-<li>PR updates targeting <code>main</code>: fast lane.</li>
+<li>PR updates targeting <code>main</code>: static analysis and fast lane.</li>
 <li>Ready/non-draft PRs targeting <code>main</code>: full non-Pyomo lane with coverage.</li>
-<li>Pushes to <code>main</code>: full non-Pyomo lane with coverage.</li>
+<li>Pushes to <code>main</code>: static analysis and full non-Pyomo lane with coverage.</li>
 <li>Ready/non-draft PRs, pushes to <code>main</code>, and manual dispatch: notebook lane.</li>
 <li>Manual dispatch: slow non-Pyomo, full non-Pyomo, or optional Pyomo lane.</li>
 </ul>

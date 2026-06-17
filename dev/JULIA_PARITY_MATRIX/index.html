@@ -876,14 +876,16 @@ make the category clear in the test name or assertion comments.</p>
   place of Julia <code>!</code> APIs.</li>
 </ul>
 <h2 id="static-checks">Static Checks</h2>
-<p>Active CI workflows currently run pytest-based suites for PRs, main-branch
-pushes, and manual slow-test dispatches. The development extra includes
-<code>ruff</code> and <code>mypy</code>, but the active GitHub Actions workflows do not enforce
-either static checker yet.</p>
-<p>Ruff can continue to be run manually while a dedicated CI decision is pending.
-Mypy is not expected to be clean without follow-up work because SciPy stubs and
-some existing fitting annotations still need attention. A separate issue should
-track adding static-check CI or documenting why these checks remain manual.</p>
+<p>Active PR and main-branch CI workflows run static analysis before the pytest
+lanes. Ruff is enforced with the narrow Pyflakes rule set configured in
+<code>pyproject.toml</code>:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>python<span class="w"> </span>-m<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>lyopronto<span class="w"> </span>tests<span class="w"> </span>examples<span class="w"> </span>main.py
+</span></code></pre></div>
+<p>mypy is advisory until the remaining real project type errors are fixed:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>python<span class="w"> </span>-m<span class="w"> </span>mypy<span class="w"> </span>lyopronto
+</span></code></pre></div>
+<p>The mypy configuration ignores missing SciPy stubs initially, but it must not
+blanket-ignore project modules or hide real in-repo type issues.</p>
 <h2 id="non-exported-julia-helpers">Non-Exported Julia Helpers</h2>
 <p>These helpers are not public exports from Julia <code>LyoPronto.jl</code>, but they are
 tracked here because downstream typed APIs depend on them.</p>
