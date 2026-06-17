@@ -21,8 +21,9 @@ Active GitHub workflows use the Python version in
 `.github/ci-config/ci-versions.yml`. PRs always run the fast lane; ready
 non-draft PRs and pushes to `main` run the full non-Pyomo lane with coverage;
 notebook tests run in an explicit notebook workflow; slow and Pyomo validation
-are available through the manual validation workflow. Ruff formatting and
-linting commands are documented local checks but are not currently CI gates.
+are available through the manual validation workflow. Static analysis runs as
+its own CI lane: Ruff linting is enforced, and mypy is advisory while the
+remaining project type errors are staged for follow-up work.
 
 Warnings are part of the test signal. The default pytest configuration keeps
 warnings visible instead of using `--disable-warnings`. When a test deliberately
@@ -142,12 +143,11 @@ committing ignored local run output.
 ### 5. Code Quality Checks
 
 ```bash
-# Format and lint code
-ruff format lyopronto/ tests/
-ruff check lyopronto/ tests/
+# Enforced Ruff linting
+python -m ruff check lyopronto tests examples main.py
 
-# Type checking (optional but recommended)
-mypy lyopronto/
+# Advisory type checking
+python -m mypy lyopronto
 ```
 
 ### 6. Commit Changes
@@ -287,8 +287,8 @@ Before submitting a PR, ensure:
 
 - [ ] Fast lane passes (`./run_local_ci.sh fast`)
 - [ ] Full lane passes before review when practical (`./run_local_ci.sh full`)
-- [ ] Code is formatted (`ruff format lyopronto/ tests/`)
-- [ ] Ruff checks pass locally (`ruff check lyopronto/ tests/`)
+- [ ] Ruff lint passes (`python -m ruff check lyopronto tests examples main.py`)
+- [ ] Advisory mypy output is reviewed (`python -m mypy lyopronto`)
 - [ ] Documentation is updated
 - [ ] Docstrings are complete
 - [ ] CHANGELOG.md is updated (if applicable)

@@ -3,13 +3,14 @@
 ## Overview
 
 LyoPRONTO uses explicit pytest marker lanes instead of a single ambiguous test
-suite. The workflows are designed around five lanes:
+suite. The workflows are designed around six lanes:
 
-1. Fast PR feedback
-2. Full non-Pyomo validation
-3. Manual slow non-Pyomo validation
-4. Explicit notebook validation
-5. Manual optional Pyomo validation
+1. Static analysis
+2. Fast PR feedback
+3. Full non-Pyomo validation
+4. Manual slow non-Pyomo validation
+5. Explicit notebook validation
+6. Manual optional Pyomo validation
 
 The marker policy and local commands are also documented in `tests/README.md`.
 
@@ -19,6 +20,9 @@ The marker policy and local commands are also documented in `tests/README.md`.
 
 Runs on pull requests targeting `main`.
 
+- `static-analysis` runs on every PR update:
+  `python -m ruff check lyopronto tests examples main.py`
+  and advisory `python -m mypy lyopronto`
 - `fast-scipy` runs on every PR update:
   `pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"`
 - `full-non-pyomo` runs only for ready/non-draft PRs:
@@ -28,6 +32,9 @@ Runs on pull requests targeting `main`.
 
 Runs on pushes to `main`.
 
+- `static-analysis` runs the enforced Ruff lint gate:
+  `python -m ruff check lyopronto tests examples main.py`
+  and advisory `python -m mypy lyopronto`
 - `full-non-pyomo` runs the main confidence gate:
   `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
 
@@ -58,6 +65,8 @@ code 5 as a no-op because the repository does not currently track Pyomo tests.
 Use `run_local_ci.sh` to run the same commands locally:
 
 ```bash
+python -m ruff check lyopronto tests examples main.py
+python -m mypy lyopronto
 ./run_local_ci.sh fast
 ./run_local_ci.sh full
 ./run_local_ci.sh slow
@@ -73,11 +82,11 @@ SKIP_INSTALL=1 ./run_local_ci.sh fast
 
 ## Expected Pull Request Flow
 
-1. Open or update a PR: fast lane runs.
+1. Open or update a PR: static analysis and the fast lane run.
 2. Convert the PR out of draft: full non-Pyomo lane runs with coverage.
 3. Notebook lane runs separately for ready PRs.
 4. Reviewers can request manual slow or Pyomo lanes when relevant.
-5. Merge to `main`: full non-Pyomo lane runs again.
+5. Merge to `main`: static analysis and the full non-Pyomo lane run again.
 
 ## Maintenance Notes
 
@@ -87,5 +96,7 @@ SKIP_INSTALL=1 ./run_local_ci.sh fast
   Pyomo implementation and tests exist.
 - Do not broaden fast PR deselection beyond `slow`, `notebook`, and `pyomo`
   without documenting the reason.
-- Ruff formatting and linting are local checks documented in
-  `CONTRIBUTING.md`; they are not active CI gates.
+- Ruff linting is enforced in CI with the narrow Pyflakes rule set configured
+  in `pyproject.toml`.
+- mypy is advisory in CI until the remaining real project type errors are fixed;
+  do not add blanket package-wide ignores to silence those errors.

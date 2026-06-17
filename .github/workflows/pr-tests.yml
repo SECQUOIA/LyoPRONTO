@@ -9,6 +9,38 @@ permissions:
   contents: read
 
 jobs:
+  static-analysis:
+    name: Static analysis
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Read CI version config
+      id: versions
+      uses: mikefarah/yq@v4.44.1
+      with:
+        cmd: yq eval '.python-version' .github/ci-config/ci-versions.yml
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ steps.versions.outputs.result }}
+        cache: 'pip'
+        cache-dependency-path: pyproject.toml
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        pip install -e ".[dev]"
+
+    - name: Run Ruff lint
+      run: python -m ruff check lyopronto tests examples main.py
+
+    - name: Run mypy advisory check
+      continue-on-error: true
+      run: python -m mypy lyopronto
+
   fast-scipy:
     name: Fast SciPy lane
     runs-on: ubuntu-latest

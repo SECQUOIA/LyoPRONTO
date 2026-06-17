@@ -157,15 +157,22 @@ make the category clear in the test name or assertion comments.
 
 ## Static Checks
 
-Active CI workflows currently run pytest-based suites for PRs, main-branch
-pushes, and manual slow-test dispatches. The development extra includes
-`ruff` and `mypy`, but the active GitHub Actions workflows do not enforce
-either static checker yet.
+Active PR and main-branch CI workflows run static analysis before the pytest
+lanes. Ruff is enforced with the narrow Pyflakes rule set configured in
+`pyproject.toml`:
 
-Ruff can continue to be run manually while a dedicated CI decision is pending.
-Mypy is not expected to be clean without follow-up work because SciPy stubs and
-some existing fitting annotations still need attention. A separate issue should
-track adding static-check CI or documenting why these checks remain manual.
+```bash
+python -m ruff check lyopronto tests examples main.py
+```
+
+mypy is advisory until the remaining real project type errors are fixed:
+
+```bash
+python -m mypy lyopronto
+```
+
+The mypy configuration ignores missing SciPy stubs initially, but it must not
+blanket-ignore project modules or hide real in-repo type issues.
 
 ## Non-Exported Julia Helpers
 

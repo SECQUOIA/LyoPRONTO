@@ -28,7 +28,6 @@ Based on the web interface inputs from the screenshot:
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from pathlib import Path
 
 from lyopronto import calc_knownRp
 
@@ -131,34 +130,34 @@ def run_primary_drying_simulation():
     
     # Display input parameters
     print("\n📋 INPUT PARAMETERS:")
-    print(f"\nVial Geometry:")
+    print("\nVial Geometry:")
     print(f"  Vial Area (Av):    {vial['Av']:.2f} cm²")
     print(f"  Product Area (Ap): {vial['Ap']:.2f} cm²")
     print(f"  Fill Volume:       {vial['Vfill']:.2f} mL")
     
-    print(f"\nProduct Properties:")
+    print("\nProduct Properties:")
     print(f"  R₀:                {product['R0']:.1f} cm²-hr-Torr/g")
     print(f"  A₁:                {product['A1']:.1f} cm-hr-Torr/g")
     print(f"  A₂:                {product['A2']:.1f} 1/cm")
     print(f"  Solid Content:     {product['cSolid']:.2f} g/mL")
     print(f"  Critical Temp:     {T_pr_crit:.1f} °C")
     
-    print(f"\nHeat Transfer:")
+    print("\nHeat Transfer:")
     print(f"  Kc:                {ht['KC']:.6f} cal/s/K/cm²")
     print(f"  Kp:                {ht['KP']:.6f} cal/s/K/cm²/Torr")
     print(f"  Kd:                {ht['KD']:.2f}")
     
-    print(f"\nProcess Conditions:")
+    print("\nProcess Conditions:")
     print(f"  Chamber Pressure:  {Pch:.2f} Torr ({Pch*1000:.0f} mTorr)")
     print(f"  Shelf Temperature: {T_init:.1f} → {Tsh:.1f} °C")
     print(f"  Ramp Rate:         {shelf_ramp_rate:.1f} °C/min")
     
-    print(f"\nEquipment:")
+    print("\nEquipment:")
     print(f"  Number of Vials:   {n_vials}")
     print(f"  Capability:        dm/dt = {equipment_capability['a']:.3f} + {equipment_capability['b']:.1f}*Pch")
     
     # Load temperature profile if available
-    temp_profile = load_temperature_profile()
+    load_temperature_profile()
     
     # Prepare Pchamber dictionary
     Pchamber = {
@@ -188,8 +187,8 @@ def run_primary_drying_simulation():
     avg_flux = output[:, 5].mean()
     max_flux = output[:, 5].max()
     
-    print(f"✓ Simulation complete!")
-    print(f"\n📊 RESULTS:")
+    print("✓ Simulation complete!")
+    print("\n📊 RESULTS:")
     print(f"  Drying Time:       {drying_time:.2f} hr")
     print(f"  Max Product Temp:  {max_temp:.2f} °C")
     print(f"  Final Temp:        {final_temp:.2f} °C")
@@ -235,7 +234,7 @@ def save_results_to_csv(output, filename=None):
     # Save with semicolon delimiter (matching web interface format)
     df.to_csv(filename, sep=';', index=False)
     print(f"\n💾 Results saved to: {filename}")
-    print(f"   Format: CSV with semicolon delimiter")
+    print("   Format: CSV with semicolon delimiter")
     print(f"   Rows: {len(df)}")
 
 # ============================================================================
@@ -347,16 +346,16 @@ def compare_with_web_output(output, web_csv='test_data/reference_primary_drying.
         web_max_temp = df_web['Sublimation Temperature [C]'].max()
         sim_max_temp = output[:, 1].max()
         
-        print(f"\n📐 Drying Time:")
+        print("\n📐 Drying Time:")
         print(f"  Web Interface:  {web_time:.2f} hr")
         print(f"  This Simulation: {sim_time:.2f} hr")
         print(f"  Difference:      {abs(web_time - sim_time):.2f} hr ({abs(web_time - sim_time)/web_time*100:.1f}%)")
         
-        print(f"\n📐 Final % Dried:")
+        print("\n📐 Final % Dried:")
         print(f"  Web Interface:   {web_final_dried:.2f}%")
         print(f"  This Simulation: {sim_final_dried:.2f}%")
         
-        print(f"\n📐 Max Product Temperature:")
+        print("\n📐 Max Product Temperature:")
         print(f"  Web Interface:   {web_max_temp:.2f} °C")
         print(f"  This Simulation: {sim_max_temp:.2f} °C")
         print(f"  Difference:      {abs(web_max_temp - sim_max_temp):.2f} °C")
@@ -365,11 +364,11 @@ def compare_with_web_output(output, web_csv='test_data/reference_primary_drying.
         time_match = abs(web_time - sim_time) / web_time < 0.05  # Within 5%
         temp_match = abs(web_max_temp - sim_max_temp) < 1.0  # Within 1°C
         
-        print(f"\n✅ Assessment:")
+        print("\n✅ Assessment:")
         if time_match and temp_match:
-            print(f"  ✓ Results match web interface within acceptable tolerance")
+            print("  ✓ Results match web interface within acceptable tolerance")
         else:
-            print(f"  ⚠ Some differences detected - check input parameters")
+            print("  ⚠ Some differences detected - check input parameters")
         
     except FileNotFoundError:
         print(f"\n⚠ Web interface output file not found: {web_csv}")

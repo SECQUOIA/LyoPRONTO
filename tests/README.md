@@ -37,6 +37,17 @@ without documenting why the scientific reference changed.
 
 ## Running Tests Locally
 
+Run static analysis before the pytest lanes when preparing a PR:
+
+```bash
+python -m ruff check lyopronto tests examples main.py
+python -m mypy lyopronto
+```
+
+Ruff linting is enforced in CI with the narrow Pyflakes rule set in
+`pyproject.toml`. mypy is advisory in CI while remaining project type errors
+are fixed in staged follow-up work.
+
 Use the local CI wrapper when you want the same commands used by GitHub Actions:
 
 ```bash
@@ -89,6 +100,8 @@ The current top warning sources audited for this policy are:
 
 ## CI Integration
 
+- Static analysis runs in PR and main-branch workflows. Ruff linting is an
+  enforced gate; mypy is advisory.
 - `.github/workflows/pr-tests.yml` runs the fast lane for all PR updates and
   the full non-Pyomo lane with coverage once the PR is ready for review.
 - `.github/workflows/tests.yml` runs the full non-Pyomo lane with coverage on

@@ -34,7 +34,7 @@ def _version_from_pyproject() -> str:
     pyproject = Path(__file__).resolve().parents[1] / "pyproject.toml"
     try:
         try:
-            import tomllib
+            tomllib: Any = import_module("tomllib")
         except ModuleNotFoundError:  # pragma: no cover - Python < 3.11 fallback
             tomllib = None
 

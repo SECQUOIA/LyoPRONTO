@@ -14,7 +14,6 @@ Based on web interface input from Design Space Generator tab.
 """
 
 import numpy as np
-import pandas as pd
 import os
 from datetime import datetime
 import lyopronto.design_space as design_space
@@ -147,9 +146,9 @@ def main():
         shelf_results, product_results, eq_cap_results = design_space.dry(
             vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial
         )
-    except (IndexError, ValueError) as e:
-        print(f"Note: Design space calculation completed with edge case handling")
-        print(f"(This can occur when drying is extremely fast or slow)")
+    except (IndexError, ValueError):
+        print("Note: Design space calculation completed with edge case handling")
+        print("(This can occur when drying is extremely fast or slow)")
         print()
         # Use a smaller timestep for edge cases
         dt = 0.001  # Smaller timestep
@@ -284,7 +283,7 @@ def main():
             flux_eq   # Final is same for constant flux
         ])
     
-    print(f"Results saved successfully!")
+    print("Results saved successfully!")
     print()
     
     # ==============================================================================
@@ -314,7 +313,6 @@ def main():
         
         # Line 5 is product temp data
         ref_product = lines[4].strip().split(';')
-        ref_T_product = float(ref_product[1])
         ref_drying_time_product = float(ref_product[2])
         ref_avg_flux_product = float(ref_product[3])
         
@@ -343,7 +341,6 @@ def main():
         # Check tolerances
         tol_temp = 0.1  # °C
         tol_time = 0.01  # hr
-        tol_flux = 0.01  # kg/hr/m²
         
         checks_passed = True
         
