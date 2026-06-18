@@ -56,7 +56,7 @@ def test_pyomo_extra_defines_optional_solver_stack_only() -> None:
     project = _pyproject()["project"]
     optional = project["optional-dependencies"]
 
-    assert optional["pyomo"] == ["pyomo", "idaes-pse"]
+    assert optional["pyomo"] == ["pyomo>=6.7", "idaes-pse>=2.2"]
     assert "pyomo" not in project["dependencies"]
     assert "idaes-pse" not in project["dependencies"]
     assert _requirements(ROOT / "requirements-dev.txt") == ["-e .[dev]"]
