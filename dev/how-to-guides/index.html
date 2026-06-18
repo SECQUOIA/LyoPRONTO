@@ -225,6 +225,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How-to Guide
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -241,6 +259,69 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#run-maintained-script-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run Maintained Script Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-typed-api-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run Typed API Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-notebook-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run Notebook Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-local-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run Local Validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -457,6 +538,58 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#run-maintained-script-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run Maintained Script Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-typed-api-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run Typed API Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-notebook-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run Notebook Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-local-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run Local Validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -473,7 +606,32 @@
 
 
 <h1 id="how-to-guide">How-to Guide</h1>
-<p>Under construction, but do note that the examples (e.g. for <a href="../examples/knownRp_PD/">known Rp</a> and <a href="../examples/unknownRp_PD/">unknown Rp</a> ) are generated from Jupyter notebooks, which you can find in the full repo and modify.</p>
+<h2 id="run-maintained-script-examples">Run Maintained Script Examples</h2>
+<p>From the repository root:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev]&quot;</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>python<span class="w"> </span>examples/example_web_interface.py
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>python<span class="w"> </span>examples/example_optimizer.py
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>python<span class="w"> </span>examples/example_freezing.py
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>python<span class="w"> </span>examples/example_design_space.py
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>python<span class="w"> </span>examples/example_parameter_estimation.py
+</span></code></pre></div>
+<p>Outputs are written to <code>examples/outputs/</code>.</p>
+<h2 id="run-typed-api-examples">Run Typed API Examples</h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>python<span class="w"> </span>-m<span class="w"> </span>examples.typed_api_examples
+</span></code></pre></div>
+<p>These examples are also covered by <code>tests/test_typed_examples.py</code>.</p>
+<h2 id="run-notebook-examples">Run Notebook Examples</h2>
+<p>The MkDocs notebook examples are tracked under <code>docs/examples/</code>:</p>
+<ul>
+<li><a href="../examples/knownRp_PD/">known Rp</a></li>
+<li><a href="../examples/unknownRp_PD/">unknown Rp</a></li>
+</ul>
+<p>Notebook execution is validated through the explicit notebook CI lane.</p>
+<h2 id="run-local-validation">Run Local Validation</h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>python<span class="w"> </span>-m<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>lyopronto<span class="w"> </span>tests<span class="w"> </span>examples<span class="w"> </span>main.py
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not slow and not notebook and not pyomo&quot;</span>
+</span></code></pre></div>
+<p>See <code>tests/README.md</code> for marker details.</p>
 
 
 

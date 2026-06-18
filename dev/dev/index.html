@@ -617,56 +617,62 @@
 
 <h1 id="contributor-documentation">Contributor Documentation</h1>
 <h2 id="testing">Testing</h2>
-<p>To install test dependencies, run
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip install .[dev]
+<p>To install test dependencies, run</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev]&quot;</span>
 </span></code></pre></div>
-inside the LyoPRONTO directory (next to <code>pyproject.toml</code>).</p>
-<p>For fast PR-style feedback, execute
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>./run_local_ci.sh fast
+<p>inside the LyoPRONTO directory (next to <code>pyproject.toml</code>).</p>
+<p>For fast PR-style feedback, execute</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>./run_local_ci.sh<span class="w"> </span>fast
 </span></code></pre></div>
-which runs
-<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pytest tests/ -n auto -v -m &quot;not slow and not notebook and not pyomo&quot;
-</span></code></pre></div></p>
+<p>which runs</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not slow and not notebook and not pyomo&quot;</span>
+</span></code></pre></div>
 <p>Before marking a PR ready for review, run the full non-Pyomo lane when
-practical:
-<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>./run_local_ci.sh full
+practical:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>./run_local_ci.sh<span class="w"> </span>full
 </span></code></pre></div>
-which runs
-<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pytest tests/ -n auto -v -m &quot;not pyomo&quot; --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
-</span></code></pre></div></p>
+<p>which runs</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not pyomo&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-report<span class="o">=</span>xml:coverage.xml<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
+</span></code></pre></div>
 <p>Notebook, slow, and optional Pyomo validation are separate lanes:
 <code>./run_local_ci.sh notebook</code>, <code>./run_local_ci.sh slow</code>, and
 <code>./run_local_ci.sh pyomo</code>.</p>
 <h2 id="documentation">Documentation</h2>
-<p>Documentation build has different dependencies, installable by
-<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>pip install .[docs]
-</span></code></pre></div></p>
-<p>Run
-<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>mike deploy [name]
+<p>Documentation build has different dependencies, installable by</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[docs]&quot;</span>
 </span></code></pre></div>
-to deploy a docs version with ID <code>[name]</code>, which could be e.g. <code>v1.1.0</code> or <code>pr-10</code>, etc. Preview locally by navigating to <code>LyoPRONTO_folder/site</code>, then running
-<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>python -m http.server --bind localhost
+<p>Run a local build with:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>mkdocs<span class="w"> </span>build
 </span></code></pre></div>
-to spin up a local HTTP server on your own machine. </p>
-<p>On pushing to master, GitHub actions will run
-<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>mike deploy dev
+<p>Preview locally with:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>mkdocs<span class="w"> </span>serve
 </span></code></pre></div>
-and on each tagged release will <code>mike deploy</code> the version number.</p>
+<p>Docs publishing uses <code>mike</code> in <code>.github/workflows/docs.yml</code>. Pull requests
+build a <code>pr-&lt;number&gt;</code> docs version, pushes to <code>main</code> deploy <code>dev</code>, and
+published releases deploy the release version plus <code>latest</code>.</p>
 <p>On the off chance that the documentation gets really broken, you can do the following to deploy a new version of it to GitHub Pages:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>git fetch
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>git switch [branch with desired docs]
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>mike delete [broken docs version] # if necessary
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>mike deploy [new docs version] # if necessary
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>git switch gh-pages
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>git push origin gh-pages
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>git<span class="w"> </span>fetch
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>git<span class="w"> </span>switch<span class="w"> </span><span class="o">[</span>branch<span class="w"> </span>with<span class="w"> </span>desired<span class="w"> </span>docs<span class="o">]</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>mike<span class="w"> </span>delete<span class="w"> </span><span class="o">[</span>broken<span class="w"> </span>docs<span class="w"> </span>version<span class="o">]</span><span class="w"> </span><span class="c1"># if necessary</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>mike<span class="w"> </span>deploy<span class="w"> </span><span class="o">[</span>new<span class="w"> </span>docs<span class="w"> </span>version<span class="o">]</span><span class="w"> </span><span class="c1"># if necessary</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>git<span class="w"> </span>switch<span class="w"> </span>gh-pages
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>gh-pages
 </span></code></pre></div>
 <h3 id="helpful-references-for-how-to-get-documentation-generated">Helpful references for how to get documentation generated</h3>
 <p>https://realpython.com/python-project-documentation-with-mkdocs/ for a tutorial on MkDocs</p>
 <p>https://entangled.github.io/mkdocs-plugin/setup/ because it would be nice to use for examples &amp; tests</p>
 <p>https://github.com/jimporter/mike?tab=readme-ov-file for versioning the docs</p>
 <h2 id="linting-and-formatting">Linting and formatting</h2>
-<p>The test suite is linted and formatted with Ruff, on default settings.</p>
-<p>The main code base should also get the same treatment, but at present (2026-02-02) am waiting to do so: some of the code will be ugly upon formatting and should be rewritten to be less ugly.</p>
+<p>Ruff linting is enforced in CI with the scoped Pyflakes rule set in
+<code>pyproject.toml</code>:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>python<span class="w"> </span>-m<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>lyopronto<span class="w"> </span>tests<span class="w"> </span>examples<span class="w"> </span>main.py
+</span></code></pre></div>
+<p>mypy is advisory in CI while remaining project type issues are handled in
+follow-up work:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>python<span class="w"> </span>-m<span class="w"> </span>mypy<span class="w"> </span>lyopronto
+</span></code></pre></div>
+<p>Do not claim broad formatting enforcement unless a future workflow actually
+enforces it.</p>
 
 
 

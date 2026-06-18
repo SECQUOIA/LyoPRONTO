@@ -828,10 +828,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#initialization-for-convergence" class="md-nav__link">
+  <a href="#initialization-for-future-optimizer-convergence" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Initialization for Convergence
+        Initialization for Future Optimizer Convergence
       
     </span>
   </a>
@@ -889,10 +889,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#dried-column-is-percentage-0-100" class="md-nav__link">
+  <a href="#dried-column-is-fraction-0-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ❌ "dried column is percentage 0-100"
+        ❌ "dried column is fraction 0-1"
       
     </span>
   </a>
@@ -1231,10 +1231,12 @@
 - If Tsub too high → Psub high → dmdt high → needs more heat (inconsistent)
 - If Tsub too low → Psub low → dmdt low → needs less heat (inconsistent)
 - Unique Tsub where heat supply = heat demand (equilibrium)</p>
-<p><strong>Why this matters for Pyomo</strong>:
-- Cannot use explicit formula for Tsub
-- Must formulate as constraint: <code>f(Tsub, Tsh, Pch, ...) = 0</code>
-- Requires reformulation (log transform, auxiliary variables)</p>
+<p><strong>Why this matters for future optimization backends</strong>:
+- There is no explicit formula for <code>Tsub</code>.
+- Simultaneous optimization backends must represent this relationship as an
+  algebraic constraint.
+- Any future Pyomo work should track the details in issue #80 and child issues,
+  not as free-standing roadmap text in this reference.</p>
 <hr />
 <h2 id="valid-parameter-ranges">Valid Parameter Ranges</h2>
 <h3 id="physical-bounds">Physical Bounds</h3>
@@ -1338,7 +1340,7 @@
 - Sublimation ceases (no more ice)
 - No latent heat consumption
 - Vial bottom heats up toward shelf temperature
-- Termination criterion: <code>L ≤ 0</code> or <code>frac_dried ≥ 0.99</code></p>
+- Termination criterion: fully dried cake length or <code>percent_dried &gt;= 99</code></p>
 <hr />
 <h2 id="numerical-considerations">Numerical Considerations</h2>
 <h3 id="mass-balance-error-2">Mass Balance Error (~2%)</h3>
@@ -1368,49 +1370,37 @@
 - Energy balance is implicit in Tsub
 - Could iterate manually, but fsolve is robust
 - Convergence typically 3-5 iterations</p>
-<p><strong>How to reformulate for Pyomo?</strong>
-- Cannot call fsolve in constraint
-- Must express as algebraic constraint:
+<p><strong>How to reformulate for simultaneous optimization?</strong>
+- Do not call <code>fsolve</code> inside an optimizer constraint.
+- Express the same relationship as an algebraic constraint:
   <div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">Q_shelf</span> <span class="o">-</span> <span class="n">Q_sublimation</span> <span class="o">=</span> <span class="mi">0</span>
 </span></code></pre></div>
-- Pyomo solver handles implicitness</p>
+- The optimization backend then solves that implicit relationship as part of
+  the full model.</p>
 <h3 id="exponential-vapor-pressure">Exponential Vapor Pressure</h3>
 <p><strong>Why log transform?</strong>
 - <code>exp(-6144.96 / (Tsub + 273.15))</code> is exponential
-- In Pyomo, can cause overflow/underflow
+- In nonlinear optimization, it can cause overflow/underflow
 - Numerically unstable for optimization</p>
 <p><strong>Solution</strong>:
 <div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># Instead of: Psub = A * exp(B / Tsub)</span>
 </span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="c1"># Use: log(Psub) = log(A) + B / Tsub</span>
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="n">log_Psub</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Var</span><span class="p">()</span>
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="n">model</span><span class="o">.</span><span class="n">con</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">Constraint</span><span class="p">(</span><span class="n">expr</span><span class="o">=</span><span class="n">log_Psub</span> <span class="o">==</span> <span class="n">log</span><span class="p">(</span><span class="mf">2.698e10</span><span class="p">)</span> <span class="o">-</span> <span class="mf">6144.96</span><span class="o">/</span><span class="p">(</span><span class="n">Tsub</span><span class="o">+</span><span class="mf">273.15</span><span class="p">))</span>
-</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="c1"># Then: Psub = exp(log_Psub) where needed</span>
 </span></code></pre></div></p>
 <p><strong>Benefits</strong>:
 - No overflow (log maps exp to linear)
 - Better conditioned Jacobian
 - Standard technique in chemical engineering optimization</p>
-<h3 id="initialization-for-convergence">Initialization for Convergence</h3>
+<h3 id="initialization-for-future-optimizer-convergence">Initialization for Future Optimizer Convergence</h3>
 <p><strong>Why warmstart?</strong>
 - NLP solvers need good initial guess
 - Far from optimum → may not converge
 - Close to optimum → converges in 10-50 iterations</p>
 <p><strong>Strategy</strong>:
 1. Solve with scipy (fast, robust)
-2. Use scipy solution to initialize Pyomo variables
-3. Pyomo refines solution (exploits problem structure)</p>
-<p><strong>Example</strong>:
-<div class="language-python highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1"># Get scipy solution</span>
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="n">scipy_sol</span> <span class="o">=</span> <span class="n">opt_Pch_Tsh</span><span class="o">.</span><span class="n">optimize_scipy</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
-</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="c1"># Initialize Pyomo model</span>
-</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="n">model</span><span class="o">.</span><span class="n">Pch</span><span class="o">.</span><span class="n">set_value</span><span class="p">(</span><span class="n">scipy_sol</span><span class="p">[</span><span class="s1">&#39;Pch&#39;</span><span class="p">])</span>
-</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="n">model</span><span class="o">.</span><span class="n">Tsh</span><span class="o">.</span><span class="n">set_value</span><span class="p">(</span><span class="n">scipy_sol</span><span class="p">[</span><span class="s1">&#39;Tsh&#39;</span><span class="p">])</span>
-</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="n">model</span><span class="o">.</span><span class="n">Tsub</span><span class="o">.</span><span class="n">set_value</span><span class="p">(</span><span class="n">scipy_sol</span><span class="p">[</span><span class="s1">&#39;Tsub&#39;</span><span class="p">])</span>
-</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>
-</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="c1"># Solve (will converge much faster)</span>
-</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="n">opt</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-</span></code></pre></div></p>
+2. Use the SciPy trajectory to initialize future simultaneous-optimization
+   variables.
+3. Let the new backend refine the solution while preserving physics and unit
+   conventions.</p>
 <hr />
 <h2 id="common-misconceptions-for-ai-assistants">Common Misconceptions (for AI assistants)</h2>
 <h3 id="higher-pressure-always-means-faster-drying">❌ "Higher pressure always means faster drying"</h3>
@@ -1428,11 +1418,11 @@
 - Internal calculations use Torr
 - Output converted for historical reasons
 - Always check units!</p>
-<h3 id="dried-column-is-percentage-0-100">❌ "dried column is percentage 0-100"</h3>
-<p><strong>Reality</strong>: <code>output[:, 6]</code> is <strong>fraction 0-1</strong>
-- 0.5 means 50% dried
-- 0.99 means 99% dried
-- NOT 99 (which would be 9900%!)</p>
+<h3 id="dried-column-is-fraction-0-1">❌ "dried column is fraction 0-1"</h3>
+<p><strong>Reality</strong>: <code>output[:, 6]</code> is <strong>percent dried from 0 to 100</strong>
+- 50 means 50% dried
+- 99 means 99% dried
+- NOT 0.99 for 99% dried</p>
 <h3 id="mass-balance-must-be-exact">❌ "Mass balance must be exact"</h3>
 <p><strong>Reality</strong>: 1-2% error is normal for numerical integration
 - Not a code bug
@@ -1446,38 +1436,38 @@
 <hr />
 <h2 id="quick-reference-for-common-checks">Quick Reference for Common Checks</h2>
 <h3 id="is-this-output-physically-reasonable">Is this output physically reasonable?</h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="k">def</span> <span class="nf">check_physics</span><span class="p">(</span><span class="n">output</span><span class="p">):</span>
-</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Quick physical sanity checks.&quot;&quot;&quot;</span>
-</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>    <span class="n">time</span> <span class="o">=</span> <span class="n">output</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
-</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>    <span class="n">Tsub</span> <span class="o">=</span> <span class="n">output</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
-</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>    <span class="n">Tbot</span> <span class="o">=</span> <span class="n">output</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
-</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>    <span class="n">Tsh</span> <span class="o">=</span> <span class="n">output</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span>
-</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>    <span class="n">Pch</span> <span class="o">=</span> <span class="n">output</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span>  <span class="c1"># mTorr!</span>
-</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>    <span class="n">flux</span> <span class="o">=</span> <span class="n">output</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">]</span>
-</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a>    <span class="n">dried</span> <span class="o">=</span> <span class="n">output</span><span class="p">[:,</span> <span class="mi">6</span><span class="p">]</span>
-</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a>
-</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a>    <span class="c1"># Time should be positive and increasing</span>
-</span><span id="__span-16-12"><a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a>    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">time</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>
-</span><span id="__span-16-13"><a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a>    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">time</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
-</span><span id="__span-16-14"><a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a>
-</span><span id="__span-16-15"><a id="__codelineno-16-15" name="__codelineno-16-15" href="#__codelineno-16-15"></a>    <span class="c1"># Temperatures should be in reasonable range</span>
-</span><span id="__span-16-16"><a id="__codelineno-16-16" name="__codelineno-16-16" href="#__codelineno-16-16"></a>    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">Tsub</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="mi">60</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">Tsub</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span>
-</span><span id="__span-16-17"><a id="__codelineno-16-17" name="__codelineno-16-17" href="#__codelineno-16-17"></a>    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">Tbot</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="mi">60</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">Tbot</span> <span class="o">&lt;=</span> <span class="mi">50</span><span class="p">)</span>
-</span><span id="__span-16-18"><a id="__codelineno-16-18" name="__codelineno-16-18" href="#__codelineno-16-18"></a>
-</span><span id="__span-16-19"><a id="__codelineno-16-19" name="__codelineno-16-19" href="#__codelineno-16-19"></a>    <span class="c1"># Pressure should be in mTorr range</span>
-</span><span id="__span-16-20"><a id="__codelineno-16-20" name="__codelineno-16-20" href="#__codelineno-16-20"></a>    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">Pch</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">Pch</span> <span class="o">&lt;=</span> <span class="mi">1000</span><span class="p">)</span>  <span class="c1"># 0-1 Torr in mTorr</span>
-</span><span id="__span-16-21"><a id="__codelineno-16-21" name="__codelineno-16-21" href="#__codelineno-16-21"></a>
-</span><span id="__span-16-22"><a id="__codelineno-16-22" name="__codelineno-16-22" href="#__codelineno-16-22"></a>    <span class="c1"># Flux should be non-negative</span>
-</span><span id="__span-16-23"><a id="__codelineno-16-23" name="__codelineno-16-23" href="#__codelineno-16-23"></a>    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">flux</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>
-</span><span id="__span-16-24"><a id="__codelineno-16-24" name="__codelineno-16-24" href="#__codelineno-16-24"></a>
-</span><span id="__span-16-25"><a id="__codelineno-16-25" name="__codelineno-16-25" href="#__codelineno-16-25"></a>    <span class="c1"># Dried fraction should be 0-1 and increasing</span>
-</span><span id="__span-16-26"><a id="__codelineno-16-26" name="__codelineno-16-26" href="#__codelineno-16-26"></a>    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">dried</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">dried</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">)</span>
-</span><span id="__span-16-27"><a id="__codelineno-16-27" name="__codelineno-16-27" href="#__codelineno-16-27"></a>    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">dried</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># monotonic increase</span>
-</span><span id="__span-16-28"><a id="__codelineno-16-28" name="__codelineno-16-28" href="#__codelineno-16-28"></a>
-</span><span id="__span-16-29"><a id="__codelineno-16-29" name="__codelineno-16-29" href="#__codelineno-16-29"></a>    <span class="c1"># Final dried should be close to 1</span>
-</span><span id="__span-16-30"><a id="__codelineno-16-30" name="__codelineno-16-30" href="#__codelineno-16-30"></a>    <span class="k">assert</span> <span class="n">dried</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mf">0.99</span>
-</span><span id="__span-16-31"><a id="__codelineno-16-31" name="__codelineno-16-31" href="#__codelineno-16-31"></a>
-</span><span id="__span-16-32"><a id="__codelineno-16-32" name="__codelineno-16-32" href="#__codelineno-16-32"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✅ Output is physically reasonable&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="k">def</span> <span class="nf">check_physics</span><span class="p">(</span><span class="n">output</span><span class="p">):</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Quick physical sanity checks.&quot;&quot;&quot;</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>    <span class="n">time</span> <span class="o">=</span> <span class="n">output</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>    <span class="n">Tsub</span> <span class="o">=</span> <span class="n">output</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>    <span class="n">Tbot</span> <span class="o">=</span> <span class="n">output</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>    <span class="n">Tsh</span> <span class="o">=</span> <span class="n">output</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span>
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>    <span class="n">Pch</span> <span class="o">=</span> <span class="n">output</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span>  <span class="c1"># mTorr!</span>
+</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>    <span class="n">flux</span> <span class="o">=</span> <span class="n">output</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">]</span>
+</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>    <span class="n">dried</span> <span class="o">=</span> <span class="n">output</span><span class="p">[:,</span> <span class="mi">6</span><span class="p">]</span>
+</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>
+</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>    <span class="c1"># Time should be positive and increasing</span>
+</span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a>    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">time</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a>    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">time</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-15-14"><a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a>
+</span><span id="__span-15-15"><a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a>    <span class="c1"># Temperatures should be in reasonable range</span>
+</span><span id="__span-15-16"><a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a>    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">Tsub</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="mi">60</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">Tsub</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-15-17"><a id="__codelineno-15-17" name="__codelineno-15-17" href="#__codelineno-15-17"></a>    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">Tbot</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="mi">60</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">Tbot</span> <span class="o">&lt;=</span> <span class="mi">50</span><span class="p">)</span>
+</span><span id="__span-15-18"><a id="__codelineno-15-18" name="__codelineno-15-18" href="#__codelineno-15-18"></a>
+</span><span id="__span-15-19"><a id="__codelineno-15-19" name="__codelineno-15-19" href="#__codelineno-15-19"></a>    <span class="c1"># Pressure should be in mTorr range</span>
+</span><span id="__span-15-20"><a id="__codelineno-15-20" name="__codelineno-15-20" href="#__codelineno-15-20"></a>    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">Pch</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">Pch</span> <span class="o">&lt;=</span> <span class="mi">1000</span><span class="p">)</span>  <span class="c1"># 0-1 Torr in mTorr</span>
+</span><span id="__span-15-21"><a id="__codelineno-15-21" name="__codelineno-15-21" href="#__codelineno-15-21"></a>
+</span><span id="__span-15-22"><a id="__codelineno-15-22" name="__codelineno-15-22" href="#__codelineno-15-22"></a>    <span class="c1"># Flux should be non-negative</span>
+</span><span id="__span-15-23"><a id="__codelineno-15-23" name="__codelineno-15-23" href="#__codelineno-15-23"></a>    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">flux</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-15-24"><a id="__codelineno-15-24" name="__codelineno-15-24" href="#__codelineno-15-24"></a>
+</span><span id="__span-15-25"><a id="__codelineno-15-25" name="__codelineno-15-25" href="#__codelineno-15-25"></a>    <span class="c1"># Percent dried should be 0-100 and increasing</span>
+</span><span id="__span-15-26"><a id="__codelineno-15-26" name="__codelineno-15-26" href="#__codelineno-15-26"></a>    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">dried</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">dried</span> <span class="o">&lt;=</span> <span class="mi">100</span><span class="p">)</span>
+</span><span id="__span-15-27"><a id="__codelineno-15-27" name="__codelineno-15-27" href="#__codelineno-15-27"></a>    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">dried</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># monotonic increase</span>
+</span><span id="__span-15-28"><a id="__codelineno-15-28" name="__codelineno-15-28" href="#__codelineno-15-28"></a>
+</span><span id="__span-15-29"><a id="__codelineno-15-29" name="__codelineno-15-29" href="#__codelineno-15-29"></a>    <span class="c1"># Final dried should be close to complete</span>
+</span><span id="__span-15-30"><a id="__codelineno-15-30" name="__codelineno-15-30" href="#__codelineno-15-30"></a>    <span class="k">assert</span> <span class="n">dried</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">99</span>
+</span><span id="__span-15-31"><a id="__codelineno-15-31" name="__codelineno-15-31" href="#__codelineno-15-31"></a>
+</span><span id="__span-15-32"><a id="__codelineno-15-32" name="__codelineno-15-32" href="#__codelineno-15-32"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✅ Output is physically reasonable&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <hr />
 <h2 id="references-for-deep-dives">References for Deep Dives</h2>
