@@ -535,6 +535,14 @@
 already ready:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nv">SKIP_INSTALL</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>./run_local_ci.sh<span class="w"> </span>fast
 </span></code></pre></div>
+<p>For the optional Pyomo lane, install the documented Pyomo extra and IPOPT
+solver extensions:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev,pyomo]&quot;</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>idaes<span class="w"> </span>get-extensions<span class="w"> </span>--extra<span class="w"> </span>petsc
+</span></code></pre></div>
+<p>A conda-managed local environment may instead provide IPOPT with:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>ipopt
+</span></code></pre></div>
 <h2 id="ci-lanes">CI Lanes</h2>
 <table>
 <thead>
@@ -590,7 +598,9 @@ already ready:</p>
 <li><code>slow</code>: optimizer-heavy or long-running tests excluded from fast PR feedback.</li>
 <li><code>notebook</code>: papermill/Jupyter documentation tests.</li>
 <li><code>pyomo</code>: optional future Pyomo/IPOPT tests. No collected tests is a no-op in
-  the manual Pyomo lane.</li>
+  the manual Pyomo lane. Tests that need IPOPT should use
+  <code>tests.pyomo_solver.require_pyomo_solver("ipopt")</code> for clear missing-solver
+  skips.</li>
 <li><code>main</code>: legacy <code>main.py</code> and high-level API behavior coverage.</li>
 <li><code>serial</code>: tests that must run with <code>pytest -m serial -n 0</code>.</li>
 </ul>

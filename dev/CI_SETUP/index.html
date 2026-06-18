@@ -494,6 +494,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#optional-pyomo-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optional Pyomo Setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#maintenance-checklist" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -595,6 +606,19 @@ configuration is:</p>
 </span></code></pre></div>
 <p>The manual Pyomo lane installs optional Pyomo/IDAES dependencies and treats
 pytest exit code 5 as a no-op until tracked Pyomo tests exist.</p>
+<h2 id="optional-pyomo-setup">Optional Pyomo Setup</h2>
+<p>Normal runtime and development installs intentionally exclude Pyomo and IPOPT.
+For Pyomo development or the manual Pyomo lane, install the optional stack with:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev,pyomo]&quot;</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>idaes<span class="w"> </span>get-extensions<span class="w"> </span>--extra<span class="w"> </span>petsc
+</span></code></pre></div>
+<p>The same setup is used by <code>./run_local_ci.sh pyomo</code> and the manual validation
+workflow. A conda-managed local environment may instead install IPOPT with:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>ipopt
+</span></code></pre></div>
+<p>Pyomo-marked tests that need IPOPT should use
+<code>tests.pyomo_solver.require_pyomo_solver("ipopt")</code> so missing Pyomo or IPOPT
+skips with a clear installation hint.</p>
 <h2 id="maintenance-checklist">Maintenance Checklist</h2>
 <ul>
 <li>Keep marker expressions synchronized across workflows, <code>run_local_ci.sh</code>,

@@ -533,6 +533,9 @@
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="c1"># Explicit notebook validation</span>
 </span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;notebook&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-report<span class="o">=</span>xml:coverage.xml<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="c1"># Manual Pyomo validation after installing .[dev,pyomo] and IPOPT</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;pyomo&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-report<span class="o">=</span>xml:coverage.xml<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
 </span></code></pre></div>
 <h2 id="why-this-helps">Why This Helps</h2>
 <ul>
@@ -543,7 +546,9 @@
 <li>Notebook execution is visible as its own lane instead of being hidden inside
   ordinary fast tests.</li>
 <li>The optional Pyomo lane can be exercised manually without failing only because
-  no Pyomo tests have been added yet.</li>
+  no Pyomo tests have been added yet. Future Pyomo tests should use
+  <code>tests.pyomo_solver.require_pyomo_solver("ipopt")</code> so missing IPOPT setup is
+  reported as a clear skip.</li>
 </ul>
 <h2 id="maintenance-notes">Maintenance Notes</h2>
 <ul>
