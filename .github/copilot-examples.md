@@ -6,7 +6,7 @@ This file provides concrete code examples to help AI coding assistants understan
 1. [Running Simulations](#running-simulations)
 2. [Writing Tests](#writing-tests)
 3. [Parsing Output](#parsing-output)
-4. [Creating Pyomo Models](#creating-pyomo-models)
+4. [Pyomo Roadmap Work](#pyomo-roadmap-work)
 5. [Common Workflows](#common-workflows)
 
 ---
@@ -148,9 +148,9 @@ class TestPrimaryDrying:
         assert_physically_reasonable_output(output)
         
         # Check drying completion
-        final_dried = output[-1, 6]  # fraction dried at end
-        assert final_dried >= 0.99, \
-            f"Expected at least 99% dried, got {final_dried*100:.1f}%"
+        final_dried = output[-1, 6]  # percent dried at end
+        assert final_dried >= 99, \
+            f"Expected at least 99% dried, got {final_dried:.1f}%"
     
     def test_mass_balance(self, standard_setup):
         """Verify mass balance between sublimation and product consumption."""
@@ -224,11 +224,10 @@ Tbot = output[:, 2]           # °C
 Tsh = output[:, 3]            # °C (shelf setpoint)
 Pch = output[:, 4]            # mTorr (NOT Torr!)
 flux = output[:, 5]           # kg/hr/m²
-frac_dried = output[:, 6]     # 0-1 (NOT percentage!)
+percent_dried = output[:, 6]  # percent dried, 0-100
 
 # Convert units for plotting
-Pch_torr = Pch / 1000         # Convert mTorr → Torr
-percent_dried = frac_dried * 100  # Convert fraction → percentage
+Pch_torr = Pch / 1000         # Convert mTorr to Torr
 
 # Create plots
 fig, axes = plt.subplots(2, 2, figsize=(12, 8))
@@ -280,7 +279,7 @@ def analyze_drying_output(output):
     
     # Time metrics
     metrics['total_time'] = output[-1, 0]  # hours
-    time_90 = np.interp(0.90, output[:, 6], output[:, 0])
+    time_90 = np.interp(90.0, output[:, 6], output[:, 0])
     metrics['time_to_90pct'] = time_90
     
     # Temperature metrics
@@ -295,7 +294,7 @@ def analyze_drying_output(output):
     # Find when flux peaks
     idx_max_flux = np.argmax(output[:, 5])
     metrics['time_peak_flux'] = output[idx_max_flux, 0]  # hours
-    metrics['frac_dried_at_peak_flux'] = output[idx_max_flux, 6]  # 0-1
+    metrics['percent_dried_at_peak_flux'] = output[idx_max_flux, 6]
     
     return metrics
 
@@ -308,183 +307,14 @@ print(f"Temperature range: {metrics['min_Tsub']:.1f} to {metrics['max_Tsub']:.1f
 
 ---
 
-## Creating Pyomo Models
+## Pyomo Roadmap Work
 
-### Single Time-Step Model (Phase 1)
+No `lyopronto/pyomo_models/` package is tracked on `main`. Do not generate
+Pyomo implementation docs or examples unless the same PR adds tracked code,
+optional dependency handling, runnable examples, and Pyomo-marked tests.
 
-```python
-import pyomo.environ as pyo
-from lyopronto.functions import Vapor_pressure
-from lyopronto.constant import dHs
-import numpy as np
-
-def create_single_step_model(vial, product, Lck, constraints):
-    """Create Pyomo model for single time-step optimization.
-    
-    This is the Phase 1 Pyomo model that replicates scipy behavior.
-    
-    Args:
-        vial (dict): Vial geometry parameters
-        product (dict): Product properties (R0, A1, A2)
-        Lck (float): Current dried cake length (cm)
-        constraints (dict): Optimization constraints
-        
-    Returns:
-        pyo.ConcreteModel: Configured Pyomo model
-    """
-    model = pyo.ConcreteModel()
-    
-    # ===== Decision Variables =====
-    model.Pch = pyo.Var(bounds=(0.05, 0.5))  # Torr
-    model.Tsh = pyo.Var(bounds=(-50, 50))    # °C
-    
-    # ===== State Variables =====
-    model.Tsub = pyo.Var(bounds=(-60, 0))    # °C
-    model.Tbot = pyo.Var(bounds=(-60, 50))   # °C
-    model.dmdt = pyo.Var(bounds=(0, None))   # kg/hr (non-negative)
-    
-    # ===== Auxiliary Variables (for numerical stability) =====
-    model.log_Psub = pyo.Var()  # log(Psub) instead of exp(...)
-    model.Rp = pyo.Var(bounds=(1.0, 1000.0))  # cm²-hr-Torr/g
-    model.Kv = pyo.Var(bounds=(1e-5, 1e-2))   # [cal/s/K/cm**2]
-    
-    # ===== Parameters =====
-    Av = vial['Av']
-    Ap = vial['Ap']
-    R0 = product['R0']
-    A1 = product['A1']
-    A2 = product['A2']
-    
-    # ===== Equations =====
-    
-    # Product resistance (nonlinear but well-behaved)
-    @model.Constraint()
-    def resistance_equation(m):
-        return m.Rp == R0 + A1 * Lck / (1 + A2 * Lck)
-    
-    # Vapor pressure (log transform for stability)
-    @model.Constraint()
-    def vapor_pressure_log(m):
-        # log(Psub) = log(2.698e10) - 6144.96/(Tsub + 273.15)
-        return m.log_Psub == pyo.log(2.698e10) - 6144.96 / (m.Tsub + 273.15)
-    
-    # Sublimation rate (mass transfer)
-    @model.Constraint()
-    def sublimation_rate(m):
-        Psub = pyo.exp(m.log_Psub)
-        # dmdt = Ap / Rp * (Psub - Pch)
-        # Multiply by conversion factor to get kg/hr
-        return m.dmdt == Ap / m.Rp * (Psub - m.Pch) * 1e-4
-    
-    # Vial heat transfer coefficient
-    @model.Constraint()
-    def vial_heat_transfer(m):
-        # Simplified: Kv = KC (pressure and distance effects omitted for now)
-        KC = 2.5e-4
-        return m.Kv == KC
-    
-    # Energy balance (steady state: heat in = heat out)
-    @model.Constraint()
-    def energy_balance(m):
-        Q_shelf = m.Kv * Av * (m.Tsh - m.Tbot)  # cal/s
-        Q_sublimation = m.dmdt * dHs / 3600  # cal/s (dmdt is kg/hr)
-        return Q_shelf == Q_sublimation
-    
-    # Temperature constraint (product temperature limit)
-    @model.Constraint()
-    def temperature_limit(m):
-        T_max = constraints['T_max']
-        return m.Tsub <= T_max
-    
-    # ===== Objective =====
-    # Maximize sublimation rate (minimize drying time)
-    model.obj = pyo.Objective(expr=model.dmdt, sense=pyo.maximize)
-    
-    return model
-
-
-def solve_model(model, solver='ipopt'):
-    """Solve Pyomo model and extract results.
-    
-    Args:
-        model: Configured Pyomo model
-        solver (str): Solver to use ('ipopt' recommended)
-        
-    Returns:
-        dict: Solution dictionary with optimal values
-    """
-    # Create solver
-    opt = pyo.SolverFactory(solver)
-    
-    # Set solver options for robustness
-    if solver == 'ipopt':
-        opt.options['tol'] = 1e-6
-        opt.options['max_iter'] = 3000
-        opt.options['print_level'] = 5
-    
-    # Solve
-    results = opt.solve(model, tee=True)
-    
-    # Check status
-    if results.solver.termination_condition != pyo.TerminationCondition.optimal:
-        raise RuntimeError(f"Solver failed: {results.solver.termination_condition}")
-    
-    # Extract solution
-    solution = {
-        'Pch': pyo.value(model.Pch),
-        'Tsh': pyo.value(model.Tsh),
-        'Tsub': pyo.value(model.Tsub),
-        'Tbot': pyo.value(model.Tbot),
-        'dmdt': pyo.value(model.dmdt),
-        'objective': pyo.value(model.obj),
-    }
-    
-    return solution
-
-
-# ===== Usage Example =====
-if __name__ == "__main__":
-    vial = {'Av': 3.14, 'Ap': 2.86, 'Vfill': 3.0}
-    product = {'R0': 1.0, 'A1': 20.0, 'A2': 0.5, 'rho_solid': 0.05}
-    constraints = {'T_max': -15.0}
-    
-    # Solve at 50% dried (Lck = Lpr0/2)
-    from lyopronto.functions import Lpr0_FUN
-    Lpr0 = Lpr0_FUN(vial['Vfill'], vial['Ap'], product['rho_solid'])
-    Lck = Lpr0 / 2
-    
-    model = create_single_step_model(vial, product, Lck, constraints)
-    solution = solve_model(model)
-    
-    print(f"Optimal Pch: {solution['Pch']:.3f} Torr")
-    print(f"Optimal Tsh: {solution['Tsh']:.2f} °C")
-    print(f"Sublimation rate: {solution['dmdt']:.4f} kg/hr")
-```
-
-### Warmstart from scipy Solution
-
-```python
-def initialize_from_scipy(model, scipy_solution):
-    """Initialize Pyomo model with scipy solution for warmstart.
-    
-    Args:
-        model: Pyomo model to initialize
-        scipy_solution (dict): Solution from scipy optimizer
-    """
-    # Set decision variables
-    model.Pch.set_value(scipy_solution['Pch'])
-    model.Tsh.set_value(scipy_solution['Tsh'])
-    
-    # Set state variables if available
-    if 'Tsub' in scipy_solution:
-        model.Tsub.set_value(scipy_solution['Tsub'])
-    if 'Tbot' in scipy_solution:
-        model.Tbot.set_value(scipy_solution['Tbot'])
-    if 'dmdt' in scipy_solution:
-        model.dmdt.set_value(scipy_solution['dmdt'])
-    
-    print("Model initialized with scipy solution")
-```
+Use GitHub issue #80 and its child issues for Pyomo planning. Current shipped
+examples should continue to use the SciPy-backed APIs shown in this file.
 
 ---
 
@@ -586,13 +416,14 @@ print(f"\nOptimal conditions: Pch={optimal['Pch_torr']} Torr, Tsh={optimal['Tsh_
 
 ### When Debugging:
 1. **Check output shape** - Should be (n, 7) with n >= 1
-2. **Check units** - Pch in mTorr (not Torr), dried as fraction (not %)
+2. **Check units** - Pch in mTorr (not Torr), dried as percent from 0 to 100
 3. **Check tolerances** - Mass balance within 2% is acceptable
 4. **Check flux** - Non-monotonic is expected, not a bug
 5. **Run tests** - `pytest tests/ -v` to validate changes
 
 ### When Optimizing:
-1. **Use log transforms** - Avoid exp() in Pyomo constraints
-2. **Set bounds** - All variables need reasonable bounds
-3. **Warmstart** - Initialize from scipy solution when possible
-4. **Validate** - Compare Pyomo results with scipy baseline
+1. **Use current APIs** - `opt_Pch.py`, `opt_Tsh.py`, and `opt_Pch_Tsh.py`
+   are the tracked optimization implementations.
+2. **Set bounds** - All optimizer inputs need physically meaningful bounds.
+3. **Validate** - Compare optimized trajectories against regression fixtures
+   and physical constraints.

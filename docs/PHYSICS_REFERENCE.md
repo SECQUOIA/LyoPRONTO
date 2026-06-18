@@ -269,10 +269,12 @@ This is a **nonlinear equation** in Tsub:
 - If Tsub too low → Psub low → dmdt low → needs less heat (inconsistent)
 - Unique Tsub where heat supply = heat demand (equilibrium)
 
-**Why this matters for Pyomo**:
-- Cannot use explicit formula for Tsub
-- Must formulate as constraint: `f(Tsub, Tsh, Pch, ...) = 0`
-- Requires reformulation (log transform, auxiliary variables)
+**Why this matters for future optimization backends**:
+- There is no explicit formula for `Tsub`.
+- Simultaneous optimization backends must represent this relationship as an
+  algebraic constraint.
+- Any future Pyomo work should track the details in issue #80 and child issues,
+  not as free-standing roadmap text in this reference.
 
 ---
 
@@ -367,7 +369,7 @@ This is a **nonlinear equation** in Tsub:
 - Sublimation ceases (no more ice)
 - No latent heat consumption
 - Vial bottom heats up toward shelf temperature
-- Termination criterion: `L ≤ 0` or `frac_dried ≥ 0.99`
+- Termination criterion: fully dried cake length or `percent_dried >= 99`
 
 ---
 
@@ -410,28 +412,26 @@ This is a **nonlinear equation** in Tsub:
 - Could iterate manually, but fsolve is robust
 - Convergence typically 3-5 iterations
 
-**How to reformulate for Pyomo?**
-- Cannot call fsolve in constraint
-- Must express as algebraic constraint:
+**How to reformulate for simultaneous optimization?**
+- Do not call `fsolve` inside an optimizer constraint.
+- Express the same relationship as an algebraic constraint:
   ```python
   Q_shelf - Q_sublimation = 0
   ```
-- Pyomo solver handles implicitness
+- The optimization backend then solves that implicit relationship as part of
+  the full model.
 
 ### Exponential Vapor Pressure
 
 **Why log transform?**
 - `exp(-6144.96 / (Tsub + 273.15))` is exponential
-- In Pyomo, can cause overflow/underflow
+- In nonlinear optimization, it can cause overflow/underflow
 - Numerically unstable for optimization
 
 **Solution**:
 ```python
 # Instead of: Psub = A * exp(B / Tsub)
 # Use: log(Psub) = log(A) + B / Tsub
-log_Psub = pyo.Var()
-model.con = pyo.Constraint(expr=log_Psub == log(2.698e10) - 6144.96/(Tsub+273.15))
-# Then: Psub = exp(log_Psub) where needed
 ```
 
 **Benefits**:
@@ -439,7 +439,7 @@ model.con = pyo.Constraint(expr=log_Psub == log(2.698e10) - 6144.96/(Tsub+273.15
 - Better conditioned Jacobian
 - Standard technique in chemical engineering optimization
 
-### Initialization for Convergence
+### Initialization for Future Optimizer Convergence
 
 **Why warmstart?**
 - NLP solvers need good initial guess
@@ -448,22 +448,10 @@ model.con = pyo.Constraint(expr=log_Psub == log(2.698e10) - 6144.96/(Tsub+273.15
 
 **Strategy**:
 1. Solve with scipy (fast, robust)
-2. Use scipy solution to initialize Pyomo variables
-3. Pyomo refines solution (exploits problem structure)
-
-**Example**:
-```python
-# Get scipy solution
-scipy_sol = opt_Pch_Tsh.optimize_scipy(...)
-
-# Initialize Pyomo model
-model.Pch.set_value(scipy_sol['Pch'])
-model.Tsh.set_value(scipy_sol['Tsh'])
-model.Tsub.set_value(scipy_sol['Tsub'])
-
-# Solve (will converge much faster)
-opt.solve(model)
-```
+2. Use the SciPy trajectory to initialize future simultaneous-optimization
+   variables.
+3. Let the new backend refine the solution while preserving physics and unit
+   conventions.
 
 ---
 
@@ -490,12 +478,12 @@ opt.solve(model)
 - Output converted for historical reasons
 - Always check units!
 
-### ❌ "dried column is percentage 0-100"
+### ❌ "dried column is fraction 0-1"
 
-**Reality**: `output[:, 6]` is **fraction 0-1**
-- 0.5 means 50% dried
-- 0.99 means 99% dried
-- NOT 99 (which would be 9900%!)
+**Reality**: `output[:, 6]` is **percent dried from 0 to 100**
+- 50 means 50% dried
+- 99 means 99% dried
+- NOT 0.99 for 99% dried
 
 ### ❌ "Mass balance must be exact"
 
@@ -542,12 +530,12 @@ def check_physics(output):
     # Flux should be non-negative
     assert np.all(flux >= 0)
     
-    # Dried fraction should be 0-1 and increasing
-    assert np.all(dried >= 0) and np.all(dried <= 1)
+    # Percent dried should be 0-100 and increasing
+    assert np.all(dried >= 0) and np.all(dried <= 100)
     assert np.all(np.diff(dried) >= 0)  # monotonic increase
     
-    # Final dried should be close to 1
-    assert dried[-1] >= 0.99
+    # Final dried should be close to complete
+    assert dried[-1] >= 99
     
     print("✅ Output is physically reasonable")
 ```

@@ -46,6 +46,7 @@ junit*.xml
 
 # Documentation and notebook build outputs
 docs/build/
+site/
 docs/examples/*_output.ipynb
 
 # Local simulation and example outputs
