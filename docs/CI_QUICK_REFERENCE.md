@@ -19,6 +19,20 @@ already ready:
 SKIP_INSTALL=1 ./run_local_ci.sh fast
 ```
 
+For the optional Pyomo lane, install the documented Pyomo extra and IPOPT
+solver extensions:
+
+```bash
+python -m pip install -e ".[dev,pyomo]"
+idaes get-extensions --extra petsc
+```
+
+A conda-managed local environment may instead provide IPOPT with:
+
+```bash
+conda install -c conda-forge ipopt
+```
+
 ## CI Lanes
 
 | Lane | Command | Workflow |
@@ -43,7 +57,9 @@ SKIP_INSTALL=1 ./run_local_ci.sh fast
 - `slow`: optimizer-heavy or long-running tests excluded from fast PR feedback.
 - `notebook`: papermill/Jupyter documentation tests.
 - `pyomo`: optional future Pyomo/IPOPT tests. No collected tests is a no-op in
-  the manual Pyomo lane.
+  the manual Pyomo lane. Tests that need IPOPT should use
+  `tests.pyomo_solver.require_pyomo_solver("ipopt")` for clear missing-solver
+  skips.
 - `main`: legacy `main.py` and high-level API behavior coverage.
 - `serial`: tests that must run with `pytest -m serial -n 0`.
 

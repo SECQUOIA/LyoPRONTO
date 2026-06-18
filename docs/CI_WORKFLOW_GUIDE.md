@@ -60,6 +60,30 @@ Manual dispatch workflow with three lane choices:
 The Pyomo lane installs the optional Pyomo/IDAES stack and treats pytest exit
 code 5 as a no-op because the repository does not currently track Pyomo tests.
 
+## Optional Pyomo Setup
+
+Default installs and the normal development extra do not include Pyomo, IDAES,
+or IPOPT. Use the Pyomo extra only when developing or manually validating future
+Pyomo work:
+
+```bash
+python -m pip install -e ".[dev,pyomo]"
+idaes get-extensions --extra petsc
+```
+
+The manual Pyomo workflow and `./run_local_ci.sh pyomo` use that same package
+extra and IDAES extension command. If you manage solvers through conda instead,
+install IPOPT into the active environment and ensure it is on PATH:
+
+```bash
+conda install -c conda-forge ipopt
+```
+
+Future Pyomo-marked tests should call
+`tests.pyomo_solver.require_pyomo_solver("ipopt")` before constructing models.
+That helper skips with these install hints when Pyomo or IPOPT is missing,
+instead of failing later with an opaque solver error.
+
 ## Local Equivalents
 
 Use `run_local_ci.sh` to run the same commands locally:

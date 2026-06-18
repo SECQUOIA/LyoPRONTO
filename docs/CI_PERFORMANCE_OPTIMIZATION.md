@@ -25,6 +25,9 @@ pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xm
 
 # Explicit notebook validation
 pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+
+# Manual Pyomo validation after installing .[dev,pyomo] and IPOPT
+pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
 ```
 
 ## Why This Helps
@@ -36,7 +39,9 @@ pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage
 - Notebook execution is visible as its own lane instead of being hidden inside
   ordinary fast tests.
 - The optional Pyomo lane can be exercised manually without failing only because
-  no Pyomo tests have been added yet.
+  no Pyomo tests have been added yet. Future Pyomo tests should use
+  `tests.pyomo_solver.require_pyomo_solver("ipopt")` so missing IPOPT setup is
+  reported as a clear skip.
 
 ## Maintenance Notes
 
