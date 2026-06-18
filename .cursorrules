@@ -1,7 +1,9 @@
 # Cursor AI Rules for LyoPRONTO
 
 ## Project Overview
-LyoPRONTO is a lyophilization (freeze-drying) process simulator. Currently transitioning from scipy to Pyomo for optimization.
+LyoPRONTO is a lyophilization (freeze-drying) process simulator. The current
+implementation uses scipy/NumPy; Pyomo simultaneous optimization is roadmap work
+tracked in issue #80 and its child issues.
 
 ## Code Generation Preferences
 
@@ -58,12 +60,16 @@ def test_my_function_edge_case():
 **CRITICAL**: When working with `calc_knownRp.dry()` output:
 ```python
 # output[:, 4] is in mTorr, not Torr!
-# output[:, 6] is fraction 0-1, not percentage 0-100!
+# output[:, 6] is percentage 0-100, not fraction 0-1!
 ```
 
-Always reference `TEST_FIXES_SUMMARY.md` when working with outputs.
+Reference `docs/PHYSICS_REFERENCE.md` and output-column tests when working with
+simulator outputs.
 
 ## Pyomo Model Guidelines
+
+Pyomo implementation work is planned, not currently shipped. Before adding Pyomo
+code, confirm the scope in issue #80 or a linked child issue.
 
 1. **Initialization**: Always warmstart with scipy solution
 2. **Bounds**: Use physically reasonable bounds on all variables
@@ -75,7 +81,7 @@ Always reference `TEST_FIXES_SUMMARY.md` when working with outputs.
 - Physics equations → `lyopronto/functions.py`
 - Simulators → `lyopronto/calc_*.py`
 - Tests → `tests/test_*.py`
-- Pyomo models → `lyopronto/pyomo_models/` (create if needed)
+- Pyomo models → no tracked package yet; add only for scoped Pyomo roadmap work
 
 ## Performance Considerations
 
@@ -103,9 +109,6 @@ Notes:
 
 ## Current Priority
 
-Focus on Phase 1 of Pyomo transition:
-1. Single time-step optimization model
-2. Comparison tests with scipy
-3. Validation against existing behavior
-
-Refer to `PYOMO_ROADMAP.md` for detailed plan.
+Keep docs, tests, and examples aligned with the shipped scipy/NumPy
+implementation. Pyomo roadmap planning lives in issue #80:
+https://github.com/SECQUOIA/LyoPRONTO/issues/80

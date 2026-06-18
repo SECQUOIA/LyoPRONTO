@@ -83,3 +83,7 @@ Docs publishing uses `mike` in `.github/workflows/docs.yml`.
 Do not keep dated completion reports, obsolete implementation snapshots, or
 old coverage/test-count summaries in the documentation tree. Use GitHub issues,
 PRs, and git history for that historical record.
+
+This policy intentionally replaces older `docs/archive/` guidance. Do not
+reintroduce a documentation archive for dated reports unless a new issue or PR
+changes this policy.
