@@ -228,7 +228,7 @@ def save_results_to_csv(output, filename=None):
         'Shelf Temperature [C]': output[:, 3],
         'Chamber Pressure [mTorr]': output[:, 4],  # Already in mTorr
         'Sublimation Flux [kg/hr/m^2]': output[:, 5],
-        'Percent Dried': output[:, 6] * 100,  # Convert fraction to percentage
+        'Percent Dried': output[:, 6],
     })
     
     # Save with semicolon delimiter (matching web interface format)
@@ -258,7 +258,7 @@ def plot_results(output, save_fig=True):
     Tsh = output[:, 3]
     Pch = output[:, 4]
     flux = output[:, 5]
-    percent_dried = output[:, 6] * 100  # Convert to percentage
+    percent_dried = output[:, 6]
     
     # Temperature profile
     axes[0, 0].plot(time, Tsub, 'b-', label='Sublimation Front', linewidth=2)
@@ -341,7 +341,7 @@ def compare_with_web_output(output, web_csv='test_data/reference_primary_drying.
         sim_time = output[-1, 0]
         
         web_final_dried = df_web['Percent Dried'].iloc[-1]
-        sim_final_dried = output[-1, 6] * 100
+        sim_final_dried = output[-1, 6]
         
         web_max_temp = df_web['Sublimation Temperature [C]'].max()
         sim_max_temp = output[:, 1].max()
