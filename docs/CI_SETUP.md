@@ -62,6 +62,27 @@ pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xm
 The manual Pyomo lane installs optional Pyomo/IDAES dependencies and treats
 pytest exit code 5 as a no-op until tracked Pyomo tests exist.
 
+## Optional Pyomo Setup
+
+Normal runtime and development installs intentionally exclude Pyomo and IPOPT.
+For Pyomo development or the manual Pyomo lane, install the optional stack with:
+
+```bash
+python -m pip install -e ".[dev,pyomo]"
+idaes get-extensions --extra petsc
+```
+
+The same setup is used by `./run_local_ci.sh pyomo` and the manual validation
+workflow. A conda-managed local environment may instead install IPOPT with:
+
+```bash
+conda install -c conda-forge ipopt
+```
+
+Pyomo-marked tests that need IPOPT should use
+`tests.pyomo_solver.require_pyomo_solver("ipopt")` so missing Pyomo or IPOPT
+skips with a clear installation hint.
+
 ## Maintenance Checklist
 
 - Keep marker expressions synchronized across workflows, `run_local_ci.sh`,

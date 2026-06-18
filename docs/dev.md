@@ -39,6 +39,20 @@ Notebook, slow, and optional Pyomo validation are separate lanes:
 `./run_local_ci.sh notebook`, `./run_local_ci.sh slow`, and
 `./run_local_ci.sh pyomo`.
 
+Optional Pyomo work uses a separate extra so default development environments
+stay non-Pyomo:
+
+```bash
+python -m pip install -e ".[dev,pyomo]"
+idaes get-extensions --extra petsc
+```
+
+A conda-managed local environment may instead install IPOPT with:
+
+```bash
+conda install -c conda-forge ipopt
+```
+
 ## Documentation
 
 Documentation build has different dependencies, installable by

@@ -40,13 +40,22 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip setuptools wheel
-        pip install -e ".[dev]"
+        if [ "${{ inputs.lane }}" = "pyomo" ]; then
+          pip install -e ".[dev,pyomo]"
+        else
+          pip install -e ".[dev]"
+        fi
 
-    - name: Install optional Pyomo stack
+    - name: Install optional Pyomo solver extensions
       if: inputs.lane == 'pyomo'
       run: |
-        pip install pyomo idaes-pse
-        idaes get-extensions --extra petsc
+        idaes get-extensions --extra petsc || {
+          rc=$?
+          echo "Failed to install IDAES solver extensions for the Pyomo lane."
+          echo "Install IPOPT with: idaes get-extensions --extra petsc"
+          echo "Alternative local install: conda install -c conda-forge ipopt"
+          exit "$rc"
+        }
 
     - name: Run selected validation lane
       run: |

@@ -20,10 +20,26 @@ Lanes:
   full      Full non-Pyomo validation with coverage.
   slow      Manual slow optimizer-heavy validation with coverage.
   notebook  Explicit notebook validation with coverage.
-  pyomo     Optional future Pyomo lane; no collected tests is a no-op.
+  pyomo     Optional future Pyomo lane; installs .[dev,pyomo] and no collected tests is a no-op.
 
 Set SKIP_INSTALL=1 to skip dependency installation.
 USAGE
+}
+
+install_idaes_extensions() {
+    if ! command -v idaes >/dev/null 2>&1; then
+        echo "Error: idaes command is unavailable after installing the Pyomo extra."
+        echo 'Install the optional stack with: python -m pip install -e ".[dev,pyomo]"'
+        return 1
+    fi
+
+    idaes get-extensions --extra petsc || {
+        rc=$?
+        echo "Failed to install IDAES solver extensions for the Pyomo lane."
+        echo "Install IPOPT with: idaes get-extensions --extra petsc"
+        echo "Alternative local install: conda install -c conda-forge ipopt"
+        return "$rc"
+    }
 }
 
 run_pytest_allow_empty() {
@@ -76,14 +92,19 @@ echo ""
 if [[ "${SKIP_INSTALL:-0}" != "1" ]]; then
     echo "3. Installing dependencies..."
     python -m pip install --upgrade pip setuptools wheel -q
-    pip install -e ".[dev]" -q
     if [[ "$LANE" == "pyomo" ]]; then
-        pip install pyomo idaes-pse -q
-        idaes get-extensions --extra petsc
+        pip install -e ".[dev,pyomo]" -q
+        install_idaes_extensions
+    else
+        pip install -e ".[dev]" -q
     fi
     echo "   Dependencies installed"
 else
     echo "3. Skipping dependency installation because SKIP_INSTALL=1"
+    if [[ "$LANE" == "pyomo" ]]; then
+        echo '   Pyomo lane expects: python -m pip install -e ".[dev,pyomo]"'
+        echo "   IPOPT solver setup: idaes get-extensions --extra petsc"
+    fi
 fi
 echo ""
 

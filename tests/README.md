@@ -20,7 +20,9 @@ lanes for LyoPRONTO.
 - `notebook`: Papermill or Jupyter execution tests for documentation examples.
   Keep these in the explicit notebook lane.
 - `pyomo`: Tests that require Pyomo, IPOPT, or the Pyomo optimization stack.
-  There are currently no tracked Pyomo tests; the manual lane may no-op.
+  There are currently no tracked Pyomo tests; the manual lane may no-op. Tests
+  that need IPOPT should call `tests.pyomo_solver.require_pyomo_solver("ipopt")`
+  so missing solver setup skips with an installation hint.
 - `main`: Tests covering behavior that was historically reachable through
   `main.py` or the high-level API. This is a coverage label, not a CI lane.
 - `serial`: Tests that must not run under xdist parallelism. Run them with
@@ -66,6 +68,23 @@ pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverag
 pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
 pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
 pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+```
+
+## Optional Pyomo Setup
+
+Default package installs and `.[dev]` do not include Pyomo, IDAES, or IPOPT.
+Install the optional Pyomo test stack with:
+
+```bash
+python -m pip install -e ".[dev,pyomo]"
+idaes get-extensions --extra petsc
+```
+
+If your local environment manages solvers with conda, install IPOPT there and
+keep it on PATH:
+
+```bash
+conda install -c conda-forge ipopt
 ```
 
 For quick debugging, it is still fine to run a single file or test directly:

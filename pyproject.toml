@@ -59,6 +59,10 @@ docs = [
     "mike>=2.1",
     "mkdocs-ipynb>=0.1.1",
 ]
+pyomo = [
+    "pyomo",
+    "idaes-pse",
+]
 
 
 [project.urls]

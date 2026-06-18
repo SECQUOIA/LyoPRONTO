@@ -52,6 +52,16 @@ def test_requirements_dev_delegates_to_dev_extra() -> None:
     assert _requirements(ROOT / "requirements-dev.txt") == ["-e .[dev]"]
 
 
+def test_pyomo_extra_defines_optional_solver_stack_only() -> None:
+    project = _pyproject()["project"]
+    optional = project["optional-dependencies"]
+
+    assert optional["pyomo"] == ["pyomo", "idaes-pse"]
+    assert "pyomo" not in project["dependencies"]
+    assert "idaes-pse" not in project["dependencies"]
+    assert _requirements(ROOT / "requirements-dev.txt") == ["-e .[dev]"]
+
+
 def test_pytest_configuration_has_single_source() -> None:
     config = _pyproject()["tool"]["pytest"]["ini_options"]
 
@@ -126,7 +136,9 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     )
     assert 'pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto' in manual_tests
     assert 'rc" -eq 5' in manual_tests
-    assert "pip install pyomo idaes-pse" in manual_tests
+    assert 'pip install -e ".[dev,pyomo]"' in manual_tests
+    assert "idaes get-extensions --extra petsc" in manual_tests
+    assert "pip install pyomo idaes-pse" not in manual_tests
     assert "RUN_SLOW_TESTS" not in manual_tests
 
     assert 'pytest tests/ -n auto -v -m "notebook" --cov=lyopronto' in notebook_tests
@@ -141,6 +153,9 @@ def test_local_ci_script_matches_documented_lane_expressions() -> None:
     assert 'SLOW_EXPR="slow and not pyomo"' in script
     assert 'NOTEBOOK_EXPR="notebook"' in script
     assert 'PYOMO_EXPR="pyomo"' in script
+    assert 'pip install -e ".[dev,pyomo]"' in script
+    assert "idaes get-extensions --extra petsc" in script
+    assert "pip install pyomo idaes-pse" not in script
     assert "run_pytest_allow_empty" in script
     assert "SKIP_INSTALL=1" in script
 
@@ -172,6 +187,9 @@ def test_contributor_docs_include_ci_and_static_analysis_commands() -> None:
     assert "Warning Policy" in docs
     assert "pytest.warns" in docs
     assert "--disable-warnings" in docs
+    assert 'python -m pip install -e ".[dev,pyomo]"' in docs
+    assert "idaes get-extensions --extra petsc" in docs
+    assert "conda install -c conda-forge ipopt" in docs
 
 
 def test_legacy_setup_py_metadata_removed() -> None:

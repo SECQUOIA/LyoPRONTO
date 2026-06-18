@@ -30,6 +30,13 @@ For documentation builds:
 python -m pip install -e ".[docs]"
 ```
 
+For optional Pyomo development and manual Pyomo validation:
+
+```bash
+python -m pip install -e ".[dev,pyomo]"
+idaes get-extensions --extra petsc
+```
+
 The package metadata supports Python 3.8 and newer. GitHub Actions reads its
 active CI Python version from `.github/ci-config/ci-versions.yml`.
 
