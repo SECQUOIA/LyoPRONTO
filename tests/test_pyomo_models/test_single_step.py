@@ -188,6 +188,15 @@ def _scipy_single_step_reference(case: Dict[str, object]) -> Dict[str, float]:
     return dict(zip(keys, map(float, result.x)))
 
 
+def _assert_single_step_matches_reference(solved, reference):
+    assert solved["Pch"] == pytest.approx(reference["Pch"], abs=1.0e-5)
+    assert solved["Tsh"] == pytest.approx(reference["Tsh"], abs=5.0e-2)
+    assert solved["Tbot"] == pytest.approx(reference["Tbot"], abs=5.0e-2)
+    assert solved["Tsub"] == pytest.approx(reference["Tsub"], abs=5.0e-2)
+    assert solved["Psub"] == pytest.approx(reference["Psub"], rel=5.0e-3)
+    assert solved["dmdt"] == pytest.approx(reference["dmdt"], rel=5.0e-3, abs=1.0e-7)
+
+
 def test_single_step_model_constructs_without_global_state(standard_case):
     model = create_single_step_model(
         standard_case["vial"],
@@ -224,6 +233,25 @@ def test_single_step_model_constructs_without_global_state(standard_case):
             standard_case["product"]["A2"],
         )
     )
+
+
+def test_vapor_pressure_constraints_match_legacy_function(standard_case):
+    model = create_single_step_model(
+        standard_case["vial"],
+        standard_case["product"],
+        standard_case["ht"],
+        standard_case["lpr0"],
+        standard_case["lck"],
+    )
+
+    for tsub in (-45.0, -25.0, -5.0):
+        vapor_pressure = float(functions.Vapor_pressure(tsub))
+        model.Tsub.set_value(tsub)
+        model.Psub.set_value(vapor_pressure)
+        model.log_Psub.set_value(np.log(vapor_pressure))
+
+        assert pyo.value(model.vapor_pressure_log.body) == pytest.approx(0.0, abs=1.0e-12)
+        assert pyo.value(model.vapor_pressure_exp.body) == pytest.approx(0.0, abs=1.0e-12)
 
 
 def test_equipment_capability_requires_vial_count(standard_case):
@@ -311,10 +339,27 @@ def test_single_step_solves_and_matches_scipy_reference(standard_case):
 
     assert result.success, result.message
     solved = result.as_dict()
-    assert solved["Pch"] == pytest.approx(reference["Pch"], abs=1.0e-5)
-    assert solved["Tsh"] == pytest.approx(reference["Tsh"], abs=5.0e-2)
-    assert solved["Tbot"] == pytest.approx(reference["Tbot"], abs=5.0e-2)
-    assert solved["Tsub"] == pytest.approx(reference["Tsub"], abs=5.0e-2)
-    assert solved["Psub"] == pytest.approx(reference["Psub"], rel=5.0e-3)
-    assert solved["dmdt"] == pytest.approx(reference["dmdt"], rel=5.0e-3, abs=1.0e-7)
+    _assert_single_step_matches_reference(solved, reference)
+    assert max(violation or 0.0 for violation in result.constraint_violations.values()) < 1.0e-5
+
+
+def test_single_step_cold_start_solves_and_matches_scipy_reference(standard_case):
+    solver = require_pyomo_solver("ipopt")
+    reference = _scipy_single_step_reference(standard_case)
+    model = create_single_step_model(
+        standard_case["vial"],
+        standard_case["product"],
+        standard_case["ht"],
+        standard_case["lpr0"],
+        standard_case["lck"],
+        tsh_bounds=standard_case["tsh_bounds"],
+        eq_cap=standard_case["eq_cap"],
+        nvial=standard_case["nvial"],
+        fixed_pch=standard_case["fixed_pch"],
+    )
+
+    result = solve_single_step(model, solver=solver)
+
+    assert result.success, result.message
+    _assert_single_step_matches_reference(result.as_dict(), reference)
     assert max(violation or 0.0 for violation in result.constraint_violations.values()) < 1.0e-5

@@ -149,7 +149,9 @@ def create_single_step_model(
     model.Rp = pyo.Expression(expr=model.R0 + model.A1 * model.Lck / (1.0 + model.A2 * model.Lck))
 
     model.vapor_pressure_log = pyo.Constraint(
-        expr=model.log_Psub == pyo.log(2.698e10) - 6144.96 / (273.15 + model.Tsub)
+        expr=model.log_Psub
+        == pyo.log(functions.VAPOR_PRESSURE_PREEXPONENTIAL)
+        - functions.VAPOR_PRESSURE_TEMPERATURE_COEFFICIENT / (273.15 + model.Tsub)
     )
     model.vapor_pressure_exp = pyo.Constraint(expr=model.Psub == pyo.exp(model.log_Psub))
     model.mass_transfer = pyo.Constraint(
