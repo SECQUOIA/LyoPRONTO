@@ -133,44 +133,16 @@ output[:, 6]  # percent_dried - percent dried (0-100)
    - ✅ Check physical reasonableness with `assert_physically_reasonable_output()`
    - ✅ Write descriptive test names and docstrings
 
-## Pyomo Development Guidelines
+## Pyomo Roadmap Guidelines
 
-### When Creating Pyomo Models
+No Pyomo implementation is tracked on `main`. Do not add Pyomo user docs,
+examples, or API references unless the same PR adds tracked implementation,
+optional dependency handling, runnable examples, and `@pytest.mark.pyomo`
+tests.
 
-1. **Variable Bounds** (use these ranges)
-   ```python
-   Pch: (0.05, 0.5)      # Torr
-   Tsh: (-50, 50)        # °C
-   Tsub: (-60, 0)        # °C
-   Tbot: (-60, 50)       # °C
-   dmdt: (0, None)       # kg/hr (non-negative)
-   ```
-
-2. **Avoid Direct Exponentials**
-   ```python
-   # ❌ Don't do this (numerical issues):
-   model.Psub = pyo.Expression(expr=2.698e10 * pyo.exp(-6144.96/(model.Tsub+273.15)))
-   
-   # ✅ Do this instead (log transform):
-   model.log_Psub = pyo.Var()
-   model.log_constraint = pyo.Constraint(
-       expr=model.log_Psub == log(2.698e10) - 6144.96/(model.Tsub+273.15)
-   )
-   ```
-
-3. **Handle Conditionals**
-   ```python
-   # ❌ Don't use if statements in Pyomo expressions
-   if dmdt < 0:
-       dmdt = 0
-   
-   # ✅ Use smooth max or complementarity
-   model.dmdt_nonneg = pyo.Constraint(expr=model.dmdt >= 0)
-   ```
-
-4. **Initialization Strategy**
-   - Always initialize with scipy solution for warmstart
-   - Use `model.var.set_value()` to set initial guesses
+Use issue #80 and its child issues for Pyomo planning. Keep current docs
+focused on the shipped SciPy-backed implementation until Pyomo code and tests
+return.
 
 ## Testing Requirements
 
@@ -181,11 +153,11 @@ output[:, 6]  # percent_dried - percent dried (0-100)
 4. Include edge case tests
 5. Run full test suite: `pytest tests/ -v`
 
-### For Pyomo Code
-1. Add comparison test against scipy baseline
-2. Test convergence with different initial guesses
-3. Test numerical stability
-4. Benchmark performance
+### For Future Pyomo Code
+1. Add comparison tests against SciPy baselines with documented tolerances.
+2. Test solver failure and infeasible-model diagnostics.
+3. Keep solver dependencies optional and out of default installs.
+4. Update CI lane documentation when Pyomo tests become real validation.
 
 ## Documentation Standards
 
@@ -295,10 +267,6 @@ Q_sub = dmdt * dHs  # Heat for sublimation
 ### Examples and Tests
 - **Examples**: See `examples/README.md` for web interface examples (4 modes)
 - **Testing**: See `tests/README.md` for current test lanes and marker policy
-- **Historical logs**: See `docs/archive/` for development history
-
-### Historical Reference
-- **Archive**: See `docs/archive/` for detailed session summaries and historical context
 
 ## Questions?
 
@@ -316,5 +284,5 @@ Current focus:
 - Keep legacy dict APIs and typed Pint APIs documented separately.
 - Keep CI lane documentation synchronized with workflows and `run_local_ci.sh`.
 - Treat Pyomo as planned until tracked implementation and tests are added.
-- Use GitHub issues and milestones for Pyomo roadmap planning; keep current
+- Use Pyomo roadmap issue #80 and child issues for planning; keep current
   implementation status in `docs/ARCHITECTURE.md`.

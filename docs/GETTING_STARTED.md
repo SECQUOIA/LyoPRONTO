@@ -151,8 +151,8 @@ Legacy output columns are:
   broad filters.
 - Keep Pyomo references marked as planned unless tracked implementation and
   tests are present.
-- Keep historical status reports in `docs/archive/` rather than treating old
-  coverage or test-count snapshots as current.
+- Do not add stale completion reports or old coverage/test-count snapshots to
+  the documentation tree.
 
 ## Troubleshooting
 
@@ -195,4 +195,3 @@ assert Rp > 0, "Product resistance must be positive"
 - Current CI workflow guide: `CI_WORKFLOW_GUIDE.md`
 - Current architecture: `ARCHITECTURE.md`
 - Current examples: `../examples/README.md`
-- Historical reports: `archive/README.md`

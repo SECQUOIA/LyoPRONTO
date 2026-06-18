@@ -1,7 +1,7 @@
 # LyoPRONTO Documentation
 
 This directory contains current technical documentation for the LyoPRONTO
-repository plus an archive of historical development reports.
+repository.
 
 ## Current Documentation
 
@@ -17,15 +17,10 @@ For users and contributors:
 - `CI_QUICK_REFERENCE.md`: compact CI command reference
 - `SLOW_TEST_STRATEGY.md`: marker lane strategy
 - `CI_PERFORMANCE_OPTIMIZATION.md`: CI runtime strategy
-- `PYOMO_ROADMAP.md`: short Pyomo status note that redirects roadmap planning
-  to GitHub issues
-- `COEXISTENCE_PHILOSOPHY.md`: current SciPy/Pyomo boundary note; not a
-  roadmap
 
-Pyomo roadmap planning should live in GitHub issues and milestones, starting
-from the parent roadmap issue
-[#63](https://github.com/SECQUOIA/LyoPRONTO/issues/63). The current repository
-status is summarized in `ARCHITECTURE.md`.
+Pyomo roadmap planning lives in GitHub issue
+[#80](https://github.com/SECQUOIA/LyoPRONTO/issues/80) and its child issues.
+The current repository status is summarized in `ARCHITECTURE.md`.
 
 For the MkDocs site:
 
@@ -36,10 +31,6 @@ For the MkDocs site:
 - `reference.md`
 - `dev.md`
 - `examples/`
-
-Historical completion reports, stale coverage snapshots, and old test-count
-summaries live in `docs/archive/`. They are retained for context and should
-not be treated as current repository status.
 
 ## Testing and CI
 
@@ -87,8 +78,8 @@ mkdocs serve
 
 Docs publishing uses `mike` in `.github/workflows/docs.yml`.
 
-## Archive Policy
+## Stale Report Policy
 
-Move dated completion reports and obsolete implementation snapshots to
-`docs/archive/` instead of deleting them. When doing so, update
-`docs/archive/README.md` with the reason they are historical.
+Do not keep dated completion reports, obsolete implementation snapshots, or
+old coverage/test-count summaries in the documentation tree. Use GitHub issues,
+PRs, and git history for that historical record.

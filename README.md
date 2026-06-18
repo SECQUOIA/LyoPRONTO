@@ -113,9 +113,6 @@ For contributor orientation, start with:
 - `tests/README.md`
 - `examples/README.md`
 
-Historical completion reports and stale coverage/test-count snapshots are kept
-in `docs/archive/` with rationale.
-
 ## Citation
 
 G. Shivkumar, P. S. Kazarin, A. D. Strongrich, and A. A. Alexeenko,

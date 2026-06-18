@@ -332,7 +332,7 @@ documentation that describes Pyomo models as implemented unless the same PR
 adds the implementation, optional dependency handling, and Pyomo-marked tests.
 
 Use GitHub issues and milestones for roadmap planning, starting from the
-parent roadmap issue #63. Current repository status is summarized in
+Pyomo roadmap issue #80. Current repository status is summarized in
 `docs/ARCHITECTURE.md`.
 
 ## Questions or Issues?

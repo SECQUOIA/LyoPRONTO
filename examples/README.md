@@ -334,7 +334,7 @@ Future examples to add:
 
 Pyomo optimization is not tracked on `main`. Add this example only after a
 future PR adds Pyomo implementation, optional dependency documentation, and
-Pyomo-marked tests.
+Pyomo-marked tests. Track that work in issue #86.
 
 ---
 

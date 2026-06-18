@@ -18,9 +18,9 @@ LyoPRONTO models vial-scale lyophilization with:
 - RF, Pikal, fitting, vial, equipment-capability, and cycle-time helpers
 
 There is no tracked `lyopronto/pyomo_models/` package on `main`. Pyomo roadmap
-planning should live in GitHub issues and milestones, starting from
-[#63](https://github.com/SECQUOIA/LyoPRONTO/issues/63), rather than
-current-state documentation.
+planning lives in GitHub issue
+[#80](https://github.com/SECQUOIA/LyoPRONTO/issues/80) and its child issues,
+rather than current-state documentation.
 
 ## Package Layout
 
@@ -54,7 +54,7 @@ Supporting directories:
 examples/       # Maintained examples plus legacy examples
 test_data/      # Reference inputs and regression data
 tests/          # Pytest suite and marker policy
-docs/           # Current docs plus archived historical reports
+docs/           # Current technical documentation
 .github/        # GitHub Actions workflows and contributor tool docs
 ```
 
@@ -212,8 +212,9 @@ Current facts:
 - automatic PR and main-branch workflows exclude Pyomo
 - manual Pyomo validation is available for future work and may no-op today
 
-Roadmap planning should be tracked in GitHub issues and milestones unless a
-future PR adds implementation docs that are tied to tracked code and tests.
+Roadmap planning is tracked in
+[#80](https://github.com/SECQUOIA/LyoPRONTO/issues/80) and child issues unless
+a future PR adds implementation docs that are tied to tracked code and tests.
 
 ## Design Constraints
 
@@ -222,5 +223,6 @@ future PR adds implementation docs that are tied to tracked code and tests.
 - Keep `import lyopronto` lightweight.
 - Avoid new dependencies for legacy paths unless they are justified by the
   feature being added.
-- Keep historical completion reports in `docs/archive/`; current docs should
-  prefer commands and status descriptions that can be verified from the repo.
+- Keep dated completion reports and old coverage/test-count snapshots out of
+  the documentation tree; use GitHub issues, PRs, and git history for that
+  historical record.
