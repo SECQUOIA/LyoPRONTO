@@ -9,6 +9,10 @@
       
       
       
+        <link rel="prev" href="../reference/">
+      
+      
+        <link rel="next" href="../dev/">
       
       
         
@@ -19,7 +23,7 @@
     
     
       
-        <title>Continuous Integration Setup - LyoPRONTO Documentation</title>
+        <title>Pyomo Status - LyoPRONTO Documentation</title>
       
     
     
@@ -62,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#continuous-integration-setup" class="md-skip">
+        <a href="#pyomo-status" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +106,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Continuous Integration Setup
+              Pyomo Status
             
           </span>
         </div>
@@ -400,10 +404,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../PYOMO_STATUS/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pyomo Status
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -419,6 +450,70 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#implemented" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implemented
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trajectory-discretization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trajectory Discretization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#warmstarts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Warmstarts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#roadmap-planning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Roadmap Planning
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -477,10 +572,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
+  <a href="#implemented" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Overview
+        Implemented
       
     </span>
   </a>
@@ -488,10 +583,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#workflows" class="md-nav__link">
+  <a href="#trajectory-discretization" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Workflows
+        Trajectory Discretization
       
     </span>
   </a>
@@ -499,10 +594,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#local-setup" class="md-nav__link">
+  <a href="#warmstarts" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Local Setup
+        Warmstarts
       
     </span>
   </a>
@@ -510,32 +605,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#lane-commands" class="md-nav__link">
+  <a href="#roadmap-planning" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Lane Commands
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#optional-pyomo-setup" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Optional Pyomo Setup
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#maintenance-checklist" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Maintenance Checklist
+        Roadmap Planning
       
     </span>
   </a>
@@ -559,106 +632,48 @@
 
 
 
-<h1 id="continuous-integration-setup">Continuous Integration Setup</h1>
-<h2 id="overview">Overview</h2>
-<p>LyoPRONTO uses GitHub Actions with explicit pytest marker lanes. The active CI
-configuration is:</p>
+<h1 id="pyomo-status">Pyomo Status</h1>
+<p>Pyomo support is optional and isolated under <code>lyopronto.pyomo_models</code>. It does
+not change the legacy SciPy calculators or their public output arrays.</p>
+<h2 id="implemented">Implemented</h2>
 <ul>
-<li>Platform: Ubuntu latest</li>
-<li>Python: read from <code>.github/ci-config/ci-versions.yml</code></li>
-<li>Dependency install: <code>pip install -e ".[dev]"</code></li>
-<li>Coverage upload: Codecov, non-blocking when configured</li>
+<li><code>single_step.py</code> builds and solves one primary-drying optimization point with
+  the legacy heat-transfer and mass-transfer equations.</li>
+<li><code>trajectory.py</code> builds a multi-period primary-drying trajectory model over a
+  fixed uniform time grid.</li>
+<li>Pyomo tests are marked <code>pyomo</code> and are skip-safe when Pyomo or IPOPT is not
+  installed.</li>
 </ul>
-<p>The detailed workflow behavior is documented in <code>docs/CI_WORKFLOW_GUIDE.md</code>.</p>
-<h2 id="workflows">Workflows</h2>
-<table>
-<thead>
-<tr>
-<th>Workflow</th>
-<th>Trigger</th>
-<th>Lane</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>.github/workflows/pr-tests.yml</code></td>
-<td>Pull requests to <code>main</code></td>
-<td>Static analysis and fast PR lane for all PR updates; full non-Pyomo lane for ready/non-draft PRs</td>
-</tr>
-<tr>
-<td><code>.github/workflows/tests.yml</code></td>
-<td>Pushes to <code>main</code></td>
-<td>Static analysis and full non-Pyomo lane</td>
-</tr>
-<tr>
-<td><code>.github/workflows/rundocs.yml</code></td>
-<td>Ready PRs, pushes to <code>main</code>, manual dispatch</td>
-<td>Notebook lane</td>
-</tr>
-<tr>
-<td><code>.github/workflows/slow-tests.yml</code></td>
-<td>Manual dispatch</td>
-<td>Slow non-Pyomo, full non-Pyomo, or optional Pyomo lane</td>
-</tr>
-<tr>
-<td><code>.github/workflows/docs.yml</code></td>
-<td>Docs publish events</td>
-<td>Documentation deployment</td>
-</tr>
-</tbody>
-</table>
-<h2 id="local-setup">Local Setup</h2>
-<p>Install development dependencies from the project root:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>pip<span class="w"> </span>setuptools<span class="w"> </span>wheel
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev]&quot;</span>
+<h2 id="trajectory-discretization">Trajectory Discretization</h2>
+<p>The first trajectory implementation uses backward Euler for dried cake length:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Lck[t] = Lck[t - 1] + dt * dLdt[t]
 </span></code></pre></div>
-<p>Run CI-equivalent lanes locally with:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>./run_local_ci.sh<span class="w"> </span>fast
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>./run_local_ci.sh<span class="w"> </span>full
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>./run_local_ci.sh<span class="w"> </span>slow
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>./run_local_ci.sh<span class="w"> </span>notebook
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>./run_local_ci.sh<span class="w"> </span>pyomo
-</span></code></pre></div>
-<p>Set <code>SKIP_INSTALL=1</code> to reuse an existing environment:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nv">SKIP_INSTALL</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>./run_local_ci.sh<span class="w"> </span>fast
-</span></code></pre></div>
-<h2 id="lane-commands">Lane Commands</h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python<span class="w"> </span>-m<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>lyopronto<span class="w"> </span>tests<span class="w"> </span>examples<span class="w"> </span>main.py
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>python<span class="w"> </span>-m<span class="w"> </span>mypy<span class="w"> </span>lyopronto
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not slow and not notebook and not pyomo&quot;</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not pyomo&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-report<span class="o">=</span>xml:coverage.xml<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;slow and not pyomo&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-report<span class="o">=</span>xml:coverage.xml<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;notebook&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-report<span class="o">=</span>xml:coverage.xml<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;pyomo&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-report<span class="o">=</span>xml:coverage.xml<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
-</span></code></pre></div>
-<p>The manual Pyomo lane installs optional Pyomo/IDAES dependencies and treats
-pytest exit code 5 as a no-op until tracked Pyomo tests exist.</p>
-<h2 id="optional-pyomo-setup">Optional Pyomo Setup</h2>
-<p>Normal runtime and development installs intentionally exclude Pyomo and IPOPT.
-For Pyomo development or the manual Pyomo lane, install the optional stack with:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev,pyomo]&quot;</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>idaes<span class="w"> </span>get-extensions<span class="w"> </span>--extra<span class="w"> </span>petsc
-</span></code></pre></div>
-<p>The same setup is used by <code>./run_local_ci.sh pyomo</code> and the manual validation
-workflow. A conda-managed local environment may instead install IPOPT with:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>ipopt
-</span></code></pre></div>
-<p>Pyomo-marked tests that need IPOPT should use
-<code>tests.pyomo_solver.require_pyomo_solver("ipopt")</code> so missing Pyomo or IPOPT
-skips with a clear installation hint.</p>
-<h2 id="maintenance-checklist">Maintenance Checklist</h2>
+<p>The model enforces the algebraic primary-drying physics at every time node:</p>
 <ul>
-<li>Keep marker expressions synchronized across workflows, <code>run_local_ci.sh</code>,
-  <code>tests/README.md</code>, and this document.</li>
-<li>Do not add automatic Pyomo jobs until tracked Pyomo implementation/tests
-  exist.</li>
-<li>Keep notebook tests in the explicit notebook lane.</li>
-<li>Keep slow optimizer-heavy tests out of the fast PR lane.</li>
-<li>Ruff linting is enforced in CI with the narrow Pyflakes rule set configured
-  in <code>pyproject.toml</code>.</li>
-<li>mypy is advisory in CI until the remaining real project type errors are fixed;
-  do not add blanket package-wide ignores to silence those errors.</li>
+<li>vapor pressure from sublimation-front temperature</li>
+<li>sublimation mass transfer</li>
+<li>frozen-layer heat balance</li>
+<li>shelf-to-vial energy balance</li>
+<li>pressure-dependent vial heat transfer</li>
+<li>optional product-temperature and equipment-capability limits</li>
 </ul>
+<p>Chamber pressure, shelf temperature, dried cake length, temperatures,
+sublimation rate, vapor pressure, and heat-transfer coefficient are time-indexed
+Pyomo variables. Chamber-pressure and shelf-temperature profiles can be fixed
+from legacy ramp schedules, or bounded and constrained by per-hour ramp limits.</p>
+<p>The final dried target is represented as a lower bound on the final dried cake
+fraction. Targets must remain below 100% because the frozen-layer heat balance
+is singular when no frozen layer remains.</p>
+<h2 id="warmstarts">Warmstarts</h2>
+<p><code>trajectory_initialization_from_scipy_output</code> converts a legacy SciPy
+trajectory table into Pyomo initial values. It converts pressure from mTorr to
+Torr, sublimation flux to kg/hr/vial, and percent dried to cake length.</p>
+<p><code>apply_trajectory_warmstart</code> can apply that mapping, or any compatible indexed
+mapping, to an existing trajectory model.</p>
+<h2 id="roadmap-planning">Roadmap Planning</h2>
+<p>Future Pyomo planning remains in GitHub issue
+<a href="https://github.com/SECQUOIA/LyoPRONTO/issues/80">#80</a> and its child issues.
+Keep this page focused on implemented behavior and current usage notes.</p>
 
 
 

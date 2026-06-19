@@ -403,6 +403,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../PYOMO_STATUS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pyomo Status
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../dev/" class="md-nav__link">
         
   
@@ -516,6 +543,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#optional-pyomo-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optional Pyomo Models
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -571,6 +609,17 @@
     <span class="md-ellipsis">
       
         Typed Workflows
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyomo-trajectory-prototype" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pyomo Trajectory Prototype
       
     </span>
   </a>
@@ -633,9 +682,7 @@
 
 
 <h1 id="lyopronto-architecture">LyoPRONTO Architecture</h1>
-<p>This document describes the current repository architecture on <code>main</code>. Target
-or planned Pyomo work is separated from the tracked implementation so users do
-not confuse roadmap items with shipped code.</p>
+<p>This document describes the current repository architecture on <code>main</code>.</p>
 <h2 id="current-capabilities">Current Capabilities</h2>
 <p>LyoPRONTO models vial-scale lyophilization with:</p>
 <ul>
@@ -647,11 +694,12 @@ not confuse roadmap items with shipped code.</p>
 <li>legacy file-oriented compatibility helpers</li>
 <li>typed Pint APIs ported from Julia-facing workflows</li>
 <li>RF, Pikal, fitting, vial, equipment-capability, and cycle-time helpers</li>
+<li>optional Pyomo primary-drying prototypes for single-step and multi-period
+  trajectory modeling</li>
 </ul>
-<p>There is no tracked <code>lyopronto/pyomo_models/</code> package on <code>main</code>. Pyomo roadmap
-planning lives in GitHub issue
-<a href="https://github.com/SECQUOIA/LyoPRONTO/issues/80">#80</a> and its child issues,
-rather than current-state documentation.</p>
+<p>Pyomo roadmap planning lives in GitHub issue
+<a href="https://github.com/SECQUOIA/LyoPRONTO/issues/80">#80</a> and its child issues.
+Tracked Pyomo implementation status is documented in <code>docs/PYOMO_STATUS.md</code>.</p>
 <h2 id="package-layout">Package Layout</h2>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>lyopronto/
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── __init__.py              # Lightweight lazy public package interface
@@ -673,7 +721,8 @@ rather than current-state documentation.</p>
 </span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>├── fitting.py               # SciPy fitting helpers for typed workflows
 </span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>├── cycle_time.py            # End-of-primary-drying detection
 </span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>├── eccurt.py                # Equipment capability utilities
-</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>└── vials.py                 # Vial geometry and metadata helpers
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>├── vials.py                 # Vial geometry and metadata helpers
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>└── pyomo_models/            # Optional Pyomo primary-drying prototypes
 </span></code></pre></div>
 <p>Supporting directories:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>examples/       # Maintained examples plus legacy examples
@@ -730,6 +779,16 @@ workflows:</p>
 </ul>
 <p>These helpers are exposed lazily at package level for compatibility with
 imports such as <code>from lyopronto import execute_simulation</code>.</p>
+<h3 id="optional-pyomo-models">Optional Pyomo Models</h3>
+<p><code>lyopronto.pyomo_models</code> is an additive optional package. It is imported lazily
+and requires the <code>pyomo</code> extra only when users request Pyomo functionality. The
+current tracked models are:</p>
+<ul>
+<li><code>single_step</code>: one primary-drying optimization point</li>
+<li><code>trajectory</code>: a backward-Euler multi-period primary-drying trajectory model</li>
+</ul>
+<p>The Pyomo modules share legacy unit conventions and physics helper functions,
+but they remain isolated from the existing SciPy calculators.</p>
 <h2 id="dependency-shape">Dependency Shape</h2>
 <p>The legacy path has a shallow dependency graph:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>constant.py
@@ -751,40 +810,57 @@ imports such as <code>from lyopronto import execute_simulation</code>.</p>
 </span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>fitting.py
 </span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>cycle_time.py, eccurt.py, vials.py
 </span></code></pre></div>
+<p>The optional Pyomo path depends on <code>functions.py</code>, <code>constant.py</code>, and Pyomo:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>constant.py, functions.py
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    ↓
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>pyomo_models/single_step.py
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>pyomo_models/trajectory.py
+</span></code></pre></div>
 <p><code>__init__.py</code> avoids importing heavy plotting or solver modules at top-level
 import time. It lazily imports submodules and selected public symbols on first
 access.</p>
 <h2 id="data-flow">Data Flow</h2>
 <h3 id="legacy-primary-drying">Legacy Primary Drying</h3>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>vial/product/heat-transfer/process dictionaries
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    ↓
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>calc_knownRp.dry(...)
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    ↓
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>RampInterpolator builds Pch(t) and Tsh(t)
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    ↓
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>solve_ivp integrates dried cake length
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    ↓
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>functions.py computes vapor pressure, Rp, Kv, sublimation rate, and output rows
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    ↓
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>NumPy output table with legacy units
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>vial/product/heat-transfer/process dictionaries
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    ↓
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>calc_knownRp.dry(...)
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    ↓
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>RampInterpolator builds Pch(t) and Tsh(t)
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    ↓
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>solve_ivp integrates dried cake length
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    ↓
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>functions.py computes vapor pressure, Rp, Kv, sublimation rate, and output rows
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    ↓
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>NumPy output table with legacy units
 </span></code></pre></div>
 <h3 id="high-level-compatibility">High-Level Compatibility</h3>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>YAML/CSV-style inputs or in-memory dictionaries
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    ↓
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>high_level.execute_simulation(...)
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    ↓
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>selected calculator, design-space generator, optimizer, or freezing workflow
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    ↓
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>high_level.save_csv(...) and generate_visualizations(...)
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>YAML/CSV-style inputs or in-memory dictionaries
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    ↓
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>high_level.execute_simulation(...)
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    ↓
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>selected calculator, design-space generator, optimizer, or freezing workflow
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    ↓
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>high_level.save_csv(...) and generate_visualizations(...)
 </span></code></pre></div>
 <h3 id="typed-workflows">Typed Workflows</h3>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Pint quantities or canonical plain floats
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    ↓
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>typed dataclasses / workflow-specific parameter objects
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    ↓
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>SciPy ODE, optimization, or fitting helper
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    ↓
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>typed solution objects, diagnostics, or fitted parameters
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Pint quantities or canonical plain floats
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    ↓
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>typed dataclasses / workflow-specific parameter objects
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    ↓
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>SciPy ODE, optimization, or fitting helper
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>    ↓
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>typed solution objects, diagnostics, or fitted parameters
+</span></code></pre></div>
+<h3 id="pyomo-trajectory-prototype">Pyomo Trajectory Prototype</h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>vial/product/heat-transfer/process dictionaries
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>    ↓
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>optional legacy ramp sampling and SciPy trajectory warmstart
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>    ↓
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>pyomo_models.trajectory.create_trajectory_model(...)
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>    ↓
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>uniform backward-Euler dried-cake dynamics plus nodewise physics constraints
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>    ↓
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>solve_trajectory(...) diagnostics and legacy-shaped trajectory table
 </span></code></pre></div>
 <h2 id="ci-and-test-architecture">CI and Test Architecture</h2>
 <p>The active test and CI lanes are marker-based:</p>
@@ -794,23 +870,21 @@ access.</p>
 <li>full non-Pyomo lane: tracked confidence gate with coverage</li>
 <li>notebook lane: explicit Jupyter/papermill validation</li>
 <li>slow non-Pyomo lane: manual optimizer-heavy validation</li>
-<li>Pyomo lane: manual optional future lane, allowed to no-op until Pyomo tests
-  are tracked</li>
+<li>Pyomo lane: manual optional lane for environments with Pyomo and IPOPT</li>
 </ul>
 <p>The authoritative current testing policy is in <code>tests/README.md</code>. The CI
 workflow guide is in <code>docs/CI_WORKFLOW_GUIDE.md</code>.</p>
 <h2 id="pyomo-status">Pyomo Status</h2>
-<p>Pyomo simultaneous optimization is a roadmap item, not current shipped code.
-Current facts:</p>
+<p>Pyomo support is optional and additive. Current facts:</p>
 <ul>
-<li>no <code>lyopronto/pyomo_models/</code> directory is tracked on <code>main</code></li>
-<li>no Pyomo tests are currently collected from the repository</li>
+<li><code>lyopronto/pyomo_models/</code> contains tracked single-step and trajectory models.</li>
+<li>Pyomo tests are marked <code>pyomo</code> and require optional Pyomo/IPOPT tooling.</li>
 <li>automatic PR and main-branch workflows exclude Pyomo</li>
-<li>manual Pyomo validation is available for future work and may no-op today</li>
+<li>manual Pyomo validation exercises the optional lane when the extra solver
+  stack is installed</li>
 </ul>
-<p>Roadmap planning is tracked in
-<a href="https://github.com/SECQUOIA/LyoPRONTO/issues/80">#80</a> and child issues unless
-a future PR adds implementation docs that are tied to tracked code and tests.</p>
+<p>See <code>docs/PYOMO_STATUS.md</code> for the tracked model status, the trajectory
+discretization choice, and warmstart hooks.</p>
 <h2 id="design-constraints">Design Constraints</h2>
 <ul>
 <li>Preserve legacy dict APIs and output table shapes for existing scripts.</li>
