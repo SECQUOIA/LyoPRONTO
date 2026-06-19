@@ -51,5 +51,5 @@ nav:
         - examples/unknownRp_PD.ipynb
     - explanation.md
     - reference.md
+    - PYOMO_STATUS.md
     - dev.md
-

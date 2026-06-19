@@ -15,9 +15,16 @@ PYOMO_AVAILABLE = _is_pyomo_available()
 
 _LAZY_EXPORTS = {
     "SingleStepResult": "single_step",
+    "TrajectoryResult": "trajectory",
+    "apply_trajectory_warmstart": "trajectory",
     "create_single_step_model": "single_step",
+    "create_trajectory_model": "trajectory",
     "format_single_step_output": "utils",
     "solve_single_step": "single_step",
+    "solve_trajectory": "trajectory",
+    "sample_ramp_profile": "trajectory",
+    "trajectory_initialization_from_scipy_output": "trajectory",
+    "trajectory_values": "trajectory",
 }
 
 
@@ -36,7 +43,14 @@ def __getattr__(name: str) -> Any:
 __all__ = [
     "PYOMO_AVAILABLE",
     "SingleStepResult",
+    "TrajectoryResult",
+    "apply_trajectory_warmstart",
     "create_single_step_model",
+    "create_trajectory_model",
     "format_single_step_output",
     "solve_single_step",
+    "solve_trajectory",
+    "sample_ramp_profile",
+    "trajectory_initialization_from_scipy_output",
+    "trajectory_values",
 ]
