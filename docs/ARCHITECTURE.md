@@ -19,7 +19,7 @@ LyoPRONTO models vial-scale lyophilization with:
 
 Pyomo roadmap planning lives in GitHub issue
 [#80](https://github.com/SECQUOIA/LyoPRONTO/issues/80) and its child issues.
-Tracked Pyomo implementation status is documented in `docs/PYOMO_ROADMAP.md`.
+Tracked Pyomo implementation status is documented in `docs/PYOMO_STATUS.md`.
 
 ## Package Layout
 
@@ -246,8 +246,8 @@ Pyomo support is optional and additive. Current facts:
 - manual Pyomo validation exercises the optional lane when the extra solver
   stack is installed
 
-See `docs/PYOMO_ROADMAP.md` for the tracked model status, the trajectory
-discretization choice, warmstart hooks, and remaining roadmap items.
+See `docs/PYOMO_STATUS.md` for the tracked model status, the trajectory
+discretization choice, and warmstart hooks.
 
 ## Design Constraints
 

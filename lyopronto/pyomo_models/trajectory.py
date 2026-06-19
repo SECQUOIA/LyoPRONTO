@@ -274,6 +274,12 @@ def create_trajectory_model(
     uniform interval length in hours. ``final_dried_fraction`` is constrained at
     the last node and must be less than 1.0 because the frozen-layer heat
     balance is singular when no frozen layer remains.
+
+    When ``product["T_pr_crit"]`` or ``tbot_upper`` is provided, the model
+    constrains ``Tbot`` at every node. This also applies when chamber-pressure
+    and shelf-temperature profiles are fixed, so fixed-profile use is a
+    constrained feasibility replay rather than an unconstrained legacy
+    simulation.
     """
     _require_keys("vial", vial, ("Av", "Ap"))
     if lpr0 is None:

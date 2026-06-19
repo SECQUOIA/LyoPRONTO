@@ -224,3 +224,39 @@ def test_trajectory_solves_and_matches_scipy_reference(standard_trajectory_case)
     assert np.max(trajectory[:, 2]) <= product["T_pr_crit"] + 1.0e-6
     assert result.values["Lck"][-1] >= 0.95 * lpr0
     assert max(violation or 0.0 for violation in result.constraint_violations.values()) < 1.0e-5
+
+
+def test_trajectory_cold_start_solves_and_matches_scipy_reference(standard_trajectory_case):
+    solver = require_pyomo_solver("ipopt")
+    vial = standard_trajectory_case["vial"]
+    product = standard_trajectory_case["product"]
+    ht = standard_trajectory_case["ht"]
+    pchamber = standard_trajectory_case["Pchamber"]
+    tshelf = standard_trajectory_case["Tshelf"]
+    dt = standard_trajectory_case["dt"]
+    n_steps = standard_trajectory_case["n_steps"]
+    time_points = _time_points(standard_trajectory_case)
+    reference = calc_knownRp.dry(vial, product, ht, pchamber, tshelf, dt)
+    lpr0 = functions.Lpr0_FUN(vial["Vfill"], vial["Ap"], product["cSolid"])
+    model = create_trajectory_model(
+        vial,
+        product,
+        ht,
+        n_steps=n_steps,
+        dt=dt,
+        final_dried_fraction=0.95,
+        fixed_pch_profile=sample_ramp_profile(pchamber, time_points),
+        fixed_tsh_profile=sample_ramp_profile(tshelf, time_points),
+        pch_ramp_rate=pchamber["ramp_rate"] * constant.hr_To_min,
+        tsh_ramp_rate=tshelf["ramp_rate"] * constant.hr_To_min,
+    )
+
+    result = solve_trajectory(model, solver=solver)
+
+    assert result.success, result.message
+    trajectory = result.as_table()
+    assert trajectory[-1, 6] >= 95.0
+    assert trajectory[-1, 6] == pytest.approx(reference[-1, 6], abs=1.5)
+    assert np.max(trajectory[:, 2]) <= product["T_pr_crit"] + 1.0e-6
+    assert result.values["Lck"][-1] >= 0.95 * lpr0
+    assert max(violation or 0.0 for violation in result.constraint_violations.values()) < 1.0e-5

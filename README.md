@@ -83,7 +83,7 @@ LyoPRONTO currently exposes three supported API layers:
 
 See `docs/ARCHITECTURE.md`, `docs/reference.md`, and
 `docs/TYPED_API_GUIDE.md` for current module boundaries and unit conventions.
-See `docs/PYOMO_ROADMAP.md` for optional Pyomo model status and trajectory
+See `docs/PYOMO_STATUS.md` for optional Pyomo model status and trajectory
 discretization notes.
 
 ## Tests and CI

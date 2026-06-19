@@ -63,7 +63,7 @@ is lazily imported and requires the `pyomo` extra only when requested:
 - `lyopronto.pyomo_models.single_step`
 - `lyopronto.pyomo_models.trajectory`
 
-See `docs/PYOMO_ROADMAP.md` for the current Pyomo implementation status,
+See `docs/PYOMO_STATUS.md` for the current Pyomo implementation status,
 trajectory discretization, and warmstart hooks.
 
 ### Plotting Helpers

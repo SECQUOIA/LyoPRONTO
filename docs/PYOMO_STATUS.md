@@ -1,4 +1,4 @@
-# Pyomo Roadmap and Status
+# Pyomo Status
 
 Pyomo support is optional and isolated under `lyopronto.pyomo_models`. It does
 not change the legacy SciPy calculators or their public output arrays.
@@ -47,12 +47,8 @@ Torr, sublimation flux to kg/hr/vial, and percent dried to cake length.
 `apply_trajectory_warmstart` can apply that mapping, or any compatible indexed
 mapping, to an existing trajectory model.
 
-## Next Work
+## Roadmap Planning
 
-- Add non-uniform grids or collocation for better accuracy at comparable model
-  sizes.
-- Add direct trajectory optimization modes where chamber pressure, shelf
-  temperature, or both are decision variables against cycle-time or drying-rate
-  objectives.
-- Expand comparison tests across optimizer and design-space reference cases.
-- Add richer diagnostics for infeasible trajectories and active constraints.
+Future Pyomo planning remains in GitHub issue
+[#80](https://github.com/SECQUOIA/LyoPRONTO/issues/80) and its child issues.
+Keep this page focused on implemented behavior and current usage notes.
