@@ -35,9 +35,9 @@ which runs
 pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
 ```
 
-Notebook, slow, and optional Pyomo validation are separate lanes:
-`./run_local_ci.sh notebook`, `./run_local_ci.sh slow`, and
-`./run_local_ci.sh pyomo`.
+Notebook, slow, and Pyomo validation are separate lanes:
+`./run_local_ci.sh notebook`, `./run_local_ci.sh slow`,
+`./run_local_ci.sh pyomo-light`, and `./run_local_ci.sh pyomo`.
 
 Optional Pyomo work uses a separate extra so default development environments
 stay non-Pyomo:

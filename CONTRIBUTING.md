@@ -11,18 +11,21 @@ choose the right feedback level:
 - **Full non-Pyomo lane:** `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
 - **Slow manual lane:** `pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
 - **Notebook lane:** `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
-- **Pyomo lane:** `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+- **Pyomo light lane:** `pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v`
+- **Pyomo solver lane:** `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
 
 The same commands are available locally through `./run_local_ci.sh fast`,
 `./run_local_ci.sh full`, `./run_local_ci.sh slow`,
-`./run_local_ci.sh notebook`, and `./run_local_ci.sh pyomo`.
+`./run_local_ci.sh notebook`, `./run_local_ci.sh pyomo-light`, and
+`./run_local_ci.sh pyomo`.
 
 Active GitHub workflows use the Python version in
 `.github/ci-config/ci-versions.yml`. PRs always run the fast lane; ready
 non-draft PRs and pushes to `main` run the full non-Pyomo lane with coverage;
-notebook tests run in an explicit notebook workflow; slow and Pyomo validation
-are available through the manual validation workflow. Static analysis runs as
-its own CI lane: Ruff linting is enforced, and mypy is advisory while the
+notebook tests run in an explicit notebook workflow; Pyomo model and test
+changes run a path-filtered Pyomo light workflow; slow and solver-backed Pyomo
+validation are available through optional/manual workflows. Static analysis runs
+as its own CI lane: Ruff linting is enforced, and mypy is advisory while the
 remaining project type errors are staged for follow-up work.
 
 Warnings are part of the test signal. The default pytest configuration keeps

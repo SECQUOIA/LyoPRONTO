@@ -50,11 +50,13 @@ The same lanes are available through:
 ./run_local_ci.sh full
 ./run_local_ci.sh slow
 ./run_local_ci.sh notebook
+./run_local_ci.sh pyomo-light
 ./run_local_ci.sh pyomo
 ```
 
-The Pyomo lane is manual and optional until tracked Pyomo implementation and
-tests exist. See `tests/README.md` for the authoritative marker policy.
+The Pyomo light lane mirrors the automatic path-filtered CI job for Pyomo model
+and test changes. Solver-backed Pyomo validation remains optional. See
+`tests/README.md` for the authoritative marker policy.
 
 ## Building the Site
 
