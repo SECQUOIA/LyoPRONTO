@@ -55,6 +55,17 @@ legacy workflows:
 These helpers are also exposed lazily at package level for existing imports
 such as `from lyopronto import execute_simulation`.
 
+### Optional Pyomo Models
+
+`lyopronto.pyomo_models` contains optional Pyomo primary-drying prototypes. It
+is lazily imported and requires the `pyomo` extra only when requested:
+
+- `lyopronto.pyomo_models.single_step`
+- `lyopronto.pyomo_models.trajectory`
+
+See `docs/PYOMO_ROADMAP.md` for the current Pyomo implementation status,
+trajectory discretization, and warmstart hooks.
+
 ### Plotting Helpers
 
 Plotting is explicit. `import lyopronto` does not import Matplotlib. Use

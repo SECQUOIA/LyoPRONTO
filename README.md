@@ -78,9 +78,13 @@ LyoPRONTO currently exposes three supported API layers:
   `cycle_time`, `eccurt`, and `vials`.
 - High-level compatibility helpers: `read_inputs`, `save_inputs`,
   `execute_simulation`, `save_csv`, and `generate_visualizations`.
+- Optional Pyomo prototypes: `lyopronto.pyomo_models.single_step` and
+  `lyopronto.pyomo_models.trajectory`.
 
 See `docs/ARCHITECTURE.md`, `docs/reference.md`, and
 `docs/TYPED_API_GUIDE.md` for current module boundaries and unit conventions.
+See `docs/PYOMO_ROADMAP.md` for optional Pyomo model status and trajectory
+discretization notes.
 
 ## Tests and CI
 
@@ -101,8 +105,8 @@ pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverag
 `./run_local_ci.sh fast`, `./run_local_ci.sh full`,
 `./run_local_ci.sh slow`, `./run_local_ci.sh notebook`, and
 `./run_local_ci.sh pyomo` mirror the documented GitHub Actions lanes. Pyomo is
-currently a manual optional lane because no tracked Pyomo implementation or
-Pyomo-marked tests are present on `main`.
+a manual optional lane because Pyomo and IPOPT are optional solver
+dependencies, not requirements for the default SciPy package.
 
 ## Documentation
 

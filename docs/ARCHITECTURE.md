@@ -1,8 +1,6 @@
 # LyoPRONTO Architecture
 
-This document describes the current repository architecture on `main`. Target
-or planned Pyomo work is separated from the tracked implementation so users do
-not confuse roadmap items with shipped code.
+This document describes the current repository architecture on `main`.
 
 ## Current Capabilities
 
@@ -16,11 +14,12 @@ LyoPRONTO models vial-scale lyophilization with:
 - legacy file-oriented compatibility helpers
 - typed Pint APIs ported from Julia-facing workflows
 - RF, Pikal, fitting, vial, equipment-capability, and cycle-time helpers
+- optional Pyomo primary-drying prototypes for single-step and multi-period
+  trajectory modeling
 
-There is no tracked `lyopronto/pyomo_models/` package on `main`. Pyomo roadmap
-planning lives in GitHub issue
-[#80](https://github.com/SECQUOIA/LyoPRONTO/issues/80) and its child issues,
-rather than current-state documentation.
+Pyomo roadmap planning lives in GitHub issue
+[#80](https://github.com/SECQUOIA/LyoPRONTO/issues/80) and its child issues.
+Tracked Pyomo implementation status is documented in `docs/PYOMO_ROADMAP.md`.
 
 ## Package Layout
 
@@ -45,7 +44,8 @@ lyopronto/
 ├── fitting.py               # SciPy fitting helpers for typed workflows
 ├── cycle_time.py            # End-of-primary-drying detection
 ├── eccurt.py                # Equipment capability utilities
-└── vials.py                 # Vial geometry and metadata helpers
+├── vials.py                 # Vial geometry and metadata helpers
+└── pyomo_models/            # Optional Pyomo primary-drying prototypes
 ```
 
 Supporting directories:
@@ -113,6 +113,18 @@ workflows:
 These helpers are exposed lazily at package level for compatibility with
 imports such as `from lyopronto import execute_simulation`.
 
+### Optional Pyomo Models
+
+`lyopronto.pyomo_models` is an additive optional package. It is imported lazily
+and requires the `pyomo` extra only when users request Pyomo functionality. The
+current tracked models are:
+
+- `single_step`: one primary-drying optimization point
+- `trajectory`: a backward-Euler multi-period primary-drying trajectory model
+
+The Pyomo modules share legacy unit conventions and physics helper functions,
+but they remain isolated from the existing SciPy calculators.
+
 ## Dependency Shape
 
 The legacy path has a shallow dependency graph:
@@ -139,6 +151,15 @@ pikal.py, rf.py
     ↓
 fitting.py
 cycle_time.py, eccurt.py, vials.py
+```
+
+The optional Pyomo path depends on `functions.py`, `constant.py`, and Pyomo:
+
+```text
+constant.py, functions.py
+    ↓
+pyomo_models/single_step.py
+pyomo_models/trajectory.py
 ```
 
 `__init__.py` avoids importing heavy plotting or solver modules at top-level
@@ -187,6 +208,20 @@ SciPy ODE, optimization, or fitting helper
 typed solution objects, diagnostics, or fitted parameters
 ```
 
+### Pyomo Trajectory Prototype
+
+```text
+vial/product/heat-transfer/process dictionaries
+    ↓
+optional legacy ramp sampling and SciPy trajectory warmstart
+    ↓
+pyomo_models.trajectory.create_trajectory_model(...)
+    ↓
+uniform backward-Euler dried-cake dynamics plus nodewise physics constraints
+    ↓
+solve_trajectory(...) diagnostics and legacy-shaped trajectory table
+```
+
 ## CI and Test Architecture
 
 The active test and CI lanes are marker-based:
@@ -196,25 +231,23 @@ The active test and CI lanes are marker-based:
 - full non-Pyomo lane: tracked confidence gate with coverage
 - notebook lane: explicit Jupyter/papermill validation
 - slow non-Pyomo lane: manual optimizer-heavy validation
-- Pyomo lane: manual optional future lane, allowed to no-op until Pyomo tests
-  are tracked
+- Pyomo lane: manual optional lane for environments with Pyomo and IPOPT
 
 The authoritative current testing policy is in `tests/README.md`. The CI
 workflow guide is in `docs/CI_WORKFLOW_GUIDE.md`.
 
 ## Pyomo Status
 
-Pyomo simultaneous optimization is a roadmap item, not current shipped code.
-Current facts:
+Pyomo support is optional and additive. Current facts:
 
-- no `lyopronto/pyomo_models/` directory is tracked on `main`
-- no Pyomo tests are currently collected from the repository
+- `lyopronto/pyomo_models/` contains tracked single-step and trajectory models.
+- Pyomo tests are marked `pyomo` and require optional Pyomo/IPOPT tooling.
 - automatic PR and main-branch workflows exclude Pyomo
-- manual Pyomo validation is available for future work and may no-op today
+- manual Pyomo validation exercises the optional lane when the extra solver
+  stack is installed
 
-Roadmap planning is tracked in
-[#80](https://github.com/SECQUOIA/LyoPRONTO/issues/80) and child issues unless
-a future PR adds implementation docs that are tied to tracked code and tests.
+See `docs/PYOMO_ROADMAP.md` for the tracked model status, the trajectory
+discretization choice, warmstart hooks, and remaining roadmap items.
 
 ## Design Constraints
 
