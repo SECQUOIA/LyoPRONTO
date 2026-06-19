@@ -455,6 +455,8 @@ class TestOptPchTshEdgeCases:
         conservative_setup["Pchamber"]["max"] = 0.090
         conservative_setup["Tshelf"]["min"] = -35.0
         conservative_setup["Tshelf"]["max"] = -25.0
+        # This case checks feasibility within narrow bounds, not 0.01 hr resolution.
+        conservative_setup["dt"] = 0.05
 
         output = opt_Pch_Tsh.dry(
             conservative_setup["vial"],
