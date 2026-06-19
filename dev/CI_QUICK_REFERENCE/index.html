@@ -556,7 +556,8 @@
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>./run_local_ci.sh<span class="w"> </span>full
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>./run_local_ci.sh<span class="w"> </span>slow
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>./run_local_ci.sh<span class="w"> </span>notebook
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>./run_local_ci.sh<span class="w"> </span>pyomo
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>./run_local_ci.sh<span class="w"> </span>pyomo-light
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>./run_local_ci.sh<span class="w"> </span>pyomo
 </span></code></pre></div>
 <p>Use <code>SKIP_INSTALL=1</code> to skip dependency installation when your environment is
 already ready:</p>
@@ -606,9 +607,14 @@ solver extensions:</p>
 <td><code>.github/workflows/rundocs.yml</code></td>
 </tr>
 <tr>
-<td>Pyomo</td>
+<td>Pyomo light</td>
+<td><code>pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v</code></td>
+<td><code>.github/workflows/pyomo-tests.yml</code></td>
+</tr>
+<tr>
+<td>Pyomo solver</td>
 <td><code>pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing</code></td>
-<td><code>.github/workflows/slow-tests.yml</code></td>
+<td><code>.github/workflows/pyomo-tests.yml</code>, <code>.github/workflows/slow-tests.yml</code></td>
 </tr>
 </tbody>
 </table>
@@ -618,14 +624,20 @@ solver extensions:</p>
 <li>Ready/non-draft PRs targeting <code>main</code>: full non-Pyomo lane with coverage.</li>
 <li>Pushes to <code>main</code>: static analysis and full non-Pyomo lane with coverage.</li>
 <li>Ready/non-draft PRs, pushes to <code>main</code>, and manual dispatch: notebook lane.</li>
+<li>PRs or pushes to <code>main</code> changing <code>lyopronto/pyomo_models/**</code> or
+  <code>tests/test_pyomo_models/**</code>: required Pyomo light lane and optional
+  non-blocking solver comparison.</li>
 <li>Manual dispatch: slow non-Pyomo, full non-Pyomo, or optional Pyomo lane.</li>
 </ul>
+<p>Do not add the path-filtered Pyomo light job to branch-protection required
+status checks. It does not report on non-Pyomo PRs. The optional solver
+comparison job is job-level non-blocking, so review its logs when it runs.</p>
 <h2 id="marker-policy">Marker Policy</h2>
 <ul>
 <li><code>slow</code>: optimizer-heavy or long-running tests excluded from fast PR feedback.</li>
 <li><code>notebook</code>: papermill/Jupyter documentation tests.</li>
-<li><code>pyomo</code>: optional future Pyomo/IPOPT tests. No collected tests is a no-op in
-  the manual Pyomo lane. Tests that need IPOPT should use
+<li><code>pyomo</code>: optional Pyomo/IPOPT tests. Model-construction coverage runs in the
+  path-filtered Pyomo light lane. Tests that need IPOPT should use
   <code>tests.pyomo_solver.require_pyomo_solver("ipopt")</code> for clear missing-solver
   skips.</li>
 <li><code>main</code>: legacy <code>main.py</code> and high-level API behavior coverage.</li>

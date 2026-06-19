@@ -661,9 +661,9 @@ practical:</p>
 <p>which runs</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not pyomo&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-report<span class="o">=</span>xml:coverage.xml<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
 </span></code></pre></div>
-<p>Notebook, slow, and optional Pyomo validation are separate lanes:
-<code>./run_local_ci.sh notebook</code>, <code>./run_local_ci.sh slow</code>, and
-<code>./run_local_ci.sh pyomo</code>.</p>
+<p>Notebook, slow, and Pyomo validation are separate lanes:
+<code>./run_local_ci.sh notebook</code>, <code>./run_local_ci.sh slow</code>,
+<code>./run_local_ci.sh pyomo-light</code>, and <code>./run_local_ci.sh pyomo</code>.</p>
 <p>Optional Pyomo work uses a separate extra so default development environments
 stay non-Pyomo:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev,pyomo]&quot;</span>

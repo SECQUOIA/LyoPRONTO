@@ -546,7 +546,8 @@
   coverage.</li>
 <li>Slow optimizer-heavy validation is available through manual dispatch.</li>
 <li>Notebook tests run in their own explicit workflow.</li>
-<li>Pyomo validation is manual and optional until tracked Pyomo tests exist.</li>
+<li>Pyomo light validation runs automatically only when Pyomo model or test paths
+  change; solver-backed Pyomo validation remains optional.</li>
 </ul>
 <h2 id="commands">Commands</h2>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Fast PR feedback</span>
@@ -561,8 +562,11 @@
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="c1"># Explicit notebook validation</span>
 </span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;notebook&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-report<span class="o">=</span>xml:coverage.xml<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
 </span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="c1"># Manual Pyomo validation after installing .[dev,pyomo] and IPOPT</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;pyomo&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-report<span class="o">=</span>xml:coverage.xml<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="c1"># Automatic Pyomo light validation after installing .[dev,pyomo]</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>pytest<span class="w"> </span>tests/test_pyomo_models<span class="w"> </span>tests/test_pyomo_solver.py<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="c1"># Optional solver-backed Pyomo validation after installing .[dev,pyomo] and IPOPT</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;pyomo&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-report<span class="o">=</span>xml:coverage.xml<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
 </span></code></pre></div>
 <h2 id="why-this-helps">Why This Helps</h2>
 <ul>
@@ -572,8 +576,8 @@
   pay that cost.</li>
 <li>Notebook execution is visible as its own lane instead of being hidden inside
   ordinary fast tests.</li>
-<li>The optional Pyomo lane can be exercised manually without failing only because
-  no Pyomo tests have been added yet. Future Pyomo tests should use
+<li>The Pyomo light lane is path-filtered so default non-Pyomo PRs do not install
+  optional Pyomo dependencies. Solver-backed Pyomo tests should use
   <code>tests.pyomo_solver.require_pyomo_solver("ipopt")</code> so missing IPOPT setup is
   reported as a clear skip.</li>
 </ul>

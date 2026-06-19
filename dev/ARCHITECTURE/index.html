@@ -870,7 +870,10 @@ access.</p>
 <li>full non-Pyomo lane: tracked confidence gate with coverage</li>
 <li>notebook lane: explicit Jupyter/papermill validation</li>
 <li>slow non-Pyomo lane: manual optimizer-heavy validation</li>
-<li>Pyomo lane: manual optional lane for environments with Pyomo and IPOPT</li>
+<li>Pyomo light lane: path-filtered automatic validation for Pyomo model/test
+  changes without IPOPT</li>
+<li>Pyomo solver lane: optional solver-backed validation for environments with
+  Pyomo and IPOPT</li>
 </ul>
 <p>The authoritative current testing policy is in <code>tests/README.md</code>. The CI
 workflow guide is in <code>docs/CI_WORKFLOW_GUIDE.md</code>.</p>
@@ -879,7 +882,9 @@ workflow guide is in <code>docs/CI_WORKFLOW_GUIDE.md</code>.</p>
 <ul>
 <li><code>lyopronto/pyomo_models/</code> contains tracked single-step and trajectory models.</li>
 <li>Pyomo tests are marked <code>pyomo</code> and require optional Pyomo/IPOPT tooling.</li>
-<li>automatic PR and main-branch workflows exclude Pyomo</li>
+<li>automatic default PR and main-branch workflows exclude Pyomo, while
+  <code>.github/workflows/pyomo-tests.yml</code> runs when Pyomo model or test paths
+  change</li>
 <li>manual Pyomo validation exercises the optional lane when the extra solver
   stack is installed</li>
 </ul>

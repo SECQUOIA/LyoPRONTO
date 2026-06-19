@@ -566,7 +566,8 @@ configuration is:</p>
 <ul>
 <li>Platform: Ubuntu latest</li>
 <li>Python: read from <code>.github/ci-config/ci-versions.yml</code></li>
-<li>Dependency install: <code>pip install -e ".[dev]"</code></li>
+<li>Dependency install: default lanes use <code>pip install -e ".[dev]"</code>; Pyomo lanes
+  use <code>pip install -e ".[dev,pyomo]"</code></li>
 <li>Coverage upload: Codecov, non-blocking when configured</li>
 </ul>
 <p>The detailed workflow behavior is documented in <code>docs/CI_WORKFLOW_GUIDE.md</code>.</p>
@@ -596,6 +597,11 @@ configuration is:</p>
 <td>Notebook lane</td>
 </tr>
 <tr>
+<td><code>.github/workflows/pyomo-tests.yml</code></td>
+<td>PRs and pushes to <code>main</code> changing <code>lyopronto/pyomo_models/**</code> or <code>tests/test_pyomo_models/**</code>; manual dispatch</td>
+<td>Required Pyomo no-solver lane plus optional non-blocking solver comparison</td>
+</tr>
+<tr>
 <td><code>.github/workflows/slow-tests.yml</code></td>
 <td>Manual dispatch</td>
 <td>Slow non-Pyomo, full non-Pyomo, or optional Pyomo lane</td>
@@ -617,7 +623,8 @@ configuration is:</p>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>./run_local_ci.sh<span class="w"> </span>full
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>./run_local_ci.sh<span class="w"> </span>slow
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>./run_local_ci.sh<span class="w"> </span>notebook
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>./run_local_ci.sh<span class="w"> </span>pyomo
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>./run_local_ci.sh<span class="w"> </span>pyomo-light
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>./run_local_ci.sh<span class="w"> </span>pyomo
 </span></code></pre></div>
 <p>Set <code>SKIP_INSTALL=1</code> to reuse an existing environment:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nv">SKIP_INSTALL</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>./run_local_ci.sh<span class="w"> </span>fast
@@ -629,18 +636,28 @@ configuration is:</p>
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not pyomo&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-report<span class="o">=</span>xml:coverage.xml<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
 </span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;slow and not pyomo&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-report<span class="o">=</span>xml:coverage.xml<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
 </span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;notebook&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-report<span class="o">=</span>xml:coverage.xml<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;pyomo&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-report<span class="o">=</span>xml:coverage.xml<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>pytest<span class="w"> </span>tests/test_pyomo_models<span class="w"> </span>tests/test_pyomo_solver.py<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;pyomo&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-report<span class="o">=</span>xml:coverage.xml<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
 </span></code></pre></div>
-<p>The manual Pyomo lane installs optional Pyomo/IDAES dependencies and treats
-pytest exit code 5 as a no-op until tracked Pyomo tests exist.</p>
+<p>The automatic Pyomo lane installs optional Pyomo/IDAES dependencies without
+IPOPT and relies on solver-backed tests to skip with installation hints. The
+optional solver comparison lane and manual Pyomo lane install IPOPT extensions
+when that deeper validation is needed.</p>
+<p>Do not configure the path-filtered Pyomo light job as a branch-protection
+required status check. Non-Pyomo PRs do not trigger <code>.github/workflows/pyomo-tests.yml</code>,
+so that check would never report for those PRs. If Pyomo status must become a
+repository-wide required check, add an always-running gate job first.</p>
 <h2 id="optional-pyomo-setup">Optional Pyomo Setup</h2>
 <p>Normal runtime and development installs intentionally exclude Pyomo and IPOPT.
-For Pyomo development or the manual Pyomo lane, install the optional stack with:</p>
+For Pyomo development, the automatic Pyomo lane, or the manual Pyomo lane,
+install the optional stack with:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev,pyomo]&quot;</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>idaes<span class="w"> </span>get-extensions<span class="w"> </span>--extra<span class="w"> </span>petsc
 </span></code></pre></div>
-<p>The same setup is used by <code>./run_local_ci.sh pyomo</code> and the manual validation
-workflow. A conda-managed local environment may instead install IPOPT with:</p>
+<p>The same package extra is used by <code>./run_local_ci.sh pyomo-light</code>. Solver-backed
+validation through <code>./run_local_ci.sh pyomo</code> and the optional CI comparison job
+also installs IPOPT with <code>idaes get-extensions --extra petsc</code>. A conda-managed
+local environment may instead install IPOPT with:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>ipopt
 </span></code></pre></div>
 <p>Pyomo-marked tests that need IPOPT should use
@@ -650,8 +667,11 @@ skips with a clear installation hint.</p>
 <ul>
 <li>Keep marker expressions synchronized across workflows, <code>run_local_ci.sh</code>,
   <code>tests/README.md</code>, and this document.</li>
-<li>Do not add automatic Pyomo jobs until tracked Pyomo implementation/tests
-  exist.</li>
+<li>Keep automatic Pyomo coverage path-filtered to Pyomo code and tests so
+  default non-Pyomo PRs do not install optional Pyomo dependencies.</li>
+<li>Monitor the optional solver comparison logs when they run. The job is
+  job-level non-blocking, so install failures and comparison failures do not
+  fail the PR status.</li>
 <li>Keep notebook tests in the explicit notebook lane.</li>
 <li>Keep slow optimizer-heavy tests out of the fast PR lane.</li>
 <li>Ruff linting is enforced in CI with the narrow Pyflakes rule set configured

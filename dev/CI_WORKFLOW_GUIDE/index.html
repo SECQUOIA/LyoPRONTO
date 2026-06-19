@@ -543,6 +543,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#githubworkflowspyomo-testsyml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        .github/workflows/pyomo-tests.yml
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -612,14 +623,15 @@
 <h1 id="ci-workflow-guide">CI Workflow Guide</h1>
 <h2 id="overview">Overview</h2>
 <p>LyoPRONTO uses explicit pytest marker lanes instead of a single ambiguous test
-suite. The workflows are designed around six lanes:</p>
+suite. The workflows are designed around seven lanes:</p>
 <ol>
 <li>Static analysis</li>
 <li>Fast PR feedback</li>
 <li>Full non-Pyomo validation</li>
 <li>Manual slow non-Pyomo validation</li>
 <li>Explicit notebook validation</li>
-<li>Manual optional Pyomo validation</li>
+<li>Automatic Pyomo no-solver validation</li>
+<li>Optional Pyomo solver comparison</li>
 </ol>
 <p>The marker policy and local commands are also documented in <code>tests/README.md</code>.</p>
 <h2 id="workflows">Workflows</h2>
@@ -661,23 +673,40 @@ dispatch.</p>
   <code>pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing</code></li>
 </ul>
 <p>The Pyomo lane installs the optional Pyomo/IDAES stack and treats pytest exit
-code 5 as a no-op because the repository does not currently track Pyomo tests.</p>
+code 5 as a no-op for manual compatibility.</p>
+<h3 id="githubworkflowspyomo-testsyml"><code>.github/workflows/pyomo-tests.yml</code></h3>
+<p>Runs when PRs or pushes to <code>main</code> change <code>lyopronto/pyomo_models/**</code> or
+<code>tests/test_pyomo_models/**</code>, and can also be started manually.</p>
+<ul>
+<li><code>pyomo-no-solver</code> installs <code>.[dev,pyomo]</code> without IPOPT and runs:
+  <code>pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v</code></li>
+<li><code>pyomo-solver-comparison</code> is non-blocking, attempts
+  <code>idaes get-extensions --extra petsc</code>, and runs the Pyomo SciPy comparison
+  tests when the optional solver stack installs.</li>
+</ul>
+<p>The Pyomo workflow is path-filtered. Do not add <code>pyomo-no-solver</code> or
+<code>pyomo-solver-comparison</code> as branch-protection required status checks while the
+workflow uses <code>paths</code>, because they do not report on non-Pyomo PRs. If Pyomo
+status must be required repository-wide, add an always-running gate job first.
+The solver comparison job is job-level non-blocking; monitor its logs because
+both install failures and comparison test failures leave the PR status green.</p>
 <h2 id="optional-pyomo-setup">Optional Pyomo Setup</h2>
 <p>Default installs and the normal development extra do not include Pyomo, IDAES,
-or IPOPT. Use the Pyomo extra only when developing or manually validating future
-Pyomo work:</p>
+or IPOPT. Use the Pyomo extra only when developing or validating Pyomo work:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev,pyomo]&quot;</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>idaes<span class="w"> </span>get-extensions<span class="w"> </span>--extra<span class="w"> </span>petsc
 </span></code></pre></div>
-<p>The manual Pyomo workflow and <code>./run_local_ci.sh pyomo</code> use that same package
-extra and IDAES extension command. If you manage solvers through conda instead,
-install IPOPT into the active environment and ensure it is on PATH:</p>
+<p>The automatic Pyomo light workflow and <code>./run_local_ci.sh pyomo-light</code> use the
+package extra without installing IPOPT. The optional solver comparison workflow
+and <code>./run_local_ci.sh pyomo</code> also use the IDAES extension command. If you
+manage solvers through conda instead, install IPOPT into the active environment
+and ensure it is on PATH:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>ipopt
 </span></code></pre></div>
-<p>Future Pyomo-marked tests should call
-<code>tests.pyomo_solver.require_pyomo_solver("ipopt")</code> before constructing models.
-That helper skips with these install hints when Pyomo or IPOPT is missing,
-instead of failing later with an opaque solver error.</p>
+<p>Pyomo-marked tests that need IPOPT should call
+<code>tests.pyomo_solver.require_pyomo_solver("ipopt")</code> before solving models. That
+helper skips with these install hints when Pyomo or IPOPT is missing, instead of
+failing later with an opaque solver error.</p>
 <h2 id="local-equivalents">Local Equivalents</h2>
 <p>Use <code>run_local_ci.sh</code> to run the same commands locally:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>python<span class="w"> </span>-m<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>lyopronto<span class="w"> </span>tests<span class="w"> </span>examples<span class="w"> </span>main.py
@@ -686,7 +715,8 @@ instead of failing later with an opaque solver error.</p>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>./run_local_ci.sh<span class="w"> </span>full
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>./run_local_ci.sh<span class="w"> </span>slow
 </span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>./run_local_ci.sh<span class="w"> </span>notebook
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>./run_local_ci.sh<span class="w"> </span>pyomo
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>./run_local_ci.sh<span class="w"> </span>pyomo-light
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>./run_local_ci.sh<span class="w"> </span>pyomo
 </span></code></pre></div>
 <p>Set <code>SKIP_INSTALL=1</code> when dependencies are already installed:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nv">SKIP_INSTALL</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>./run_local_ci.sh<span class="w"> </span>fast
@@ -696,15 +726,20 @@ instead of failing later with an opaque solver error.</p>
 <li>Open or update a PR: static analysis and the fast lane run.</li>
 <li>Convert the PR out of draft: full non-Pyomo lane runs with coverage.</li>
 <li>Notebook lane runs separately for ready PRs.</li>
+<li>If the PR changes Pyomo model code or tests, the Pyomo light lane runs
+   automatically; the optional solver comparison runs for ready PRs.</li>
 <li>Reviewers can request manual slow or Pyomo lanes when relevant.</li>
-<li>Merge to <code>main</code>: static analysis and the full non-Pyomo lane run again.</li>
+<li>Merge to <code>main</code>: static analysis and the full non-Pyomo lane run again, with
+   Pyomo lanes also path-filtered on Pyomo changes.</li>
 </ol>
 <h2 id="maintenance-notes">Maintenance Notes</h2>
 <ul>
 <li>Keep marker expressions synchronized between workflows, <code>run_local_ci.sh</code>,
   and <code>tests/README.md</code>.</li>
-<li>Do not add Pyomo validation to automatic PR/main workflows until tracked
-  Pyomo implementation and tests exist.</li>
+<li>Keep automatic Pyomo validation isolated behind the Pyomo path filter so
+  default non-Pyomo PRs do not install optional Pyomo dependencies.</li>
+<li>Do not configure path-filtered Pyomo jobs as branch-protection required status
+  checks unless an always-running gate job is added.</li>
 <li>Do not broaden fast PR deselection beyond <code>slow</code>, <code>notebook</code>, and <code>pyomo</code>
   without documenting the reason.</li>
 <li>Ruff linting is enforced in CI with the narrow Pyflakes rule set configured
