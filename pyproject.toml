@@ -46,6 +46,7 @@ dev = [
     "pytest-mock>=3",
     "pytest-cov>=4.1.0",
     "pytest-xdist>=3.3.0",
+    "pytest-timeout>=2.2.0",
     "hypothesis>=6.82.0",
     "ruff>=0.12.0",
     "mypy>=1.4.0",
@@ -107,6 +108,8 @@ addopts = [
     "--tb=short",
     "--strict-markers",
     "--maxfail=5",
+    "--timeout=600",
+    "--timeout-method=thread",
     "-n",
     "auto",
 ]
@@ -121,7 +124,7 @@ markers = [
     "parametric: Parametric tests across multiple scenarios",
     "fast: Quick tests that run in under 1 second",
     "serial: Tests that must run without xdist parallelism; run with 'pytest -m serial -n 0'",
-    "pyomo: Optional Pyomo/IPOPT tests; deselect with '-m not pyomo'",
+    "pyomo: Implemented optional Pyomo model and IPOPT solver tests; deselect with '-m not pyomo'",
     "notebook: Papermill/Jupyter notebook execution tests run in the notebook lane",
     "main: Legacy main.py and high-level API behavior tests",
 ]

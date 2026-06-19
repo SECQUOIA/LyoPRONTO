@@ -12,7 +12,7 @@ GitHub Actions plus `run_local_ci.sh`.
 
 - **Workflow:** `.github/workflows/pr-tests.yml`
 - **Trigger:** Every pull request update
-- **Command:** `pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"`
+- **Command:** `pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo" --durations=25`
 - **Purpose:** Keep ordinary PR feedback focused on tracked, non-notebook SciPy
   behavior.
 
@@ -21,15 +21,15 @@ GitHub Actions plus `run_local_ci.sh`.
 - **Workflows:** `.github/workflows/pr-tests.yml`,
   `.github/workflows/tests.yml`
 - **Trigger:** Ready/non-draft PRs and pushes to `main`
-- **Command:** `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+- **Command:** `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25`
 - **Purpose:** Main confidence gate for tracked behavior while Pyomo remains a
-  planned optional stack.
+  implemented optional stack.
 
 ### Slow Non-Pyomo Lane
 
 - **Workflow:** `.github/workflows/slow-tests.yml`
 - **Trigger:** Manual workflow dispatch
-- **Command:** `pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+- **Command:** `pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25`
 - **Purpose:** Targeted optimizer-heavy validation when a change touches slow
   scientific paths or when a reviewer wants focused evidence.
 
@@ -37,7 +37,7 @@ GitHub Actions plus `run_local_ci.sh`.
 
 - **Workflow:** `.github/workflows/rundocs.yml`
 - **Trigger:** Ready/non-draft PRs, pushes to `main`, or manual dispatch
-- **Command:** `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+- **Command:** `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25`
 - **Purpose:** Execute documentation notebooks separately from ordinary fast
   tests.
 
@@ -46,7 +46,7 @@ GitHub Actions plus `run_local_ci.sh`.
 - **Workflow:** `.github/workflows/pyomo-tests.yml`
 - **Trigger:** Pull requests and pushes to `main` that change
   `lyopronto/pyomo_models/**` or `tests/test_pyomo_models/**`
-- **Command:** `pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v`
+- **Command:** `pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v --durations=25`
 - **Purpose:** Required import, model-construction, and missing-solver skip
   validation while keeping Pyomo out of default non-Pyomo PR lanes.
 
@@ -56,7 +56,7 @@ GitHub Actions plus `run_local_ci.sh`.
   `.github/workflows/slow-tests.yml`
 - **Trigger:** Optional non-blocking path-filtered comparison job or manual
   workflow dispatch
-- **Command:** `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+- **Command:** `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25`
 - **Purpose:** Solver-backed Pyomo/IPOPT validation when the optional solver
   stack is available.
 
@@ -64,9 +64,12 @@ GitHub Actions plus `run_local_ci.sh`.
 
 - `slow`: Long-running or optimizer-heavy tests excluded from the fast PR lane.
 - `notebook`: Papermill/Jupyter tests for documentation examples.
-- `pyomo`: Optional tests requiring Pyomo and solver dependencies.
+- `pyomo`: Implemented optional Pyomo model and solver tests.
 - `main`: Legacy `main.py` and high-level API behavior coverage.
 - `serial`: Tests that must be run without xdist, using `pytest -m serial -n 0`.
+
+All lanes report the 25 slowest tests and inherit
+`--timeout=600 --timeout-method=thread` from `pyproject.toml`.
 
 ## Local Usage
 

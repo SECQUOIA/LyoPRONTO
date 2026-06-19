@@ -39,8 +39,8 @@ Current local commands:
 ```bash
 python -m ruff check lyopronto tests examples main.py
 python -m mypy lyopronto
-pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"
-pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo" --durations=25
+pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25
 ```
 
 The same lanes are available through:
@@ -57,6 +57,9 @@ The same lanes are available through:
 The Pyomo light lane mirrors the automatic path-filtered CI job for Pyomo model
 and test changes. Solver-backed Pyomo validation remains optional. See
 `tests/README.md` for the authoritative marker policy.
+
+Pytest lanes include `--durations=25` and inherit
+`--timeout=600 --timeout-method=thread` from the shared pytest configuration.
 
 ## Building the Site
 

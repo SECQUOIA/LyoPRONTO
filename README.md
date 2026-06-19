@@ -93,13 +93,13 @@ Run static analysis and the fast PR lane locally with:
 ```bash
 python -m ruff check lyopronto tests examples main.py
 python -m mypy lyopronto
-pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"
+pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo" --durations=25
 ```
 
 The full tracked validation lane is:
 
 ```bash
-pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25
 ```
 
 `./run_local_ci.sh fast`, `./run_local_ci.sh full`,
@@ -108,6 +108,10 @@ pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverag
 documented GitHub Actions lanes. Pyomo remains optional: the path-filtered
 automatic Pyomo lane installs `.[dev,pyomo]` without IPOPT, while
 solver-backed Pyomo validation stays optional.
+
+All pytest lanes report the 25 slowest tests. The shared pytest configuration
+also enforces `--timeout=600 --timeout-method=thread` through `pytest-timeout`
+from the `dev` extra so hung tests fail clearly.
 
 ## Documentation
 

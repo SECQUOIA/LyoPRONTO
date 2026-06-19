@@ -60,12 +60,22 @@ def test_pyomo_extra_defines_optional_solver_stack_only() -> None:
     assert _requirements(ROOT / "requirements-dev.txt") == ["-e .[dev]"]
 
 
+def test_dev_extra_includes_test_diagnostics_plugins() -> None:
+    project = _pyproject()["project"]
+    dev_dependencies = project["optional-dependencies"]["dev"]
+
+    assert "pytest-timeout>=2.2.0" in dev_dependencies
+    assert any(dependency.startswith("pytest-xdist") for dependency in dev_dependencies)
+
+
 def test_pytest_configuration_has_single_source() -> None:
     config = _pyproject()["tool"]["pytest"]["ini_options"]
 
     assert not (ROOT / "pytest.ini").exists()
     assert config["testpaths"] == ["tests"]
     assert "--strict-markers" in config["addopts"]
+    assert "--timeout=600" in config["addopts"]
+    assert "--timeout-method=thread" in config["addopts"]
     assert "--disable-warnings" not in config["addopts"]
     assert "--dist=loadgroup" not in config["addopts"]
     assert config["filterwarnings"] == ["default"]
@@ -78,7 +88,7 @@ def test_required_test_lane_markers_have_policy_descriptions() -> None:
 
     assert "fast PR lane" in markers["slow"]
     assert "notebook lane" in markers["notebook"]
-    assert "Optional Pyomo/IPOPT" in markers["pyomo"]
+    assert "Implemented optional Pyomo" in markers["pyomo"]
     assert "-n 0" in markers["serial"]
     assert "high-level API" in markers["main"]
 
@@ -112,10 +122,12 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     notebook_tests = _text(".github/workflows/rundocs.yml")
     pyomo_tests = _text(".github/workflows/pyomo-tests.yml")
 
-    assert 'pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"' in pr_tests
+    assert 'pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo" --durations=25' in pr_tests
     assert 'pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto' in pr_tests
+    assert "--cov-report=term-missing --durations=25" in pr_tests
     assert "github.event.pull_request.draft == false" in pr_tests
     assert 'pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto' in main_tests
+    assert "--cov-report=term-missing --durations=25" in main_tests
     assert "pip install pyomo" not in pr_tests
     assert "pip install pyomo" not in main_tests
     assert 'pip install -e ".[dev,pyomo]"' not in pr_tests
@@ -129,6 +141,7 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
 
     assert 'pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto' in manual_tests
     assert 'pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto' in manual_tests
+    assert manual_tests.count("--cov-report=term-missing --durations=25") == 3
     assert 'rc" -eq 5' in manual_tests
     assert 'pip install -e ".[dev,pyomo]"' in manual_tests
     assert "idaes get-extensions --extra petsc" in manual_tests
@@ -136,12 +149,14 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert "RUN_SLOW_TESTS" not in manual_tests
 
     assert 'pytest tests/ -n auto -v -m "notebook" --cov=lyopronto' in notebook_tests
+    assert "--cov-report=term-missing --durations=25" in notebook_tests
     assert "github.event.pull_request.draft == false" in notebook_tests
 
     assert "lyopronto/pyomo_models/**" in pyomo_tests
     assert "tests/test_pyomo_models/**" in pyomo_tests
     assert 'pip install -e ".[dev,pyomo]"' in pyomo_tests
-    assert "pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v" in pyomo_tests
+    assert "pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v --durations=25" in pyomo_tests
+    assert "pytest -n 0 -v --durations=25" in pyomo_tests
     assert "idaes get-extensions --extra petsc" in pyomo_tests
     assert "Install IPOPT with: idaes get-extensions --extra petsc" in pyomo_tests
     assert "Alternative local install: conda install -c conda-forge ipopt" in pyomo_tests
@@ -165,6 +180,7 @@ def test_local_ci_script_matches_documented_lane_expressions() -> None:
     assert 'NOTEBOOK_EXPR="notebook"' in script
     assert 'PYOMO_EXPR="pyomo"' in script
     assert 'PYOMO_LIGHT_TARGETS="tests/test_pyomo_models tests/test_pyomo_solver.py"' in script
+    assert '--durations=25' in script
     assert "pyomo-light" in script
     assert 'pip install -e ".[dev,pyomo]"' in script
     assert "idaes get-extensions --extra petsc" in script
@@ -185,8 +201,11 @@ def test_contributor_docs_include_ci_and_static_analysis_commands() -> None:
         ]
     )
 
-    assert 'pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"' in docs
+    assert 'pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo" --durations=25' in docs
     assert 'pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto' in docs
+    assert "--cov-report=term-missing --durations=25" in docs
+    assert "--timeout=600" in docs
+    assert "--timeout-method=thread" in docs
     assert "Ruff linting" in docs
     assert "python -m ruff check lyopronto tests examples main.py" in docs
     assert "python -m mypy lyopronto" in docs

@@ -46,7 +46,7 @@ jobs:
     - name: Run Pyomo no-solver tests
       run: |
         echo "Running Pyomo import, model-construction, and solver-skip tests"
-        pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v
+        pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v --durations=25
 
   pyomo-solver-comparison:
     name: Pyomo solver comparison lane (optional)
@@ -88,7 +88,7 @@ jobs:
 
     - name: Run Pyomo SciPy comparison tests
       run: |
-        pytest -n 0 -v \
+        pytest -n 0 -v --durations=25 \
           tests/test_pyomo_models/test_single_step.py::test_single_step_solves_and_matches_scipy_reference \
           tests/test_pyomo_models/test_single_step.py::test_single_step_cold_start_solves_and_matches_scipy_reference \
           tests/test_pyomo_models/test_trajectory.py::test_trajectory_solves_and_matches_scipy_reference \

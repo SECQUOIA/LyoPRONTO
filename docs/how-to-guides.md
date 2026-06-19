@@ -36,7 +36,7 @@ Notebook execution is validated through the explicit notebook CI lane.
 
 ```bash
 python -m ruff check lyopronto tests examples main.py
-pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"
+pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo" --durations=25
 ```
 
 See `tests/README.md` for marker details.

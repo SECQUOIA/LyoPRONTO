@@ -69,7 +69,7 @@ jobs:
     - name: Run fast PR tests
       run: |
         echo "Running fast PR lane without slow, notebook, or Pyomo tests"
-        pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"
+        pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo" --durations=25
 
   full-non-pyomo:
     name: Full non-Pyomo lane
@@ -100,7 +100,7 @@ jobs:
     - name: Run full non-Pyomo validation
       run: |
         echo "Running full non-Pyomo validation with coverage"
-        pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+        pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25
 
     - name: Upload coverage
       uses: codecov/codecov-action@v4

@@ -14,6 +14,8 @@ suite. The workflows are designed around seven lanes:
 7. Optional Pyomo solver comparison
 
 The marker policy and local commands are also documented in `tests/README.md`.
+Each pytest lane reports `--durations=25` and inherits
+`--timeout=600 --timeout-method=thread` from the shared pytest configuration.
 
 ## Workflows
 
@@ -25,9 +27,9 @@ Runs on pull requests targeting `main`.
   `python -m ruff check lyopronto tests examples main.py`
   and advisory `python -m mypy lyopronto`
 - `fast-scipy` runs on every PR update:
-  `pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"`
+  `pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo" --durations=25`
 - `full-non-pyomo` runs only for ready/non-draft PRs:
-  `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+  `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25`
 
 ### `.github/workflows/tests.yml`
 
@@ -37,7 +39,7 @@ Runs on pushes to `main`.
   `python -m ruff check lyopronto tests examples main.py`
   and advisory `python -m mypy lyopronto`
 - `full-non-pyomo` runs the main confidence gate:
-  `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+  `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25`
 
 ### `.github/workflows/rundocs.yml`
 
@@ -45,18 +47,18 @@ Runs notebook validation for ready/non-draft PRs, pushes to `main`, and manual
 dispatch.
 
 - `notebook-tests` runs:
-  `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+  `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25`
 
 ### `.github/workflows/slow-tests.yml`
 
 Manual dispatch workflow with three lane choices:
 
 - `slow-non-pyomo`:
-  `pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+  `pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25`
 - `full-non-pyomo`:
-  `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+  `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25`
 - `pyomo`:
-  `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+  `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25`
 
 The Pyomo lane installs the optional Pyomo/IDAES stack and treats pytest exit
 code 5 as a no-op for manual compatibility.
@@ -67,7 +69,7 @@ Runs when PRs or pushes to `main` change `lyopronto/pyomo_models/**` or
 `tests/test_pyomo_models/**`, and can also be started manually.
 
 - `pyomo-no-solver` installs `.[dev,pyomo]` without IPOPT and runs:
-  `pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v`
+  `pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v --durations=25`
 - `pyomo-solver-comparison` is non-blocking, attempts
   `idaes get-extensions --extra petsc`, and runs the Pyomo SciPy comparison
   tests when the optional solver stack installs.
