@@ -108,6 +108,7 @@ addopts = [
     "--tb=short",
     "--strict-markers",
     "--maxfail=5",
+    "--durations=25",
     "--timeout=600",
     "--timeout-method=thread",
     "-n",

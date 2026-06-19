@@ -16,22 +16,22 @@ CI performance is managed with marker-based lanes:
 
 ```bash
 # Fast PR feedback
-pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo" --durations=25
+pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"
 
 # Full non-Pyomo validation with coverage
-pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25
+pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
 
 # Manual slow validation
-pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25
+pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
 
 # Explicit notebook validation
-pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25
+pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
 
 # Automatic Pyomo light validation after installing .[dev,pyomo]
-pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v --durations=25
+pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v
 
 # Optional solver-backed Pyomo validation after installing .[dev,pyomo] and IPOPT
-pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25
+pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
 ```
 
 ## Why This Helps
@@ -42,8 +42,8 @@ pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xm
   pay that cost.
 - Notebook execution is visible as its own lane instead of being hidden inside
   ordinary fast tests.
-- Each pytest lane reports the 25 slowest tests and uses the shared
-  `--timeout=600 --timeout-method=thread` configuration so hangs fail clearly.
+- Each pytest lane inherits the shared `--durations=25`, `--timeout=600`,
+  and `--timeout-method=thread` configuration so hangs fail clearly.
 - The Pyomo light lane is path-filtered so default non-Pyomo PRs do not install
   optional Pyomo dependencies. Solver-backed Pyomo tests should use
   `tests.pyomo_solver.require_pyomo_solver("ipopt")` so missing IPOPT setup is

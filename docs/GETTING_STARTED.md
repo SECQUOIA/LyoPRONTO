@@ -54,13 +54,13 @@ Use the same lane commands that CI documents:
 ```bash
 python -m ruff check lyopronto tests examples main.py
 python -m mypy lyopronto
-pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo" --durations=25
+pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"
 ```
 
 Before marking a PR ready when practical:
 
 ```bash
-pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25
+pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
 ```
 
 The wrapper script mirrors CI lanes:
@@ -172,7 +172,7 @@ python -c "import sys; print('\n'.join(sys.path))"
 
 ```bash
 # Re-run the fast lane with verbose output
-pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo" --durations=25
+pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"
 
 # Check if issue is with one specific test
 pytest tests/test_functions.py::TestVaporPressure -v

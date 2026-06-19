@@ -65,17 +65,18 @@ Use the local CI wrapper when you want the same commands used by GitHub Actions:
 The underlying pytest commands are:
 
 ```bash
-pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo" --durations=25
-pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25
-pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25
-pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25
-pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v --durations=25
-pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25
+pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"
+pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v
+pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
 ```
 
-Each lane reports the 25 slowest tests. Shared pytest defaults also apply
-`--timeout=600 --timeout-method=thread` through `pytest-timeout` from the
-`dev` extra, so a hung test fails clearly without requiring the Pyomo extra.
+Each lane inherits `--durations=25`, `--timeout=600`, and
+`--timeout-method=thread` from the shared pytest defaults through
+`pytest-timeout` from the `dev` extra, so a hung test fails clearly without
+requiring the Pyomo extra.
 
 ## Optional Pyomo Setup
 

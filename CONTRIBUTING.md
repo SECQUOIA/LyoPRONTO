@@ -7,16 +7,16 @@ Thank you for your interest in contributing to LyoPRONTO! This document provides
 LyoPRONTO uses explicit pytest marker lanes so contributors and reviewers can
 choose the right feedback level:
 
-- **Fast PR lane:** `pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo" --durations=25`
-- **Full non-Pyomo lane:** `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25`
-- **Slow manual lane:** `pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25`
-- **Notebook lane:** `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25`
-- **Pyomo light lane:** `pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v --durations=25`
-- **Pyomo solver lane:** `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25`
+- **Fast PR lane:** `pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"`
+- **Full non-Pyomo lane:** `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+- **Slow manual lane:** `pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+- **Notebook lane:** `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+- **Pyomo light lane:** `pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v`
+- **Pyomo solver lane:** `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
 
-All pytest lanes report the 25 slowest tests. The shared pytest configuration
-also applies `--timeout=600 --timeout-method=thread` through `pytest-timeout`
-from the `dev` extra.
+All pytest lanes inherit `--durations=25`, `--timeout=600`, and
+`--timeout-method=thread` from the shared pytest configuration through
+`pytest-timeout` from the `dev` extra.
 
 The same commands are available locally through `./run_local_ci.sh fast`,
 `./run_local_ci.sh full`, `./run_local_ci.sh slow`,

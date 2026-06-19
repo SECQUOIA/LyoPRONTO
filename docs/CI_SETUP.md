@@ -55,17 +55,18 @@ SKIP_INSTALL=1 ./run_local_ci.sh fast
 ```bash
 python -m ruff check lyopronto tests examples main.py
 python -m mypy lyopronto
-pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo" --durations=25
-pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25
-pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25
-pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25
-pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v --durations=25
-pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25
+pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"
+pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v
+pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
 ```
 
-All pytest lanes report the 25 slowest tests. The shared pytest configuration
-also applies `--timeout=600 --timeout-method=thread` through `pytest-timeout`
-from the `dev` extra, including Pyomo lanes that install `.[dev,pyomo]`.
+All pytest lanes inherit `--durations=25`, `--timeout=600`, and
+`--timeout-method=thread` from the shared pytest configuration through
+`pytest-timeout` from the `dev` extra, including Pyomo lanes that install
+`.[dev,pyomo]`.
 
 The automatic Pyomo lane installs optional Pyomo/IDAES dependencies without
 IPOPT and relies on solver-backed tests to skip with installation hints. The

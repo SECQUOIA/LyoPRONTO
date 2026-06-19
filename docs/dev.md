@@ -19,7 +19,7 @@ For fast PR-style feedback, execute
 which runs
 
 ```bash
-pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo" --durations=25
+pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"
 ```
 
 Before marking a PR ready for review, run the full non-Pyomo lane when
@@ -32,11 +32,11 @@ practical:
 which runs
 
 ```bash
-pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25
+pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
 ```
 
-All pytest lanes report slowest-test durations and inherit
-`--timeout=600 --timeout-method=thread` from `pyproject.toml`.
+All pytest lanes inherit `--durations=25`, `--timeout=600`, and
+`--timeout-method=thread` from `pyproject.toml`.
 
 Notebook, slow, and Pyomo validation are separate lanes:
 `./run_local_ci.sh notebook`, `./run_local_ci.sh slow`,

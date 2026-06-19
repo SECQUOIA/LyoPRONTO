@@ -39,15 +39,15 @@ conda install -c conda-forge ipopt
 | Lane | Command | Workflow |
 | --- | --- | --- |
 | Static analysis | `python -m ruff check lyopronto tests examples main.py`; advisory `python -m mypy lyopronto` | `.github/workflows/pr-tests.yml`, `.github/workflows/tests.yml` |
-| Fast PR | `pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo" --durations=25` | `.github/workflows/pr-tests.yml` |
-| Full non-Pyomo | `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25` | `.github/workflows/pr-tests.yml`, `.github/workflows/tests.yml` |
-| Slow non-Pyomo | `pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25` | `.github/workflows/slow-tests.yml` |
-| Notebook | `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25` | `.github/workflows/rundocs.yml` |
-| Pyomo light | `pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v --durations=25` | `.github/workflows/pyomo-tests.yml` |
-| Pyomo solver | `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing --durations=25` | `.github/workflows/pyomo-tests.yml`, `.github/workflows/slow-tests.yml` |
+| Fast PR | `pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"` | `.github/workflows/pr-tests.yml` |
+| Full non-Pyomo | `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing` | `.github/workflows/pr-tests.yml`, `.github/workflows/tests.yml` |
+| Slow non-Pyomo | `pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing` | `.github/workflows/slow-tests.yml` |
+| Notebook | `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing` | `.github/workflows/rundocs.yml` |
+| Pyomo light | `pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v` | `.github/workflows/pyomo-tests.yml` |
+| Pyomo solver | `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing` | `.github/workflows/pyomo-tests.yml`, `.github/workflows/slow-tests.yml` |
 
-All pytest lanes report the 25 slowest tests and inherit
-`--timeout=600 --timeout-method=thread` from `pyproject.toml`.
+All pytest lanes inherit `--durations=25`, `--timeout=600`, and
+`--timeout-method=thread` from `pyproject.toml`.
 
 ## Triggers
 
