@@ -72,6 +72,13 @@ Runs when PRs or pushes to `main` change `lyopronto/pyomo_models/**` or
   `idaes get-extensions --extra petsc`, and runs the Pyomo SciPy comparison
   tests when the optional solver stack installs.
 
+The Pyomo workflow is path-filtered. Do not add `pyomo-no-solver` or
+`pyomo-solver-comparison` as branch-protection required status checks while the
+workflow uses `paths`, because they do not report on non-Pyomo PRs. If Pyomo
+status must be required repository-wide, add an always-running gate job first.
+The solver comparison job is job-level non-blocking; monitor its logs because
+both install failures and comparison test failures leave the PR status green.
+
 ## Optional Pyomo Setup
 
 Default installs and the normal development extra do not include Pyomo, IDAES,
@@ -135,6 +142,8 @@ SKIP_INSTALL=1 ./run_local_ci.sh fast
   and `tests/README.md`.
 - Keep automatic Pyomo validation isolated behind the Pyomo path filter so
   default non-Pyomo PRs do not install optional Pyomo dependencies.
+- Do not configure path-filtered Pyomo jobs as branch-protection required status
+  checks unless an always-running gate job is added.
 - Do not broaden fast PR deselection beyond `slow`, `notebook`, and `pyomo`
   without documenting the reason.
 - Ruff linting is enforced in CI with the narrow Pyflakes rule set configured

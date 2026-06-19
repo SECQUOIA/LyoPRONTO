@@ -57,6 +57,10 @@ conda install -c conda-forge ipopt
   non-blocking solver comparison.
 - Manual dispatch: slow non-Pyomo, full non-Pyomo, or optional Pyomo lane.
 
+Do not add the path-filtered Pyomo light job to branch-protection required
+status checks. It does not report on non-Pyomo PRs. The optional solver
+comparison job is job-level non-blocking, so review its logs when it runs.
+
 ## Marker Policy
 
 - `slow`: optimizer-heavy or long-running tests excluded from fast PR feedback.

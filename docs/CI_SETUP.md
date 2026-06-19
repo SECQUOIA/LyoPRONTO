@@ -68,6 +68,11 @@ IPOPT and relies on solver-backed tests to skip with installation hints. The
 optional solver comparison lane and manual Pyomo lane install IPOPT extensions
 when that deeper validation is needed.
 
+Do not configure the path-filtered Pyomo light job as a branch-protection
+required status check. Non-Pyomo PRs do not trigger `.github/workflows/pyomo-tests.yml`,
+so that check would never report for those PRs. If Pyomo status must become a
+repository-wide required check, add an always-running gate job first.
+
 ## Optional Pyomo Setup
 
 Normal runtime and development installs intentionally exclude Pyomo and IPOPT.
@@ -98,6 +103,9 @@ skips with a clear installation hint.
   `tests/README.md`, and this document.
 - Keep automatic Pyomo coverage path-filtered to Pyomo code and tests so
   default non-Pyomo PRs do not install optional Pyomo dependencies.
+- Monitor the optional solver comparison logs when they run. The job is
+  job-level non-blocking, so install failures and comparison failures do not
+  fail the PR status.
 - Keep notebook tests in the explicit notebook lane.
 - Keep slow optimizer-heavy tests out of the fast PR lane.
 - Ruff linting is enforced in CI with the narrow Pyflakes rule set configured

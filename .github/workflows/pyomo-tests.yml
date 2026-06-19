@@ -78,7 +78,13 @@ jobs:
 
     - name: Install optional Pyomo solver extensions
       run: |
-        idaes get-extensions --extra petsc
+        idaes get-extensions --extra petsc || {
+          rc=$?
+          echo "Failed to install IDAES solver extensions for the Pyomo lane."
+          echo "Install IPOPT with: idaes get-extensions --extra petsc"
+          echo "Alternative local install: conda install -c conda-forge ipopt"
+          exit "$rc"
+        }
 
     - name: Run Pyomo SciPy comparison tests
       run: |

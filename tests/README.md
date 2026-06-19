@@ -138,6 +138,11 @@ The current top warning sources audited for this policy are:
   `full-non-pyomo`, and `pyomo` lanes.
 - Python version is read from `.github/ci-config/ci-versions.yml`.
 
+Do not configure path-filtered Pyomo jobs as branch-protection required status
+checks while `.github/workflows/pyomo-tests.yml` uses `paths`; they do not report
+on non-Pyomo PRs. The optional solver comparison job is job-level non-blocking,
+so inspect its logs when it runs.
+
 ## Best Practices
 
 - Mark optimizer-heavy or long-running tests with `@pytest.mark.slow`.

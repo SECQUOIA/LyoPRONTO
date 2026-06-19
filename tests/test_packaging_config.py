@@ -143,6 +143,8 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert 'pip install -e ".[dev,pyomo]"' in pyomo_tests
     assert "pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v" in pyomo_tests
     assert "idaes get-extensions --extra petsc" in pyomo_tests
+    assert "Install IPOPT with: idaes get-extensions --extra petsc" in pyomo_tests
+    assert "Alternative local install: conda install -c conda-forge ipopt" in pyomo_tests
     assert "continue-on-error: true" in pyomo_tests
     assert (
         "tests/test_pyomo_models/test_single_step.py::test_single_step_solves_and_matches_scipy_reference"
@@ -200,6 +202,8 @@ def test_contributor_docs_include_ci_and_static_analysis_commands() -> None:
     assert "idaes get-extensions --extra petsc" in docs
     assert "conda install -c conda-forge ipopt" in docs
     assert "./run_local_ci.sh pyomo-light" in docs
+    assert "branch-protection required status checks" in docs
+    assert "job-level non-blocking" in docs
 
 
 def test_legacy_setup_py_metadata_removed() -> None:
