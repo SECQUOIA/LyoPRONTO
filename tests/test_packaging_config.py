@@ -43,9 +43,7 @@ def _text(path: str) -> str:
 def test_requirements_txt_mirrors_runtime_dependencies() -> None:
     project = _pyproject()["project"]
 
-    assert sorted(_requirements(ROOT / "requirements.txt")) == sorted(
-        project["dependencies"]
-    )
+    assert sorted(_requirements(ROOT / "requirements.txt")) == sorted(project["dependencies"])
 
 
 def test_requirements_dev_delegates_to_dev_extra() -> None:
@@ -80,7 +78,7 @@ def test_required_test_lane_markers_have_policy_descriptions() -> None:
 
     assert "fast PR lane" in markers["slow"]
     assert "notebook lane" in markers["notebook"]
-    assert "Optional future Pyomo/IPOPT" in markers["pyomo"]
+    assert "Optional Pyomo/IPOPT" in markers["pyomo"]
     assert "-n 0" in markers["serial"]
     assert "high-level API" in markers["main"]
 
@@ -102,8 +100,7 @@ def test_static_tooling_configuration_is_staged_and_scoped() -> None:
     assert "ignore_errors" not in mypy
     assert "ignore_missing_imports" not in mypy
     assert any(
-        override["module"] == ["scipy", "scipy.*"]
-        and override["ignore_missing_imports"] is True
+        override["module"] == ["scipy", "scipy.*"] and override["ignore_missing_imports"] is True
         for override in mypy["overrides"]
     )
 
@@ -113,16 +110,16 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     main_tests = _text(".github/workflows/tests.yml")
     manual_tests = _text(".github/workflows/slow-tests.yml")
     notebook_tests = _text(".github/workflows/rundocs.yml")
+    pyomo_tests = _text(".github/workflows/pyomo-tests.yml")
 
-    assert (
-        'pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"'
-        in pr_tests
-    )
+    assert 'pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"' in pr_tests
     assert 'pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto' in pr_tests
     assert "github.event.pull_request.draft == false" in pr_tests
     assert 'pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto' in main_tests
     assert "pip install pyomo" not in pr_tests
     assert "pip install pyomo" not in main_tests
+    assert 'pip install -e ".[dev,pyomo]"' not in pr_tests
+    assert 'pip install -e ".[dev,pyomo]"' not in main_tests
     assert "python -m ruff check lyopronto tests examples main.py" in pr_tests
     assert "python -m ruff check lyopronto tests examples main.py" in main_tests
     assert "python -m mypy lyopronto" in pr_tests
@@ -130,10 +127,7 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert "continue-on-error: true" in pr_tests
     assert "continue-on-error: true" in main_tests
 
-    assert (
-        'pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto'
-        in manual_tests
-    )
+    assert 'pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto' in manual_tests
     assert 'pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto' in manual_tests
     assert 'rc" -eq 5' in manual_tests
     assert 'pip install -e ".[dev,pyomo]"' in manual_tests
@@ -144,6 +138,23 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert 'pytest tests/ -n auto -v -m "notebook" --cov=lyopronto' in notebook_tests
     assert "github.event.pull_request.draft == false" in notebook_tests
 
+    assert "lyopronto/pyomo_models/**" in pyomo_tests
+    assert "tests/test_pyomo_models/**" in pyomo_tests
+    assert 'pip install -e ".[dev,pyomo]"' in pyomo_tests
+    assert "pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v" in pyomo_tests
+    assert "idaes get-extensions --extra petsc" in pyomo_tests
+    assert "Install IPOPT with: idaes get-extensions --extra petsc" in pyomo_tests
+    assert "Alternative local install: conda install -c conda-forge ipopt" in pyomo_tests
+    assert "continue-on-error: true" in pyomo_tests
+    assert (
+        "tests/test_pyomo_models/test_single_step.py::test_single_step_solves_and_matches_scipy_reference"
+        in pyomo_tests
+    )
+    assert (
+        "tests/test_pyomo_models/test_trajectory.py::test_trajectory_solves_and_matches_scipy_reference"
+        in pyomo_tests
+    )
+
 
 def test_local_ci_script_matches_documented_lane_expressions() -> None:
     script = _text("run_local_ci.sh")
@@ -153,6 +164,8 @@ def test_local_ci_script_matches_documented_lane_expressions() -> None:
     assert 'SLOW_EXPR="slow and not pyomo"' in script
     assert 'NOTEBOOK_EXPR="notebook"' in script
     assert 'PYOMO_EXPR="pyomo"' in script
+    assert 'PYOMO_LIGHT_TARGETS="tests/test_pyomo_models tests/test_pyomo_solver.py"' in script
+    assert "pyomo-light" in script
     assert 'pip install -e ".[dev,pyomo]"' in script
     assert "idaes get-extensions --extra petsc" in script
     assert "pip install pyomo idaes-pse" not in script
@@ -172,9 +185,7 @@ def test_contributor_docs_include_ci_and_static_analysis_commands() -> None:
         ]
     )
 
-    assert (
-        'pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"' in docs
-    )
+    assert 'pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"' in docs
     assert 'pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto' in docs
     assert "Ruff linting" in docs
     assert "python -m ruff check lyopronto tests examples main.py" in docs
@@ -190,6 +201,9 @@ def test_contributor_docs_include_ci_and_static_analysis_commands() -> None:
     assert 'python -m pip install -e ".[dev,pyomo]"' in docs
     assert "idaes get-extensions --extra petsc" in docs
     assert "conda install -c conda-forge ipopt" in docs
+    assert "./run_local_ci.sh pyomo-light" in docs
+    assert "branch-protection required status checks" in docs
+    assert "job-level non-blocking" in docs
 
 
 def test_legacy_setup_py_metadata_removed() -> None:

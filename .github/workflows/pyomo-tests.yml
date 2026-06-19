@@ -1,0 +1,95 @@
+name: Pyomo Tests
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [ opened, synchronize, reopened, ready_for_review, converted_to_draft ]
+    paths:
+      - 'lyopronto/pyomo_models/**'
+      - 'tests/test_pyomo_models/**'
+  push:
+    branches: [ main ]
+    paths:
+      - 'lyopronto/pyomo_models/**'
+      - 'tests/test_pyomo_models/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pyomo-no-solver:
+    name: Pyomo import and construction lane
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Read CI version config
+      id: versions
+      uses: mikefarah/yq@v4.44.1
+      with:
+        cmd: yq eval '.python-version' .github/ci-config/ci-versions.yml
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ steps.versions.outputs.result }}
+        cache: 'pip'
+        cache-dependency-path: pyproject.toml
+
+    - name: Install Pyomo test dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        pip install -e ".[dev,pyomo]"
+
+    - name: Run Pyomo no-solver tests
+      run: |
+        echo "Running Pyomo import, model-construction, and solver-skip tests"
+        pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v
+
+  pyomo-solver-comparison:
+    name: Pyomo solver comparison lane (optional)
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
+    needs: pyomo-no-solver
+    continue-on-error: true
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Read CI version config
+      id: versions
+      uses: mikefarah/yq@v4.44.1
+      with:
+        cmd: yq eval '.python-version' .github/ci-config/ci-versions.yml
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ steps.versions.outputs.result }}
+        cache: 'pip'
+        cache-dependency-path: pyproject.toml
+
+    - name: Install Pyomo test dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        pip install -e ".[dev,pyomo]"
+
+    - name: Install optional Pyomo solver extensions
+      run: |
+        idaes get-extensions --extra petsc || {
+          rc=$?
+          echo "Failed to install IDAES solver extensions for the Pyomo lane."
+          echo "Install IPOPT with: idaes get-extensions --extra petsc"
+          echo "Alternative local install: conda install -c conda-forge ipopt"
+          exit "$rc"
+        }
+
+    - name: Run Pyomo SciPy comparison tests
+      run: |
+        pytest -n 0 -v \
+          tests/test_pyomo_models/test_single_step.py::test_single_step_solves_and_matches_scipy_reference \
+          tests/test_pyomo_models/test_single_step.py::test_single_step_cold_start_solves_and_matches_scipy_reference \
+          tests/test_pyomo_models/test_trajectory.py::test_trajectory_solves_and_matches_scipy_reference \
+          tests/test_pyomo_models/test_trajectory.py::test_trajectory_cold_start_solves_and_matches_scipy_reference

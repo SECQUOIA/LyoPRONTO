@@ -41,19 +41,30 @@ GitHub Actions plus `run_local_ci.sh`.
 - **Purpose:** Execute documentation notebooks separately from ordinary fast
   tests.
 
-### Pyomo Lane
+### Pyomo Light Lane
 
-- **Workflow:** `.github/workflows/slow-tests.yml`
-- **Trigger:** Manual workflow dispatch
+- **Workflow:** `.github/workflows/pyomo-tests.yml`
+- **Trigger:** Pull requests and pushes to `main` that change
+  `lyopronto/pyomo_models/**` or `tests/test_pyomo_models/**`
+- **Command:** `pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v`
+- **Purpose:** Required import, model-construction, and missing-solver skip
+  validation while keeping Pyomo out of default non-Pyomo PR lanes.
+
+### Pyomo Solver Lane
+
+- **Workflows:** `.github/workflows/pyomo-tests.yml`,
+  `.github/workflows/slow-tests.yml`
+- **Trigger:** Optional non-blocking path-filtered comparison job or manual
+  workflow dispatch
 - **Command:** `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
-- **Purpose:** Optional future validation for Pyomo/IPOPT tests. Until tracked
-  Pyomo tests exist, exit code 5 from pytest is treated as a no-op.
+- **Purpose:** Solver-backed Pyomo/IPOPT validation when the optional solver
+  stack is available.
 
 ## Marker Policy
 
 - `slow`: Long-running or optimizer-heavy tests excluded from the fast PR lane.
 - `notebook`: Papermill/Jupyter tests for documentation examples.
-- `pyomo`: Optional future tests requiring Pyomo and solver dependencies.
+- `pyomo`: Optional tests requiring Pyomo and solver dependencies.
 - `main`: Legacy `main.py` and high-level API behavior coverage.
 - `serial`: Tests that must be run without xdist, using `pytest -m serial -n 0`.
 
@@ -64,6 +75,7 @@ GitHub Actions plus `run_local_ci.sh`.
 ./run_local_ci.sh full
 ./run_local_ci.sh slow
 ./run_local_ci.sh notebook
+./run_local_ci.sh pyomo-light
 ./run_local_ci.sh pyomo
 ```
 

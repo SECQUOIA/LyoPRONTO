@@ -10,17 +10,19 @@ FULL_EXPR="not pyomo"
 SLOW_EXPR="slow and not pyomo"
 NOTEBOOK_EXPR="notebook"
 PYOMO_EXPR="pyomo"
+PYOMO_LIGHT_TARGETS="tests/test_pyomo_models tests/test_pyomo_solver.py"
 
 usage() {
     cat <<'USAGE'
-Usage: ./run_local_ci.sh [fast|full|slow|notebook|pyomo]
+Usage: ./run_local_ci.sh [fast|full|slow|notebook|pyomo-light|pyomo]
 
 Lanes:
   fast      PR feedback lane: excludes slow, notebook, and Pyomo tests.
   full      Full non-Pyomo validation with coverage.
   slow      Manual slow optimizer-heavy validation with coverage.
   notebook  Explicit notebook validation with coverage.
-  pyomo     Optional future Pyomo lane; installs .[dev,pyomo] and no collected tests is a no-op.
+  pyomo-light  Automatic Pyomo lane equivalent; installs .[dev,pyomo] without IPOPT.
+  pyomo     Optional solver-backed Pyomo lane; installs .[dev,pyomo] and IPOPT.
 
 Set SKIP_INSTALL=1 to skip dependency installation.
 USAGE
@@ -59,7 +61,7 @@ if [[ "$LANE" == "-h" || "$LANE" == "--help" ]]; then
 fi
 
 case "$LANE" in
-    fast|full|slow|notebook|pyomo)
+    fast|full|slow|notebook|pyomo-light|pyomo)
         ;;
     *)
         echo "Unknown lane: $LANE"
@@ -92,18 +94,22 @@ echo ""
 if [[ "${SKIP_INSTALL:-0}" != "1" ]]; then
     echo "3. Installing dependencies..."
     python -m pip install --upgrade pip setuptools wheel -q
-    if [[ "$LANE" == "pyomo" ]]; then
+    if [[ "$LANE" == "pyomo" || "$LANE" == "pyomo-light" ]]; then
         pip install -e ".[dev,pyomo]" -q
-        install_idaes_extensions
+        if [[ "$LANE" == "pyomo" ]]; then
+            install_idaes_extensions
+        fi
     else
         pip install -e ".[dev]" -q
     fi
     echo "   Dependencies installed"
 else
     echo "3. Skipping dependency installation because SKIP_INSTALL=1"
-    if [[ "$LANE" == "pyomo" ]]; then
+    if [[ "$LANE" == "pyomo" || "$LANE" == "pyomo-light" ]]; then
         echo '   Pyomo lane expects: python -m pip install -e ".[dev,pyomo]"'
-        echo "   IPOPT solver setup: idaes get-extensions --extra petsc"
+        if [[ "$LANE" == "pyomo" ]]; then
+            echo "   IPOPT solver setup: idaes get-extensions --extra petsc"
+        fi
     fi
 fi
 echo ""
@@ -125,6 +131,10 @@ case "$LANE" in
     notebook)
         echo "   Command: pytest tests/ -n auto -v -m \"$NOTEBOOK_EXPR\" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing"
         pytest tests/ -n auto -v -m "$NOTEBOOK_EXPR" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+        ;;
+    pyomo-light)
+        echo "   Command: pytest $PYOMO_LIGHT_TARGETS -n auto -v"
+        pytest $PYOMO_LIGHT_TARGETS -n auto -v
         ;;
     pyomo)
         echo "   Command: pytest tests/ -n auto -v -m \"$PYOMO_EXPR\" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing"

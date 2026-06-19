@@ -7,11 +7,12 @@ lanes for LyoPRONTO.
 
 | Lane | Marker expression | Where it runs | Purpose |
 | --- | --- | --- | --- |
-| Fast PR | `not slow and not notebook and not pyomo` | Every PR update in `.github/workflows/pr-tests.yml` | Quick contributor feedback without solver-heavy, notebook, or future Pyomo tests. |
+| Fast PR | `not slow and not notebook and not pyomo` | Every PR update in `.github/workflows/pr-tests.yml` | Quick contributor feedback without solver-heavy, notebook, or Pyomo tests. |
 | Full non-Pyomo | `not pyomo` | Ready/non-draft PRs and pushes to `main` | Main confidence gate with coverage for the tracked SciPy implementation. |
 | Slow non-Pyomo | `slow and not pyomo` | Manual validation workflow | Targeted optimizer-heavy validation. |
 | Notebook | `notebook` | Explicit notebook workflow | Executes documentation notebooks separately from ordinary fast tests. |
-| Pyomo | `pyomo` | Manual validation workflow | Optional future lane. No collected tests is treated as a no-op until tracked Pyomo tests exist. |
+| Pyomo light | `tests/test_pyomo_models tests/test_pyomo_solver.py` | Path-filtered automatic workflow and `./run_local_ci.sh pyomo-light` | Required import, model-construction, and missing-solver skip coverage without IPOPT. |
+| Pyomo solver | `pyomo` | Optional solver comparison workflow and manual validation workflow | Solver-backed SciPy comparison coverage when IPOPT is available. |
 
 ## Marker Policy
 
@@ -20,9 +21,9 @@ lanes for LyoPRONTO.
 - `notebook`: Papermill or Jupyter execution tests for documentation examples.
   Keep these in the explicit notebook lane.
 - `pyomo`: Tests that require Pyomo, IPOPT, or the Pyomo optimization stack.
-  There are currently no tracked Pyomo tests; the manual lane may no-op. Tests
-  that need IPOPT should call `tests.pyomo_solver.require_pyomo_solver("ipopt")`
-  so missing solver setup skips with an installation hint.
+  Model construction tests run automatically on Pyomo path changes. Tests that
+  need IPOPT should call `tests.pyomo_solver.require_pyomo_solver("ipopt")` so
+  missing solver setup skips with an installation hint.
 - `main`: Tests covering behavior that was historically reachable through
   `main.py` or the high-level API. This is a coverage label, not a CI lane.
 - `serial`: Tests that must not run under xdist parallelism. Run them with
@@ -57,6 +58,7 @@ Use the local CI wrapper when you want the same commands used by GitHub Actions:
 ./run_local_ci.sh full
 ./run_local_ci.sh slow
 ./run_local_ci.sh notebook
+./run_local_ci.sh pyomo-light
 ./run_local_ci.sh pyomo
 ```
 
@@ -67,6 +69,7 @@ pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"
 pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
 pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
 pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v
 pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
 ```
 
@@ -127,15 +130,24 @@ The current top warning sources audited for this policy are:
   pushes to `main`.
 - `.github/workflows/rundocs.yml` runs notebook-marked tests as an explicit
   notebook lane for ready PRs, `main`, and manual dispatch.
+- `.github/workflows/pyomo-tests.yml` runs on PRs or pushes that change
+  `lyopronto/pyomo_models/**` or `tests/test_pyomo_models/**`; its required
+  lane installs `.[dev,pyomo]` without IPOPT and its solver comparison job is
+  non-blocking.
 - `.github/workflows/slow-tests.yml` provides manual `slow-non-pyomo`,
   `full-non-pyomo`, and `pyomo` lanes.
 - Python version is read from `.github/ci-config/ci-versions.yml`.
+
+Do not configure path-filtered Pyomo jobs as branch-protection required status
+checks while `.github/workflows/pyomo-tests.yml` uses `paths`; they do not report
+on non-Pyomo PRs. The optional solver comparison job is job-level non-blocking,
+so inspect its logs when it runs.
 
 ## Best Practices
 
 - Mark optimizer-heavy or long-running tests with `@pytest.mark.slow`.
 - Mark papermill/Jupyter execution tests with `@pytest.mark.notebook`.
-- Mark future Pyomo/IPOPT tests with `@pytest.mark.pyomo`.
+- Mark Pyomo/IPOPT tests with `@pytest.mark.pyomo`.
 - Mark tests that cannot run under xdist with `@pytest.mark.serial`.
 - Do not use broad marker deselection to hide a failure. If a lane excludes a
   marker, document the reason in this file and in the workflow command.

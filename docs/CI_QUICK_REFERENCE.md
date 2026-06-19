@@ -9,6 +9,7 @@ python -m mypy lyopronto
 ./run_local_ci.sh full
 ./run_local_ci.sh slow
 ./run_local_ci.sh notebook
+./run_local_ci.sh pyomo-light
 ./run_local_ci.sh pyomo
 ```
 
@@ -42,7 +43,8 @@ conda install -c conda-forge ipopt
 | Full non-Pyomo | `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing` | `.github/workflows/pr-tests.yml`, `.github/workflows/tests.yml` |
 | Slow non-Pyomo | `pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing` | `.github/workflows/slow-tests.yml` |
 | Notebook | `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing` | `.github/workflows/rundocs.yml` |
-| Pyomo | `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing` | `.github/workflows/slow-tests.yml` |
+| Pyomo light | `pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v` | `.github/workflows/pyomo-tests.yml` |
+| Pyomo solver | `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing` | `.github/workflows/pyomo-tests.yml`, `.github/workflows/slow-tests.yml` |
 
 ## Triggers
 
@@ -50,14 +52,21 @@ conda install -c conda-forge ipopt
 - Ready/non-draft PRs targeting `main`: full non-Pyomo lane with coverage.
 - Pushes to `main`: static analysis and full non-Pyomo lane with coverage.
 - Ready/non-draft PRs, pushes to `main`, and manual dispatch: notebook lane.
+- PRs or pushes to `main` changing `lyopronto/pyomo_models/**` or
+  `tests/test_pyomo_models/**`: required Pyomo light lane and optional
+  non-blocking solver comparison.
 - Manual dispatch: slow non-Pyomo, full non-Pyomo, or optional Pyomo lane.
+
+Do not add the path-filtered Pyomo light job to branch-protection required
+status checks. It does not report on non-Pyomo PRs. The optional solver
+comparison job is job-level non-blocking, so review its logs when it runs.
 
 ## Marker Policy
 
 - `slow`: optimizer-heavy or long-running tests excluded from fast PR feedback.
 - `notebook`: papermill/Jupyter documentation tests.
-- `pyomo`: optional future Pyomo/IPOPT tests. No collected tests is a no-op in
-  the manual Pyomo lane. Tests that need IPOPT should use
+- `pyomo`: optional Pyomo/IPOPT tests. Model-construction coverage runs in the
+  path-filtered Pyomo light lane. Tests that need IPOPT should use
   `tests.pyomo_solver.require_pyomo_solver("ipopt")` for clear missing-solver
   skips.
 - `main`: legacy `main.py` and high-level API behavior coverage.

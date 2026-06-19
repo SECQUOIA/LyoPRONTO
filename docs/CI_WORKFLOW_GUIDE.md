@@ -3,14 +3,15 @@
 ## Overview
 
 LyoPRONTO uses explicit pytest marker lanes instead of a single ambiguous test
-suite. The workflows are designed around six lanes:
+suite. The workflows are designed around seven lanes:
 
 1. Static analysis
 2. Fast PR feedback
 3. Full non-Pyomo validation
 4. Manual slow non-Pyomo validation
 5. Explicit notebook validation
-6. Manual optional Pyomo validation
+6. Automatic Pyomo no-solver validation
+7. Optional Pyomo solver comparison
 
 The marker policy and local commands are also documented in `tests/README.md`.
 
@@ -58,31 +59,50 @@ Manual dispatch workflow with three lane choices:
   `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
 
 The Pyomo lane installs the optional Pyomo/IDAES stack and treats pytest exit
-code 5 as a no-op because the repository does not currently track Pyomo tests.
+code 5 as a no-op for manual compatibility.
+
+### `.github/workflows/pyomo-tests.yml`
+
+Runs when PRs or pushes to `main` change `lyopronto/pyomo_models/**` or
+`tests/test_pyomo_models/**`, and can also be started manually.
+
+- `pyomo-no-solver` installs `.[dev,pyomo]` without IPOPT and runs:
+  `pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v`
+- `pyomo-solver-comparison` is non-blocking, attempts
+  `idaes get-extensions --extra petsc`, and runs the Pyomo SciPy comparison
+  tests when the optional solver stack installs.
+
+The Pyomo workflow is path-filtered. Do not add `pyomo-no-solver` or
+`pyomo-solver-comparison` as branch-protection required status checks while the
+workflow uses `paths`, because they do not report on non-Pyomo PRs. If Pyomo
+status must be required repository-wide, add an always-running gate job first.
+The solver comparison job is job-level non-blocking; monitor its logs because
+both install failures and comparison test failures leave the PR status green.
 
 ## Optional Pyomo Setup
 
 Default installs and the normal development extra do not include Pyomo, IDAES,
-or IPOPT. Use the Pyomo extra only when developing or manually validating future
-Pyomo work:
+or IPOPT. Use the Pyomo extra only when developing or validating Pyomo work:
 
 ```bash
 python -m pip install -e ".[dev,pyomo]"
 idaes get-extensions --extra petsc
 ```
 
-The manual Pyomo workflow and `./run_local_ci.sh pyomo` use that same package
-extra and IDAES extension command. If you manage solvers through conda instead,
-install IPOPT into the active environment and ensure it is on PATH:
+The automatic Pyomo light workflow and `./run_local_ci.sh pyomo-light` use the
+package extra without installing IPOPT. The optional solver comparison workflow
+and `./run_local_ci.sh pyomo` also use the IDAES extension command. If you
+manage solvers through conda instead, install IPOPT into the active environment
+and ensure it is on PATH:
 
 ```bash
 conda install -c conda-forge ipopt
 ```
 
-Future Pyomo-marked tests should call
-`tests.pyomo_solver.require_pyomo_solver("ipopt")` before constructing models.
-That helper skips with these install hints when Pyomo or IPOPT is missing,
-instead of failing later with an opaque solver error.
+Pyomo-marked tests that need IPOPT should call
+`tests.pyomo_solver.require_pyomo_solver("ipopt")` before solving models. That
+helper skips with these install hints when Pyomo or IPOPT is missing, instead of
+failing later with an opaque solver error.
 
 ## Local Equivalents
 
@@ -95,6 +115,7 @@ python -m mypy lyopronto
 ./run_local_ci.sh full
 ./run_local_ci.sh slow
 ./run_local_ci.sh notebook
+./run_local_ci.sh pyomo-light
 ./run_local_ci.sh pyomo
 ```
 
@@ -109,15 +130,20 @@ SKIP_INSTALL=1 ./run_local_ci.sh fast
 1. Open or update a PR: static analysis and the fast lane run.
 2. Convert the PR out of draft: full non-Pyomo lane runs with coverage.
 3. Notebook lane runs separately for ready PRs.
-4. Reviewers can request manual slow or Pyomo lanes when relevant.
-5. Merge to `main`: static analysis and the full non-Pyomo lane run again.
+4. If the PR changes Pyomo model code or tests, the Pyomo light lane runs
+   automatically; the optional solver comparison runs for ready PRs.
+5. Reviewers can request manual slow or Pyomo lanes when relevant.
+6. Merge to `main`: static analysis and the full non-Pyomo lane run again, with
+   Pyomo lanes also path-filtered on Pyomo changes.
 
 ## Maintenance Notes
 
 - Keep marker expressions synchronized between workflows, `run_local_ci.sh`,
   and `tests/README.md`.
-- Do not add Pyomo validation to automatic PR/main workflows until tracked
-  Pyomo implementation and tests exist.
+- Keep automatic Pyomo validation isolated behind the Pyomo path filter so
+  default non-Pyomo PRs do not install optional Pyomo dependencies.
+- Do not configure path-filtered Pyomo jobs as branch-protection required status
+  checks unless an always-running gate job is added.
 - Do not broaden fast PR deselection beyond `slow`, `notebook`, and `pyomo`
   without documenting the reason.
 - Ruff linting is enforced in CI with the narrow Pyflakes rule set configured

@@ -7,7 +7,8 @@ configuration is:
 
 - Platform: Ubuntu latest
 - Python: read from `.github/ci-config/ci-versions.yml`
-- Dependency install: `pip install -e ".[dev]"`
+- Dependency install: default lanes use `pip install -e ".[dev]"`; Pyomo lanes
+  use `pip install -e ".[dev,pyomo]"`
 - Coverage upload: Codecov, non-blocking when configured
 
 The detailed workflow behavior is documented in `docs/CI_WORKFLOW_GUIDE.md`.
@@ -19,6 +20,7 @@ The detailed workflow behavior is documented in `docs/CI_WORKFLOW_GUIDE.md`.
 | `.github/workflows/pr-tests.yml` | Pull requests to `main` | Static analysis and fast PR lane for all PR updates; full non-Pyomo lane for ready/non-draft PRs |
 | `.github/workflows/tests.yml` | Pushes to `main` | Static analysis and full non-Pyomo lane |
 | `.github/workflows/rundocs.yml` | Ready PRs, pushes to `main`, manual dispatch | Notebook lane |
+| `.github/workflows/pyomo-tests.yml` | PRs and pushes to `main` changing `lyopronto/pyomo_models/**` or `tests/test_pyomo_models/**`; manual dispatch | Required Pyomo no-solver lane plus optional non-blocking solver comparison |
 | `.github/workflows/slow-tests.yml` | Manual dispatch | Slow non-Pyomo, full non-Pyomo, or optional Pyomo lane |
 | `.github/workflows/docs.yml` | Docs publish events | Documentation deployment |
 
@@ -38,6 +40,7 @@ Run CI-equivalent lanes locally with:
 ./run_local_ci.sh full
 ./run_local_ci.sh slow
 ./run_local_ci.sh notebook
+./run_local_ci.sh pyomo-light
 ./run_local_ci.sh pyomo
 ```
 
@@ -56,24 +59,35 @@ pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"
 pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
 pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
 pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v
 pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
 ```
 
-The manual Pyomo lane installs optional Pyomo/IDAES dependencies and treats
-pytest exit code 5 as a no-op until tracked Pyomo tests exist.
+The automatic Pyomo lane installs optional Pyomo/IDAES dependencies without
+IPOPT and relies on solver-backed tests to skip with installation hints. The
+optional solver comparison lane and manual Pyomo lane install IPOPT extensions
+when that deeper validation is needed.
+
+Do not configure the path-filtered Pyomo light job as a branch-protection
+required status check. Non-Pyomo PRs do not trigger `.github/workflows/pyomo-tests.yml`,
+so that check would never report for those PRs. If Pyomo status must become a
+repository-wide required check, add an always-running gate job first.
 
 ## Optional Pyomo Setup
 
 Normal runtime and development installs intentionally exclude Pyomo and IPOPT.
-For Pyomo development or the manual Pyomo lane, install the optional stack with:
+For Pyomo development, the automatic Pyomo lane, or the manual Pyomo lane,
+install the optional stack with:
 
 ```bash
 python -m pip install -e ".[dev,pyomo]"
 idaes get-extensions --extra petsc
 ```
 
-The same setup is used by `./run_local_ci.sh pyomo` and the manual validation
-workflow. A conda-managed local environment may instead install IPOPT with:
+The same package extra is used by `./run_local_ci.sh pyomo-light`. Solver-backed
+validation through `./run_local_ci.sh pyomo` and the optional CI comparison job
+also installs IPOPT with `idaes get-extensions --extra petsc`. A conda-managed
+local environment may instead install IPOPT with:
 
 ```bash
 conda install -c conda-forge ipopt
@@ -87,8 +101,11 @@ skips with a clear installation hint.
 
 - Keep marker expressions synchronized across workflows, `run_local_ci.sh`,
   `tests/README.md`, and this document.
-- Do not add automatic Pyomo jobs until tracked Pyomo implementation/tests
-  exist.
+- Keep automatic Pyomo coverage path-filtered to Pyomo code and tests so
+  default non-Pyomo PRs do not install optional Pyomo dependencies.
+- Monitor the optional solver comparison logs when they run. The job is
+  job-level non-blocking, so install failures and comparison failures do not
+  fail the PR status.
 - Keep notebook tests in the explicit notebook lane.
 - Keep slow optimizer-heavy tests out of the fast PR lane.
 - Ruff linting is enforced in CI with the narrow Pyflakes rule set configured

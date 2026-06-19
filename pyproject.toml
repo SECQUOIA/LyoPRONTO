@@ -121,7 +121,7 @@ markers = [
     "parametric: Parametric tests across multiple scenarios",
     "fast: Quick tests that run in under 1 second",
     "serial: Tests that must run without xdist parallelism; run with 'pytest -m serial -n 0'",
-    "pyomo: Optional future Pyomo/IPOPT tests; deselect with '-m not pyomo'",
+    "pyomo: Optional Pyomo/IPOPT tests; deselect with '-m not pyomo'",
     "notebook: Papermill/Jupyter notebook execution tests run in the notebook lane",
     "main: Legacy main.py and high-level API behavior tests",
 ]

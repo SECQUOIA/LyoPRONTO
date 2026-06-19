@@ -231,7 +231,10 @@ The active test and CI lanes are marker-based:
 - full non-Pyomo lane: tracked confidence gate with coverage
 - notebook lane: explicit Jupyter/papermill validation
 - slow non-Pyomo lane: manual optimizer-heavy validation
-- Pyomo lane: manual optional lane for environments with Pyomo and IPOPT
+- Pyomo light lane: path-filtered automatic validation for Pyomo model/test
+  changes without IPOPT
+- Pyomo solver lane: optional solver-backed validation for environments with
+  Pyomo and IPOPT
 
 The authoritative current testing policy is in `tests/README.md`. The CI
 workflow guide is in `docs/CI_WORKFLOW_GUIDE.md`.
@@ -242,7 +245,9 @@ Pyomo support is optional and additive. Current facts:
 
 - `lyopronto/pyomo_models/` contains tracked single-step and trajectory models.
 - Pyomo tests are marked `pyomo` and require optional Pyomo/IPOPT tooling.
-- automatic PR and main-branch workflows exclude Pyomo
+- automatic default PR and main-branch workflows exclude Pyomo, while
+  `.github/workflows/pyomo-tests.yml` runs when Pyomo model or test paths
+  change
 - manual Pyomo validation exercises the optional lane when the extra solver
   stack is installed
 

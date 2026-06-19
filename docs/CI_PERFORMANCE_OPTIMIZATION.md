@@ -9,7 +9,8 @@ CI performance is managed with marker-based lanes:
   coverage.
 - Slow optimizer-heavy validation is available through manual dispatch.
 - Notebook tests run in their own explicit workflow.
-- Pyomo validation is manual and optional until tracked Pyomo tests exist.
+- Pyomo light validation runs automatically only when Pyomo model or test paths
+  change; solver-backed Pyomo validation remains optional.
 
 ## Commands
 
@@ -26,7 +27,10 @@ pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xm
 # Explicit notebook validation
 pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
 
-# Manual Pyomo validation after installing .[dev,pyomo] and IPOPT
+# Automatic Pyomo light validation after installing .[dev,pyomo]
+pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v
+
+# Optional solver-backed Pyomo validation after installing .[dev,pyomo] and IPOPT
 pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
 ```
 
@@ -38,8 +42,8 @@ pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xm
   pay that cost.
 - Notebook execution is visible as its own lane instead of being hidden inside
   ordinary fast tests.
-- The optional Pyomo lane can be exercised manually without failing only because
-  no Pyomo tests have been added yet. Future Pyomo tests should use
+- The Pyomo light lane is path-filtered so default non-Pyomo PRs do not install
+  optional Pyomo dependencies. Solver-backed Pyomo tests should use
   `tests.pyomo_solver.require_pyomo_solver("ipopt")` so missing IPOPT setup is
   reported as a clear skip.
 

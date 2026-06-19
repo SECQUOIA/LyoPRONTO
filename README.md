@@ -103,10 +103,11 @@ pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverag
 ```
 
 `./run_local_ci.sh fast`, `./run_local_ci.sh full`,
-`./run_local_ci.sh slow`, `./run_local_ci.sh notebook`, and
-`./run_local_ci.sh pyomo` mirror the documented GitHub Actions lanes. Pyomo is
-a manual optional lane because Pyomo and IPOPT are optional solver
-dependencies, not requirements for the default SciPy package.
+`./run_local_ci.sh slow`, `./run_local_ci.sh notebook`,
+`./run_local_ci.sh pyomo-light`, and `./run_local_ci.sh pyomo` mirror the
+documented GitHub Actions lanes. Pyomo remains optional: the path-filtered
+automatic Pyomo lane installs `.[dev,pyomo]` without IPOPT, while
+solver-backed Pyomo validation stays optional.
 
 ## Documentation
 
