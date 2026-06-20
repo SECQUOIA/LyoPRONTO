@@ -140,12 +140,14 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
         "--cov=lyopronto --cov-config=.coveragerc.non-pyomo "
         "--cov-report=xml:coverage.xml --cov-report=term-missing"
     )
+    pr_non_pyomo_cov = "--cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing"
     pyomo_cov = "--cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing"
     fast_pr_command = 'pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"'
 
     assert fast_pr_command in pr_tests
     assert f"{fast_pr_command} --cov" not in pr_tests
-    assert f'pytest tests/ -n auto -v -m "not pyomo" {non_pyomo_cov}' in pr_tests
+    assert f'pytest tests/ -n auto -v -m "not pyomo" {pr_non_pyomo_cov}' in pr_tests
+    assert "--cov-report=xml:coverage.xml" not in pr_tests
     assert "--cov-report=term-missing" in pr_tests
     assert "codecov/codecov-action" not in pr_tests
     assert "pr-non-pyomo" not in pr_tests
@@ -240,8 +242,10 @@ def test_contributor_docs_include_ci_and_static_analysis_commands() -> None:
         "--cov=lyopronto --cov-config=.coveragerc.non-pyomo "
         "--cov-report=xml:coverage.xml --cov-report=term-missing"
     )
+    pr_non_pyomo_cov = "--cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing"
 
     assert 'pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"' in docs
+    assert f'pytest tests/ -n auto -v -m "not pyomo" {pr_non_pyomo_cov}' in docs
     assert f'pytest tests/ -n auto -v -m "not pyomo" {non_pyomo_cov}' in docs
     assert f'pytest tests/ -n auto -v -m "slow and not pyomo" {non_pyomo_cov}' in docs
     assert f'pytest tests/ -n auto -v -m "notebook" {non_pyomo_cov}' in docs

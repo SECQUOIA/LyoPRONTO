@@ -29,7 +29,7 @@ Runs on pull requests targeting `main`.
 - `fast-scipy` runs on every PR update:
   `pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"`
 - `full-non-pyomo` runs only for ready/non-draft PRs:
-  `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=xml:coverage.xml --cov-report=term-missing`
+  `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing`
 
 ### `.github/workflows/tests.yml`
 
@@ -70,7 +70,7 @@ the default configuration in the optional Pyomo lane.
 Codecov uploads are informational and non-blocking from pushes to `main`, the
 notebook workflow, and manual validation lanes. The PR workflow keeps coverage
 generation in the ready/non-draft full lane but does not upload coverage to
-Codecov.
+Codecov, so it logs only the terminal coverage report.
 
 ### `.github/workflows/pyomo-tests.yml`
 

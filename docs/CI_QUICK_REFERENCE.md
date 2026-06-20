@@ -40,7 +40,8 @@ conda install -c conda-forge ipopt
 | --- | --- | --- |
 | Static analysis | `python -m ruff check lyopronto tests examples main.py`; advisory `python -m mypy lyopronto` | `.github/workflows/pr-tests.yml`, `.github/workflows/tests.yml` |
 | Fast PR | `pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"` | `.github/workflows/pr-tests.yml` |
-| Full non-Pyomo | `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=xml:coverage.xml --cov-report=term-missing` | `.github/workflows/pr-tests.yml`, `.github/workflows/tests.yml` |
+| Full non-Pyomo PR | `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing` | `.github/workflows/pr-tests.yml` |
+| Full non-Pyomo main/local | `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=xml:coverage.xml --cov-report=term-missing` | `.github/workflows/tests.yml`, `run_local_ci.sh` |
 | Slow non-Pyomo | `pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=xml:coverage.xml --cov-report=term-missing` | `.github/workflows/slow-tests.yml` |
 | Notebook | `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=xml:coverage.xml --cov-report=term-missing` | `.github/workflows/rundocs.yml` |
 | Pyomo light | `pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v` | `.github/workflows/pyomo-tests.yml` |
