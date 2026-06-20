@@ -9,7 +9,8 @@ configuration is:
 - Python: read from `.github/ci-config/ci-versions.yml`
 - Dependency install: default lanes use `pip install -e ".[dev]"`; Pyomo lanes
   use `pip install -e ".[dev,pyomo]"`
-- Coverage upload: Codecov, non-blocking when configured
+- Coverage config: non-Pyomo coverage uses `.coveragerc.non-pyomo`
+- Coverage upload: none; Codecov uploads are not configured
 
 The detailed workflow behavior is documented in `docs/CI_WORKFLOW_GUIDE.md`.
 
@@ -56,11 +57,11 @@ SKIP_INSTALL=1 ./run_local_ci.sh fast
 python -m ruff check lyopronto tests examples main.py
 python -m mypy lyopronto
 pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"
-pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
-pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
-pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
+pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
+pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
 pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v
-pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=term-missing
 ```
 
 All pytest lanes inherit `--durations=25`, `--timeout=600`, and
@@ -72,6 +73,9 @@ The automatic Pyomo lane installs optional Pyomo/IDAES dependencies without
 IPOPT and relies on solver-backed tests to skip with installation hints. The
 optional solver comparison lane and manual Pyomo lane install IPOPT extensions
 when that deeper validation is needed.
+
+Codecov uploads are not configured. Coverage remains visible in terminal
+reports from the coverage lanes.
 
 Do not configure the path-filtered Pyomo light job as a branch-protection
 required status check. Non-Pyomo PRs do not trigger `.github/workflows/pyomo-tests.yml`,
@@ -108,6 +112,8 @@ skips with a clear installation hint.
   `tests/README.md`, and this document.
 - Keep automatic Pyomo coverage path-filtered to Pyomo code and tests so
   default non-Pyomo PRs do not install optional Pyomo dependencies.
+- Keep `.coveragerc.non-pyomo` on SciPy-only coverage commands so optional
+  Pyomo modules are not counted as unexecuted in non-Pyomo totals.
 - Monitor the optional solver comparison logs when they run. The job is
   job-level non-blocking, so install failures and comparison failures do not
   fail the PR status.

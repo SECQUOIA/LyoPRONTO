@@ -218,7 +218,7 @@ git push origin feature/descriptive-name
 pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"
 
 # Run with coverage
-pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
 
 # Run specific test
 pytest tests/test_functions.py::TestVaporPressure::test_vapor_pressure_at_freezing_point -v

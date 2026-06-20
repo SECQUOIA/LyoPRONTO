@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import configparser
 from importlib import metadata
 from pathlib import Path
 from typing import Any
@@ -83,6 +84,16 @@ def test_pytest_configuration_has_single_source() -> None:
     assert any(marker.startswith("pyomo:") for marker in config["markers"])
 
 
+def test_non_pyomo_coverage_config_omits_optional_pyomo_models() -> None:
+    config = configparser.ConfigParser()
+    path = ROOT / ".coveragerc.non-pyomo"
+
+    assert config.read(str(path)) == [str(path)]
+    omit = [value.strip() for value in config["run"]["omit"].splitlines() if value.strip()]
+
+    assert omit == ["lyopronto/pyomo_models/*"]
+
+
 def test_required_test_lane_markers_have_policy_descriptions() -> None:
     config = _pyproject()["tool"]["pytest"]["ini_options"]
     markers = {marker.split(":", maxsplit=1)[0]: marker for marker in config["markers"]}
@@ -125,13 +136,27 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     workflow_text = "\n".join(
         [pr_tests, main_tests, manual_tests, notebook_tests, pyomo_tests]
     )
+    non_pyomo_cov = (
+        "--cov=lyopronto --cov-config=.coveragerc.non-pyomo "
+        "--cov-report=term-missing"
+    )
+    pyomo_cov = "--cov=lyopronto --cov-report=term-missing"
+    fast_pr_command = 'pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"'
 
-    assert 'pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"' in pr_tests
-    assert 'pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto' in pr_tests
-    assert "--cov-report=term-missing" in pr_tests
+    assert fast_pr_command in pr_tests
+    assert f"{fast_pr_command} --cov" not in pr_tests
+    assert f'pytest tests/ -n auto -v -m "not pyomo" {non_pyomo_cov}' in pr_tests
+    assert "codecov/codecov-action" not in pr_tests
+    assert "pr-non-pyomo" not in pr_tests
     assert "github.event.pull_request.draft == false" in pr_tests
-    assert 'pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto' in main_tests
-    assert "--cov-report=term-missing" in main_tests
+    assert f'pytest tests/ -n auto -v -m "not pyomo" {non_pyomo_cov}' in main_tests
+    assert "--cov-report=term-missing" in workflow_text
+    assert "--cov-report=xml:coverage.xml" not in workflow_text
+    assert "coverage.xml" not in workflow_text
+    assert "codecov/codecov-action" not in workflow_text
+    assert "CODECOV_TOKEN" not in workflow_text
+    assert "fail_ci_if_error" not in workflow_text
+    assert "main-non-pyomo" not in workflow_text
     assert "pip install pyomo" not in pr_tests
     assert "pip install pyomo" not in main_tests
     assert 'pip install -e ".[dev,pyomo]"' not in pr_tests
@@ -144,19 +169,24 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert "continue-on-error: true" in main_tests
     assert "--durations=25" not in workflow_text
 
-    assert 'pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto' in manual_tests
-    assert 'pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto' in manual_tests
+    assert f'pytest tests/ -n auto -v -m "slow and not pyomo" {non_pyomo_cov}' in manual_tests
+    assert f'pytest tests/ -n auto -v -m "not pyomo" {non_pyomo_cov}' in manual_tests
+    assert f'pytest tests/ -n auto -v -m "pyomo" {pyomo_cov}' in manual_tests
+    assert manual_tests.count("--cov-config=.coveragerc.non-pyomo") == 2
     assert manual_tests.count("--cov-report=term-missing") == 3
+    assert "manual-${{ inputs.lane }}" not in manual_tests
+    assert "manual-validation" not in manual_tests
     assert 'rc" -eq 5' in manual_tests
     assert 'pip install -e ".[dev,pyomo]"' in manual_tests
     assert "idaes get-extensions --extra petsc" in manual_tests
     assert "pip install pyomo idaes-pse" not in manual_tests
     assert "RUN_SLOW_TESTS" not in manual_tests
 
-    assert 'pytest tests/ -n auto -v -m "notebook" --cov=lyopronto' in notebook_tests
+    assert f'pytest tests/ -n auto -v -m "notebook" {non_pyomo_cov}' in notebook_tests
     assert "--cov-report=term-missing" in notebook_tests
     assert "github.event.pull_request.draft == false" in notebook_tests
 
+    assert "--cov-config=.coveragerc.non-pyomo" not in pyomo_tests
     assert "lyopronto/pyomo_models/**" in pyomo_tests
     assert "tests/test_pyomo_models/**" in pyomo_tests
     assert 'pip install -e ".[dev,pyomo]"' in pyomo_tests
@@ -185,6 +215,10 @@ def test_local_ci_script_matches_documented_lane_expressions() -> None:
     assert 'NOTEBOOK_EXPR="notebook"' in script
     assert 'PYOMO_EXPR="pyomo"' in script
     assert 'PYOMO_LIGHT_TARGETS="tests/test_pyomo_models tests/test_pyomo_solver.py"' in script
+    assert 'NON_PYOMO_COV_CONFIG=".coveragerc.non-pyomo"' in script
+    assert script.count('--cov-config="$NON_PYOMO_COV_CONFIG"') == 3
+    assert "--cov-report=xml:coverage.xml" not in script
+    assert "coverage.xml" not in script
     assert "--durations=25" not in script
     assert "pyomo-light" in script
     assert 'pip install -e ".[dev,pyomo]"' in script
@@ -205,10 +239,19 @@ def test_contributor_docs_include_ci_and_static_analysis_commands() -> None:
             _text("docs/JULIA_PARITY_MATRIX.md"),
         ]
     )
+    non_pyomo_cov = (
+        "--cov=lyopronto --cov-config=.coveragerc.non-pyomo "
+        "--cov-report=term-missing"
+    )
 
     assert 'pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"' in docs
-    assert 'pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto' in docs
+    assert f'pytest tests/ -n auto -v -m "not pyomo" {non_pyomo_cov}' in docs
+    assert f'pytest tests/ -n auto -v -m "slow and not pyomo" {non_pyomo_cov}' in docs
+    assert f'pytest tests/ -n auto -v -m "notebook" {non_pyomo_cov}' in docs
     assert "--cov-report=term-missing" in docs
+    assert "--cov-report=xml:coverage.xml" not in docs
+    assert ".coveragerc.non-pyomo" in docs
+    assert "Codecov uploads are not configured" in docs
     assert "--durations=25" in docs
     assert "--timeout=600" in docs
     assert "--timeout-method=thread" in docs

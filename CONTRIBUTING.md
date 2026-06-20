@@ -8,11 +8,11 @@ LyoPRONTO uses explicit pytest marker lanes so contributors and reviewers can
 choose the right feedback level:
 
 - **Fast PR lane:** `pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"`
-- **Full non-Pyomo lane:** `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
-- **Slow manual lane:** `pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
-- **Notebook lane:** `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+- **Full non-Pyomo lane:** `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing`
+- **Slow manual lane:** `pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing`
+- **Notebook lane:** `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing`
 - **Pyomo light lane:** `pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v`
-- **Pyomo solver lane:** `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+- **Pyomo solver lane:** `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=term-missing`
 
 All pytest lanes inherit `--durations=25`, `--timeout=600`, and
 `--timeout-method=thread` from the shared pytest configuration through
@@ -31,6 +31,8 @@ changes run a path-filtered Pyomo light workflow; slow and solver-backed Pyomo
 validation are available through optional/manual workflows. Static analysis runs
 as its own CI lane: Ruff linting is enforced, and mypy is advisory while the
 remaining project type errors are staged for follow-up work.
+Non-Pyomo coverage lanes use `.coveragerc.non-pyomo` so optional Pyomo modules
+do not appear as unexecuted files in SciPy-only reports.
 
 Warnings are part of the test signal. The default pytest configuration keeps
 warnings visible instead of using `--disable-warnings`. When a test deliberately

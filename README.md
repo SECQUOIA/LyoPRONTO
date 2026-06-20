@@ -99,7 +99,7 @@ pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"
 The full tracked validation lane is:
 
 ```bash
-pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
 ```
 
 `./run_local_ci.sh fast`, `./run_local_ci.sh full`,

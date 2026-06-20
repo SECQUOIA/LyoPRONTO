@@ -40,14 +40,17 @@ conda install -c conda-forge ipopt
 | --- | --- | --- |
 | Static analysis | `python -m ruff check lyopronto tests examples main.py`; advisory `python -m mypy lyopronto` | `.github/workflows/pr-tests.yml`, `.github/workflows/tests.yml` |
 | Fast PR | `pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"` | `.github/workflows/pr-tests.yml` |
-| Full non-Pyomo | `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing` | `.github/workflows/pr-tests.yml`, `.github/workflows/tests.yml` |
-| Slow non-Pyomo | `pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing` | `.github/workflows/slow-tests.yml` |
-| Notebook | `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing` | `.github/workflows/rundocs.yml` |
+| Full non-Pyomo PR | `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing` | `.github/workflows/pr-tests.yml` |
+| Full non-Pyomo main/local | `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing` | `.github/workflows/tests.yml`, `run_local_ci.sh` |
+| Slow non-Pyomo | `pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing` | `.github/workflows/slow-tests.yml` |
+| Notebook | `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing` | `.github/workflows/rundocs.yml` |
 | Pyomo light | `pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v` | `.github/workflows/pyomo-tests.yml` |
-| Pyomo solver | `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing` | `.github/workflows/pyomo-tests.yml`, `.github/workflows/slow-tests.yml` |
+| Pyomo solver | `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=term-missing` | `.github/workflows/pyomo-tests.yml`, `.github/workflows/slow-tests.yml` |
 
 All pytest lanes inherit `--durations=25`, `--timeout=600`, and
 `--timeout-method=thread` from `pyproject.toml`.
+Non-Pyomo coverage uses `.coveragerc.non-pyomo` to keep optional Pyomo modules
+out of SciPy-only totals.
 
 ## Triggers
 
@@ -63,6 +66,8 @@ All pytest lanes inherit `--durations=25`, `--timeout=600`, and
 Do not add the path-filtered Pyomo light job to branch-protection required
 status checks. It does not report on non-Pyomo PRs. The optional solver
 comparison job is job-level non-blocking, so review its logs when it runs.
+Codecov uploads are not configured. Coverage remains visible in terminal
+reports from the full, notebook, slow, and Pyomo solver lanes.
 
 ## Marker Policy
 

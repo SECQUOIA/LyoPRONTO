@@ -40,7 +40,7 @@ Current local commands:
 python -m ruff check lyopronto tests examples main.py
 python -m mypy lyopronto
 pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"
-pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
 ```
 
 The same lanes are available through:
