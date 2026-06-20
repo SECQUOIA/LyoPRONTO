@@ -576,6 +576,8 @@
   pay that cost.</li>
 <li>Notebook execution is visible as its own lane instead of being hidden inside
   ordinary fast tests.</li>
+<li>Each pytest lane inherits the shared <code>--durations=25</code>, <code>--timeout=600</code>,
+  and <code>--timeout-method=thread</code> configuration so hangs fail clearly.</li>
 <li>The Pyomo light lane is path-filtered so default non-Pyomo PRs do not install
   optional Pyomo dependencies. Solver-backed Pyomo tests should use
   <code>tests.pyomo_solver.require_pyomo_solver("ipopt")</code> so missing IPOPT setup is

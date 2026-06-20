@@ -629,8 +629,8 @@ GitHub Actions plus <code>run_local_ci.sh</code>.</p>
   <code>.github/workflows/tests.yml</code></li>
 <li><strong>Trigger:</strong> Ready/non-draft PRs and pushes to <code>main</code></li>
 <li><strong>Command:</strong> <code>pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing</code></li>
-<li><strong>Purpose:</strong> Main confidence gate for tracked behavior while Pyomo remains a
-  planned optional stack.</li>
+<li><strong>Purpose:</strong> Main confidence gate for tracked behavior while Pyomo remains an
+  implemented optional stack.</li>
 </ul>
 <h3 id="slow-non-pyomo-lane">Slow Non-Pyomo Lane</h3>
 <ul>
@@ -671,10 +671,12 @@ GitHub Actions plus <code>run_local_ci.sh</code>.</p>
 <ul>
 <li><code>slow</code>: Long-running or optimizer-heavy tests excluded from the fast PR lane.</li>
 <li><code>notebook</code>: Papermill/Jupyter tests for documentation examples.</li>
-<li><code>pyomo</code>: Optional tests requiring Pyomo and solver dependencies.</li>
+<li><code>pyomo</code>: Implemented optional Pyomo model and solver tests.</li>
 <li><code>main</code>: Legacy <code>main.py</code> and high-level API behavior coverage.</li>
 <li><code>serial</code>: Tests that must be run without xdist, using <code>pytest -m serial -n 0</code>.</li>
 </ul>
+<p>All lanes inherit <code>--durations=25</code>, <code>--timeout=600</code>, and
+<code>--timeout-method=thread</code> from <code>pyproject.toml</code>.</p>
 <h2 id="local-usage">Local Usage</h2>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>./run_local_ci.sh<span class="w"> </span>fast
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>./run_local_ci.sh<span class="w"> </span>full

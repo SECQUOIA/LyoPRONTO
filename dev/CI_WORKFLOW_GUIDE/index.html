@@ -633,7 +633,9 @@ suite. The workflows are designed around seven lanes:</p>
 <li>Automatic Pyomo no-solver validation</li>
 <li>Optional Pyomo solver comparison</li>
 </ol>
-<p>The marker policy and local commands are also documented in <code>tests/README.md</code>.</p>
+<p>The marker policy and local commands are also documented in <code>tests/README.md</code>.
+Each pytest lane inherits <code>--durations=25</code>, <code>--timeout=600</code>, and
+<code>--timeout-method=thread</code> from the shared pytest configuration.</p>
 <h2 id="workflows">Workflows</h2>
 <h3 id="githubworkflowspr-testsyml"><code>.github/workflows/pr-tests.yml</code></h3>
 <p>Runs on pull requests targeting <code>main</code>.</p>

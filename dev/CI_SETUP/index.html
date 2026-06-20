@@ -639,6 +639,10 @@ configuration is:</p>
 </span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>pytest<span class="w"> </span>tests/test_pyomo_models<span class="w"> </span>tests/test_pyomo_solver.py<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v
 </span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;pyomo&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-report<span class="o">=</span>xml:coverage.xml<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
 </span></code></pre></div>
+<p>All pytest lanes inherit <code>--durations=25</code>, <code>--timeout=600</code>, and
+<code>--timeout-method=thread</code> from the shared pytest configuration through
+<code>pytest-timeout</code> from the <code>dev</code> extra, including Pyomo lanes that install
+<code>.[dev,pyomo]</code>.</p>
 <p>The automatic Pyomo lane installs optional Pyomo/IDAES dependencies without
 IPOPT and relies on solver-backed tests to skip with installation hints. The
 optional solver comparison lane and manual Pyomo lane install IPOPT extensions

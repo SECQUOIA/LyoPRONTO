@@ -618,6 +618,8 @@ solver extensions:</p>
 </tr>
 </tbody>
 </table>
+<p>All pytest lanes inherit <code>--durations=25</code>, <code>--timeout=600</code>, and
+<code>--timeout-method=thread</code> from <code>pyproject.toml</code>.</p>
 <h2 id="triggers">Triggers</h2>
 <ul>
 <li>PR updates targeting <code>main</code>: static analysis and fast lane.</li>
@@ -636,8 +638,9 @@ comparison job is job-level non-blocking, so review its logs when it runs.</p>
 <ul>
 <li><code>slow</code>: optimizer-heavy or long-running tests excluded from fast PR feedback.</li>
 <li><code>notebook</code>: papermill/Jupyter documentation tests.</li>
-<li><code>pyomo</code>: optional Pyomo/IPOPT tests. Model-construction coverage runs in the
-  path-filtered Pyomo light lane. Tests that need IPOPT should use
+<li><code>pyomo</code>: implemented optional Pyomo model and IPOPT solver tests.
+  Model-construction coverage runs in the path-filtered Pyomo light lane.
+  Tests that need IPOPT should use
   <code>tests.pyomo_solver.require_pyomo_solver("ipopt")</code> for clear missing-solver
   skips.</li>
 <li><code>main</code>: legacy <code>main.py</code> and high-level API behavior coverage.</li>
