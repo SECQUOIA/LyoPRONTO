@@ -22,8 +22,8 @@ GitHub Actions plus `run_local_ci.sh`.
   `.github/workflows/tests.yml`
 - **Trigger:** Ready/non-draft PRs and pushes to `main`
 - **Command:** `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
-- **Purpose:** Main confidence gate for tracked behavior while Pyomo remains a
-  planned optional stack.
+- **Purpose:** Main confidence gate for tracked behavior while Pyomo remains an
+  implemented optional stack.
 
 ### Slow Non-Pyomo Lane
 
@@ -64,9 +64,12 @@ GitHub Actions plus `run_local_ci.sh`.
 
 - `slow`: Long-running or optimizer-heavy tests excluded from the fast PR lane.
 - `notebook`: Papermill/Jupyter tests for documentation examples.
-- `pyomo`: Optional tests requiring Pyomo and solver dependencies.
+- `pyomo`: Implemented optional Pyomo model and solver tests.
 - `main`: Legacy `main.py` and high-level API behavior coverage.
 - `serial`: Tests that must be run without xdist, using `pytest -m serial -n 0`.
+
+All lanes inherit `--durations=25`, `--timeout=600`, and
+`--timeout-method=thread` from `pyproject.toml`.
 
 ## Local Usage
 

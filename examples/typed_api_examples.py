@@ -215,7 +215,7 @@ def run_rf_fitting() -> dict[str, Any]:
     fit = PrimaryDryFit(sol.t_hours, sol.tf, Tvws=sol.tvw, t_end=sol.drying_time)
     transform = KBBTransform(params.Kvwf * 0.5, params.Bf * 0.5, params.Bvw * 0.5)
     result = fit_rf_primary_drying(
-        params, fit, transform, max_nfev=16, xtol=1e-7, ftol=1e-7, gtol=1e-7
+        params, fit, transform, max_nfev=24, xtol=1e-7, ftol=1e-7, gtol=1e-7
     )
     fitted = result.fitted_params
     return {

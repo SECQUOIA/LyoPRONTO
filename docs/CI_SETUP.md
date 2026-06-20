@@ -63,6 +63,11 @@ pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v
 pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
 ```
 
+All pytest lanes inherit `--durations=25`, `--timeout=600`, and
+`--timeout-method=thread` from the shared pytest configuration through
+`pytest-timeout` from the `dev` extra, including Pyomo lanes that install
+`.[dev,pyomo]`.
+
 The automatic Pyomo lane installs optional Pyomo/IDAES dependencies without
 IPOPT and relies on solver-backed tests to skip with installation hints. The
 optional solver comparison lane and manual Pyomo lane install IPOPT extensions

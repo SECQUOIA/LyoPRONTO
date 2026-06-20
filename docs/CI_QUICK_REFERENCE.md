@@ -46,6 +46,9 @@ conda install -c conda-forge ipopt
 | Pyomo light | `pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v` | `.github/workflows/pyomo-tests.yml` |
 | Pyomo solver | `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing` | `.github/workflows/pyomo-tests.yml`, `.github/workflows/slow-tests.yml` |
 
+All pytest lanes inherit `--durations=25`, `--timeout=600`, and
+`--timeout-method=thread` from `pyproject.toml`.
+
 ## Triggers
 
 - PR updates targeting `main`: static analysis and fast lane.
@@ -65,8 +68,9 @@ comparison job is job-level non-blocking, so review its logs when it runs.
 
 - `slow`: optimizer-heavy or long-running tests excluded from fast PR feedback.
 - `notebook`: papermill/Jupyter documentation tests.
-- `pyomo`: optional Pyomo/IPOPT tests. Model-construction coverage runs in the
-  path-filtered Pyomo light lane. Tests that need IPOPT should use
+- `pyomo`: implemented optional Pyomo model and IPOPT solver tests.
+  Model-construction coverage runs in the path-filtered Pyomo light lane.
+  Tests that need IPOPT should use
   `tests.pyomo_solver.require_pyomo_solver("ipopt")` for clear missing-solver
   skips.
 - `main`: legacy `main.py` and high-level API behavior coverage.

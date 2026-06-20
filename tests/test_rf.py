@@ -329,7 +329,7 @@ def test_fit_rf_primary_drying_least_squares_recovers_kbb(synthetic_rf_params):
         synthetic_rf_params,
         fit,
         transform,
-        max_nfev=16,
+        max_nfev=24,
         xtol=1e-7,
         ftol=1e-7,
         gtol=1e-7,

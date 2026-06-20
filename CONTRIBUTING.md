@@ -14,6 +14,10 @@ choose the right feedback level:
 - **Pyomo light lane:** `pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v`
 - **Pyomo solver lane:** `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
 
+All pytest lanes inherit `--durations=25`, `--timeout=600`, and
+`--timeout-method=thread` from the shared pytest configuration through
+`pytest-timeout` from the `dev` extra.
+
 The same commands are available locally through `./run_local_ci.sh fast`,
 `./run_local_ci.sh full`, `./run_local_ci.sh slow`,
 `./run_local_ci.sh notebook`, `./run_local_ci.sh pyomo-light`, and

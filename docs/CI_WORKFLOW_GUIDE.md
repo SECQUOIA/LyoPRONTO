@@ -14,6 +14,8 @@ suite. The workflows are designed around seven lanes:
 7. Optional Pyomo solver comparison
 
 The marker policy and local commands are also documented in `tests/README.md`.
+Each pytest lane inherits `--durations=25`, `--timeout=600`, and
+`--timeout-method=thread` from the shared pytest configuration.
 
 ## Workflows
 

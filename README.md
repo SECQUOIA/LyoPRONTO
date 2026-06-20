@@ -109,6 +109,10 @@ documented GitHub Actions lanes. Pyomo remains optional: the path-filtered
 automatic Pyomo lane installs `.[dev,pyomo]` without IPOPT, while
 solver-backed Pyomo validation stays optional.
 
+All pytest lanes inherit `--durations=25`, `--timeout=600`, and
+`--timeout-method=thread` from the shared pytest configuration through
+`pytest-timeout` from the `dev` extra so hung tests fail clearly.
+
 ## Documentation
 
 Build the documentation site with:

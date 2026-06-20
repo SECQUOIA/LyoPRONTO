@@ -35,6 +35,9 @@ which runs
 pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
 ```
 
+All pytest lanes inherit `--durations=25`, `--timeout=600`, and
+`--timeout-method=thread` from `pyproject.toml`.
+
 Notebook, slow, and Pyomo validation are separate lanes:
 `./run_local_ci.sh notebook`, `./run_local_ci.sh slow`,
 `./run_local_ci.sh pyomo-light`, and `./run_local_ci.sh pyomo`.

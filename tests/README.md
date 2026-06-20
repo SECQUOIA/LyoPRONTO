@@ -73,6 +73,11 @@ pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v
 pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
 ```
 
+Each lane inherits `--durations=25`, `--timeout=600`, and
+`--timeout-method=thread` from the shared pytest defaults through
+`pytest-timeout` from the `dev` extra, so a hung test fails clearly without
+requiring the Pyomo extra.
+
 ## Optional Pyomo Setup
 
 Default package installs and `.[dev]` do not include Pyomo, IDAES, or IPOPT.

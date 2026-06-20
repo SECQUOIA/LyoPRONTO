@@ -58,6 +58,9 @@ The Pyomo light lane mirrors the automatic path-filtered CI job for Pyomo model
 and test changes. Solver-backed Pyomo validation remains optional. See
 `tests/README.md` for the authoritative marker policy.
 
+Pytest lanes inherit `--durations=25`, `--timeout=600`, and
+`--timeout-method=thread` from the shared pytest configuration.
+
 ## Building the Site
 
 Install documentation dependencies:

@@ -42,6 +42,8 @@ pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xm
   pay that cost.
 - Notebook execution is visible as its own lane instead of being hidden inside
   ordinary fast tests.
+- Each pytest lane inherits the shared `--durations=25`, `--timeout=600`,
+  and `--timeout-method=thread` configuration so hangs fail clearly.
 - The Pyomo light lane is path-filtered so default non-Pyomo PRs do not install
   optional Pyomo dependencies. Solver-backed Pyomo tests should use
   `tests.pyomo_solver.require_pyomo_solver("ipopt")` so missing IPOPT setup is
