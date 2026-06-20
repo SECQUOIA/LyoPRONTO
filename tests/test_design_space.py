@@ -188,6 +188,74 @@ class TestDesignSpaceEdgeCases:
             "Output should contain NaNs for infeasible conditions"
         )
 
+    def test_design_space_high_pressure(self, design_space_1T1P):
+        """High chamber pressure should finish with NaNs for infeasible drying modes."""
+        vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial = design_space_1T1P
+        Pchamber["setpt"] = [150.0]
+
+        with pytest.warns(UserWarning, match="sublimation"):
+            output = design_space.dry(
+                vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial
+            )
+
+        check_shape(output, Pchamber, Tshelf)
+        assert np.any(np.isnan(output[0])), (
+            "Output should contain NaNs for infeasible shelf-temperature isotherms"
+        )
+        assert np.any(np.isnan(output[1])), (
+            "Output should contain NaNs for infeasible product-temperature isotherms"
+        )
+        assert not np.any(np.isnan(output[2])), (
+            "Equipment capability should remain finite when its rate is positive"
+        )
+
+    def test_design_space_high_temperature_high_pressure(self, design_space_1T1P):
+        """High shelf temperature with high pressure should not enter invalid loops."""
+        vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial = design_space_1T1P
+        Tshelf["setpt"] = [20.0]
+        Pchamber["setpt"] = [150.0]
+
+        with pytest.warns(UserWarning, match="sublimation"):
+            output = design_space.dry(
+                vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial
+            )
+
+        check_shape(output, Pchamber, Tshelf)
+        assert np.any(np.isnan(output[0])), (
+            "Output should contain NaNs for infeasible shelf-temperature isotherms"
+        )
+        assert np.any(np.isnan(output[1])), (
+            "Output should contain NaNs for infeasible product-temperature isotherms"
+        )
+        assert not np.any(np.isnan(output[2])), (
+            "Equipment capability should remain finite when its rate is positive"
+        )
+
+    def test_design_space_hot_dry_infeasible_product_limit(self, design_space_1T1P):
+        """Hot dry conditions should report melting and impossible product isotherms."""
+        vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial = design_space_1T1P
+        Tshelf["setpt"] = [20.0]
+        Pchamber["setpt"] = [15.0]
+
+        with pytest.warns(UserWarning) as warning_record:
+            output = design_space.dry(
+                vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial
+            )
+
+        messages = [str(warning.message) for warning in warning_record]
+        assert any("melting point" in message for message in messages)
+        assert any("sublimation is not feasible" in message for message in messages)
+        check_shape(output, Pchamber, Tshelf)
+        assert np.any(np.isnan(output[0])), (
+            "Output should contain NaNs for physically invalid shelf-temperature data"
+        )
+        assert np.any(np.isnan(output[1])), (
+            "Output should contain NaNs for infeasible product-temperature isotherms"
+        )
+        assert not np.any(np.isnan(output[2])), (
+            "Equipment capability should remain finite when its rate is positive"
+        )
+
     def test_design_space_shelf_ramp_down(self, design_space_1T1P):
         """Test design space with ramp-down in shelf temperature."""
         vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial = design_space_1T1P
@@ -259,6 +327,15 @@ class TestDesignSpaceEdgeCases:
             )
 
         check_shape(output, Pchamber, Tshelf)
+        assert not np.any(np.isnan(output[0])), (
+            "Output should contain no NaNs for feasible shelf-temperature isotherms"
+        )
+        assert not np.any(np.isnan(output[1])), (
+            "Output should contain no NaNs for feasible product-temperature isotherms"
+        )
+        assert np.any(np.isnan(output[2])), (
+            "Output should contain NaNs for infeasible equipment capability"
+        )
 
 
 class TestDesignSpaceComparison:
