@@ -1,0 +1,3 @@
+[run]
+omit =
+    lyopronto/pyomo_models/*

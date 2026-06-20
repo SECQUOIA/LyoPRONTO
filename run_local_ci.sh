@@ -11,6 +11,7 @@ SLOW_EXPR="slow and not pyomo"
 NOTEBOOK_EXPR="notebook"
 PYOMO_EXPR="pyomo"
 PYOMO_LIGHT_TARGETS="tests/test_pyomo_models tests/test_pyomo_solver.py"
+NON_PYOMO_COV_CONFIG=".coveragerc.non-pyomo"
 
 usage() {
     cat <<'USAGE'
@@ -121,16 +122,16 @@ case "$LANE" in
         pytest tests/ -n auto -v -m "$FAST_EXPR"
         ;;
     full)
-        echo "   Command: pytest tests/ -n auto -v -m \"$FULL_EXPR\" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing"
-        pytest tests/ -n auto -v -m "$FULL_EXPR" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+        echo "   Command: pytest tests/ -n auto -v -m \"$FULL_EXPR\" --cov=lyopronto --cov-config=$NON_PYOMO_COV_CONFIG --cov-report=xml:coverage.xml --cov-report=term-missing"
+        pytest tests/ -n auto -v -m "$FULL_EXPR" --cov=lyopronto --cov-config="$NON_PYOMO_COV_CONFIG" --cov-report=xml:coverage.xml --cov-report=term-missing
         ;;
     slow)
-        echo "   Command: pytest tests/ -n auto -v -m \"$SLOW_EXPR\" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing"
-        pytest tests/ -n auto -v -m "$SLOW_EXPR" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+        echo "   Command: pytest tests/ -n auto -v -m \"$SLOW_EXPR\" --cov=lyopronto --cov-config=$NON_PYOMO_COV_CONFIG --cov-report=xml:coverage.xml --cov-report=term-missing"
+        pytest tests/ -n auto -v -m "$SLOW_EXPR" --cov=lyopronto --cov-config="$NON_PYOMO_COV_CONFIG" --cov-report=xml:coverage.xml --cov-report=term-missing
         ;;
     notebook)
-        echo "   Command: pytest tests/ -n auto -v -m \"$NOTEBOOK_EXPR\" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing"
-        pytest tests/ -n auto -v -m "$NOTEBOOK_EXPR" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+        echo "   Command: pytest tests/ -n auto -v -m \"$NOTEBOOK_EXPR\" --cov=lyopronto --cov-config=$NON_PYOMO_COV_CONFIG --cov-report=xml:coverage.xml --cov-report=term-missing"
+        pytest tests/ -n auto -v -m "$NOTEBOOK_EXPR" --cov=lyopronto --cov-config="$NON_PYOMO_COV_CONFIG" --cov-report=xml:coverage.xml --cov-report=term-missing
         ;;
     pyomo-light)
         echo "   Command: pytest $PYOMO_LIGHT_TARGETS -n auto -v"

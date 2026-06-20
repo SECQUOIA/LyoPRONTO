@@ -41,7 +41,7 @@ jobs:
     - name: Run notebook tests
       run: |
         echo "Running explicit notebook validation lane"
-        pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+        pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=xml:coverage.xml --cov-report=term-missing
 
     - name: Upload coverage
       uses: codecov/codecov-action@v4

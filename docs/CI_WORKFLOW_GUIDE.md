@@ -29,7 +29,7 @@ Runs on pull requests targeting `main`.
 - `fast-scipy` runs on every PR update:
   `pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"`
 - `full-non-pyomo` runs only for ready/non-draft PRs:
-  `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+  `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=xml:coverage.xml --cov-report=term-missing`
 
 ### `.github/workflows/tests.yml`
 
@@ -39,7 +39,7 @@ Runs on pushes to `main`.
   `python -m ruff check lyopronto tests examples main.py`
   and advisory `python -m mypy lyopronto`
 - `full-non-pyomo` runs the main confidence gate:
-  `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+  `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=xml:coverage.xml --cov-report=term-missing`
 
 ### `.github/workflows/rundocs.yml`
 
@@ -47,21 +47,30 @@ Runs notebook validation for ready/non-draft PRs, pushes to `main`, and manual
 dispatch.
 
 - `notebook-tests` runs:
-  `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+  `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=xml:coverage.xml --cov-report=term-missing`
 
 ### `.github/workflows/slow-tests.yml`
 
 Manual dispatch workflow with three lane choices:
 
 - `slow-non-pyomo`:
-  `pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+  `pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=xml:coverage.xml --cov-report=term-missing`
 - `full-non-pyomo`:
-  `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+  `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=xml:coverage.xml --cov-report=term-missing`
 - `pyomo`:
   `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
 
 The Pyomo lane installs the optional Pyomo/IDAES stack and treats pytest exit
 code 5 as a no-op for manual compatibility.
+
+Non-Pyomo coverage commands use `.coveragerc.non-pyomo` so optional Pyomo
+source files are not reported as 0% in SciPy-only lanes. Pyomo coverage uses
+the default configuration in the optional Pyomo lane.
+
+Codecov uploads are informational and non-blocking from pushes to `main`, the
+notebook workflow, and manual validation lanes. The PR workflow keeps coverage
+generation in the ready/non-draft full lane but does not upload coverage to
+Codecov.
 
 ### `.github/workflows/pyomo-tests.yml`
 
