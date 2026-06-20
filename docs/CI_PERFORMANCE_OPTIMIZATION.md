@@ -19,19 +19,19 @@ CI performance is managed with marker-based lanes:
 pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"
 
 # Full non-Pyomo validation with coverage
-pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=xml:coverage.xml --cov-report=term-missing
+pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
 
 # Manual slow validation
-pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=xml:coverage.xml --cov-report=term-missing
+pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
 
 # Explicit notebook validation
-pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=xml:coverage.xml --cov-report=term-missing
+pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
 
 # Automatic Pyomo light validation after installing .[dev,pyomo]
 pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v
 
 # Optional solver-backed Pyomo validation after installing .[dev,pyomo] and IPOPT
-pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=term-missing
 ```
 
 ## Why This Helps

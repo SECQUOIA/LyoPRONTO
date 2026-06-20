@@ -32,7 +32,7 @@ practical:
 which runs
 
 ```bash
-pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=xml:coverage.xml --cov-report=term-missing
+pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
 ```
 
 All pytest lanes inherit `--durations=25`, `--timeout=600`, and

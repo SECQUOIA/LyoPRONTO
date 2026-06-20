@@ -72,26 +72,16 @@ jobs:
 
         case "${{ inputs.lane }}" in
           slow-non-pyomo)
-            pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=xml:coverage.xml --cov-report=term-missing
+            pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
             ;;
           full-non-pyomo)
-            pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=xml:coverage.xml --cov-report=term-missing
+            pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
             ;;
           pyomo)
-            run_pytest_allow_empty pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+            run_pytest_allow_empty pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=term-missing
             ;;
           *)
             echo "Unknown lane: ${{ inputs.lane }}"
             exit 2
             ;;
         esac
-
-    - name: Upload coverage
-      if: ${{ always() && hashFiles('coverage.xml') != '' }}
-      uses: codecov/codecov-action@v4
-      with:
-        file: ./coverage.xml
-        flags: manual-${{ inputs.lane }}
-        name: manual-${{ inputs.lane }}-coverage
-        fail_ci_if_error: false
-        token: ${{ secrets.CODECOV_TOKEN }}

@@ -122,24 +122,24 @@ case "$LANE" in
         pytest tests/ -n auto -v -m "$FAST_EXPR"
         ;;
     full)
-        echo "   Command: pytest tests/ -n auto -v -m \"$FULL_EXPR\" --cov=lyopronto --cov-config=$NON_PYOMO_COV_CONFIG --cov-report=xml:coverage.xml --cov-report=term-missing"
-        pytest tests/ -n auto -v -m "$FULL_EXPR" --cov=lyopronto --cov-config="$NON_PYOMO_COV_CONFIG" --cov-report=xml:coverage.xml --cov-report=term-missing
+        echo "   Command: pytest tests/ -n auto -v -m \"$FULL_EXPR\" --cov=lyopronto --cov-config=$NON_PYOMO_COV_CONFIG --cov-report=term-missing"
+        pytest tests/ -n auto -v -m "$FULL_EXPR" --cov=lyopronto --cov-config="$NON_PYOMO_COV_CONFIG" --cov-report=term-missing
         ;;
     slow)
-        echo "   Command: pytest tests/ -n auto -v -m \"$SLOW_EXPR\" --cov=lyopronto --cov-config=$NON_PYOMO_COV_CONFIG --cov-report=xml:coverage.xml --cov-report=term-missing"
-        pytest tests/ -n auto -v -m "$SLOW_EXPR" --cov=lyopronto --cov-config="$NON_PYOMO_COV_CONFIG" --cov-report=xml:coverage.xml --cov-report=term-missing
+        echo "   Command: pytest tests/ -n auto -v -m \"$SLOW_EXPR\" --cov=lyopronto --cov-config=$NON_PYOMO_COV_CONFIG --cov-report=term-missing"
+        pytest tests/ -n auto -v -m "$SLOW_EXPR" --cov=lyopronto --cov-config="$NON_PYOMO_COV_CONFIG" --cov-report=term-missing
         ;;
     notebook)
-        echo "   Command: pytest tests/ -n auto -v -m \"$NOTEBOOK_EXPR\" --cov=lyopronto --cov-config=$NON_PYOMO_COV_CONFIG --cov-report=xml:coverage.xml --cov-report=term-missing"
-        pytest tests/ -n auto -v -m "$NOTEBOOK_EXPR" --cov=lyopronto --cov-config="$NON_PYOMO_COV_CONFIG" --cov-report=xml:coverage.xml --cov-report=term-missing
+        echo "   Command: pytest tests/ -n auto -v -m \"$NOTEBOOK_EXPR\" --cov=lyopronto --cov-config=$NON_PYOMO_COV_CONFIG --cov-report=term-missing"
+        pytest tests/ -n auto -v -m "$NOTEBOOK_EXPR" --cov=lyopronto --cov-config="$NON_PYOMO_COV_CONFIG" --cov-report=term-missing
         ;;
     pyomo-light)
         echo "   Command: pytest $PYOMO_LIGHT_TARGETS -n auto -v"
         pytest $PYOMO_LIGHT_TARGETS -n auto -v
         ;;
     pyomo)
-        echo "   Command: pytest tests/ -n auto -v -m \"$PYOMO_EXPR\" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing"
-        run_pytest_allow_empty pytest tests/ -n auto -v -m "$PYOMO_EXPR" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+        echo "   Command: pytest tests/ -n auto -v -m \"$PYOMO_EXPR\" --cov=lyopronto --cov-report=term-missing"
+        run_pytest_allow_empty pytest tests/ -n auto -v -m "$PYOMO_EXPR" --cov=lyopronto --cov-report=term-missing
         ;;
 esac
 

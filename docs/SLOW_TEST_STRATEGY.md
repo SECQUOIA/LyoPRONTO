@@ -21,7 +21,7 @@ GitHub Actions plus `run_local_ci.sh`.
 - **Workflows:** `.github/workflows/pr-tests.yml`,
   `.github/workflows/tests.yml`
 - **Trigger:** Ready/non-draft PRs and pushes to `main`
-- **Command:** `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=xml:coverage.xml --cov-report=term-missing`
+- **Command:** `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing`
 - **Purpose:** Main confidence gate for tracked behavior while Pyomo remains an
   implemented optional stack.
 
@@ -29,7 +29,7 @@ GitHub Actions plus `run_local_ci.sh`.
 
 - **Workflow:** `.github/workflows/slow-tests.yml`
 - **Trigger:** Manual workflow dispatch
-- **Command:** `pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=xml:coverage.xml --cov-report=term-missing`
+- **Command:** `pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing`
 - **Purpose:** Targeted optimizer-heavy validation when a change touches slow
   scientific paths or when a reviewer wants focused evidence.
 
@@ -37,7 +37,7 @@ GitHub Actions plus `run_local_ci.sh`.
 
 - **Workflow:** `.github/workflows/rundocs.yml`
 - **Trigger:** Ready/non-draft PRs, pushes to `main`, or manual dispatch
-- **Command:** `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=xml:coverage.xml --cov-report=term-missing`
+- **Command:** `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing`
 - **Purpose:** Execute documentation notebooks separately from ordinary fast
   tests.
 
@@ -56,7 +56,7 @@ GitHub Actions plus `run_local_ci.sh`.
   `.github/workflows/slow-tests.yml`
 - **Trigger:** Optional non-blocking path-filtered comparison job or manual
   workflow dispatch
-- **Command:** `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing`
+- **Command:** `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=term-missing`
 - **Purpose:** Solver-backed Pyomo/IPOPT validation when the optional solver
   stack is available.
 

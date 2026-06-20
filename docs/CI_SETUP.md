@@ -10,7 +10,7 @@ configuration is:
 - Dependency install: default lanes use `pip install -e ".[dev]"`; Pyomo lanes
   use `pip install -e ".[dev,pyomo]"`
 - Coverage config: non-Pyomo coverage uses `.coveragerc.non-pyomo`
-- Coverage upload: Codecov, informational and non-blocking outside the PR workflow
+- Coverage upload: none; Codecov uploads are not configured
 
 The detailed workflow behavior is documented in `docs/CI_WORKFLOW_GUIDE.md`.
 
@@ -57,11 +57,11 @@ SKIP_INSTALL=1 ./run_local_ci.sh fast
 python -m ruff check lyopronto tests examples main.py
 python -m mypy lyopronto
 pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"
-pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=xml:coverage.xml --cov-report=term-missing
-pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=xml:coverage.xml --cov-report=term-missing
-pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=xml:coverage.xml --cov-report=term-missing
+pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
+pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
+pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
 pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v
-pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing
+pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=term-missing
 ```
 
 All pytest lanes inherit `--durations=25`, `--timeout=600`, and
@@ -74,9 +74,8 @@ IPOPT and relies on solver-backed tests to skip with installation hints. The
 optional solver comparison lane and manual Pyomo lane install IPOPT extensions
 when that deeper validation is needed.
 
-The PR workflow does not upload coverage to Codecov. Codecov uploads remain
-informational from pushes to `main`, the notebook workflow, and manual
-validation lanes; upload errors do not fail those jobs.
+Codecov uploads are not configured. Coverage remains visible in terminal
+reports from the coverage lanes.
 
 Do not configure the path-filtered Pyomo light job as a branch-protection
 required status check. Non-Pyomo PRs do not trigger `.github/workflows/pyomo-tests.yml`,
