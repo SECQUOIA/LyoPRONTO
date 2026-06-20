@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import configparser
+import re
+import shlex
 from importlib import metadata
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import pytest
 
@@ -39,6 +41,151 @@ def _requirements(path: Path) -> list[str]:
 
 def _text(path: str) -> str:
     return (ROOT / path).read_text(encoding="utf-8")
+
+
+def _shell_assignments(text: str) -> dict[str, str]:
+    assignments = {}
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "=" not in stripped:
+            continue
+
+        name, value = stripped.split("=", maxsplit=1)
+        if not re.fullmatch(r"[A-Z][A-Z0-9_]*", name):
+            continue
+        if value.startswith("$("):
+            continue
+
+        try:
+            parsed = shlex.split(value)
+        except ValueError:
+            continue
+        if len(parsed) == 1:
+            assignments[name] = parsed[0]
+
+    return assignments
+
+
+def _local_ci_lane_expressions(script: str) -> dict[str, str]:
+    assignments = _shell_assignments(script)
+    return {
+        "fast": assignments["FAST_EXPR"],
+        "full": assignments["FULL_EXPR"],
+        "slow": assignments["SLOW_EXPR"],
+        "notebook": assignments["NOTEBOOK_EXPR"],
+        "pyomo": assignments["PYOMO_EXPR"],
+    }
+
+
+def _pytest_command_strings(text: str) -> list[str]:
+    commands = []
+    for line in text.splitlines():
+        commands.extend(re.findall(r"`([^`]*\bpytest\s+[^`]*)`", line))
+
+        stripped = line.strip()
+        if stripped.startswith("run_pytest_allow_empty pytest "):
+            commands.append(stripped)
+        elif stripped.startswith("pytest "):
+            commands.append(stripped)
+
+    return commands
+
+
+def _pytest_commands(text: str) -> list[list[str]]:
+    commands = []
+    allow_empty_prefix = "run_pytest_allow_empty "
+    for command_text in _pytest_command_strings(text):
+        command_text = command_text.strip().rstrip("\\").strip()
+        if command_text.startswith(allow_empty_prefix):
+            command_text = command_text[len(allow_empty_prefix) :]
+
+        try:
+            commands.append(shlex.split(command_text))
+        except ValueError:
+            continue
+
+    return commands
+
+
+def _marker_expression(command: list[str]) -> Optional[str]:
+    try:
+        marker_index = command.index("-m")
+    except ValueError:
+        return None
+
+    if marker_index + 1 >= len(command):
+        return None
+    return command[marker_index + 1]
+
+
+def _commands_with_marker(text: str, marker_expression: str) -> list[list[str]]:
+    return [
+        command
+        for command in _pytest_commands(text)
+        if _marker_expression(command) == marker_expression
+    ]
+
+
+def _single_command_with_marker(text: str, marker_expression: str) -> list[str]:
+    commands = _commands_with_marker(text, marker_expression)
+
+    assert len(commands) == 1
+    return commands[0]
+
+
+def _commands_with_targets(text: str, targets: list[str]) -> list[list[str]]:
+    return [
+        command
+        for command in _pytest_commands(text)
+        if all(target in command for target in targets)
+    ]
+
+
+def _single_command_with_targets(text: str, targets: list[str]) -> list[str]:
+    commands = _commands_with_targets(text, targets)
+
+    assert len(commands) == 1
+    return commands[0]
+
+
+def _has_coverage(command: list[str]) -> bool:
+    return any(
+        argument == "--cov" or argument.startswith("--cov=") for argument in command
+    )
+
+
+def _has_non_pyomo_cov_config(command: list[str]) -> bool:
+    return any(
+        argument.startswith("--cov-config=")
+        and (".coveragerc.non-pyomo" in argument or "$NON_PYOMO_COV_CONFIG" in argument)
+        for argument in command
+    )
+
+
+def _assert_non_pyomo_coverage(command: list[str]) -> None:
+    assert "--cov=lyopronto" in command
+    assert _has_non_pyomo_cov_config(command)
+    assert "--cov-report=term-missing" in command
+
+
+def _assert_pyomo_coverage(command: list[str]) -> None:
+    assert "--cov=lyopronto" in command
+    assert not _has_non_pyomo_cov_config(command)
+    assert "--cov-report=term-missing" in command
+
+
+def _assert_no_coverage(command: list[str]) -> None:
+    assert not _has_coverage(command)
+    assert not _has_non_pyomo_cov_config(command)
+    assert "--cov-report=term-missing" not in command
+
+
+def _assert_marker_mentions(expression: str, marker: str) -> None:
+    assert re.search(rf"\b{re.escape(marker)}\b", expression)
+
+
+def _assert_marker_excludes(expression: str, marker: str) -> None:
+    assert re.search(rf"\bnot\s+{re.escape(marker)}\b", expression)
 
 
 def test_requirements_txt_mirrors_runtime_dependencies() -> None:
@@ -128,6 +275,9 @@ def test_static_tooling_configuration_is_staged_and_scoped() -> None:
 
 
 def test_ci_workflows_use_documented_test_lane_expressions() -> None:
+    script = _text("run_local_ci.sh")
+    lane_expressions = _local_ci_lane_expressions(script)
+    pyomo_light_targets = _shell_assignments(script)["PYOMO_LIGHT_TARGETS"].split()
     pr_tests = _text(".github/workflows/pr-tests.yml")
     main_tests = _text(".github/workflows/tests.yml")
     manual_tests = _text(".github/workflows/slow-tests.yml")
@@ -136,20 +286,44 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     workflow_text = "\n".join(
         [pr_tests, main_tests, manual_tests, notebook_tests, pyomo_tests]
     )
-    non_pyomo_cov = (
-        "--cov=lyopronto --cov-config=.coveragerc.non-pyomo "
-        "--cov-report=term-missing"
-    )
-    pyomo_cov = "--cov=lyopronto --cov-report=term-missing"
-    fast_pr_command = 'pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"'
+    fast_pr_command = _single_command_with_marker(pr_tests, lane_expressions["fast"])
+    for marker in ["slow", "notebook", "pyomo"]:
+        _assert_marker_excludes(lane_expressions["fast"], marker)
+    _assert_no_coverage(fast_pr_command)
 
-    assert fast_pr_command in pr_tests
-    assert f"{fast_pr_command} --cov" not in pr_tests
-    assert f'pytest tests/ -n auto -v -m "not pyomo" {non_pyomo_cov}' in pr_tests
+    full_non_pyomo_commands = (
+        _commands_with_marker(pr_tests, lane_expressions["full"])
+        + _commands_with_marker(main_tests, lane_expressions["full"])
+        + _commands_with_marker(manual_tests, lane_expressions["full"])
+    )
+    assert len(full_non_pyomo_commands) == 3
+    _assert_marker_excludes(lane_expressions["full"], "pyomo")
+    for command in full_non_pyomo_commands:
+        _assert_non_pyomo_coverage(command)
+
+    slow_command = _single_command_with_marker(manual_tests, lane_expressions["slow"])
+    _assert_marker_mentions(lane_expressions["slow"], "slow")
+    _assert_marker_excludes(lane_expressions["slow"], "pyomo")
+    _assert_non_pyomo_coverage(slow_command)
+
+    notebook_command = _single_command_with_marker(
+        notebook_tests, lane_expressions["notebook"]
+    )
+    _assert_marker_mentions(lane_expressions["notebook"], "notebook")
+    _assert_non_pyomo_coverage(notebook_command)
+
+    manual_pyomo_command = _single_command_with_marker(
+        manual_tests, lane_expressions["pyomo"]
+    )
+    _assert_marker_mentions(lane_expressions["pyomo"], "pyomo")
+    _assert_pyomo_coverage(manual_pyomo_command)
+
+    pyomo_light_command = _single_command_with_targets(pyomo_tests, pyomo_light_targets)
+    _assert_no_coverage(pyomo_light_command)
+
     assert "codecov/codecov-action" not in pr_tests
     assert "pr-non-pyomo" not in pr_tests
     assert "github.event.pull_request.draft == false" in pr_tests
-    assert f'pytest tests/ -n auto -v -m "not pyomo" {non_pyomo_cov}' in main_tests
     assert "--cov-report=term-missing" in workflow_text
     assert "--cov-report=xml:coverage.xml" not in workflow_text
     assert "coverage.xml" not in workflow_text
@@ -159,8 +333,13 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert "main-non-pyomo" not in workflow_text
     assert "pip install pyomo" not in pr_tests
     assert "pip install pyomo" not in main_tests
+    assert "pip install pyomo" not in notebook_tests
     assert 'pip install -e ".[dev,pyomo]"' not in pr_tests
     assert 'pip install -e ".[dev,pyomo]"' not in main_tests
+    assert 'pip install -e ".[dev,pyomo]"' not in notebook_tests
+    assert "idaes get-extensions --extra petsc" not in pr_tests
+    assert "idaes get-extensions --extra petsc" not in main_tests
+    assert "idaes get-extensions --extra petsc" not in notebook_tests
     assert "python -m ruff check lyopronto tests examples main.py" in pr_tests
     assert "python -m ruff check lyopronto tests examples main.py" in main_tests
     assert "python -m mypy lyopronto" in pr_tests
@@ -169,11 +348,6 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert "continue-on-error: true" in main_tests
     assert "--durations=25" not in workflow_text
 
-    assert f'pytest tests/ -n auto -v -m "slow and not pyomo" {non_pyomo_cov}' in manual_tests
-    assert f'pytest tests/ -n auto -v -m "not pyomo" {non_pyomo_cov}' in manual_tests
-    assert f'pytest tests/ -n auto -v -m "pyomo" {pyomo_cov}' in manual_tests
-    assert manual_tests.count("--cov-config=.coveragerc.non-pyomo") == 2
-    assert manual_tests.count("--cov-report=term-missing") == 3
     assert "manual-${{ inputs.lane }}" not in manual_tests
     assert "manual-validation" not in manual_tests
     assert 'rc" -eq 5' in manual_tests
@@ -182,19 +356,18 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert "pip install pyomo idaes-pse" not in manual_tests
     assert "RUN_SLOW_TESTS" not in manual_tests
 
-    assert f'pytest tests/ -n auto -v -m "notebook" {non_pyomo_cov}' in notebook_tests
-    assert "--cov-report=term-missing" in notebook_tests
     assert "github.event.pull_request.draft == false" in notebook_tests
 
     assert "--cov-config=.coveragerc.non-pyomo" not in pyomo_tests
     assert "lyopronto/pyomo_models/**" in pyomo_tests
     assert "tests/test_pyomo_models/**" in pyomo_tests
     assert 'pip install -e ".[dev,pyomo]"' in pyomo_tests
-    assert "pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v" in pyomo_tests
     assert "pytest -n 0 -v" in pyomo_tests
     assert "idaes get-extensions --extra petsc" in pyomo_tests
     assert "Install IPOPT with: idaes get-extensions --extra petsc" in pyomo_tests
-    assert "Alternative local install: conda install -c conda-forge ipopt" in pyomo_tests
+    assert (
+        "Alternative local install: conda install -c conda-forge ipopt" in pyomo_tests
+    )
     assert "continue-on-error: true" in pyomo_tests
     assert (
         "tests/test_pyomo_models/test_single_step.py::test_single_step_solves_and_matches_scipy_reference"
@@ -208,15 +381,40 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
 
 def test_local_ci_script_matches_documented_lane_expressions() -> None:
     script = _text("run_local_ci.sh")
+    assignments = _shell_assignments(script)
+    lane_expressions = _local_ci_lane_expressions(script)
 
-    assert 'FAST_EXPR="not slow and not notebook and not pyomo"' in script
-    assert 'FULL_EXPR="not pyomo"' in script
-    assert 'SLOW_EXPR="slow and not pyomo"' in script
-    assert 'NOTEBOOK_EXPR="notebook"' in script
-    assert 'PYOMO_EXPR="pyomo"' in script
-    assert 'PYOMO_LIGHT_TARGETS="tests/test_pyomo_models tests/test_pyomo_solver.py"' in script
-    assert 'NON_PYOMO_COV_CONFIG=".coveragerc.non-pyomo"' in script
-    assert script.count('--cov-config="$NON_PYOMO_COV_CONFIG"') == 3
+    fast_command = _single_command_with_marker(script, "$FAST_EXPR")
+    for marker in ["slow", "notebook", "pyomo"]:
+        _assert_marker_excludes(lane_expressions["fast"], marker)
+    _assert_no_coverage(fast_command)
+
+    for variable in ["FULL_EXPR", "SLOW_EXPR", "NOTEBOOK_EXPR"]:
+        command = _single_command_with_marker(script, f"${variable}")
+        _assert_non_pyomo_coverage(command)
+
+    _assert_marker_excludes(lane_expressions["full"], "pyomo")
+    _assert_marker_mentions(lane_expressions["slow"], "slow")
+    _assert_marker_excludes(lane_expressions["slow"], "pyomo")
+    _assert_marker_mentions(lane_expressions["notebook"], "notebook")
+
+    pyomo_light_commands = [
+        command
+        for command in _pytest_commands(script)
+        if "$PYOMO_LIGHT_TARGETS" in command
+    ]
+    assert len(pyomo_light_commands) == 1
+    assert assignments["PYOMO_LIGHT_TARGETS"].split() == [
+        "tests/test_pyomo_models",
+        "tests/test_pyomo_solver.py",
+    ]
+    _assert_no_coverage(pyomo_light_commands[0])
+
+    pyomo_command = _single_command_with_marker(script, "$PYOMO_EXPR")
+    _assert_marker_mentions(lane_expressions["pyomo"], "pyomo")
+    _assert_pyomo_coverage(pyomo_command)
+
+    assert assignments["NON_PYOMO_COV_CONFIG"] == ".coveragerc.non-pyomo"
     assert "--cov-report=xml:coverage.xml" not in script
     assert "coverage.xml" not in script
     assert "--durations=25" not in script
@@ -229,6 +427,10 @@ def test_local_ci_script_matches_documented_lane_expressions() -> None:
 
 
 def test_contributor_docs_include_ci_and_static_analysis_commands() -> None:
+    script = _text("run_local_ci.sh")
+    assignments = _shell_assignments(script)
+    lane_expressions = _local_ci_lane_expressions(script)
+    pyomo_light_targets = assignments["PYOMO_LIGHT_TARGETS"].split()
     docs = "\n".join(
         [
             _text("tests/README.md"),
@@ -239,15 +441,28 @@ def test_contributor_docs_include_ci_and_static_analysis_commands() -> None:
             _text("docs/JULIA_PARITY_MATRIX.md"),
         ]
     )
-    non_pyomo_cov = (
-        "--cov=lyopronto --cov-config=.coveragerc.non-pyomo "
-        "--cov-report=term-missing"
-    )
 
-    assert 'pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"' in docs
-    assert f'pytest tests/ -n auto -v -m "not pyomo" {non_pyomo_cov}' in docs
-    assert f'pytest tests/ -n auto -v -m "slow and not pyomo" {non_pyomo_cov}' in docs
-    assert f'pytest tests/ -n auto -v -m "notebook" {non_pyomo_cov}' in docs
+    fast_commands = _commands_with_marker(docs, lane_expressions["fast"])
+    assert fast_commands
+    for command in fast_commands:
+        _assert_no_coverage(command)
+
+    for lane in ["full", "slow", "notebook"]:
+        commands = _commands_with_marker(docs, lane_expressions[lane])
+        assert commands
+        for command in commands:
+            _assert_non_pyomo_coverage(command)
+
+    pyomo_commands = _commands_with_marker(docs, lane_expressions["pyomo"])
+    assert pyomo_commands
+    for command in pyomo_commands:
+        _assert_pyomo_coverage(command)
+
+    pyomo_light_commands = _commands_with_targets(docs, pyomo_light_targets)
+    assert pyomo_light_commands
+    for command in pyomo_light_commands:
+        _assert_no_coverage(command)
+
     assert "--cov-report=term-missing" in docs
     assert "--cov-report=xml:coverage.xml" not in docs
     assert ".coveragerc.non-pyomo" in docs
