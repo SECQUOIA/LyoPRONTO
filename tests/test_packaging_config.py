@@ -43,6 +43,7 @@ def _text(path: str) -> str:
     return (ROOT / path).read_text(encoding="utf-8")
 
 
+# CI lane parsers assume single-token shell vars and bare or backticked pytest commands.
 def _shell_assignments(text: str) -> dict[str, str]:
     assignments = {}
     for line in text.splitlines():
