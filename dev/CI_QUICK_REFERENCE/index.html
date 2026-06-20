@@ -592,18 +592,23 @@ solver extensions:</p>
 <td><code>.github/workflows/pr-tests.yml</code></td>
 </tr>
 <tr>
-<td>Full non-Pyomo</td>
-<td><code>pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing</code></td>
-<td><code>.github/workflows/pr-tests.yml</code>, <code>.github/workflows/tests.yml</code></td>
+<td>Full non-Pyomo PR</td>
+<td><code>pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing</code></td>
+<td><code>.github/workflows/pr-tests.yml</code></td>
+</tr>
+<tr>
+<td>Full non-Pyomo main/local</td>
+<td><code>pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing</code></td>
+<td><code>.github/workflows/tests.yml</code>, <code>run_local_ci.sh</code></td>
 </tr>
 <tr>
 <td>Slow non-Pyomo</td>
-<td><code>pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing</code></td>
+<td><code>pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing</code></td>
 <td><code>.github/workflows/slow-tests.yml</code></td>
 </tr>
 <tr>
 <td>Notebook</td>
-<td><code>pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing</code></td>
+<td><code>pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing</code></td>
 <td><code>.github/workflows/rundocs.yml</code></td>
 </tr>
 <tr>
@@ -613,13 +618,15 @@ solver extensions:</p>
 </tr>
 <tr>
 <td>Pyomo solver</td>
-<td><code>pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing</code></td>
+<td><code>pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=term-missing</code></td>
 <td><code>.github/workflows/pyomo-tests.yml</code>, <code>.github/workflows/slow-tests.yml</code></td>
 </tr>
 </tbody>
 </table>
 <p>All pytest lanes inherit <code>--durations=25</code>, <code>--timeout=600</code>, and
-<code>--timeout-method=thread</code> from <code>pyproject.toml</code>.</p>
+<code>--timeout-method=thread</code> from <code>pyproject.toml</code>.
+Non-Pyomo coverage uses <code>.coveragerc.non-pyomo</code> to keep optional Pyomo modules
+out of SciPy-only totals.</p>
 <h2 id="triggers">Triggers</h2>
 <ul>
 <li>PR updates targeting <code>main</code>: static analysis and fast lane.</li>
@@ -633,7 +640,9 @@ solver extensions:</p>
 </ul>
 <p>Do not add the path-filtered Pyomo light job to branch-protection required
 status checks. It does not report on non-Pyomo PRs. The optional solver
-comparison job is job-level non-blocking, so review its logs when it runs.</p>
+comparison job is job-level non-blocking, so review its logs when it runs.
+Codecov uploads are not configured. Coverage remains visible in terminal
+reports from the full, notebook, slow, and Pyomo solver lanes.</p>
 <h2 id="marker-policy">Marker Policy</h2>
 <ul>
 <li><code>slow</code>: optimizer-heavy or long-running tests excluded from fast PR feedback.</li>

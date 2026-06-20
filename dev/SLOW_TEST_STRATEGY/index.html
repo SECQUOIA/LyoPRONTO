@@ -628,7 +628,7 @@ GitHub Actions plus <code>run_local_ci.sh</code>.</p>
 <li><strong>Workflows:</strong> <code>.github/workflows/pr-tests.yml</code>,
   <code>.github/workflows/tests.yml</code></li>
 <li><strong>Trigger:</strong> Ready/non-draft PRs and pushes to <code>main</code></li>
-<li><strong>Command:</strong> <code>pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing</code></li>
+<li><strong>Command:</strong> <code>pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing</code></li>
 <li><strong>Purpose:</strong> Main confidence gate for tracked behavior while Pyomo remains an
   implemented optional stack.</li>
 </ul>
@@ -636,7 +636,7 @@ GitHub Actions plus <code>run_local_ci.sh</code>.</p>
 <ul>
 <li><strong>Workflow:</strong> <code>.github/workflows/slow-tests.yml</code></li>
 <li><strong>Trigger:</strong> Manual workflow dispatch</li>
-<li><strong>Command:</strong> <code>pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing</code></li>
+<li><strong>Command:</strong> <code>pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing</code></li>
 <li><strong>Purpose:</strong> Targeted optimizer-heavy validation when a change touches slow
   scientific paths or when a reviewer wants focused evidence.</li>
 </ul>
@@ -644,7 +644,7 @@ GitHub Actions plus <code>run_local_ci.sh</code>.</p>
 <ul>
 <li><strong>Workflow:</strong> <code>.github/workflows/rundocs.yml</code></li>
 <li><strong>Trigger:</strong> Ready/non-draft PRs, pushes to <code>main</code>, or manual dispatch</li>
-<li><strong>Command:</strong> <code>pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing</code></li>
+<li><strong>Command:</strong> <code>pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing</code></li>
 <li><strong>Purpose:</strong> Execute documentation notebooks separately from ordinary fast
   tests.</li>
 </ul>
@@ -663,7 +663,7 @@ GitHub Actions plus <code>run_local_ci.sh</code>.</p>
   <code>.github/workflows/slow-tests.yml</code></li>
 <li><strong>Trigger:</strong> Optional non-blocking path-filtered comparison job or manual
   workflow dispatch</li>
-<li><strong>Command:</strong> <code>pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing</code></li>
+<li><strong>Command:</strong> <code>pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=term-missing</code></li>
 <li><strong>Purpose:</strong> Solver-backed Pyomo/IPOPT validation when the optional solver
   stack is available.</li>
 </ul>
@@ -676,7 +676,9 @@ GitHub Actions plus <code>run_local_ci.sh</code>.</p>
 <li><code>serial</code>: Tests that must be run without xdist, using <code>pytest -m serial -n 0</code>.</li>
 </ul>
 <p>All lanes inherit <code>--durations=25</code>, <code>--timeout=600</code>, and
-<code>--timeout-method=thread</code> from <code>pyproject.toml</code>.</p>
+<code>--timeout-method=thread</code> from <code>pyproject.toml</code>.
+Non-Pyomo coverage lanes use <code>.coveragerc.non-pyomo</code> so optional Pyomo source
+files are omitted from SciPy-only coverage totals.</p>
 <h2 id="local-usage">Local Usage</h2>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>./run_local_ci.sh<span class="w"> </span>fast
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>./run_local_ci.sh<span class="w"> </span>full

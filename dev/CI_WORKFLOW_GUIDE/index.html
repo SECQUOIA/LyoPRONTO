@@ -646,7 +646,7 @@ Each pytest lane inherits <code>--durations=25</code>, <code>--timeout=600</code
 <li><code>fast-scipy</code> runs on every PR update:
   <code>pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"</code></li>
 <li><code>full-non-pyomo</code> runs only for ready/non-draft PRs:
-  <code>pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing</code></li>
+  <code>pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing</code></li>
 </ul>
 <h3 id="githubworkflowstestsyml"><code>.github/workflows/tests.yml</code></h3>
 <p>Runs on pushes to <code>main</code>.</p>
@@ -655,27 +655,33 @@ Each pytest lane inherits <code>--durations=25</code>, <code>--timeout=600</code
   <code>python -m ruff check lyopronto tests examples main.py</code>
   and advisory <code>python -m mypy lyopronto</code></li>
 <li><code>full-non-pyomo</code> runs the main confidence gate:
-  <code>pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing</code></li>
+  <code>pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing</code></li>
 </ul>
 <h3 id="githubworkflowsrundocsyml"><code>.github/workflows/rundocs.yml</code></h3>
 <p>Runs notebook validation for ready/non-draft PRs, pushes to <code>main</code>, and manual
 dispatch.</p>
 <ul>
 <li><code>notebook-tests</code> runs:
-  <code>pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing</code></li>
+  <code>pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing</code></li>
 </ul>
 <h3 id="githubworkflowsslow-testsyml"><code>.github/workflows/slow-tests.yml</code></h3>
 <p>Manual dispatch workflow with three lane choices:</p>
 <ul>
 <li><code>slow-non-pyomo</code>:
-  <code>pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing</code></li>
+  <code>pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing</code></li>
 <li><code>full-non-pyomo</code>:
-  <code>pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing</code></li>
+  <code>pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing</code></li>
 <li><code>pyomo</code>:
-  <code>pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=xml:coverage.xml --cov-report=term-missing</code></li>
+  <code>pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=term-missing</code></li>
 </ul>
 <p>The Pyomo lane installs the optional Pyomo/IDAES stack and treats pytest exit
 code 5 as a no-op for manual compatibility.</p>
+<p>Non-Pyomo coverage commands use <code>.coveragerc.non-pyomo</code> so optional Pyomo
+source files are not reported as 0% in SciPy-only lanes. Pyomo coverage uses
+the default configuration in the optional Pyomo lane.</p>
+<p>Codecov uploads are not configured. Coverage remains visible in terminal
+reports from the ready/non-draft full PR lane, pushes to <code>main</code>, the notebook
+workflow, and manual validation lanes.</p>
 <h3 id="githubworkflowspyomo-testsyml"><code>.github/workflows/pyomo-tests.yml</code></h3>
 <p>Runs when PRs or pushes to <code>main</code> change <code>lyopronto/pyomo_models/**</code> or
 <code>tests/test_pyomo_models/**</code>, and can also be started manually.</p>

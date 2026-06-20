@@ -568,7 +568,8 @@ configuration is:</p>
 <li>Python: read from <code>.github/ci-config/ci-versions.yml</code></li>
 <li>Dependency install: default lanes use <code>pip install -e ".[dev]"</code>; Pyomo lanes
   use <code>pip install -e ".[dev,pyomo]"</code></li>
-<li>Coverage upload: Codecov, non-blocking when configured</li>
+<li>Coverage config: non-Pyomo coverage uses <code>.coveragerc.non-pyomo</code></li>
+<li>Coverage upload: none; Codecov uploads are not configured</li>
 </ul>
 <p>The detailed workflow behavior is documented in <code>docs/CI_WORKFLOW_GUIDE.md</code>.</p>
 <h2 id="workflows">Workflows</h2>
@@ -633,11 +634,11 @@ configuration is:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python<span class="w"> </span>-m<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>lyopronto<span class="w"> </span>tests<span class="w"> </span>examples<span class="w"> </span>main.py
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>python<span class="w"> </span>-m<span class="w"> </span>mypy<span class="w"> </span>lyopronto
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not slow and not notebook and not pyomo&quot;</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not pyomo&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-report<span class="o">=</span>xml:coverage.xml<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;slow and not pyomo&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-report<span class="o">=</span>xml:coverage.xml<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;notebook&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-report<span class="o">=</span>xml:coverage.xml<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not pyomo&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-config<span class="o">=</span>.coveragerc.non-pyomo<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;slow and not pyomo&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-config<span class="o">=</span>.coveragerc.non-pyomo<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;notebook&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-config<span class="o">=</span>.coveragerc.non-pyomo<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
 </span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>pytest<span class="w"> </span>tests/test_pyomo_models<span class="w"> </span>tests/test_pyomo_solver.py<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;pyomo&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-report<span class="o">=</span>xml:coverage.xml<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;pyomo&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
 </span></code></pre></div>
 <p>All pytest lanes inherit <code>--durations=25</code>, <code>--timeout=600</code>, and
 <code>--timeout-method=thread</code> from the shared pytest configuration through
@@ -647,6 +648,8 @@ configuration is:</p>
 IPOPT and relies on solver-backed tests to skip with installation hints. The
 optional solver comparison lane and manual Pyomo lane install IPOPT extensions
 when that deeper validation is needed.</p>
+<p>Codecov uploads are not configured. Coverage remains visible in terminal
+reports from the coverage lanes.</p>
 <p>Do not configure the path-filtered Pyomo light job as a branch-protection
 required status check. Non-Pyomo PRs do not trigger <code>.github/workflows/pyomo-tests.yml</code>,
 so that check would never report for those PRs. If Pyomo status must become a
@@ -673,6 +676,8 @@ skips with a clear installation hint.</p>
   <code>tests/README.md</code>, and this document.</li>
 <li>Keep automatic Pyomo coverage path-filtered to Pyomo code and tests so
   default non-Pyomo PRs do not install optional Pyomo dependencies.</li>
+<li>Keep <code>.coveragerc.non-pyomo</code> on SciPy-only coverage commands so optional
+  Pyomo modules are not counted as unexecuted in non-Pyomo totals.</li>
 <li>Monitor the optional solver comparison logs when they run. The job is
   job-level non-blocking, so install failures and comparison failures do not
   fail the PR status.</li>
