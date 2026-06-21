@@ -18,9 +18,10 @@ The detailed workflow behavior is documented in `docs/CI_WORKFLOW_GUIDE.md`.
 
 | Workflow | Trigger | Lane |
 | --- | --- | --- |
-| `.github/workflows/pr-tests.yml` | Pull requests to `main` | Static analysis and fast PR lane for all PR updates; full non-Pyomo lane for ready/non-draft PRs |
+| `.github/workflows/pr-tests.yml` | Pull requests to `main` | Static analysis and fast PR lane for all PR updates |
+| `.github/workflows/full-validation.yml` | Pull requests to `main`, nightly schedule, version tags, manual dispatch | Full non-Pyomo lane for validation-sensitive paths or `full-validation` label; scheduled/tag/manual full validation |
 | `.github/workflows/tests.yml` | Pushes to `main` | Static analysis and full non-Pyomo lane |
-| `.github/workflows/rundocs.yml` | Ready PRs, pushes to `main`, manual dispatch | Notebook lane |
+| `.github/workflows/rundocs.yml` | Ready PRs, pushes to `main`, nightly schedule, version tags, manual dispatch | Notebook lane |
 | `.github/workflows/pyomo-tests.yml` | PRs and pushes to `main` changing `lyopronto/pyomo_models/**` or `tests/test_pyomo_models/**`; manual dispatch | Required Pyomo no-solver lane plus optional non-blocking solver comparison |
 | `.github/workflows/slow-tests.yml` | Manual dispatch | Slow non-Pyomo, full non-Pyomo, or optional Pyomo lane |
 | `.github/workflows/docs.yml` | Docs publish events | Documentation deployment |
@@ -81,6 +82,11 @@ Do not configure the path-filtered Pyomo light job as a branch-protection
 required status check. Non-Pyomo PRs do not trigger `.github/workflows/pyomo-tests.yml`,
 so that check would never report for those PRs. If Pyomo status must become a
 repository-wide required check, add an always-running gate job first.
+Repository maintainers should require the `Full non-Pyomo validation` job in
+branch protection. The Full Validation workflow is reportable on every PR; its
+full lane runs only for ready PRs that touch validation-sensitive paths, PRs
+labeled `full-validation`, nightly scheduled validation, manual dispatch, and
+version tags.
 
 ## Optional Pyomo Setup
 

@@ -6,6 +6,10 @@ on:
     types: [ opened, synchronize, reopened, ready_for_review ]
   push:
     branches: [ main ]
+    tags:
+      - 'v*'
+  schedule:
+    - cron: '43 6 * * *'
   workflow_dispatch:
 
 permissions:

@@ -70,34 +70,3 @@ jobs:
       run: |
         echo "Running fast PR lane without slow, notebook, or Pyomo tests"
         pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"
-
-  full-non-pyomo:
-    name: Full non-Pyomo lane
-    if: ${{ github.event.pull_request.draft == false }}
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Read CI version config
-      id: versions
-      uses: mikefarah/yq@v4.44.1
-      with:
-        cmd: yq eval '.python-version' .github/ci-config/ci-versions.yml
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ steps.versions.outputs.result }}
-        cache: 'pip'
-        cache-dependency-path: pyproject.toml
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip setuptools wheel
-        pip install -e ".[dev]"
-
-    - name: Run full non-Pyomo validation
-      run: |
-        echo "Running full non-Pyomo validation with coverage"
-        pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
