@@ -867,7 +867,8 @@ access.</p>
 <ul>
 <li>static analysis: enforced Ruff, advisory mypy</li>
 <li>fast PR lane: excludes <code>slow</code>, <code>notebook</code>, and <code>pyomo</code></li>
-<li>full non-Pyomo lane: tracked confidence gate with coverage</li>
+<li>full non-Pyomo lane: tracked confidence gate with coverage, run by main and
+  conditional Full Validation workflows</li>
 <li>notebook lane: explicit Jupyter/papermill validation</li>
 <li>slow non-Pyomo lane: manual optimizer-heavy validation</li>
 <li>Pyomo light lane: path-filtered automatic validation for Pyomo model/test

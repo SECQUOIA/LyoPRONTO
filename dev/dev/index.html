@@ -654,8 +654,8 @@
 <p>which runs</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not slow and not notebook and not pyomo&quot;</span>
 </span></code></pre></div>
-<p>Before marking a PR ready for review, run the full non-Pyomo lane when
-practical:</p>
+<p>Before marking a validation-sensitive PR ready for review, run the full
+non-Pyomo lane when practical:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>./run_local_ci.sh<span class="w"> </span>full
 </span></code></pre></div>
 <p>which runs</p>
@@ -665,7 +665,10 @@ practical:</p>
 <code>--timeout-method=thread</code> from <code>pyproject.toml</code>.</p>
 <p>Notebook, slow, and Pyomo validation are separate lanes:
 <code>./run_local_ci.sh notebook</code>, <code>./run_local_ci.sh slow</code>,
-<code>./run_local_ci.sh pyomo-light</code>, and <code>./run_local_ci.sh pyomo</code>.</p>
+<code>./run_local_ci.sh pyomo-light</code>, and <code>./run_local_ci.sh pyomo</code>.
+In CI, the Full Validation workflow runs the full non-Pyomo lane for
+validation-sensitive paths, the <code>full-validation</code> label, nightly schedule,
+manual dispatch, and version tags.</p>
 <p>Optional Pyomo work uses a separate extra so default development environments
 stay non-Pyomo:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev,pyomo]&quot;</span>

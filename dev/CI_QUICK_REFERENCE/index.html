@@ -594,7 +594,7 @@ solver extensions:</p>
 <tr>
 <td>Full non-Pyomo PR</td>
 <td><code>pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing</code></td>
-<td><code>.github/workflows/pr-tests.yml</code></td>
+<td><code>.github/workflows/full-validation.yml</code></td>
 </tr>
 <tr>
 <td>Full non-Pyomo main/local</td>
@@ -630,9 +630,13 @@ out of SciPy-only totals.</p>
 <h2 id="triggers">Triggers</h2>
 <ul>
 <li>PR updates targeting <code>main</code>: static analysis and fast lane.</li>
-<li>Ready/non-draft PRs targeting <code>main</code>: full non-Pyomo lane with coverage.</li>
+<li>Full Validation workflow: full non-Pyomo lane with coverage for
+  non-draft PRs touching validation-sensitive code/tests, PRs labeled
+  <code>full-validation</code>, nightly scheduled validation, manual dispatch, and version
+  tags.</li>
 <li>Pushes to <code>main</code>: static analysis and full non-Pyomo lane with coverage.</li>
-<li>Ready/non-draft PRs, pushes to <code>main</code>, and manual dispatch: notebook lane.</li>
+<li>Ready/non-draft PRs, pushes to <code>main</code>, nightly schedule, version tags, and
+  manual dispatch: notebook lane.</li>
 <li>PRs or pushes to <code>main</code> changing <code>lyopronto/pyomo_models/**</code> or
   <code>tests/test_pyomo_models/**</code>: required Pyomo light lane and optional
   non-blocking solver comparison.</li>
@@ -641,6 +645,9 @@ out of SciPy-only totals.</p>
 <p>Do not add the path-filtered Pyomo light job to branch-protection required
 status checks. It does not report on non-Pyomo PRs. The optional solver
 comparison job is job-level non-blocking, so review its logs when it runs.
+Repository maintainers should require the <code>Full non-Pyomo validation</code> job in
+branch protection. The Full Validation workflow is reportable on every PR and
+skips quickly when neither paths nor labels require the expensive full lane.
 Codecov uploads are not configured. Coverage remains visible in terminal
 reports from the full, notebook, slow, and Pyomo solver lanes.</p>
 <h2 id="marker-policy">Marker Policy</h2>

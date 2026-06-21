@@ -625,9 +625,11 @@ GitHub Actions plus <code>run_local_ci.sh</code>.</p>
 </ul>
 <h3 id="full-non-pyomo-lane">Full Non-Pyomo Lane</h3>
 <ul>
-<li><strong>Workflows:</strong> <code>.github/workflows/pr-tests.yml</code>,
+<li><strong>Workflows:</strong> <code>.github/workflows/full-validation.yml</code>,
   <code>.github/workflows/tests.yml</code></li>
-<li><strong>Trigger:</strong> Ready/non-draft PRs and pushes to <code>main</code></li>
+<li><strong>Trigger:</strong> Non-draft PRs that touch validation-sensitive paths, PRs labeled
+  <code>full-validation</code>, nightly schedule, version tags, manual dispatch, and
+  pushes to <code>main</code></li>
 <li><strong>Command:</strong> <code>pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing</code></li>
 <li><strong>Purpose:</strong> Main confidence gate for tracked behavior while Pyomo remains an
   implemented optional stack.</li>
@@ -643,7 +645,8 @@ GitHub Actions plus <code>run_local_ci.sh</code>.</p>
 <h3 id="notebook-lane">Notebook Lane</h3>
 <ul>
 <li><strong>Workflow:</strong> <code>.github/workflows/rundocs.yml</code></li>
-<li><strong>Trigger:</strong> Ready/non-draft PRs, pushes to <code>main</code>, or manual dispatch</li>
+<li><strong>Trigger:</strong> Ready/non-draft PRs, pushes to <code>main</code>, nightly schedule, version
+  tags, or manual dispatch</li>
 <li><strong>Command:</strong> <code>pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing</code></li>
 <li><strong>Purpose:</strong> Execute documentation notebooks separately from ordinary fast
   tests.</li>
@@ -688,8 +691,9 @@ files are omitted from SciPy-only coverage totals.</p>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>./run_local_ci.sh<span class="w"> </span>pyomo
 </span></code></pre></div>
 <p>Use the fast lane before pushing routine changes. Use the full lane before
-marking a PR ready for review when practical. Use the slow or notebook lanes
-when the changed files make those paths relevant.</p>
+marking a validation-sensitive PR ready for review when practical, or add the
+<code>full-validation</code> label to request the Full Validation workflow. Use the slow or
+notebook lanes when the changed files make those paths relevant.</p>
 
 
 

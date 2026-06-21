@@ -585,7 +585,12 @@ configuration is:</p>
 <tr>
 <td><code>.github/workflows/pr-tests.yml</code></td>
 <td>Pull requests to <code>main</code></td>
-<td>Static analysis and fast PR lane for all PR updates; full non-Pyomo lane for ready/non-draft PRs</td>
+<td>Static analysis and fast PR lane for all PR updates</td>
+</tr>
+<tr>
+<td><code>.github/workflows/full-validation.yml</code></td>
+<td>Pull requests to <code>main</code>, nightly schedule, version tags, manual dispatch</td>
+<td>Full non-Pyomo lane for validation-sensitive paths or <code>full-validation</code> label; scheduled/tag/manual full validation</td>
 </tr>
 <tr>
 <td><code>.github/workflows/tests.yml</code></td>
@@ -594,7 +599,7 @@ configuration is:</p>
 </tr>
 <tr>
 <td><code>.github/workflows/rundocs.yml</code></td>
-<td>Ready PRs, pushes to <code>main</code>, manual dispatch</td>
+<td>Ready PRs, pushes to <code>main</code>, nightly schedule, version tags, manual dispatch</td>
 <td>Notebook lane</td>
 </tr>
 <tr>
@@ -653,7 +658,12 @@ reports from the coverage lanes.</p>
 <p>Do not configure the path-filtered Pyomo light job as a branch-protection
 required status check. Non-Pyomo PRs do not trigger <code>.github/workflows/pyomo-tests.yml</code>,
 so that check would never report for those PRs. If Pyomo status must become a
-repository-wide required check, add an always-running gate job first.</p>
+repository-wide required check, add an always-running gate job first.
+Repository maintainers should require the <code>Full non-Pyomo validation</code> job in
+branch protection. The Full Validation workflow is reportable on every PR; its
+full lane runs only for ready PRs that touch validation-sensitive paths, PRs
+labeled <code>full-validation</code>, nightly scheduled validation, manual dispatch, and
+version tags.</p>
 <h2 id="optional-pyomo-setup">Optional Pyomo Setup</h2>
 <p>Normal runtime and development installs intentionally exclude Pyomo and IPOPT.
 For Pyomo development, the automatic Pyomo lane, or the manual Pyomo lane,

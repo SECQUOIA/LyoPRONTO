@@ -511,6 +511,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#githubworkflowsfull-validationyml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        .github/workflows/full-validation.yml
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#githubworkflowstestsyml" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -627,7 +638,7 @@ suite. The workflows are designed around seven lanes:</p>
 <ol>
 <li>Static analysis</li>
 <li>Fast PR feedback</li>
-<li>Full non-Pyomo validation</li>
+<li>Conditional full non-Pyomo validation</li>
 <li>Manual slow non-Pyomo validation</li>
 <li>Explicit notebook validation</li>
 <li>Automatic Pyomo no-solver validation</li>
@@ -645,9 +656,31 @@ Each pytest lane inherits <code>--durations=25</code>, <code>--timeout=600</code
   and advisory <code>python -m mypy lyopronto</code></li>
 <li><code>fast-scipy</code> runs on every PR update:
   <code>pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"</code></li>
-<li><code>full-non-pyomo</code> runs only for ready/non-draft PRs:
-  <code>pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing</code></li>
 </ul>
+<p>Ordinary PR feedback intentionally stops at these fast checks. Use the Full
+Validation workflow for the expensive full lane.</p>
+<h3 id="githubworkflowsfull-validationyml"><code>.github/workflows/full-validation.yml</code></h3>
+<p>Runs on pull requests targeting <code>main</code>, nightly schedule, version tags, and
+manual dispatch. The <code>Validation scope</code> job keeps the workflow reportable on
+all PRs; <code>Full non-Pyomo validation</code> skips quickly unless full validation is
+required.</p>
+<p>The full lane runs for:</p>
+<ul>
+<li>non-draft PRs labeled <code>full-validation</code></li>
+<li>non-draft PRs changing validation-sensitive code, top-level tests and shared
+  test helpers, examples, test data, or dependency metadata</li>
+<li>nightly scheduled validation</li>
+<li>version tags and manual dispatch</li>
+</ul>
+<p>The full lane command is:</p>
+<p><code>pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing</code></p>
+<p>Because this marker expression selects all non-Pyomo tests, it includes the
+slow-marked optimizer, fitting, and scientific reference checks. The notebook
+workflow still runs separately so notebook status remains visible.</p>
+<p>Repository maintainers should require the <code>Full non-Pyomo validation</code> job in
+branch protection. The job reports success quickly when the validation policy
+decides the full lane is not needed, so requiring it does not deadlock ordinary
+PRs.</p>
 <h3 id="githubworkflowstestsyml"><code>.github/workflows/tests.yml</code></h3>
 <p>Runs on pushes to <code>main</code>.</p>
 <ul>
@@ -658,8 +691,8 @@ Each pytest lane inherits <code>--durations=25</code>, <code>--timeout=600</code
   <code>pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing</code></li>
 </ul>
 <h3 id="githubworkflowsrundocsyml"><code>.github/workflows/rundocs.yml</code></h3>
-<p>Runs notebook validation for ready/non-draft PRs, pushes to <code>main</code>, and manual
-dispatch.</p>
+<p>Runs notebook validation for ready/non-draft PRs, pushes to <code>main</code>, version
+tags, nightly schedule, and manual dispatch.</p>
 <ul>
 <li><code>notebook-tests</code> runs:
   <code>pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing</code></li>
@@ -680,7 +713,7 @@ code 5 as a no-op for manual compatibility.</p>
 source files are not reported as 0% in SciPy-only lanes. Pyomo coverage uses
 the default configuration in the optional Pyomo lane.</p>
 <p>Codecov uploads are not configured. Coverage remains visible in terminal
-reports from the ready/non-draft full PR lane, pushes to <code>main</code>, the notebook
+reports from the Full Validation workflow, pushes to <code>main</code>, the notebook
 workflow, and manual validation lanes.</p>
 <h3 id="githubworkflowspyomo-testsyml"><code>.github/workflows/pyomo-tests.yml</code></h3>
 <p>Runs when PRs or pushes to <code>main</code> change <code>lyopronto/pyomo_models/**</code> or
@@ -732,11 +765,13 @@ failing later with an opaque solver error.</p>
 <h2 id="expected-pull-request-flow">Expected Pull Request Flow</h2>
 <ol>
 <li>Open or update a PR: static analysis and the fast lane run.</li>
-<li>Convert the PR out of draft: full non-Pyomo lane runs with coverage.</li>
+<li>If the PR touches validation-sensitive code/tests or needs deeper evidence,
+   the Full Validation workflow runs the full non-Pyomo lane automatically or
+   through the <code>full-validation</code> label.</li>
 <li>Notebook lane runs separately for ready PRs.</li>
 <li>If the PR changes Pyomo model code or tests, the Pyomo light lane runs
    automatically; the optional solver comparison runs for ready PRs.</li>
-<li>Reviewers can request manual slow or Pyomo lanes when relevant.</li>
+<li>Reviewers can request manual slow, full, or Pyomo lanes when relevant.</li>
 <li>Merge to <code>main</code>: static analysis and the full non-Pyomo lane run again, with
    Pyomo lanes also path-filtered on Pyomo changes.</li>
 </ol>
@@ -744,6 +779,9 @@ failing later with an opaque solver error.</p>
 <ul>
 <li>Keep marker expressions synchronized between workflows, <code>run_local_ci.sh</code>,
   and <code>tests/README.md</code>.</li>
+<li>Keep the Full Validation workflow's path list aligned with validation-
+  sensitive modules and tests, and use the <code>full-validation</code> label for PRs that
+  need deeper evidence without touching those paths.</li>
 <li>Keep automatic Pyomo validation isolated behind the Pyomo path filter so
   default non-Pyomo PRs do not install optional Pyomo dependencies.</li>
 <li>Do not configure path-filtered Pyomo jobs as branch-protection required status
