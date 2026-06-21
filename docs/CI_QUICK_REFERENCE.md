@@ -70,9 +70,9 @@ out of SciPy-only totals.
 Do not add the path-filtered Pyomo light job to branch-protection required
 status checks. It does not report on non-Pyomo PRs. The optional solver
 comparison job is job-level non-blocking, so review its logs when it runs.
-The Full Validation workflow is reportable on every PR and can be used as a
-branch-protection required status check; it skips quickly when neither paths nor
-labels require the expensive full lane.
+Repository maintainers should require the `Full non-Pyomo validation` job in
+branch protection. The Full Validation workflow is reportable on every PR and
+skips quickly when neither paths nor labels require the expensive full lane.
 Codecov uploads are not configured. Coverage remains visible in terminal
 reports from the full, notebook, slow, and Pyomo solver lanes.
 

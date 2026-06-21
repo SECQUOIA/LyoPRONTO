@@ -338,7 +338,8 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert "schedule:" in full_validation
     assert "tags:" in full_validation
     assert "lyopronto/*.py" in full_validation
-    assert "tests/test_*.py" in full_validation
+    assert "tests/*.py" in full_validation
+    assert "tests/test_*.py" not in full_validation
     assert "github.event.pull_request.draft" in full_validation
     assert "needs.validation-scope.outputs.run_full" in full_validation
     assert "--cov-report=term-missing" in workflow_text
@@ -494,6 +495,7 @@ def test_contributor_docs_include_ci_and_static_analysis_commands() -> None:
     assert "full-validation" in docs
     assert "nightly" in docs
     assert "tag" in docs
+    assert "require the `Full non-Pyomo validation` job" in docs
     assert "Ruff linting" in docs
     assert "python -m ruff check lyopronto tests examples main.py" in docs
     assert "python -m mypy lyopronto" in docs

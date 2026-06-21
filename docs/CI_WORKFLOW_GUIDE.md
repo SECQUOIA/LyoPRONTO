@@ -42,8 +42,8 @@ required.
 The full lane runs for:
 
 - non-draft PRs labeled `full-validation`
-- non-draft PRs changing validation-sensitive code, tests, examples, test data,
-  or dependency metadata
+- non-draft PRs changing validation-sensitive code, top-level tests and shared
+  test helpers, examples, test data, or dependency metadata
 - nightly scheduled validation
 - version tags and manual dispatch
 
@@ -55,9 +55,10 @@ Because this marker expression selects all non-Pyomo tests, it includes the
 slow-marked optimizer, fitting, and scientific reference checks. The notebook
 workflow still runs separately so notebook status remains visible.
 
-This job is suitable as a branch-protection required status check because it
-reports success quickly when the validation policy decides the full lane is not
-needed.
+Repository maintainers should require the `Full non-Pyomo validation` job in
+branch protection. The job reports success quickly when the validation policy
+decides the full lane is not needed, so requiring it does not deadlock ordinary
+PRs.
 
 ### `.github/workflows/tests.yml`
 

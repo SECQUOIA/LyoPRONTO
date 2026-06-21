@@ -138,9 +138,9 @@ The current top warning sources audited for this policy are:
 - `.github/workflows/full-validation.yml` runs the full non-Pyomo lane with
   coverage for non-draft PRs labeled `full-validation`, PRs that touch
   validation-sensitive code or tests, nightly scheduled validation, manual
-  dispatch, and version tags. The job reports success quickly when the full
-  lane is not required, so it can be used in branch-protection required status
-  checks.
+  dispatch, and version tags. Repository maintainers should require the
+  `Full non-Pyomo validation` job in branch protection; it reports success
+  quickly when the full lane is not required.
 - `.github/workflows/tests.yml` runs the full non-Pyomo lane with coverage on
   pushes to `main`.
 - `.github/workflows/rundocs.yml` runs notebook-marked tests as an explicit

@@ -82,10 +82,11 @@ Do not configure the path-filtered Pyomo light job as a branch-protection
 required status check. Non-Pyomo PRs do not trigger `.github/workflows/pyomo-tests.yml`,
 so that check would never report for those PRs. If Pyomo status must become a
 repository-wide required check, add an always-running gate job first.
-The Full Validation workflow is reportable on every PR and can be used as a
-branch-protection required status check; its full lane runs only for ready PRs
-that touch validation-sensitive paths, PRs labeled `full-validation`, nightly
-scheduled validation, manual dispatch, and version tags.
+Repository maintainers should require the `Full non-Pyomo validation` job in
+branch protection. The Full Validation workflow is reportable on every PR; its
+full lane runs only for ready PRs that touch validation-sensitive paths, PRs
+labeled `full-validation`, nightly scheduled validation, manual dispatch, and
+version tags.
 
 ## Optional Pyomo Setup
 
