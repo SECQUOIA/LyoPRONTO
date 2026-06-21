@@ -7,6 +7,58 @@ from lyopronto import calc_unknownRp
 from .utils import assert_warning_messages
 
 
+def _standard_vial():
+    return {"Av": 3.80, "Ap": 3.14, "Vfill": 2.0}
+
+
+def _standard_ht():
+    return {"KC": 2.75e-4, "KP": 8.93e-4, "KD": 0.46}
+
+
+def _unknown_rp_setup(vial=None, ht=None):
+    product = {"cSolid": 0.05, "T_pr_crit": -30.0}
+
+    test_data_dir = os.path.join(os.path.dirname(__file__), "..", "test_data")
+    temp_file = os.path.join(test_data_dir, "temperature.txt")
+    time, Tbot_exp = np.loadtxt(temp_file, unpack=True)
+
+    return {
+        "vial": vial or _standard_vial(),
+        "product": product,
+        "ht": ht or _standard_ht(),
+        "Pchamber": {
+            "setpt": [0.060, 0.080, 0.100],
+            "dt_setpt": [60.0, 120.0, 120.0],
+            "ramp_rate": 0.5,
+        },
+        "Tshelf": {
+            "init": -40.0,
+            "setpt": [-20.0, -10.0],
+            "dt_setpt": [120.0, 120.0],
+            "ramp_rate": 0.1,
+        },
+        "time": time,
+        "Tbot_exp": Tbot_exp,
+    }
+
+
+def _minimal_setup(vial=None, ht=None):
+    return {
+        "vial": vial or _standard_vial(),
+        "product": {"cSolid": 0.05, "T_pr_crit": -30.0},
+        "ht": ht or _standard_ht(),
+        "Pchamber": {"setpt": [0.080], "dt_setpt": [60.0], "ramp_rate": 0.5},
+        "Tshelf": {
+            "init": -40.0,
+            "setpt": [-30.0],
+            "dt_setpt": [60.0],
+            "ramp_rate": 0.1,
+        },
+        "time": np.array([0.0, 0.5, 1.0, 1.5, 2.0]),
+        "Tbot_exp": np.array([-40.0, -38.0, -35.0, -32.0, -30.0]),
+    }
+
+
 def _assert_unknownRp_reasonable(output):
     """Assert output is reasonable for unknown Rp (less strict than utils.py).
 
@@ -55,68 +107,28 @@ class TestCalcUnknownRp:
     @pytest.fixture
     def unknown_rp_setup(self, standard_vial, standard_ht):
         """Setup for unknown Rp calculation with experimental temperature data."""
-        # Product without R0, A1, A2 (will be estimated)
-        product = {"cSolid": 0.05, "T_pr_crit": -30.0}
+        return _unknown_rp_setup(standard_vial, standard_ht)
 
-        # Time-varying shelf temperature
-        Tshelf = {
-            "init": -40.0,
-            "setpt": [-20.0, -10.0],  # Two ramp stages
-            "dt_setpt": [120.0, 120.0],  # 2 hours in [min]
-            "ramp_rate": 0.1,  # deg/min
-        }
+    @pytest.fixture(scope="class")
+    def unknown_rp_case(self):
+        """Shared result for identical unknown-Rp coverage checks."""
+        setup = _unknown_rp_setup()
+        output, product_res = _dry_unknown_rp(setup)
+        return {"setup": setup, "output": output, "product_res": product_res}
 
-        # Time-varying chamber pressure
-        Pchamber = {
-            "setpt": [0.060, 0.080, 0.100],  # Three pressure stages
-            "dt_setpt": [60.0, 120.0, 120.0],  # Time at each stage [min]
-            "ramp_rate": 0.5,  # Ramp rate [Torr/min]
-        }
+    def test_unknown_rp_regression_properties(self, unknown_rp_case):
+        """Test the shared unknown-Rp result preserves baseline properties."""
+        output = unknown_rp_case["output"]
+        unknown_rp_setup = unknown_rp_case["setup"]
 
-        # Load experimental temperature data
-        test_data_dir = os.path.join(os.path.dirname(__file__), "..", "test_data")
-        temp_file = os.path.join(test_data_dir, "temperature.txt")
-
-        # Load and parse temperature data
-        time_exp = []
-        Tbot_exp = []
-        with open(temp_file, "r") as f:
-            for line in f:
-                if line.strip():
-                    t, T = line.split()
-                    time_exp.append(float(t))
-                    Tbot_exp.append(float(T))
-
-        time = np.array(time_exp)
-        Tbot_exp = np.array(Tbot_exp)
-
-        return {
-            "vial": standard_vial,
-            "product": product,
-            "ht": standard_ht,
-            "Pchamber": Pchamber,
-            "Tshelf": Tshelf,
-            "time": time,
-            "Tbot_exp": Tbot_exp,
-        }
-
-    def test_unknown_rp_completes(self, unknown_rp_setup):
-        """Test that simulation completes with experimental data."""
-        output, product_res = _dry_unknown_rp(unknown_rp_setup)
-
-        # Should return an array
+        # Completion checks
         assert isinstance(output, np.ndarray)
         assert output.shape[0] > 0
         assert output.shape[1] == 7  # Standard output columns
 
-    def test_unknown_rp_output_shape(self, unknown_rp_setup):
-        """Test output has correct dimensions and structure."""
-        output, product_res = _dry_unknown_rp(unknown_rp_setup)
-
-        # Check number of columns
+        # Output shape and finite-value checks
         assert output.shape[1] == 7, "Output should have 7 columns"
 
-        # Check output columns exist and are numeric
         assert np.all(np.isfinite(output[:, 0])), "Time column has invalid values"
         assert np.all(np.isfinite(output[:, 1])), "Tsub column has invalid values"
         assert np.all(np.isfinite(output[:, 2])), "Tbot column has invalid values"
@@ -125,88 +137,57 @@ class TestCalcUnknownRp:
         assert np.all(np.isfinite(output[:, 5])), "flux column has invalid values"
         assert np.all(np.isfinite(output[:, 6])), "frac_dried column has invalid values"
 
-    def test_unknown_rp_time_progression(self, unknown_rp_setup):
-        """Test time progresses monotonically."""
-        output, product_res = _dry_unknown_rp(unknown_rp_setup)
-
+        # Time progression checks
         time = output[:, 0]
 
-        # Time should be monotonically increasing
         time_diffs = np.diff(time)
         assert np.all(time_diffs >= 0), "Time must be monotonically increasing"
 
-        # Time should start at or near zero
         assert time[0] >= 0, f"Initial time should be non-negative, got {time[0]}"
 
-    def test_unknown_rp_shelf_temp_changes(self, unknown_rp_setup):
-        """Test shelf temperature follows ramp schedule."""
-        output, product_res = _dry_unknown_rp(unknown_rp_setup)
-
+        # Shelf temperature schedule checks
         Tsh = output[:, 3]
 
-        # Shelf temperature should start at init value
-        assert abs(Tsh[0] - unknown_rp_setup["Tshelf"]["init"]) < 1.0, (
-            f"Initial Tsh should be near {unknown_rp_setup['Tshelf']['init']}, got {Tsh[0]}"
-        )
+        assert (
+            abs(Tsh[0] - unknown_rp_setup["Tshelf"]["init"]) < 1.0
+        ), f"Initial Tsh should be near {unknown_rp_setup['Tshelf']['init']}, got {Tsh[0]}"
 
-        # Shelf temperature should change over time
         Tsh_range = np.max(Tsh) - np.min(Tsh)
         assert Tsh_range > 5.0, "Shelf temperature should vary during ramping"
 
-    def test_unknown_rp_pressure_changes(self, unknown_rp_setup):
-        """Test chamber pressure follows setpoint schedule."""
-        output, product_res = _dry_unknown_rp(unknown_rp_setup)
-
+        # Chamber pressure schedule checks
         Pch = output[:, 4] / 1000  # Convert mTorr to Torr
 
-        # Pressure should be within range of setpoints
         min_setpt = min(unknown_rp_setup["Pchamber"]["setpt"])
         max_setpt = max(unknown_rp_setup["Pchamber"]["setpt"])
 
-        assert np.min(Pch) >= min_setpt * 0.9, (
-            f"Min pressure {np.min(Pch):.3f} below setpoint range"
-        )
-        assert np.max(Pch) <= max_setpt * 1.1, (
-            f"Max pressure {np.max(Pch):.3f} above setpoint range"
-        )
+        assert (
+            np.min(Pch) >= min_setpt * 0.9
+        ), f"Min pressure {np.min(Pch):.3f} below setpoint range"
+        assert (
+            np.max(Pch) <= max_setpt * 1.1
+        ), f"Max pressure {np.max(Pch):.3f} above setpoint range"
 
-    def test_unknown_rp_physically_reasonable(self, unknown_rp_setup):
-        """Test output is physically reasonable."""
-        output, product_res = _dry_unknown_rp(unknown_rp_setup)
-
+        # Physical reasonableness checks
         _assert_unknownRp_reasonable(output)
 
-    def test_unknown_rp_reaches_completion(self, unknown_rp_setup):
-        """Test that drying progresses with parameter estimation.
-
-        Note: Parameter estimation with experimental data may not always
-        reach high completion due to physics constraints and fitting complexity.
-        """
-        output, product_res = _dry_unknown_rp(unknown_rp_setup)
-
+        # Drying progress checks
         final_percent = output[-1, 6]
         # Parameter estimation may have limited progress - check for any drying
-        assert final_percent > 0.0, (
-            f"Should show drying progress, got {final_percent:.1f}%"
-        )
-        assert final_percent <= 100.0, (
-            f"Percent dried should not exceed 100%, got {final_percent:.1f}%"
-        )
+        assert (
+            final_percent > 0.0
+        ), f"Should show drying progress, got {final_percent:.1f}%"
+        assert (
+            final_percent <= 100.0
+        ), f"Percent dried should not exceed 100%, got {final_percent:.1f}%"
 
-    def test_unknown_rp_fraction_dried_monotonic(self, unknown_rp_setup):
-        """Test fraction dried increases monotonically."""
-        output, product_res = _dry_unknown_rp(unknown_rp_setup)
-
+        # Fraction dried checks
         frac_dried = output[:, 6]
 
-        # Fraction dried should be monotonically increasing
         diffs = np.diff(frac_dried)
         assert np.all(diffs >= -1e-6), "Fraction dried must increase monotonically"
 
-    def test_unknown_rp_flux_positive(self, unknown_rp_setup):
-        """Test sublimation flux is non-negative."""
-        output, product_res = _dry_unknown_rp(unknown_rp_setup)
-
+        # Flux checks
         flux = output[:, 5]
         assert np.all(flux >= 0), "Sublimation flux must be non-negative"
 
@@ -230,45 +211,26 @@ class TestCalcUnknownRpEdgeCases:
     @pytest.fixture
     def minimal_setup(self, standard_vial, standard_ht):
         """Minimal setup with short time series."""
-        product = {"cSolid": 0.05, "T_pr_crit": -30.0}
+        return _minimal_setup(standard_vial, standard_ht)
 
-        Tshelf = {"init": -40.0, "setpt": [-30.0], "dt_setpt": [60.0], "ramp_rate": 0.1}
+    @pytest.fixture(scope="class")
+    def minimal_case(self):
+        """Shared result for identical minimal time-series checks."""
+        setup = _minimal_setup()
+        output, product_res = _dry_unknown_rp(setup, allow_singular_resistance=True)
+        return {"setup": setup, "output": output, "product_res": product_res}
 
-        Pchamber = {"setpt": [0.080], "dt_setpt": [60.0], "ramp_rate": 0.5}
+    def test_minimal_time_series_properties(self, minimal_case):
+        """Test shared minimal time-series result properties."""
+        output = minimal_case["output"]
 
-        # Minimal time series
-        time = np.array([0.0, 0.5, 1.0, 1.5, 2.0])
-        Tbot_exp = np.array([-40.0, -38.0, -35.0, -32.0, -30.0])
-
-        return {
-            "vial": standard_vial,
-            "product": product,
-            "ht": standard_ht,
-            "Pchamber": Pchamber,
-            "Tshelf": Tshelf,
-            "time": time,
-            "Tbot_exp": Tbot_exp,
-        }
-
-    def test_minimal_time_series(self, minimal_setup):
-        """Test with minimal time series data."""
-        output, product_res = _dry_unknown_rp(
-            minimal_setup, allow_singular_resistance=True
-        )
-
+        # Minimal time-series checks
         assert output.shape[0] > 0
         assert output.shape[1] == 7
 
-    def test_single_pressure_setpoint(self, minimal_setup):
-        """Test with single constant pressure."""
-        # Already has single pressure in minimal_setup
-        output, product_res = _dry_unknown_rp(
-            minimal_setup, allow_singular_resistance=True
-        )
-
+        # Single pressure setpoint checks
         Pch = output[:, 4] / 1000  # Convert to Torr
 
-        # Should maintain constant pressure
         Pch_std = np.std(Pch)
         assert Pch_std < 0.01, f"Pressure should be nearly constant, std={Pch_std:.4f}"
 

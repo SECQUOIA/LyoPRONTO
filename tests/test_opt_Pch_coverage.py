@@ -6,6 +6,58 @@ from lyopronto import opt_Pch
 from .utils import assert_physically_reasonable_output, assert_warning_messages
 
 
+def _standard_vial():
+    return {"Av": 3.80, "Ap": 3.14, "Vfill": 2.0}
+
+
+def _standard_ht():
+    return {"KC": 2.75e-4, "KP": 8.93e-4, "KD": 0.46}
+
+
+def _opt_pch_setup(vial=None, ht=None):
+    product = {"cSolid": 0.05, "R0": 1.4, "A1": 16.0, "A2": 0.0, "T_pr_crit": -30.0}
+
+    return {
+        "vial": vial or _standard_vial(),
+        "product": product,
+        "ht": ht or _standard_ht(),
+        "Pchamber": {"min": 0.040, "max": 0.200},
+        "Tshelf": {
+            "init": -40.0,
+            "setpt": [-20.0, -10.0],
+            "dt_setpt": [120.0, 120.0],
+            "ramp_rate": 1.0,
+        },
+        "dt": 0.01,
+        "eq_cap": {"a": 5.0, "b": 10.0},
+        "nVial": 398,
+    }
+
+
+def _conservative_setup(vial=None, ht=None):
+    return {
+        "vial": vial or _standard_vial(),
+        "product": {
+            "cSolid": 0.05,
+            "R0": 1.4,
+            "A1": 16.0,
+            "A2": 0.0,
+            "T_pr_crit": -40.0,
+        },
+        "ht": ht or _standard_ht(),
+        "Pchamber": {"min": 0.040, "max": 0.100},
+        "Tshelf": {
+            "init": -45.0,
+            "setpt": [-35.0],
+            "dt_setpt": [120.0],
+            "ramp_rate": 1.0,
+        },
+        "dt": 0.01,
+        "eq_cap": {"a": 5.0, "b": 10.0},
+        "nVial": 398,
+    }
+
+
 def _dry_opt_pch(setup, *, allowed_warnings=None):
     """Run pressure-only optimization and assert expected edge-case warnings."""
     if allowed_warnings is None:
@@ -30,149 +82,87 @@ def _dry_opt_pch(setup, *, allowed_warnings=None):
 class TestOptPchOnly:
     """Test pressure-only optimizer (fixed shelf temperature)."""
 
-    @pytest.fixture
-    def opt_pch_setup(self, standard_vial, standard_ht):
-        """Setup for Pch-only optimization."""
-        product = {"cSolid": 0.05, "R0": 1.4, "A1": 16.0, "A2": 0.0, "T_pr_crit": -30.0}
+    @pytest.fixture(scope="class")
+    def opt_pch_case(self):
+        """Shared result for identical pressure-only optimization checks."""
+        setup = _opt_pch_setup()
+        return {"setup": setup, "output": _dry_opt_pch(setup)}
 
-        # Fixed shelf temperature schedule
-        Tshelf = {
-            "init": -40.0,
-            "setpt": [-20.0, -10.0],
-            "dt_setpt": [120.0, 120.0],  # 2 hours in [min]
-            "ramp_rate": 1.0,  # Ramp rate [degC/min]
-        }
+    def test_opt_pch_regression_properties(self, opt_pch_case):
+        """Test the shared pressure-only optimizer result preserves properties."""
+        output = opt_pch_case["output"]
+        setup = opt_pch_case["setup"]
 
-        # Pressure bounds (will be optimized)
-        Pchamber = {"min": 0.040, "max": 0.200}
-
-        dt = 0.01  # Time step [hr]
-
-        # Equipment capability
-        eq_cap = {"a": 5.0, "b": 10.0}
-        nVial = 398
-
-        return {
-            "vial": standard_vial,
-            "product": product,
-            "ht": standard_ht,
-            "Pchamber": Pchamber,
-            "Tshelf": Tshelf,
-            "dt": dt,
-            "eq_cap": eq_cap,
-            "nVial": nVial,
-        }
-
-    def test_opt_pch_completes(self, opt_pch_setup):
-        """Test that optimizer runs to completion."""
-        output = _dry_opt_pch(opt_pch_setup)
-
-        # Should return an array
+        # Completion checks
         assert isinstance(output, np.ndarray)
         assert output.shape[0] > 0
         assert output.shape[1] == 7  # Standard output columns
 
-    def test_opt_pch_output_shape(self, opt_pch_setup):
-        """Test output has correct format."""
-        output = _dry_opt_pch(opt_pch_setup)
-
-        # Check shape
+        # Output format checks
         assert output.shape[1] == 7, "Output should have 7 columns"
-
-        # Check all values are finite
         assert np.all(np.isfinite(output)), "Output contains non-finite values"
 
-    def test_opt_pch_respects_temp_constraint(self, opt_pch_setup):
-        """Test critical temperature is not exceeded."""
-        output = _dry_opt_pch(opt_pch_setup)
-
+        # Temperature constraint checks
         Tbot = output[:, 2]  # Vial bottom temperature
-        T_crit = opt_pch_setup["product"]["T_pr_crit"]
+        T_crit = setup["product"]["T_pr_crit"]
 
-        # Allow 0.5°C tolerance for numerical optimization
         max_violation = np.max(Tbot - T_crit)
-        assert max_violation <= 0.5, (
-            f"Temperature exceeded critical by {max_violation:.2f}°C"
-        )
+        assert (
+            max_violation <= 0.5
+        ), f"Temperature exceeded critical by {max_violation:.2f}°C"
 
-    def test_opt_pch_pressure_within_bounds(self, opt_pch_setup):
-        """Test optimized pressure stays within bounds."""
-        output = _dry_opt_pch(opt_pch_setup)
-
+        # Pressure bound checks
         Pch = output[:, 4] / 1000  # Convert mTorr to Torr
-        P_min = opt_pch_setup["Pchamber"]["min"]
-        P_max = opt_pch_setup["Pchamber"]["max"]
+        P_min = setup["Pchamber"]["min"]
+        P_max = setup["Pchamber"]["max"]
 
-        assert np.all(Pch >= P_min * 0.95), (
-            f"Pressure {np.min(Pch):.3f} below minimum {P_min}"
-        )
-        assert np.all(Pch <= P_max * 1.05), (
-            f"Pressure {np.max(Pch):.3f} above maximum {P_max}"
-        )
+        assert np.all(
+            Pch >= P_min * 0.95
+        ), f"Pressure {np.min(Pch):.3f} below minimum {P_min}"
+        assert np.all(
+            Pch <= P_max * 1.05
+        ), f"Pressure {np.max(Pch):.3f} above maximum {P_max}"
 
-    def test_opt_pch_respects_equipment(self, opt_pch_setup):
-        """Test equipment capability constraint is satisfied."""
-        output = _dry_opt_pch(opt_pch_setup)
-
+        # Equipment capability checks
         flux = output[:, 5]  # Sublimation flux [kg/hr/m**2]
-        Ap_m2 = opt_pch_setup["vial"]["Ap"] / 100**2  # Convert [cm**2] to [m**2]
+        Ap_m2 = setup["vial"]["Ap"] / 100**2  # Convert [cm**2] to [m**2]
 
         # Total sublimation rate per vial
         dmdt = flux * Ap_m2  # [kg/hr/vial]
 
         # Equipment capability at different pressures
         Pch = output[:, 4] / 1000  # [Torr]
-        eq_cap_max = (
-            opt_pch_setup["eq_cap"]["a"] + opt_pch_setup["eq_cap"]["b"] * Pch
-        ) / opt_pch_setup["nVial"]
+        eq_cap_max = (setup["eq_cap"]["a"] + setup["eq_cap"]["b"] * Pch) / setup[
+            "nVial"
+        ]
 
         # Should not exceed equipment capability (with small tolerance)
         violations = dmdt - eq_cap_max
         max_violation = np.max(violations)
-        assert max_violation <= 0.01, (
-            f"Equipment capability exceeded by {max_violation:.4f} kg/hr"
-        )
+        assert (
+            max_violation <= 0.01
+        ), f"Equipment capability exceeded by {max_violation:.4f} kg/hr"
 
-    def test_opt_pch_physically_reasonable(self, opt_pch_setup):
-        """Test output is physically reasonable."""
-        output = _dry_opt_pch(opt_pch_setup)
-
+        # Physical reasonableness checks
         assert_physically_reasonable_output(output)
 
-    def test_opt_pch_reaches_completion(self, opt_pch_setup):
-        """Test that Pch optimization makes drying progress.
-
-        Note: Optimization with constraints may not always reach 99% completion
-        within time limits. Test validates the optimizer runs and makes progress.
-        """
-        output = _dry_opt_pch(opt_pch_setup)
-
+        # Drying progress checks
         final_percent = output[-1, 6]
         # Optimizer should show progress, but may not reach full completion
-        assert final_percent > 0.0, (
-            f"Should show drying progress, got {final_percent:.1f}%"
-        )
-        assert final_percent <= 100.0, (
-            f"Percent dried should not exceed 100%, got {final_percent:.1f}%"
-        )
+        assert (
+            final_percent > 0.0
+        ), f"Should show drying progress, got {final_percent:.1f}%"
+        assert (
+            final_percent <= 100.0
+        ), f"Percent dried should not exceed 100%, got {final_percent:.1f}%"
 
-    def test_opt_pch_convergence(self, opt_pch_setup):
-        """Test optimization converges to a solution."""
-        output = _dry_opt_pch(opt_pch_setup)
-
-        # If optimization converged, should have reasonable drying time
+        # Convergence checks
         total_time = output[-1, 0]
-        assert 1.0 <= total_time <= 50.0, (
-            f"Drying time {total_time:.1f} hr seems unreasonable"
-        )
+        assert (
+            1.0 <= total_time <= 50.0
+        ), f"Drying time {total_time:.1f} hr seems unreasonable"
 
-    def test_opt_pch_pressure_optimization(self, opt_pch_setup):
-        """Test that pressure is actively optimized (not just at bounds)."""
-        output = _dry_opt_pch(opt_pch_setup)
-
-        Pch = output[:, 4] / 1000  # [Torr]
-
-        # Pressure should vary during optimization
+        # Pressure optimization checks
         P_range = np.max(Pch) - np.min(Pch)
         assert P_range > 0.001, "Pressure should vary during optimization"
 
@@ -183,37 +173,7 @@ class TestOptPchEdgeCases:
     @pytest.fixture
     def conservative_setup(self, standard_vial, standard_ht):
         """Setup with very conservative critical temperature."""
-        product = {
-            "cSolid": 0.05,
-            "R0": 1.4,
-            "A1": 16.0,
-            "A2": 0.0,
-            "T_pr_crit": -40.0,  # Very conservative
-        }
-
-        Tshelf = {
-            "init": -45.0,
-            "setpt": [-35.0],
-            "dt_setpt": [120.0],
-            "ramp_rate": 1.0,
-        }
-
-        Pchamber = {"min": 0.040, "max": 0.100}
-
-        dt = 0.01
-        eq_cap = {"a": 5.0, "b": 10.0}
-        nVial = 398
-
-        return {
-            "vial": standard_vial,
-            "product": product,
-            "ht": standard_ht,
-            "Pchamber": Pchamber,
-            "Tshelf": Tshelf,
-            "dt": dt,
-            "eq_cap": eq_cap,
-            "nVial": nVial,
-        }
+        return _conservative_setup(standard_vial, standard_ht)
 
     def test_conservative_critical_temp(self, conservative_setup):
         """Test with very conservative critical temperature."""
