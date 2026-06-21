@@ -1,0 +1,106 @@
+name: Full Validation
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [ opened, synchronize, reopened, ready_for_review, converted_to_draft, labeled, unlabeled ]
+  push:
+    tags:
+      - 'v*'
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validation-scope:
+    name: Validation scope
+    runs-on: ubuntu-latest
+    outputs:
+      run_full: ${{ steps.scope.outputs.run_full }}
+      reason: ${{ steps.scope.outputs.reason }}
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Decide whether full validation is required
+      id: scope
+      env:
+        EVENT_NAME: ${{ github.event_name }}
+        PR_DRAFT: ${{ github.event.pull_request.draft || false }}
+        HAS_FULL_VALIDATION_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'full-validation') }}
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      run: |
+        run_full=false
+        reason="not requested"
+
+        if [ "$EVENT_NAME" != "pull_request" ]; then
+          run_full=true
+          reason="$EVENT_NAME trigger"
+        elif [ "$PR_DRAFT" = "true" ]; then
+          reason="draft PR"
+        elif [ "$HAS_FULL_VALIDATION_LABEL" = "true" ]; then
+          run_full=true
+          reason="full-validation label"
+        else
+          changed_paths="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
+          while IFS= read -r path; do
+            case "$path" in
+              lyopronto/*.py|tests/test_*.py|tests/conftest.py|tests/scientific_reference_scenarios.py|test_data/*|examples/*.py|pyproject.toml|requirements*.txt)
+                run_full=true
+                reason="changed validation-sensitive path: $path"
+                break
+                ;;
+            esac
+          done <<< "$changed_paths"
+        fi
+
+        echo "run_full=$run_full" >> "$GITHUB_OUTPUT"
+        echo "reason=$reason" >> "$GITHUB_OUTPUT"
+        echo "Full validation required: $run_full ($reason)"
+
+  full-non-pyomo:
+    name: Full non-Pyomo validation
+    needs: validation-scope
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Report skipped validation
+      if: ${{ needs.validation-scope.outputs.run_full != 'true' }}
+      run: |
+        echo "Full validation skipped: ${{ needs.validation-scope.outputs.reason }}"
+
+    - uses: actions/checkout@v4
+      if: ${{ needs.validation-scope.outputs.run_full == 'true' }}
+
+    - name: Read CI version config
+      if: ${{ needs.validation-scope.outputs.run_full == 'true' }}
+      id: versions
+      uses: mikefarah/yq@v4.44.1
+      with:
+        cmd: yq eval '.python-version' .github/ci-config/ci-versions.yml
+
+    - name: Set up Python
+      if: ${{ needs.validation-scope.outputs.run_full == 'true' }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ steps.versions.outputs.result }}
+        cache: 'pip'
+        cache-dependency-path: pyproject.toml
+
+    - name: Install dependencies
+      if: ${{ needs.validation-scope.outputs.run_full == 'true' }}
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        pip install -e ".[dev]"
+
+    - name: Run full non-Pyomo validation
+      if: ${{ needs.validation-scope.outputs.run_full == 'true' }}
+      run: |
+        echo "Running full non-Pyomo validation with coverage"
+        pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing

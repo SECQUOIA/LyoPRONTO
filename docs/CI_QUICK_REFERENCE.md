@@ -40,7 +40,7 @@ conda install -c conda-forge ipopt
 | --- | --- | --- |
 | Static analysis | `python -m ruff check lyopronto tests examples main.py`; advisory `python -m mypy lyopronto` | `.github/workflows/pr-tests.yml`, `.github/workflows/tests.yml` |
 | Fast PR | `pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"` | `.github/workflows/pr-tests.yml` |
-| Full non-Pyomo PR | `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing` | `.github/workflows/pr-tests.yml` |
+| Full non-Pyomo PR | `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing` | `.github/workflows/full-validation.yml` |
 | Full non-Pyomo main/local | `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing` | `.github/workflows/tests.yml`, `run_local_ci.sh` |
 | Slow non-Pyomo | `pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing` | `.github/workflows/slow-tests.yml` |
 | Notebook | `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing` | `.github/workflows/rundocs.yml` |
@@ -55,9 +55,13 @@ out of SciPy-only totals.
 ## Triggers
 
 - PR updates targeting `main`: static analysis and fast lane.
-- Ready/non-draft PRs targeting `main`: full non-Pyomo lane with coverage.
+- Full Validation workflow: full non-Pyomo lane with coverage for
+  non-draft PRs touching validation-sensitive code/tests, PRs labeled
+  `full-validation`, nightly scheduled validation, manual dispatch, and version
+  tags.
 - Pushes to `main`: static analysis and full non-Pyomo lane with coverage.
-- Ready/non-draft PRs, pushes to `main`, and manual dispatch: notebook lane.
+- Ready/non-draft PRs, pushes to `main`, nightly schedule, version tags, and
+  manual dispatch: notebook lane.
 - PRs or pushes to `main` changing `lyopronto/pyomo_models/**` or
   `tests/test_pyomo_models/**`: required Pyomo light lane and optional
   non-blocking solver comparison.
@@ -66,6 +70,9 @@ out of SciPy-only totals.
 Do not add the path-filtered Pyomo light job to branch-protection required
 status checks. It does not report on non-Pyomo PRs. The optional solver
 comparison job is job-level non-blocking, so review its logs when it runs.
+The Full Validation workflow is reportable on every PR and can be used as a
+branch-protection required status check; it skips quickly when neither paths nor
+labels require the expensive full lane.
 Codecov uploads are not configured. Coverage remains visible in terminal
 reports from the full, notebook, slow, and Pyomo solver lanes.
 

@@ -281,20 +281,29 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     pyomo_light_targets = _shell_assignments(script)["PYOMO_LIGHT_TARGETS"].split()
     pr_tests = _text(".github/workflows/pr-tests.yml")
     main_tests = _text(".github/workflows/tests.yml")
+    full_validation = _text(".github/workflows/full-validation.yml")
     manual_tests = _text(".github/workflows/slow-tests.yml")
     notebook_tests = _text(".github/workflows/rundocs.yml")
     pyomo_tests = _text(".github/workflows/pyomo-tests.yml")
     workflow_text = "\n".join(
-        [pr_tests, main_tests, manual_tests, notebook_tests, pyomo_tests]
+        [
+            pr_tests,
+            main_tests,
+            full_validation,
+            manual_tests,
+            notebook_tests,
+            pyomo_tests,
+        ]
     )
     fast_pr_command = _single_command_with_marker(pr_tests, lane_expressions["fast"])
     for marker in ["slow", "notebook", "pyomo"]:
         _assert_marker_excludes(lane_expressions["fast"], marker)
     _assert_no_coverage(fast_pr_command)
+    assert not _commands_with_marker(pr_tests, lane_expressions["full"])
 
     full_non_pyomo_commands = (
-        _commands_with_marker(pr_tests, lane_expressions["full"])
-        + _commands_with_marker(main_tests, lane_expressions["full"])
+        _commands_with_marker(main_tests, lane_expressions["full"])
+        + _commands_with_marker(full_validation, lane_expressions["full"])
         + _commands_with_marker(manual_tests, lane_expressions["full"])
     )
     assert len(full_non_pyomo_commands) == 3
@@ -324,7 +333,14 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
 
     assert "codecov/codecov-action" not in pr_tests
     assert "pr-non-pyomo" not in pr_tests
-    assert "github.event.pull_request.draft == false" in pr_tests
+    assert "full-non-pyomo:" not in pr_tests
+    assert "full-validation" in full_validation
+    assert "schedule:" in full_validation
+    assert "tags:" in full_validation
+    assert "lyopronto/*.py" in full_validation
+    assert "tests/test_*.py" in full_validation
+    assert "github.event.pull_request.draft" in full_validation
+    assert "needs.validation-scope.outputs.run_full" in full_validation
     assert "--cov-report=term-missing" in workflow_text
     assert "--cov-report=xml:coverage.xml" not in workflow_text
     assert "coverage.xml" not in workflow_text
@@ -334,12 +350,15 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert "main-non-pyomo" not in workflow_text
     assert "pip install pyomo" not in pr_tests
     assert "pip install pyomo" not in main_tests
+    assert "pip install pyomo" not in full_validation
     assert "pip install pyomo" not in notebook_tests
     assert 'pip install -e ".[dev,pyomo]"' not in pr_tests
     assert 'pip install -e ".[dev,pyomo]"' not in main_tests
+    assert 'pip install -e ".[dev,pyomo]"' not in full_validation
     assert 'pip install -e ".[dev,pyomo]"' not in notebook_tests
     assert "idaes get-extensions --extra petsc" not in pr_tests
     assert "idaes get-extensions --extra petsc" not in main_tests
+    assert "idaes get-extensions --extra petsc" not in full_validation
     assert "idaes get-extensions --extra petsc" not in notebook_tests
     assert "python -m ruff check lyopronto tests examples main.py" in pr_tests
     assert "python -m ruff check lyopronto tests examples main.py" in main_tests
@@ -471,6 +490,10 @@ def test_contributor_docs_include_ci_and_static_analysis_commands() -> None:
     assert "--durations=25" in docs
     assert "--timeout=600" in docs
     assert "--timeout-method=thread" in docs
+    assert "Full Validation workflow" in docs
+    assert "full-validation" in docs
+    assert "nightly" in docs
+    assert "tag" in docs
     assert "Ruff linting" in docs
     assert "python -m ruff check lyopronto tests examples main.py" in docs
     assert "python -m mypy lyopronto" in docs

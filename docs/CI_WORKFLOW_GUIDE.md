@@ -7,7 +7,7 @@ suite. The workflows are designed around seven lanes:
 
 1. Static analysis
 2. Fast PR feedback
-3. Full non-Pyomo validation
+3. Conditional full non-Pyomo validation
 4. Manual slow non-Pyomo validation
 5. Explicit notebook validation
 6. Automatic Pyomo no-solver validation
@@ -28,8 +28,36 @@ Runs on pull requests targeting `main`.
   and advisory `python -m mypy lyopronto`
 - `fast-scipy` runs on every PR update:
   `pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"`
-- `full-non-pyomo` runs only for ready/non-draft PRs:
+
+Ordinary PR feedback intentionally stops at these fast checks. Use the Full
+Validation workflow for the expensive full lane.
+
+### `.github/workflows/full-validation.yml`
+
+Runs on pull requests targeting `main`, nightly schedule, version tags, and
+manual dispatch. The `Validation scope` job keeps the workflow reportable on
+all PRs; `Full non-Pyomo validation` skips quickly unless full validation is
+required.
+
+The full lane runs for:
+
+- non-draft PRs labeled `full-validation`
+- non-draft PRs changing validation-sensitive code, tests, examples, test data,
+  or dependency metadata
+- nightly scheduled validation
+- version tags and manual dispatch
+
+The full lane command is:
+
   `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing`
+
+Because this marker expression selects all non-Pyomo tests, it includes the
+slow-marked optimizer, fitting, and scientific reference checks. The notebook
+workflow still runs separately so notebook status remains visible.
+
+This job is suitable as a branch-protection required status check because it
+reports success quickly when the validation policy decides the full lane is not
+needed.
 
 ### `.github/workflows/tests.yml`
 
@@ -43,8 +71,8 @@ Runs on pushes to `main`.
 
 ### `.github/workflows/rundocs.yml`
 
-Runs notebook validation for ready/non-draft PRs, pushes to `main`, and manual
-dispatch.
+Runs notebook validation for ready/non-draft PRs, pushes to `main`, version
+tags, nightly schedule, and manual dispatch.
 
 - `notebook-tests` runs:
   `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing`
@@ -68,7 +96,7 @@ source files are not reported as 0% in SciPy-only lanes. Pyomo coverage uses
 the default configuration in the optional Pyomo lane.
 
 Codecov uploads are not configured. Coverage remains visible in terminal
-reports from the ready/non-draft full PR lane, pushes to `main`, the notebook
+reports from the Full Validation workflow, pushes to `main`, the notebook
 workflow, and manual validation lanes.
 
 ### `.github/workflows/pyomo-tests.yml`
@@ -138,11 +166,13 @@ SKIP_INSTALL=1 ./run_local_ci.sh fast
 ## Expected Pull Request Flow
 
 1. Open or update a PR: static analysis and the fast lane run.
-2. Convert the PR out of draft: full non-Pyomo lane runs with coverage.
+2. If the PR touches validation-sensitive code/tests or needs deeper evidence,
+   the Full Validation workflow runs the full non-Pyomo lane automatically or
+   through the `full-validation` label.
 3. Notebook lane runs separately for ready PRs.
 4. If the PR changes Pyomo model code or tests, the Pyomo light lane runs
    automatically; the optional solver comparison runs for ready PRs.
-5. Reviewers can request manual slow or Pyomo lanes when relevant.
+5. Reviewers can request manual slow, full, or Pyomo lanes when relevant.
 6. Merge to `main`: static analysis and the full non-Pyomo lane run again, with
    Pyomo lanes also path-filtered on Pyomo changes.
 
@@ -150,6 +180,9 @@ SKIP_INSTALL=1 ./run_local_ci.sh fast
 
 - Keep marker expressions synchronized between workflows, `run_local_ci.sh`,
   and `tests/README.md`.
+- Keep the Full Validation workflow's path list aligned with validation-
+  sensitive modules and tests, and use the `full-validation` label for PRs that
+  need deeper evidence without touching those paths.
 - Keep automatic Pyomo validation isolated behind the Pyomo path filter so
   default non-Pyomo PRs do not install optional Pyomo dependencies.
 - Do not configure path-filtered Pyomo jobs as branch-protection required status

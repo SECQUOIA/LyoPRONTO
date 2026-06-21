@@ -5,10 +5,13 @@
 CI performance is managed with marker-based lanes:
 
 - Fast PR feedback excludes `slow`, `notebook`, and `pyomo`.
-- Ready/non-draft PRs and `main` runs execute the full non-Pyomo lane with
-  coverage.
+- The Full Validation workflow runs full non-Pyomo coverage for
+  validation-sensitive PRs, PRs labeled `full-validation`, nightly schedule,
+  version tags, and manual dispatch.
+- `main` runs execute the full non-Pyomo lane with coverage.
 - Slow optimizer-heavy validation is available through manual dispatch.
-- Notebook tests run in their own explicit workflow.
+- Notebook tests run in their own explicit workflow, including nightly
+  scheduled validation.
 - Pyomo light validation runs automatically only when Pyomo model or test paths
   change; solver-backed Pyomo validation remains optional.
 
@@ -37,11 +40,12 @@ pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=term-missing
 ## Why This Helps
 
 - PR updates get quick signal from tracked non-notebook SciPy behavior.
-- Coverage work is reserved for ready PRs and `main`.
+- Coverage work is reserved for validation-sensitive PRs, explicit
+  `full-validation` requests, nightly/tag validation, and `main`.
 - Non-Pyomo coverage omits optional Pyomo source files, while the Pyomo solver
   lane can still measure that package with the default coverage configuration.
-- Optimizer-heavy slow tests remain available without forcing every draft PR to
-  pay that cost.
+- Optimizer-heavy slow tests remain available without forcing every ordinary PR
+  to pay that cost.
 - Notebook execution is visible as its own lane instead of being hidden inside
   ordinary fast tests.
 - Each pytest lane inherits the shared `--durations=25`, `--timeout=600`,

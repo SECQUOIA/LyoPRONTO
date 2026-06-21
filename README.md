@@ -1,5 +1,7 @@
 # LyoPRONTO
 
+[![Full Validation](https://github.com/SECQUOIA/LyoPRONTO/actions/workflows/full-validation.yml/badge.svg)](https://github.com/SECQUOIA/LyoPRONTO/actions/workflows/full-validation.yml)
+
 LyoPRONTO is an open-source Python package for vial-scale lyophilization
 simulation and optimization. It models freezing and primary drying with heat
 and mass transfer equations, SciPy-based solvers, legacy web-interface
@@ -108,6 +110,12 @@ pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc
 documented GitHub Actions lanes. Pyomo remains optional: the path-filtered
 automatic Pyomo lane installs `.[dev,pyomo]` without IPOPT, while
 solver-backed Pyomo validation stays optional.
+
+Pull requests run static analysis and the fast SciPy lane by default. The Full
+Validation workflow runs the full non-Pyomo lane for validation-sensitive code
+and test changes, PRs labeled `full-validation`, nightly scheduled validation,
+manual dispatch, and version tags. Pushes to `main` continue to run the full
+non-Pyomo confidence gate.
 
 All pytest lanes inherit `--durations=25`, `--timeout=600`, and
 `--timeout-method=thread` from the shared pytest configuration through

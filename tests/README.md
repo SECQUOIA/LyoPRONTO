@@ -8,7 +8,7 @@ lanes for LyoPRONTO.
 | Lane | Marker expression | Where it runs | Purpose |
 | --- | --- | --- | --- |
 | Fast PR | `not slow and not notebook and not pyomo` | Every PR update in `.github/workflows/pr-tests.yml` | Quick contributor feedback without solver-heavy, notebook, or Pyomo tests. |
-| Full non-Pyomo | `not pyomo` | Ready/non-draft PRs and pushes to `main` | Main confidence gate with coverage for the tracked SciPy implementation. |
+| Full non-Pyomo | `not pyomo` | Conditional Full Validation workflow, pushes to `main`, and local/manual runs | Main confidence gate with coverage for the tracked SciPy implementation, including slow-marked non-Pyomo checks. |
 | Slow non-Pyomo | `slow and not pyomo` | Manual validation workflow | Targeted optimizer-heavy validation. |
 | Notebook | `notebook` | Explicit notebook workflow | Executes documentation notebooks separately from ordinary fast tests. |
 | Pyomo light | `tests/test_pyomo_models tests/test_pyomo_solver.py` | Path-filtered automatic workflow and `./run_local_ci.sh pyomo-light` | Required import, model-construction, and missing-solver skip coverage without IPOPT. |
@@ -134,12 +134,18 @@ The current top warning sources audited for this policy are:
 
 - Static analysis runs in PR and main-branch workflows. Ruff linting is an
   enforced gate; mypy is advisory.
-- `.github/workflows/pr-tests.yml` runs the fast lane for all PR updates and
-  the full non-Pyomo lane with coverage once the PR is ready for review.
+- `.github/workflows/pr-tests.yml` runs the fast lane for all PR updates.
+- `.github/workflows/full-validation.yml` runs the full non-Pyomo lane with
+  coverage for non-draft PRs labeled `full-validation`, PRs that touch
+  validation-sensitive code or tests, nightly scheduled validation, manual
+  dispatch, and version tags. The job reports success quickly when the full
+  lane is not required, so it can be used in branch-protection required status
+  checks.
 - `.github/workflows/tests.yml` runs the full non-Pyomo lane with coverage on
   pushes to `main`.
 - `.github/workflows/rundocs.yml` runs notebook-marked tests as an explicit
-  notebook lane for ready PRs, `main`, and manual dispatch.
+  notebook lane for ready PRs, `main`, nightly schedule, version tags, and
+  manual dispatch.
 - `.github/workflows/pyomo-tests.yml` runs on PRs or pushes that change
   `lyopronto/pyomo_models/**` or `tests/test_pyomo_models/**`; its required
   lane installs `.[dev,pyomo]` without IPOPT and its solver comparison job is

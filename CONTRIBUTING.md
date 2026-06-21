@@ -24,13 +24,16 @@ The same commands are available locally through `./run_local_ci.sh fast`,
 `./run_local_ci.sh pyomo`.
 
 Active GitHub workflows use the Python version in
-`.github/ci-config/ci-versions.yml`. PRs always run the fast lane; ready
-non-draft PRs and pushes to `main` run the full non-Pyomo lane with coverage;
-notebook tests run in an explicit notebook workflow; Pyomo model and test
-changes run a path-filtered Pyomo light workflow; slow and solver-backed Pyomo
-validation are available through optional/manual workflows. Static analysis runs
-as its own CI lane: Ruff linting is enforced, and mypy is advisory while the
-remaining project type errors are staged for follow-up work.
+`.github/ci-config/ci-versions.yml`. PRs always run static analysis and the
+fast lane. The Full Validation workflow runs the full non-Pyomo lane with
+coverage for non-draft PRs labeled `full-validation`, PRs that touch
+validation-sensitive code or tests, nightly scheduled validation, manual
+dispatch, and version tags. Pushes to `main` continue to run the full
+non-Pyomo confidence gate. Notebook tests run in an explicit notebook workflow;
+Pyomo model and test changes run a path-filtered Pyomo light workflow; slow and
+solver-backed Pyomo validation are available through optional/manual workflows.
+Static analysis runs as its own CI lane: Ruff linting is enforced, and mypy is
+advisory while the remaining project type errors are staged for follow-up work.
 Non-Pyomo coverage lanes use `.coveragerc.non-pyomo` so optional Pyomo modules
 do not appear as unexecuted files in SciPy-only reports.
 
@@ -48,7 +51,9 @@ blanket-ignore warnings from `lyopronto`.
 - Assert expected project warnings with `pytest.warns`; investigate unexpected
   warning summaries before adding filters.
 - Run `./run_local_ci.sh fast` for quick feedback before pushing.
-- Run `./run_local_ci.sh full` before marking a PR ready for review when practical.
+- Run `./run_local_ci.sh full` before marking a validation-sensitive PR ready
+  for review when practical, or apply the `full-validation` label to request
+  the CI lane.
 - Review [`tests/README.md`](tests/README.md) for full details on running, writing, and debugging tests, as well as CI workflow explanations.
 
 ---

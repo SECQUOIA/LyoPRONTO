@@ -18,9 +18,11 @@ GitHub Actions plus `run_local_ci.sh`.
 
 ### Full Non-Pyomo Lane
 
-- **Workflows:** `.github/workflows/pr-tests.yml`,
+- **Workflows:** `.github/workflows/full-validation.yml`,
   `.github/workflows/tests.yml`
-- **Trigger:** Ready/non-draft PRs and pushes to `main`
+- **Trigger:** Non-draft PRs that touch validation-sensitive paths, PRs labeled
+  `full-validation`, nightly schedule, version tags, manual dispatch, and
+  pushes to `main`
 - **Command:** `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing`
 - **Purpose:** Main confidence gate for tracked behavior while Pyomo remains an
   implemented optional stack.
@@ -36,7 +38,8 @@ GitHub Actions plus `run_local_ci.sh`.
 ### Notebook Lane
 
 - **Workflow:** `.github/workflows/rundocs.yml`
-- **Trigger:** Ready/non-draft PRs, pushes to `main`, or manual dispatch
+- **Trigger:** Ready/non-draft PRs, pushes to `main`, nightly schedule, version
+  tags, or manual dispatch
 - **Command:** `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing`
 - **Purpose:** Execute documentation notebooks separately from ordinary fast
   tests.
@@ -85,5 +88,6 @@ files are omitted from SciPy-only coverage totals.
 ```
 
 Use the fast lane before pushing routine changes. Use the full lane before
-marking a PR ready for review when practical. Use the slow or notebook lanes
-when the changed files make those paths relevant.
+marking a validation-sensitive PR ready for review when practical, or add the
+`full-validation` label to request the Full Validation workflow. Use the slow or
+notebook lanes when the changed files make those paths relevant.

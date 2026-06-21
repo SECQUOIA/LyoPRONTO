@@ -22,8 +22,8 @@ which runs
 pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"
 ```
 
-Before marking a PR ready for review, run the full non-Pyomo lane when
-practical:
+Before marking a validation-sensitive PR ready for review, run the full
+non-Pyomo lane when practical:
 
 ```bash
 ./run_local_ci.sh full
@@ -41,6 +41,9 @@ All pytest lanes inherit `--durations=25`, `--timeout=600`, and
 Notebook, slow, and Pyomo validation are separate lanes:
 `./run_local_ci.sh notebook`, `./run_local_ci.sh slow`,
 `./run_local_ci.sh pyomo-light`, and `./run_local_ci.sh pyomo`.
+In CI, the Full Validation workflow runs the full non-Pyomo lane for
+validation-sensitive paths, the `full-validation` label, nightly schedule,
+manual dispatch, and version tags.
 
 Optional Pyomo work uses a separate extra so default development environments
 stay non-Pyomo:

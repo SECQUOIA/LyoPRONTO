@@ -228,7 +228,8 @@ The active test and CI lanes are marker-based:
 
 - static analysis: enforced Ruff, advisory mypy
 - fast PR lane: excludes `slow`, `notebook`, and `pyomo`
-- full non-Pyomo lane: tracked confidence gate with coverage
+- full non-Pyomo lane: tracked confidence gate with coverage, run by main and
+  conditional Full Validation workflows
 - notebook lane: explicit Jupyter/papermill validation
 - slow non-Pyomo lane: manual optimizer-heavy validation
 - Pyomo light lane: path-filtered automatic validation for Pyomo model/test
