@@ -119,6 +119,9 @@ Implemented modules:
   equations.
 - `lyopronto.pyomo_models.trajectory` builds a multi-period primary-drying
   trajectory model over a fixed uniform time grid.
+- `lyopronto.pyomo_models.optimization` exposes experimental trajectory
+  optimization builders for pressure-only, shelf-temperature-only, and joint
+  pressure/shelf-temperature modes.
 
 Pyomo tests are marked `pyomo` and are skip-safe when Pyomo or IPOPT is not
 installed. See `dev.md` for optional solver setup and CI lane policy.
@@ -143,6 +146,24 @@ sublimation rate, vapor pressure, and heat-transfer coefficient are time-indexed
 Pyomo variables. Chamber-pressure and shelf-temperature profiles can be fixed
 from legacy ramp schedules, or bounded and constrained by per-hour ramp limits.
 
+The optimization mode builders use the same legacy dictionary conventions as
+the SciPy optimizers:
+
+- `create_pressure_optimization_model`: fixed shelf-temperature profile,
+  variable chamber pressure.
+- `create_shelf_temperature_optimization_model`: fixed chamber-pressure
+  profile, variable shelf temperature.
+- `create_joint_optimization_model`: chamber pressure and shelf temperature
+  both variable.
+
+All three modes intentionally share the trajectory objective
+`sum(Pch[t] - Psub[t])`, a driving-force proxy inherited from the legacy
+optimizers. Mode-specific behavior comes from the free/fixed controls, fixed
+profiles, bounds, product-temperature limit, optional equipment capability, and
+optional ramp-rate constraints. These Pyomo APIs are validation prototypes and
+should not be treated as stable replacements for `opt_Pch.dry`,
+`opt_Tsh.dry`, or `opt_Pch_Tsh.dry`.
+
 The final dried target is represented as a lower bound on the final dried cake
 fraction. Targets must remain below 100% because the frozen-layer heat balance
 is singular when no frozen layer remains.
@@ -152,6 +173,12 @@ table into Pyomo initial values. It converts pressure from mTorr to Torr,
 sublimation flux to kg/hr/vial, and percent dried to cake length.
 `apply_trajectory_warmstart` can apply that mapping, or any compatible indexed
 mapping, to an existing trajectory model.
+
+Comparison to SciPy optimizer results is direct for variable bounds, fixed
+profiles, output columns, and algebraic constraints. Full trajectories can
+diverge because the Pyomo optimizer solves a simultaneous fixed-horizon
+backward-Euler problem with a final dried-fraction target, while the SciPy
+optimizers solve sequential point problems and advance until complete drying.
 
 Future Pyomo planning remains in GitHub issue
 [#80](https://github.com/SECQUOIA/LyoPRONTO/issues/80) and its child issues.
