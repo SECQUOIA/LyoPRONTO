@@ -156,11 +156,13 @@ the SciPy optimizers:
 - `create_joint_optimization_model`: chamber pressure and shelf temperature
   both variable.
 
-All three modes minimize the trajectory sum of `Pch[t] - Psub[t]` while
-enforcing the trajectory physics, product-temperature limit, optional equipment
-capability, and optional ramp-rate constraints. These Pyomo APIs are validation
-prototypes and should not be treated as stable replacements for
-`opt_Pch.dry`, `opt_Tsh.dry`, or `opt_Pch_Tsh.dry`.
+All three modes intentionally share the trajectory objective
+`sum(Pch[t] - Psub[t])`, a driving-force proxy inherited from the legacy
+optimizers. Mode-specific behavior comes from the free/fixed controls, fixed
+profiles, bounds, product-temperature limit, optional equipment capability, and
+optional ramp-rate constraints. These Pyomo APIs are validation prototypes and
+should not be treated as stable replacements for `opt_Pch.dry`,
+`opt_Tsh.dry`, or `opt_Pch_Tsh.dry`.
 
 The final dried target is represented as a lower bound on the final dried cake
 fraction. Targets must remain below 100% because the frozen-layer heat balance

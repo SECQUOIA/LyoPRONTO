@@ -1,4 +1,9 @@
-"""Experimental Pyomo optimization mode builders for primary drying."""
+"""Experimental Pyomo optimization mode builders for primary drying.
+
+The mode builders intentionally share the legacy driving-force objective.
+Mode-specific behavior comes from the free/fixed controls, fixed-profile
+constraints, bounds, and optional ramp-rate constraints.
+"""
 
 from __future__ import annotations
 
@@ -45,16 +50,16 @@ _MODE_ALIASES = {
 
 _OBJECTIVE_DESCRIPTIONS = {
     OptimizationMode.PRESSURE: (
-        "minimize sum(Pch[t] - Psub[t]) with chamber pressure variable and "
-        "the shelf-temperature profile fixed"
+        "intentionally shared objective: minimize sum(Pch[t] - Psub[t]) "
+        "with chamber pressure variable and the shelf-temperature profile fixed"
     ),
     OptimizationMode.SHELF_TEMPERATURE: (
-        "minimize sum(Pch[t] - Psub[t]) with shelf temperature variable and "
-        "the chamber-pressure profile fixed"
+        "intentionally shared objective: minimize sum(Pch[t] - Psub[t]) "
+        "with shelf temperature variable and the chamber-pressure profile fixed"
     ),
     OptimizationMode.JOINT: (
-        "minimize sum(Pch[t] - Psub[t]) with chamber pressure and shelf "
-        "temperature both variable"
+        "intentionally shared objective: minimize sum(Pch[t] - Psub[t]) "
+        "with chamber pressure and shelf temperature both variable"
     ),
 }
 

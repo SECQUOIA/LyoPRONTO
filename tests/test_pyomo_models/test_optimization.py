@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from typing import Dict
 
 import numpy as np
@@ -223,19 +224,46 @@ def test_joint_mode_can_enforce_legacy_ramp_rates(optimization_case):
     assert hasattr(model, "shelf_temperature_ramp_down")
 
 
+def _solver_comparison_case(mode: OptimizationMode, base_case: Dict[str, object]) -> Dict[str, object]:
+    case = {
+        "vial": dict(base_case["vial"]),
+        "product": dict(base_case["product"]),
+        "ht": dict(base_case["ht"]),
+        "pchamber": dict(base_case["pchamber"]),
+        "tshelf": dict(base_case["tshelf"]),
+        "eq_cap": dict(base_case["eq_cap"]),
+        "nvial": base_case["nvial"],
+    }
+    if mode is OptimizationMode.PRESSURE:
+        case["product"]["T_pr_crit"] = -5.0
+        case["pchamber"]["max"] = 5.0
+        case["tshelf"]["init"] = -25.0
+    return case
+
+
 def _legacy_reference(mode: OptimizationMode, case: Dict[str, object], dt: float) -> np.ndarray:
     if mode is OptimizationMode.PRESSURE:
-        with pytest.warns(UserWarning, match="Optimization failed"):
-            return opt_Pch.dry(
+        with warnings.catch_warnings(record=True) as emitted:
+            warnings.simplefilter("always")
+            output = opt_Pch.dry(
                 case["vial"],
                 dict(case["product"]),
                 case["ht"],
-                {"min": 0.05, "max": 0.5},
+                dict(case["pchamber"]),
                 dict(case["tshelf"]),
                 dt,
                 case["eq_cap"],
                 case["nvial"],
             )
+        failure_messages = [
+            str(warning.message)
+            for warning in emitted
+            if "Optimization failed" in str(warning.message)
+        ]
+        assert not failure_messages, (
+            "pressure SciPy reference should converge without optimization failure warnings"
+        )
+        return output
     if mode is OptimizationMode.SHELF_TEMPERATURE:
         return opt_Tsh.dry(
             case["vial"],
@@ -286,21 +314,22 @@ def test_optimization_modes_solve_and_compare_to_scipy_reference(optimization_ca
     n_steps = 8
     dt = 0.25
     final_dried_fraction = 0.30
+    comparison_case = _solver_comparison_case(mode, optimization_case)
     time_points = _time_points(n_steps, dt)
-    reference = _legacy_reference(mode, optimization_case, dt)
+    reference = _legacy_reference(mode, comparison_case, dt)
 
     result = solve_primary_drying_optimization(
-        optimization_case["vial"],
-        optimization_case["product"],
-        optimization_case["ht"],
-        optimization_case["pchamber"],
-        optimization_case["tshelf"],
+        comparison_case["vial"],
+        comparison_case["product"],
+        comparison_case["ht"],
+        comparison_case["pchamber"],
+        comparison_case["tshelf"],
         n_steps=n_steps,
         dt=dt,
         mode=mode,
         final_dried_fraction=final_dried_fraction,
-        eq_cap=optimization_case["eq_cap"],
-        nvial=optimization_case["nvial"],
+        eq_cap=comparison_case["eq_cap"],
+        nvial=comparison_case["nvial"],
         solver=solver,
     )
 
@@ -309,14 +338,14 @@ def test_optimization_modes_solve_and_compare_to_scipy_reference(optimization_ca
     table = result.as_table()
     assert table.shape == (n_steps + 1, 7)
     assert table[-1, 6] >= final_dried_fraction * 100.0
-    _assert_mode_invariants(table, mode, optimization_case)
+    _assert_mode_invariants(table, mode, comparison_case)
 
     if mode is OptimizationMode.PRESSURE:
-        expected_tsh = sample_ramp_profile(optimization_case["tshelf"], time_points)
+        expected_tsh = sample_ramp_profile(comparison_case["tshelf"], time_points)
         np.testing.assert_allclose(table[:, 3], expected_tsh, atol=1.0e-6)
     elif mode is OptimizationMode.SHELF_TEMPERATURE:
         expected_pch = (
-            sample_ramp_profile(optimization_case["pchamber"], time_points)
+            sample_ramp_profile(comparison_case["pchamber"], time_points)
             * constant.Torr_to_mTorr
         )
         np.testing.assert_allclose(table[:, 4], expected_pch, atol=1.0e-6)
