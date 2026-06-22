@@ -107,4 +107,4 @@ pytest tests/test_example_scripts.py -v
 
 - `examples/README.md` - Modern examples documentation
 - `tests/test_example_scripts.py` - Legacy script tests
-- `docs/GETTING_STARTED.md` - Developer guide
+- `docs/how-to-guides.md` - setup and local validation guide

@@ -14,7 +14,7 @@ python -m examples.typed_api_examples
 ```
 
 Each example is also covered as a pytest smoke test in
-`tests/test_typed_examples.py`. See `docs/TYPED_API_GUIDE.md` for the
+`tests/test_typed_examples.py`. See `docs/reference.md` for the
 legacy-vs-typed distinction and unit conventions. The dict-based examples
 below remain the supported legacy workflow.
 
@@ -387,7 +387,7 @@ ls test_data/temperature.txt
 
 ## Questions?
 
-- See [GETTING_STARTED.md](../docs/GETTING_STARTED.md) for local setup.
+- See [how-to-guides.md](../docs/how-to-guides.md) for local setup.
 - See [tests/README.md](../tests/README.md) for testing and CI lanes.
-- See [ARCHITECTURE.md](../docs/ARCHITECTURE.md) for current code structure.
+- See [reference.md](../docs/reference.md) for current code structure.
 - See [.github/copilot-examples.md](../.github/copilot-examples.md) for code snippets.

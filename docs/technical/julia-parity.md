@@ -8,9 +8,8 @@ work. Existing dict-based calculators, optimizers, design-space generation,
 and web-style I/O remain supported and keep their legacy float units and
 output table shapes.
 
-See `docs/TYPED_API_GUIDE.md` for the legacy-vs-typed API distinction, the
-Pint unit conventions, and runnable examples in
-`examples/typed_api_examples.py`.
+See `../reference.md` for the legacy-vs-typed API distinction and Pint unit
+conventions. Runnable typed examples live in `examples/typed_api_examples.py`.
 
 ## Attribution
 
@@ -97,41 +96,6 @@ top-level imports from `lyopronto`.
   Lower-level RF heat diagnostics remain module-level unless they become
   broadly used user-facing APIs.
 
-## RF Preflight Notes
-
-RF work in Issues #45 and #46 should follow the typed Pikal and fitting
-patterns already used in Python rather than extending the legacy dict-only
-interfaces.
-
-- `RFParams` should be a frozen dataclass parallel to `PikalParams`. It should
-  keep common fields such as `Rp`, `hf0`, `csolid`, `rho_solution`, `Kshf`,
-  `Av`, `Ap`, `pch`, and `Tsh`, then add RF-specific controls and material
-  properties explicitly rather than overloading the Pikal fields.
-- `RFSolution` should parallel `PikalSolution`: `t`, `y`, `diagnostics`,
-  `params`, optional raw solver segments, typed accessors, and any legacy table
-  adapter needed by callers.
-- Heat diagnostics should be explicit. Expected diagnostic fields include
-  shelf heat, RF heat, total heat, mass-flow rate, sublimation temperature,
-  product/frozen height, product temperature, chamber pressure, shelf
-  temperature, and product resistance.
-- Time-varying RF controls should accept `RampedVariable` or compatible
-  callables, and RF time stops should be merged with shelf and chamber-pressure
-  stops in the same style as `get_pikal_tstops`.
-- Plain floats should use the current Julia-facing canonical units: time in
-  hours, heights in centimeters, temperatures in kelvin, chamber pressure in
-  torr, areas in square centimeters, product resistance in
-  `cm^2*hr*Torr/g`, concentration in `g/mL`, and heat-transfer coefficient in
-  `cal/s/K/cm^2`.
-- RF heat diagnostics should use watts. The solver should define whether RF
-  power controls are per vial or total batch power before implementation; the
-  preferred solver-level convention is per-vial watts, with batch conversion
-  handled outside the RHS. Dielectric factors such as `eppf` are dimensionless.
-- Exact Julia parity should cover equations, event behavior, time-stop
-  handling, fitting objective weights, and transform semantics. Python-specific
-  corrections should be documented where they improve API safety, such as
-  explicit Pint unit handling, clear per-vial versus batch power conventions,
-  and non-mutating return values instead of Julia `!`-style APIs.
-
 ## Parity Test Categories
 
 The existing tests mix three parity categories. New Julia-parity tests should
@@ -154,25 +118,6 @@ make the category clear in the test name or assertion comments.
   handling in `identify_pd_end`, explicit input validation for Pirani traces,
   quantity-aware inputs and outputs, and non-mutating fitting functions in
   place of Julia `!` APIs.
-
-## Static Checks
-
-Active PR and main-branch CI workflows run static analysis before the pytest
-lanes. Ruff is enforced with the narrow Pyflakes rule set configured in
-`pyproject.toml`:
-
-```bash
-python -m ruff check lyopronto tests examples main.py
-```
-
-mypy is advisory until the remaining real project type errors are fixed:
-
-```bash
-python -m mypy lyopronto
-```
-
-The mypy configuration ignores missing SciPy stubs initially, but it must not
-blanket-ignore project modules or hide real in-repo type issues.
 
 ## Non-Exported Julia Helpers
 

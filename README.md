@@ -71,7 +71,7 @@ plots from the selected simulation mode.
 
 ## Public APIs
 
-LyoPRONTO currently exposes three supported API layers:
+LyoPRONTO currently exposes four supported API layers:
 
 - Legacy dict APIs: `calc_knownRp`, `calc_unknownRp`, `freezing`,
   `design_space`, `opt_Pch`, `opt_Tsh`, `opt_Pch_Tsh`, `functions`, and
@@ -83,9 +83,8 @@ LyoPRONTO currently exposes three supported API layers:
 - Optional Pyomo prototypes: `lyopronto.pyomo_models.single_step` and
   `lyopronto.pyomo_models.trajectory`.
 
-See `docs/ARCHITECTURE.md`, `docs/reference.md`, and
-`docs/TYPED_API_GUIDE.md` for current module boundaries and unit conventions.
-See `docs/PYOMO_STATUS.md` for optional Pyomo model status and trajectory
+See `docs/reference.md` for current module boundaries and unit conventions.
+The same reference page includes optional Pyomo model status and trajectory
 discretization notes.
 
 ## Tests and CI
@@ -131,9 +130,10 @@ mkdocs build
 
 For contributor orientation, start with:
 
-- `docs/GETTING_STARTED.md`
-- `docs/ARCHITECTURE.md`
-- `docs/CI_WORKFLOW_GUIDE.md`
+- `docs/README.md`
+- `docs/how-to-guides.md`
+- `docs/reference.md`
+- `docs/dev.md`
 - `tests/README.md`
 - `examples/README.md`
 

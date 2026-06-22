@@ -1,7 +1,8 @@
 # LyoPRONTO Test Suite
 
-This document describes the supported pytest markers, local commands, and CI
-lanes for LyoPRONTO.
+This document describes the supported pytest markers, test-authoring policy,
+warning policy, and scientific reference rules for LyoPRONTO. The authoritative
+CI workflow and lane command reference is `../docs/dev.md`.
 
 ## Test Lanes
 
@@ -51,7 +52,9 @@ Ruff linting is enforced in CI with the narrow Pyflakes rule set in
 `pyproject.toml`. mypy is advisory in CI while remaining project type errors
 are fixed in staged follow-up work.
 
-Use the local CI wrapper when you want the same commands used by GitHub Actions:
+Use the local CI wrapper when you want the same commands used by GitHub Actions.
+See `../docs/dev.md` for the authoritative lane commands and workflow
+triggers:
 
 ```bash
 ./run_local_ci.sh fast
@@ -132,32 +135,9 @@ The current top warning sources audited for this policy are:
 
 ## CI Integration
 
-- Static analysis runs in PR and main-branch workflows. Ruff linting is an
-  enforced gate; mypy is advisory.
-- `.github/workflows/pr-tests.yml` runs the fast lane for all PR updates.
-- `.github/workflows/full-validation.yml` runs the full non-Pyomo lane with
-  coverage for non-draft PRs labeled `full-validation`, PRs that touch
-  validation-sensitive code or tests, nightly scheduled validation, manual
-  dispatch, and version tags. Repository maintainers should require the
-  `Full non-Pyomo validation` job in branch protection; it reports success
-  quickly when the full lane is not required.
-- `.github/workflows/tests.yml` runs the full non-Pyomo lane with coverage on
-  pushes to `main`.
-- `.github/workflows/rundocs.yml` runs notebook-marked tests as an explicit
-  notebook lane for ready PRs, `main`, nightly schedule, version tags, and
-  manual dispatch.
-- `.github/workflows/pyomo-tests.yml` runs on PRs or pushes that change
-  `lyopronto/pyomo_models/**` or `tests/test_pyomo_models/**`; its required
-  lane installs `.[dev,pyomo]` without IPOPT and its solver comparison job is
-  non-blocking.
-- `.github/workflows/slow-tests.yml` provides manual `slow-non-pyomo`,
-  `full-non-pyomo`, and `pyomo` lanes.
-- Python version is read from `.github/ci-config/ci-versions.yml`.
-
-Do not configure path-filtered Pyomo jobs as branch-protection required status
-checks while `.github/workflows/pyomo-tests.yml` uses `paths`; they do not report
-on non-Pyomo PRs. The optional solver comparison job is job-level non-blocking,
-so inspect its logs when it runs.
+See `../docs/dev.md` for workflow triggers, branch-protection guidance,
+coverage behavior, optional Pyomo setup, and the full lane command reference.
+Keep marker descriptions here synchronized with that page and `run_local_ci.sh`.
 
 ## Best Practices
 

@@ -5,37 +5,10 @@ Thank you for your interest in contributing to LyoPRONTO! This document provides
 ## Testing & Continuous Integration (CI)
 
 LyoPRONTO uses explicit pytest marker lanes so contributors and reviewers can
-choose the right feedback level:
-
-- **Fast PR lane:** `pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"`
-- **Full non-Pyomo lane:** `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing`
-- **Slow manual lane:** `pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing`
-- **Notebook lane:** `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing`
-- **Pyomo light lane:** `pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v`
-- **Pyomo solver lane:** `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=term-missing`
-
-All pytest lanes inherit `--durations=25`, `--timeout=600`, and
-`--timeout-method=thread` from the shared pytest configuration through
-`pytest-timeout` from the `dev` extra.
-
-The same commands are available locally through `./run_local_ci.sh fast`,
-`./run_local_ci.sh full`, `./run_local_ci.sh slow`,
-`./run_local_ci.sh notebook`, `./run_local_ci.sh pyomo-light`, and
-`./run_local_ci.sh pyomo`.
-
-Active GitHub workflows use the Python version in
-`.github/ci-config/ci-versions.yml`. PRs always run static analysis and the
-fast lane. The Full Validation workflow runs the full non-Pyomo lane with
-coverage for non-draft PRs labeled `full-validation`, PRs that touch
-validation-sensitive code or tests, nightly scheduled validation, manual
-dispatch, and version tags. Pushes to `main` continue to run the full
-non-Pyomo confidence gate. Notebook tests run in an explicit notebook workflow;
-Pyomo model and test changes run a path-filtered Pyomo light workflow; slow and
-solver-backed Pyomo validation are available through optional/manual workflows.
-Static analysis runs as its own CI lane: Ruff linting is enforced, and mypy is
-advisory while the remaining project type errors are staged for follow-up work.
-Non-Pyomo coverage lanes use `.coveragerc.non-pyomo` so optional Pyomo modules
-do not appear as unexecuted files in SciPy-only reports.
+choose the right feedback level. The authoritative CI workflow and lane command
+reference is [`docs/dev.md`](docs/dev.md). Use
+[`tests/README.md`](tests/README.md) for test-authoring guidance, marker
+policy, warning policy, and scientific reference scenario rules.
 
 Warnings are part of the test signal. The default pytest configuration keeps
 warnings visible instead of using `--disable-warnings`. When a test deliberately
@@ -54,7 +27,9 @@ blanket-ignore warnings from `lyopronto`.
 - Run `./run_local_ci.sh full` before marking a validation-sensitive PR ready
   for review when practical, or apply the `full-validation` label to request
   the CI lane.
-- Review [`tests/README.md`](tests/README.md) for full details on running, writing, and debugging tests, as well as CI workflow explanations.
+- Review [`docs/dev.md`](docs/dev.md) for current CI workflow
+  behavior and [`tests/README.md`](tests/README.md) for writing and debugging
+  tests.
 
 ---
 
@@ -347,12 +322,12 @@ adds the implementation, optional dependency handling, and Pyomo-marked tests.
 
 Use GitHub issues and milestones for roadmap planning, starting from the
 Pyomo roadmap issue #80. Current repository status is summarized in
-`docs/ARCHITECTURE.md`.
+`docs/reference.md`.
 
 ## Questions or Issues?
 
 - Check existing documentation in `docs/` and `*.md` files
-- Review `docs/ARCHITECTURE.md` for current module boundaries
+- Review `docs/reference.md` for current module boundaries
 - Search existing issues on GitHub
 - Ask questions by opening a new issue
 

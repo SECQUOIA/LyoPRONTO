@@ -10,7 +10,7 @@ The legacy dict-based calculators (``lyopronto.calc_knownRp``,
 the web-style I/O) remain fully supported and keep their float/unit
 conventions. The typed API documented here is additive: it uses Pint
 quantities where units matter and also accepts plain floats in the canonical
-units described in ``docs/TYPED_API_GUIDE.md``.
+units described in ``docs/reference.md``.
 
 Run directly to print a short summary of every example::
 

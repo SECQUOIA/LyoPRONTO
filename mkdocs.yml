@@ -44,12 +44,12 @@ extra_javascript:
 nav:
     # List of web pages to show, in order
     - index.md
-    - tutorials.md
-    - how-to-guides.md
+    - User Guide: how-to-guides.md
     - Examples:
         - examples/knownRp_PD.ipynb
         - examples/unknownRp_PD.ipynb
-    - explanation.md
-    - reference.md
-    - PYOMO_STATUS.md
-    - dev.md
+    - Reference:
+        - API and Package: reference.md
+        - Physics: technical/physics-reference.md
+        - Julia Parity: technical/julia-parity.md
+    - Contributor: dev.md
