@@ -9,7 +9,7 @@
       
       
       
-        <link rel="prev" href="../PYOMO_STATUS/">
+        <link rel="prev" href="../technical/julia-parity/">
       
       
       
@@ -21,7 +21,7 @@
     
     
       
-        <title>Contributor Documentation - LyoPRONTO Documentation</title>
+        <title>Contributor - LyoPRONTO Documentation</title>
       
     
     
@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#contributor-documentation" class="md-skip">
+        <a href="#contributor-guide" class="md-skip">
           Skip to content
         </a>
       
@@ -104,7 +104,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Contributor Documentation
+              Contributor
             
           </span>
         </div>
@@ -167,34 +167,7 @@
   <span class="md-ellipsis">
     
   
-    LyoPRONTO: Getting Started
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../tutorials/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Tutorials
+    LyoPRONTO Documentation
   
 
     
@@ -221,7 +194,7 @@
   <span class="md-ellipsis">
     
   
-    How-to Guide
+    User Guide
   
 
     
@@ -249,10 +222,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
             
   
   
@@ -270,8 +243,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -350,15 +323,26 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../explanation/" class="md-nav__link">
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
   
   
   <span class="md-ellipsis">
     
   
-    Explanations
+    Reference
   
 
     
@@ -366,13 +350,22 @@
   
   
 
-      </a>
-    </li>
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
   
 
-    
-      
-      
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
   
   
   
@@ -385,7 +378,7 @@
   <span class="md-ellipsis">
     
   
-    API Reference
+    API and Package
   
 
     
@@ -397,22 +390,23 @@
     </li>
   
 
-    
-      
-      
+              
+            
+              
+                
   
   
   
   
     <li class="md-nav__item">
-      <a href="../PYOMO_STATUS/" class="md-nav__link">
+      <a href="../technical/physics-reference/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Pyomo Status
+    Physics
   
 
     
@@ -421,6 +415,42 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../technical/julia-parity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Julia Parity
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -448,7 +478,7 @@
   <span class="md-ellipsis">
     
   
-    Contributor Documentation
+    Contributor
   
 
     
@@ -466,7 +496,7 @@
   <span class="md-ellipsis">
     
   
-    Contributor Documentation
+    Contributor
   
 
     
@@ -492,10 +522,54 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#testing" class="md-nav__link">
+  <a href="#setup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Testing
+        Setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#local-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local Validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ci-lane-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CI Lane Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#workflow-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Workflow Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pyomo-test-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pyomo Test Policy
       
     </span>
   </a>
@@ -511,30 +585,13 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Documentation">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#helpful-references-for-how-to-get-documentation-generated" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Helpful references for how to get documentation generated
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
         <li class="md-nav__item">
-  <a href="#linting-and-formatting" class="md-nav__link">
+  <a href="#maintenance-notes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Linting and formatting
+        Maintenance Notes
       
     </span>
   </a>
@@ -576,10 +633,54 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#testing" class="md-nav__link">
+  <a href="#setup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Testing
+        Setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#local-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local Validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ci-lane-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CI Lane Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#workflow-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Workflow Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pyomo-test-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pyomo Test Policy
       
     </span>
   </a>
@@ -595,30 +696,13 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Documentation">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#helpful-references-for-how-to-get-documentation-generated" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Helpful references for how to get documentation generated
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
         <li class="md-nav__item">
-  <a href="#linting-and-formatting" class="md-nav__link">
+  <a href="#maintenance-notes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Linting and formatting
+        Maintenance Notes
       
     </span>
   </a>
@@ -642,77 +726,152 @@
 
 
 
-<h1 id="contributor-documentation">Contributor Documentation</h1>
-<h2 id="testing">Testing</h2>
-<p>To install test dependencies, run</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev]&quot;</span>
+<h1 id="contributor-guide">Contributor Guide</h1>
+<p>This is the single contributor reference for LyoPRONTO setup, CI lanes,
+documentation builds, and static checks. Keep GitHub workflows,
+<code>run_local_ci.sh</code>, tests that assert CI policy, and this page synchronized.</p>
+<p>For user-facing examples, see <code>how-to-guides.md</code>. For test-authoring rules,
+marker details, warning policy, and scientific reference scenarios, see
+<code>../tests/README.md</code>.</p>
+<h2 id="setup">Setup</h2>
+<p>Install development dependencies from the repository root:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>pip<span class="w"> </span>setuptools<span class="w"> </span>wheel
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev]&quot;</span>
 </span></code></pre></div>
-<p>inside the LyoPRONTO directory (next to <code>pyproject.toml</code>).</p>
-<p>For fast PR-style feedback, execute</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>./run_local_ci.sh<span class="w"> </span>fast
+<p>Optional Pyomo work uses a separate extra so default development environments
+stay non-Pyomo:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev,pyomo]&quot;</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>idaes<span class="w"> </span>get-extensions<span class="w"> </span>--extra<span class="w"> </span>petsc
 </span></code></pre></div>
-<p>which runs</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not slow and not notebook and not pyomo&quot;</span>
+<p>A conda-managed local environment may instead install IPOPT with:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>ipopt
+</span></code></pre></div>
+<h2 id="local-validation">Local Validation</h2>
+<p>Run static analysis and the fast PR lane before pushing:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python<span class="w"> </span>-m<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>lyopronto<span class="w"> </span>tests<span class="w"> </span>examples<span class="w"> </span>main.py
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>python<span class="w"> </span>-m<span class="w"> </span>mypy<span class="w"> </span>lyopronto
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>./run_local_ci.sh<span class="w"> </span>fast
+</span></code></pre></div>
+<p>Ruff linting is enforced in CI with the scoped Pyflakes rule set in
+<code>pyproject.toml</code>. mypy is advisory in CI while remaining project type issues
+are handled in follow-up work.</p>
+<p>Use <code>SKIP_INSTALL=1</code> to reuse an existing environment:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nv">SKIP_INSTALL</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>./run_local_ci.sh<span class="w"> </span>fast
 </span></code></pre></div>
 <p>Before marking a validation-sensitive PR ready for review, run the full
 non-Pyomo lane when practical:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>./run_local_ci.sh<span class="w"> </span>full
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>./run_local_ci.sh<span class="w"> </span>full
 </span></code></pre></div>
-<p>which runs</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not pyomo&quot;</span><span class="w"> </span>--cov<span class="o">=</span>lyopronto<span class="w"> </span>--cov-config<span class="o">=</span>.coveragerc.non-pyomo<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
-</span></code></pre></div>
+<h2 id="ci-lane-reference">CI Lane Reference</h2>
+<table>
+<thead>
+<tr>
+<th>Lane</th>
+<th>Command</th>
+<th>Workflow</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Static analysis</td>
+<td><code>python -m ruff check lyopronto tests examples main.py</code>; advisory <code>python -m mypy lyopronto</code></td>
+<td><code>.github/workflows/pr-tests.yml</code>, <code>.github/workflows/tests.yml</code></td>
+</tr>
+<tr>
+<td>Fast PR</td>
+<td><code>pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"</code></td>
+<td><code>.github/workflows/pr-tests.yml</code></td>
+</tr>
+<tr>
+<td>Full non-Pyomo</td>
+<td><code>pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing</code></td>
+<td><code>.github/workflows/full-validation.yml</code>, <code>.github/workflows/tests.yml</code>, <code>.github/workflows/slow-tests.yml</code></td>
+</tr>
+<tr>
+<td>Slow non-Pyomo</td>
+<td><code>pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing</code></td>
+<td><code>.github/workflows/slow-tests.yml</code></td>
+</tr>
+<tr>
+<td>Notebook</td>
+<td><code>pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing</code></td>
+<td><code>.github/workflows/rundocs.yml</code></td>
+</tr>
+<tr>
+<td>Pyomo light</td>
+<td><code>pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v</code></td>
+<td><code>.github/workflows/pyomo-tests.yml</code>, <code>./run_local_ci.sh pyomo-light</code></td>
+</tr>
+<tr>
+<td>Pyomo solver</td>
+<td><code>pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=term-missing</code></td>
+<td><code>.github/workflows/pyomo-tests.yml</code>, <code>.github/workflows/slow-tests.yml</code></td>
+</tr>
+</tbody>
+</table>
 <p>All pytest lanes inherit <code>--durations=25</code>, <code>--timeout=600</code>, and
-<code>--timeout-method=thread</code> from <code>pyproject.toml</code>.</p>
-<p>Notebook, slow, and Pyomo validation are separate lanes:
-<code>./run_local_ci.sh notebook</code>, <code>./run_local_ci.sh slow</code>,
-<code>./run_local_ci.sh pyomo-light</code>, and <code>./run_local_ci.sh pyomo</code>.
-In CI, the Full Validation workflow runs the full non-Pyomo lane for
-validation-sensitive paths, the <code>full-validation</code> label, nightly schedule,
-manual dispatch, and version tags.</p>
-<p>Optional Pyomo work uses a separate extra so default development environments
-stay non-Pyomo:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev,pyomo]&quot;</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>idaes<span class="w"> </span>get-extensions<span class="w"> </span>--extra<span class="w"> </span>petsc
-</span></code></pre></div>
-<p>A conda-managed local environment may instead install IPOPT with:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>ipopt
-</span></code></pre></div>
+<code>--timeout-method=thread</code> from <code>pyproject.toml</code>. Non-Pyomo coverage lanes use
+<code>.coveragerc.non-pyomo</code> so optional Pyomo modules are omitted from SciPy-only
+coverage totals. Codecov uploads are not configured; coverage remains visible
+in terminal reports from the coverage lanes.</p>
+<h2 id="workflow-behavior">Workflow Behavior</h2>
+<p>Pull requests targeting <code>main</code> always run static analysis and the fast PR lane.
+The Full Validation workflow is reportable on every PR. Repository maintainers
+should require the <code>Full non-Pyomo validation</code> job in branch protection because
+the job reports success quickly when the validation policy decides the full
+lane is not needed. The full lane runs for non-draft PRs that touch
+validation-sensitive paths, PRs labeled <code>full-validation</code>, nightly scheduled
+validation, manual dispatch, version tags, and pushes to <code>main</code>.</p>
+<p>Notebook tests run in <code>.github/workflows/rundocs.yml</code> for ready PRs, pushes to
+<code>main</code>, nightly schedule, version tags, and manual dispatch.</p>
+<p>Pyomo model and test changes run <code>.github/workflows/pyomo-tests.yml</code>. The
+<code>pyomo-no-solver</code> job installs <code>.[dev,pyomo]</code> without IPOPT and runs the Pyomo
+light lane. The solver comparison job is job-level non-blocking; inspect its
+logs when it runs because install failures and comparison failures leave the PR
+status green.</p>
+<p>Do not configure path-filtered Pyomo jobs as branch-protection required status checks
+while <code>.github/workflows/pyomo-tests.yml</code> uses <code>paths</code>, because those jobs do
+not report on non-Pyomo PRs. If Pyomo status must be required
+repository-wide, add an always-running gate job first.</p>
+<p><code>.github/workflows/slow-tests.yml</code> is manual dispatch for focused slow
+non-Pyomo, full non-Pyomo, or optional Pyomo validation.</p>
+<h2 id="pyomo-test-policy">Pyomo Test Policy</h2>
+<p>Default installs and the <code>dev</code> extra intentionally exclude Pyomo, IDAES, and
+IPOPT. Pyomo-marked tests that need IPOPT should call
+<code>tests.pyomo_solver.require_pyomo_solver("ipopt")</code> before solving models. That
+helper skips with installation hints when Pyomo or IPOPT is missing.</p>
+<p>Keep automatic Pyomo validation isolated behind the Pyomo path filter so
+default non-Pyomo PRs do not install optional dependencies.</p>
 <h2 id="documentation">Documentation</h2>
-<p>Documentation build has different dependencies, installable by</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[docs]&quot;</span>
+<p>Install documentation dependencies:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[docs]&quot;</span>
 </span></code></pre></div>
-<p>Run a local build with:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>mkdocs<span class="w"> </span>build
-</span></code></pre></div>
-<p>Preview locally with:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>mkdocs<span class="w"> </span>serve
+<p>Build and preview locally:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>mkdocs<span class="w"> </span>build
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>mkdocs<span class="w"> </span>serve
 </span></code></pre></div>
 <p>Docs publishing uses <code>mike</code> in <code>.github/workflows/docs.yml</code>. Pull requests
 build a <code>pr-&lt;number&gt;</code> docs version, pushes to <code>main</code> deploy <code>dev</code>, and
 published releases deploy the release version plus <code>latest</code>.</p>
-<p>On the off chance that the documentation gets really broken, you can do the following to deploy a new version of it to GitHub Pages:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>git<span class="w"> </span>fetch
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>git<span class="w"> </span>switch<span class="w"> </span><span class="o">[</span>branch<span class="w"> </span>with<span class="w"> </span>desired<span class="w"> </span>docs<span class="o">]</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>mike<span class="w"> </span>delete<span class="w"> </span><span class="o">[</span>broken<span class="w"> </span>docs<span class="w"> </span>version<span class="o">]</span><span class="w"> </span><span class="c1"># if necessary</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>mike<span class="w"> </span>deploy<span class="w"> </span><span class="o">[</span>new<span class="w"> </span>docs<span class="w"> </span>version<span class="o">]</span><span class="w"> </span><span class="c1"># if necessary</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>git<span class="w"> </span>switch<span class="w"> </span>gh-pages
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>gh-pages
+<p>If a published documentation version needs to be replaced, update it from the
+branch with the desired docs:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>git<span class="w"> </span>fetch
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>git<span class="w"> </span>switch<span class="w"> </span><span class="o">[</span>branch<span class="w"> </span>with<span class="w"> </span>desired<span class="w"> </span>docs<span class="o">]</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>mike<span class="w"> </span>delete<span class="w"> </span><span class="o">[</span>broken<span class="w"> </span>docs<span class="w"> </span>version<span class="o">]</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>mike<span class="w"> </span>deploy<span class="w"> </span><span class="o">[</span>new<span class="w"> </span>docs<span class="w"> </span>version<span class="o">]</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>git<span class="w"> </span>switch<span class="w"> </span>gh-pages
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>gh-pages
 </span></code></pre></div>
-<h3 id="helpful-references-for-how-to-get-documentation-generated">Helpful references for how to get documentation generated</h3>
-<p>https://realpython.com/python-project-documentation-with-mkdocs/ for a tutorial on MkDocs</p>
-<p>https://entangled.github.io/mkdocs-plugin/setup/ because it would be nice to use for examples &amp; tests</p>
-<p>https://github.com/jimporter/mike?tab=readme-ov-file for versioning the docs</p>
-<h2 id="linting-and-formatting">Linting and formatting</h2>
-<p>Ruff linting is enforced in CI with the scoped Pyflakes rule set in
-<code>pyproject.toml</code>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>python<span class="w"> </span>-m<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>lyopronto<span class="w"> </span>tests<span class="w"> </span>examples<span class="w"> </span>main.py
-</span></code></pre></div>
-<p>mypy is advisory in CI while remaining project type issues are handled in
-follow-up work:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>python<span class="w"> </span>-m<span class="w"> </span>mypy<span class="w"> </span>lyopronto
-</span></code></pre></div>
-<p>Do not claim broad formatting enforcement unless a future workflow actually
-enforces it.</p>
+<h2 id="maintenance-notes">Maintenance Notes</h2>
+<ul>
+<li>Keep marker expressions synchronized between workflows, <code>run_local_ci.sh</code>,
+  this page, and tests that assert CI policy.</li>
+<li>Keep <code>.coveragerc.non-pyomo</code> on SciPy-only coverage commands.</li>
+<li>Keep notebook tests in the explicit notebook lane.</li>
+<li>Keep slow optimizer-heavy tests out of the fast PR lane.</li>
+<li>Do not broaden fast PR deselection beyond <code>slow</code>, <code>notebook</code>, and <code>pyomo</code>
+  without documenting the reason here.</li>
+</ul>
 
 
 
