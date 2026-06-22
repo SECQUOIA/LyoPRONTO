@@ -1,373 +1,79 @@
 # Contributing to LyoPRONTO
 
-Thank you for your interest in contributing to LyoPRONTO! This document provides guidelines and instructions for contributing.
+This file is a short entry point for contributors. The detailed, current
+workflow references are:
 
-## Testing & Continuous Integration (CI)
+- `docs/dev.md`: CI lanes, branch-protection guidance, docs builds, and
+  contributor commands.
+- `tests/README.md`: pytest markers, warning policy, test-authoring guidance,
+  and scientific reference scenario rules.
+- `docs/reference.md`: public API boundaries, package layout, typed-unit
+  conventions, and optional Pyomo model status.
+- `AGENTS.md`: repository-wide coding-agent guidance.
 
-LyoPRONTO uses explicit pytest marker lanes so contributors and reviewers can
-choose the right feedback level:
-
-- **Fast PR lane:** `pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"`
-- **Full non-Pyomo lane:** `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing`
-- **Slow manual lane:** `pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing`
-- **Notebook lane:** `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing`
-- **Pyomo light lane:** `pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v`
-- **Pyomo solver lane:** `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=term-missing`
-
-All pytest lanes inherit `--durations=25`, `--timeout=600`, and
-`--timeout-method=thread` from the shared pytest configuration through
-`pytest-timeout` from the `dev` extra.
-
-The same commands are available locally through `./run_local_ci.sh fast`,
-`./run_local_ci.sh full`, `./run_local_ci.sh slow`,
-`./run_local_ci.sh notebook`, `./run_local_ci.sh pyomo-light`, and
-`./run_local_ci.sh pyomo`.
-
-Active GitHub workflows use the Python version in
-`.github/ci-config/ci-versions.yml`. PRs always run static analysis and the
-fast lane. The Full Validation workflow runs the full non-Pyomo lane with
-coverage for non-draft PRs labeled `full-validation`, PRs that touch
-validation-sensitive code or tests, nightly scheduled validation, manual
-dispatch, and version tags. Pushes to `main` continue to run the full
-non-Pyomo confidence gate. Notebook tests run in an explicit notebook workflow;
-Pyomo model and test changes run a path-filtered Pyomo light workflow; slow and
-solver-backed Pyomo validation are available through optional/manual workflows.
-Static analysis runs as its own CI lane: Ruff linting is enforced, and mypy is
-advisory while the remaining project type errors are staged for follow-up work.
-Non-Pyomo coverage lanes use `.coveragerc.non-pyomo` so optional Pyomo modules
-do not appear as unexecuted files in SciPy-only reports.
-
-Warnings are part of the test signal. The default pytest configuration keeps
-warnings visible instead of using `--disable-warnings`. When a test deliberately
-drives an expected scientific or runtime warning, assert it with `pytest.warns`
-and check the message. Add `filterwarnings` entries only for understood
-third-party noise, scoped narrowly by category, message, and module; do not
-blanket-ignore warnings from `lyopronto`.
-
-**Contributor Checklist:**
-
-- Mark slow tests with `@pytest.mark.slow`.
-- Add or update tests for all new features and bugfixes.
-- Assert expected project warnings with `pytest.warns`; investigate unexpected
-  warning summaries before adding filters.
-- Run `./run_local_ci.sh fast` for quick feedback before pushing.
-- Run `./run_local_ci.sh full` before marking a validation-sensitive PR ready
-  for review when practical, or apply the `full-validation` label to request
-  the CI lane.
-- Review [`tests/README.md`](tests/README.md) for full details on running, writing, and debugging tests, as well as CI workflow explanations.
-
----
-
-## Table of Contents
-- [Getting Started](#getting-started)
-- [Development Workflow](#development-workflow)
-- [Coding Standards](#coding-standards)
-- [Testing Requirements](#testing-requirements)
-- [Submitting Changes](#submitting-changes)
-- [Pyomo Development](#pyomo-development)
-
-## Getting Started
-
-### Prerequisites
-- Python 3.8 or higher
-- Git
-- Basic understanding of lyophilization process (helpful but not required)
-
-### Setup Development Environment
+## Setup
 
 ```bash
-# Clone the repository
-git clone https://github.com/SECQUOIA/LyoPRONTO.git
-cd LyoPRONTO
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install in development mode with development dependencies
-pip install -e ".[dev]"
-
-# Run tests to verify setup
-pytest tests/ -v
+python -m pip install --upgrade pip setuptools wheel
+python -m pip install -e ".[dev]"
 ```
 
-## Development Workflow
-
-### 1. Create a Feature Branch
+For optional Pyomo development and manual Pyomo validation:
 
 ```bash
-# Update main branch
-git checkout main
-git pull origin main
-
-# Create feature branch
-git checkout -b feature/your-feature-name
-# or
-git checkout -b bugfix/issue-description
+python -m pip install -e ".[dev,pyomo]"
+idaes get-extensions --extra petsc
 ```
 
-### 2. Make Changes
+## Local Checks
 
-- Write tests first (TDD approach recommended)
-- Implement your feature
-- Ensure all tests pass
-- Update documentation
-
-### 3. Test Your Changes
+Run static analysis and the fast PR lane before pushing:
 
 ```bash
-# Fast PR feedback lane
-./run_local_ci.sh fast
-
-# Full non-Pyomo lane with coverage
-./run_local_ci.sh full
-
-# Check specific test
-pytest tests/test_functions.py -v
-
-# Run with debugging
-pytest tests/ -v --pdb
-```
-
-### 4. Generated Artifacts
-
-Keep generated local outputs out of commits. The repository intentionally tracks
-source and reference files such as:
-
-- source notebooks in `docs/examples/*.ipynb`
-- test fixtures and reference data in `test_data/`
-- the benchmark reference paths documented in `benchmarks/README.md`
-- `examples/outputs/README.md` and `examples/outputs/.gitkeep`
-
-Generated files are ignored by `.gitignore`, including:
-
-- local benchmark outputs under new `benchmarks/results/` run names
-- executed notebook copies named `docs/examples/*_output.ipynb`
-- files generated by example scripts in `examples/outputs/`
-- root-level `lyopronto_*`, `lyo_*`, `input_saved_*`, and `output_saved_*`
-  outputs
-- coverage, pytest, mypy, ruff, tox, and nox artifacts
-
-When regenerating outputs locally, run the example, notebook, or benchmark
-command from the repository root and inspect the result with
-`git status --short`. If a generated output should become a committed reference
-fixture, document why it is needed and update the allowlist narrowly instead of
-committing ignored local run output.
-
-### 5. Code Quality Checks
-
-```bash
-# Enforced Ruff linting
 python -m ruff check lyopronto tests examples main.py
-
-# Advisory type checking
 python -m mypy lyopronto
+./run_local_ci.sh fast
 ```
 
-### 6. Commit Changes
-
-Write clear, descriptive commit messages:
+Before marking a validation-sensitive PR ready for review, run the full
+non-Pyomo lane when practical:
 
 ```bash
-git add .
-git commit -m "Add feature: brief description
-
-Detailed explanation of what changed and why.
-- Key change 1
-- Key change 2
-
-Closes #issue_number"
+./run_local_ci.sh full
 ```
 
-### 7. Push and Create Pull Request
+Use `./run_local_ci.sh slow`, `notebook`, `pyomo-light`, or `pyomo` for focused
+manual validation. See `docs/dev.md` for the exact lane commands, coverage
+policy, workflow triggers, and branch-protection notes.
 
-```bash
-git push origin feature/your-feature-name
-```
+## Contributor Policy
 
-Then create a Pull Request on GitHub with:
-- Clear title and description
-- Reference to related issues
-- Summary of changes
-- Test results
+- Preserve legacy dictionary APIs and output shapes.
+- Keep typed Pint APIs additive.
+- Keep Pyomo optional and isolated behind the `pyomo` extra and `pyomo` marker.
+- Add or update tests for behavior changes and bug fixes.
+- Assert expected project warnings with `pytest.warns`; do not hide warnings
+  globally or use broad filters for `lyopronto` modules.
+- Keep generated local outputs out of commits. If generated output must become
+  a reference fixture, document why and update the allowlist narrowly.
+- Update docs when behavior, usage, public API boundaries, or validation policy
+  changes.
 
-## Coding Standards
+## Pull Requests
 
-### Python Style
-- Follow PEP 8 style guide
-- Use NumPy-style docstrings
-- Include type hints for function signatures
-- Maximum line length: 100 characters (flexible for readability)
+Use clear PR descriptions with:
 
-### Physics Variable Naming
-Use these standard names for consistency:
+- what changed;
+- why it changed;
+- tests run and outcomes;
+- documentation updates;
+- related issues.
 
-```python
-# Temperatures [degC]
-Tsub  # Sublimation front temperature
-Tbot  # Vial bottom temperature
-Tsh   # Shelf temperature
+Generated artifacts, local benchmark outputs, executed notebook copies,
+coverage reports, and files produced by examples should not be committed unless
+the PR intentionally adds a documented reference artifact.
 
-# Pressures (Torr)
-Pch   # Chamber pressure
-Psub  # Vapor pressure at sublimation front
+## Questions
 
-# Lengths (cm)
-Lpr0  # Initial product length
-Lck   # Dried cake length
-
-# Product properties
-Rp    # Product resistance (cm²-hr-Torr/g)
-Kv    # Vial heat transfer coefficient [cal/s/K/cm**2])
-
-# Rates
-dmdt  # Sublimation rate (kg/hr)
-```
-
-### Documentation Requirements
-
-Every function should have a docstring:
-
-```python
-def calculate_vapor_pressure(temperature):
-    """Calculate vapor pressure using Antoine equation.
-    
-    The vapor pressure of ice is calculated using the Antoine
-    equation with parameters specific to water/ice system.
-    
-    Args:
-        temperature (float): Temperature in degrees Celsius.
-        
-    Returns:
-        (float): Vapor pressure in Torr.
-        
-    Notes:
-        Valid for temperatures between -60°C and 0°C.
-        
-    Examples:
-        >>> P = calculate_vapor_pressure(-20.0)
-        >>> print(f"{P:.3f} Torr")
-        0.776 Torr
-    """
-```
-
-## Testing Requirements
-
-### Test Coverage
-- All new functions must have unit tests
-- Aim for >80% code coverage
-- Include edge cases and error conditions
-- Test physical reasonableness of results
-
-### Test Structure
-
-```python
-class TestMyFeature:
-    """Tests for my new feature."""
-    
-    def test_normal_case(self, standard_setup):
-        """Test with typical input values."""
-        result = my_function(standard_setup)
-        assert result > 0
-        assert np.isclose(result, expected, rtol=0.01)
-    
-    def test_edge_case(self):
-        """Test with boundary conditions."""
-        result = my_function(edge_case_input)
-        assert is_physically_reasonable(result)
-    
-    def test_error_handling(self):
-        """Test error conditions."""
-        with pytest.raises(ValueError):
-            my_function(invalid_input)
-```
-
-### Using Fixtures
-
-Leverage existing fixtures from `tests/conftest.py`:
-
-```python
-def test_with_fixtures(self, standard_vial, standard_product):
-    """Test using predefined fixtures."""
-    result = simulate(standard_vial, standard_product)
-    assert result is not None
-```
-
-## Submitting Changes
-
-### Pull Request Checklist
-
-Before submitting a PR, ensure:
-
-- [ ] Fast lane passes (`./run_local_ci.sh fast`)
-- [ ] Full lane passes before review when practical (`./run_local_ci.sh full`)
-- [ ] Ruff lint passes (`python -m ruff check lyopronto tests examples main.py`)
-- [ ] Advisory mypy output is reviewed (`python -m mypy lyopronto`)
-- [ ] Documentation is updated
-- [ ] Docstrings are complete
-- [ ] CHANGELOG.md is updated (if applicable)
-- [ ] No unnecessary files are included
-- [ ] Commit messages are clear and descriptive
-
-### PR Description Template
-
-```markdown
-## Description
-Brief description of what this PR does.
-
-## Motivation
-Why is this change needed? What problem does it solve?
-
-## Changes
-- Key change 1
-- Key change 2
-- Key change 3
-
-## Testing
-- [ ] Added unit tests
-- [ ] Added integration tests
-- [ ] All existing tests pass
-- [ ] Manually tested with example cases
-
-## Documentation
-- [ ] Updated docstrings
-- [ ] Updated README if needed
-- [ ] Updated CHANGELOG
-
-## Related Issues
-Closes #123
-Relates to #456
-```
-
-## Pyomo Status
-
-Pyomo simultaneous optimization is not tracked on `main` today. Do not add
-documentation that describes Pyomo models as implemented unless the same PR
-adds the implementation, optional dependency handling, and Pyomo-marked tests.
-
-Use GitHub issues and milestones for roadmap planning, starting from the
-Pyomo roadmap issue #80. Current repository status is summarized in
-`docs/ARCHITECTURE.md`.
-
-## Questions or Issues?
-
-- Check existing documentation in `docs/` and `*.md` files
-- Review `docs/ARCHITECTURE.md` for current module boundaries
-- Search existing issues on GitHub
-- Ask questions by opening a new issue
-
-## Code of Conduct
-
-- Be respectful and constructive
-- Focus on the code, not the person
-- Welcome newcomers and help them learn
-- Give credit where credit is due
-
-## Recognition
-
-Contributors will be acknowledged in:
-- `CONTRIBUTORS.md` file
-- Release notes
-- Academic papers (for significant contributions)
-
-Thank you for contributing to LyoPRONTO! 🚀
+Check existing issues on GitHub or open a new issue with the use case, expected
+behavior, observed behavior, and the commands needed to reproduce the problem.

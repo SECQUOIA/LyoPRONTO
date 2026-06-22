@@ -16,7 +16,7 @@ import pytest
 
 _REPO_ROOT = Path(__file__).parent.parent
 _MODULE_PATH = _REPO_ROOT / "examples" / "typed_api_examples.py"
-_PARITY_MATRIX = _REPO_ROOT / "docs" / "JULIA_PARITY_MATRIX.md"
+_PARITY_MATRIX = _REPO_ROOT / "docs" / "technical" / "julia-parity.md"
 _VALID_STATUSES = {
     "ported",
     "partially ported",

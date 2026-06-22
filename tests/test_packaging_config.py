@@ -456,10 +456,8 @@ def test_contributor_docs_include_ci_and_static_analysis_commands() -> None:
         [
             _text("tests/README.md"),
             _text("CONTRIBUTING.md"),
-            _text("docs/CI_WORKFLOW_GUIDE.md"),
-            _text("docs/CI_SETUP.md"),
-            _text("docs/CI_QUICK_REFERENCE.md"),
-            _text("docs/JULIA_PARITY_MATRIX.md"),
+            _text("docs/dev.md"),
+            _text("docs/technical/julia-parity.md"),
         ]
     )
 
@@ -513,6 +511,62 @@ def test_contributor_docs_include_ci_and_static_analysis_commands() -> None:
     assert "./run_local_ci.sh pyomo-light" in docs
     assert "branch-protection required status checks" in docs
     assert "job-level non-blocking" in docs
+
+
+def test_docs_inventory_classifies_retained_markdown_files() -> None:
+    inventory = _text("docs/README.md")
+    docs_dir = ROOT / "docs"
+
+    retained = sorted(path.relative_to(docs_dir).as_posix() for path in docs_dir.rglob("*.md"))
+    for path in retained:
+        assert f"`{path}`" in inventory
+
+    for filename in [
+        "CI_SETUP.md",
+        "CI_WORKFLOW_GUIDE.md",
+        "CI_QUICK_REFERENCE.md",
+        "SLOW_TEST_STRATEGY.md",
+        "CI_PERFORMANCE_OPTIMIZATION.md",
+        "GETTING_STARTED.md",
+        "ARCHITECTURE.md",
+        "TYPED_API_GUIDE.md",
+        "explanation.md",
+        "ci-testing.md",
+        "tutorials.md",
+        "technical/pyomo-status.md",
+    ]:
+        assert not (docs_dir / filename).exists()
+        assert f"`{filename}`" in inventory
+
+
+def test_agent_instructions_do_not_link_removed_docs() -> None:
+    agent_instructions = _text("AGENTS.md")
+    copilot_instructions = _text(".github/copilot-instructions.md")
+    instructions = "\n".join([agent_instructions, copilot_instructions])
+
+    for removed_path in [
+        "docs/ARCHITECTURE.md",
+        "docs/GETTING_STARTED.md",
+        "docs/PHYSICS_REFERENCE.md",
+        "docs/PYOMO_STATUS.md",
+        "docs/ci-testing.md",
+        "docs/tutorials.md",
+        "docs/technical/pyomo-status.md",
+    ]:
+        assert removed_path not in instructions
+
+    for current_path in [
+        "docs/reference.md",
+        "docs/dev.md",
+        "docs/how-to-guides.md",
+        "docs/technical/physics-reference.md",
+    ]:
+        assert current_path in instructions
+
+    assert "AGENTS.md" in copilot_instructions
+    assert "single source of truth" in agent_instructions
+    assert "GitHub Copilot Instructions for LyoPRONTO" not in agent_instructions
+    assert not (ROOT / ".github/copilot-examples.md").exists()
 
 
 def test_legacy_setup_py_metadata_removed() -> None:
