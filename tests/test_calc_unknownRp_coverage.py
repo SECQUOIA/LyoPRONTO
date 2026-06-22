@@ -101,6 +101,22 @@ def _dry_unknown_rp(setup, *, pchamber=None, allow_singular_resistance=False):
     return result
 
 
+@pytest.fixture(scope="class")
+def unknown_rp_case():
+    """Shared result for identical unknown-Rp coverage checks."""
+    setup = _unknown_rp_setup()
+    output, product_res = _dry_unknown_rp(setup)
+    return {"setup": setup, "output": output, "product_res": product_res}
+
+
+@pytest.fixture(scope="class")
+def minimal_case():
+    """Shared result for identical minimal time-series checks."""
+    setup = _minimal_setup()
+    output, product_res = _dry_unknown_rp(setup, allow_singular_resistance=True)
+    return {"setup": setup, "output": output, "product_res": product_res}
+
+
 class TestCalcUnknownRp:
     """Test calculator with unknown product resistance (uses experimental Tbot data)."""
 
@@ -108,13 +124,6 @@ class TestCalcUnknownRp:
     def unknown_rp_setup(self, standard_vial, standard_ht):
         """Setup for unknown Rp calculation with experimental temperature data."""
         return _unknown_rp_setup(standard_vial, standard_ht)
-
-    @pytest.fixture(scope="class")
-    def unknown_rp_case(self):
-        """Shared result for identical unknown-Rp coverage checks."""
-        setup = _unknown_rp_setup()
-        output, product_res = _dry_unknown_rp(setup)
-        return {"setup": setup, "output": output, "product_res": product_res}
 
     def test_unknown_rp_regression_properties(self, unknown_rp_case):
         """Test the shared unknown-Rp result preserves baseline properties."""
@@ -212,13 +221,6 @@ class TestCalcUnknownRpEdgeCases:
     def minimal_setup(self, standard_vial, standard_ht):
         """Minimal setup with short time series."""
         return _minimal_setup(standard_vial, standard_ht)
-
-    @pytest.fixture(scope="class")
-    def minimal_case(self):
-        """Shared result for identical minimal time-series checks."""
-        setup = _minimal_setup()
-        output, product_res = _dry_unknown_rp(setup, allow_singular_resistance=True)
-        return {"setup": setup, "output": output, "product_res": product_res}
 
     def test_minimal_time_series_properties(self, minimal_case):
         """Test shared minimal time-series result properties."""

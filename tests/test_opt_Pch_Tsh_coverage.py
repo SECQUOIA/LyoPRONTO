@@ -83,14 +83,32 @@ def _conservative_setup(vial=None, ht=None):
     }
 
 
+@pytest.fixture(scope="class")
+def opt_both_case():
+    """Shared result for identical joint Pch+Tsh optimization checks."""
+    setup = _opt_both_setup()
+    return {"setup": setup, "output": _dry_opt_pch_tsh(setup)}
+
+
+@pytest.fixture(scope="class")
+def joint_comparison_case():
+    """Shared joint-optimizer result for identical comparison inputs."""
+    setup = _comparison_setup()
+    output = opt_Pch_Tsh.dry(
+        setup["vial"],
+        setup["product"],
+        setup["ht"],
+        setup["Pchamber_bounds"],
+        setup["Tshelf_both"],
+        setup["dt"],
+        setup["eq_cap"],
+        setup["nVial"],
+    )
+    return {"setup": setup, "output": output}
+
+
 class TestOptPchTsh:
     """Test joint Pch+Tsh optimizer (both optimized simultaneously)."""
-
-    @pytest.fixture(scope="class")
-    def opt_both_case(self):
-        """Shared result for identical joint Pch+Tsh optimization checks."""
-        setup = _opt_both_setup()
-        return {"setup": setup, "output": _dry_opt_pch_tsh(setup)}
 
     @pytest.mark.slow
     def test_opt_both_regression_properties(self, opt_both_case):
@@ -185,22 +203,6 @@ class TestOptPchTsh:
 
 class TestOptPchTshComparison:
     """Test that joint optimization performs better than single-variable."""
-
-    @pytest.fixture(scope="class")
-    def joint_comparison_case(self):
-        """Shared joint-optimizer result for identical comparison inputs."""
-        setup = _comparison_setup()
-        output = opt_Pch_Tsh.dry(
-            setup["vial"],
-            setup["product"],
-            setup["ht"],
-            setup["Pchamber_bounds"],
-            setup["Tshelf_both"],
-            setup["dt"],
-            setup["eq_cap"],
-            setup["nVial"],
-        )
-        return {"setup": setup, "output": output}
 
     @pytest.mark.slow
     def test_joint_opt_comparison_properties(self, joint_comparison_case):

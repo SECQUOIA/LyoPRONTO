@@ -79,14 +79,15 @@ def _dry_opt_pch(setup, *, allowed_warnings=None):
     return output
 
 
+@pytest.fixture(scope="class")
+def opt_pch_case():
+    """Shared result for identical pressure-only optimization checks."""
+    setup = _opt_pch_setup()
+    return {"setup": setup, "output": _dry_opt_pch(setup)}
+
+
 class TestOptPchOnly:
     """Test pressure-only optimizer (fixed shelf temperature)."""
-
-    @pytest.fixture(scope="class")
-    def opt_pch_case(self):
-        """Shared result for identical pressure-only optimization checks."""
-        setup = _opt_pch_setup()
-        return {"setup": setup, "output": _dry_opt_pch(setup)}
 
     def test_opt_pch_regression_properties(self, opt_pch_case):
         """Test the shared pressure-only optimizer result preserves properties."""
