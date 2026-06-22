@@ -1,8 +1,9 @@
 # User Guide
 
 This page collects the maintained user workflows: install a checkout, run
-examples, use the legacy compatibility path, and validate a local change. For
-contributor CI policy and branch-protection details, use `dev.md`.
+examples, use the optional Pyomo prototypes, use the legacy compatibility path,
+and validate a local change. For contributor CI policy and branch-protection
+details, use `dev.md`.
 
 The hosted web GUI and original video tutorial remain useful orientation:
 
@@ -84,6 +85,43 @@ python -m examples.typed_api_examples
 ```
 
 These examples are also covered by `tests/test_typed_examples.py`.
+
+## Run Optional Pyomo Optimization Examples
+
+Pyomo support is optional. Default installs and `.[dev]` do not install Pyomo,
+IDAES, or IPOPT. Install the optional Pyomo stack before importing
+`lyopronto.pyomo_models` or running Pyomo examples:
+
+```bash
+python -m pip install -e ".[dev,pyomo]"
+```
+
+The maintained Pyomo example builds the three experimental optimization modes
+without solving them:
+
+```bash
+python examples/example_pyomo_optimization.py
+```
+
+It constructs:
+
+- pressure-only optimization with a fixed shelf-temperature profile;
+- shelf-temperature-only optimization with a fixed chamber-pressure profile;
+- joint pressure and shelf-temperature optimization.
+
+Model construction does not require IPOPT. Solver-backed runs require an NLP
+solver such as IPOPT:
+
+```bash
+idaes get-extensions --extra petsc
+```
+
+The Pyomo APIs intentionally remain explicit under `lyopronto.pyomo_models`.
+Use `lyopronto.opt_Pch`, `lyopronto.opt_Tsh`, and `lyopronto.opt_Pch_Tsh` for
+the shipped SciPy optimizer workflows. A unified optimizer selector is not
+provided while the Pyomo behavior remains a validation prototype, because a
+selector would blur solver dependency failures and the different fixed-horizon
+trajectory formulation.
 
 ## Run Notebook Examples
 
