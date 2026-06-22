@@ -539,6 +539,29 @@ def test_docs_inventory_classifies_retained_markdown_files() -> None:
         assert f"`{filename}`" in inventory
 
 
+def test_copilot_instructions_do_not_link_removed_docs() -> None:
+    instructions = _text(".github/copilot-instructions.md")
+
+    for removed_path in [
+        "docs/ARCHITECTURE.md",
+        "docs/GETTING_STARTED.md",
+        "docs/PHYSICS_REFERENCE.md",
+        "docs/PYOMO_STATUS.md",
+        "docs/ci-testing.md",
+        "docs/tutorials.md",
+        "docs/technical/pyomo-status.md",
+    ]:
+        assert removed_path not in instructions
+
+    for current_path in [
+        "docs/reference.md",
+        "docs/dev.md",
+        "docs/how-to-guides.md",
+        "docs/technical/physics-reference.md",
+    ]:
+        assert current_path in instructions
+
+
 def test_legacy_setup_py_metadata_removed() -> None:
     assert not (ROOT / "setup.py").exists()
 

@@ -260,9 +260,10 @@ Q_sub = dmdt * dHs  # Heat for sublimation
 ## References
 
 ### Core Documentation
-- **Architecture**: See `docs/ARCHITECTURE.md` for system design
-- **Physics**: See `docs/PHYSICS_REFERENCE.md` for equations and models
-- **Getting Started**: See `docs/GETTING_STARTED.md` for developer guide
+- **API and package map**: See `docs/reference.md` for public API boundaries
+- **Physics**: See `docs/technical/physics-reference.md` for equations and models
+- **Contributor guide**: See `docs/dev.md` for CI, testing, and docs builds
+- **User guide**: See `docs/how-to-guides.md` for setup and examples
 
 ### Examples and Tests
 - **Examples**: See `examples/README.md` for web interface examples (4 modes)
@@ -273,7 +274,7 @@ Q_sub = dmdt * dHs  # Heat for sublimation
 When unsure:
 1. Check existing tests in `tests/` for examples
 2. Review `lyopronto/functions.py` for physics implementation
-3. See `docs/ARCHITECTURE.md` for current module boundaries
+3. See `docs/reference.md` for current module boundaries
 4. Run the relevant lane from `tests/README.md` to validate changes
 5. Check `examples/` for working code examples
 
@@ -283,6 +284,6 @@ Current focus:
 
 - Keep legacy dict APIs and typed Pint APIs documented separately.
 - Keep CI lane documentation synchronized with workflows and `run_local_ci.sh`.
-- Treat Pyomo as planned until tracked implementation and tests are added.
-- Use Pyomo roadmap issue #80 and child issues for planning; keep current
-  implementation status in `docs/ARCHITECTURE.md`.
+- Treat Pyomo as optional and isolated from default installs.
+- Use Pyomo roadmap issue #80 and child issues for planning; keep implemented
+  behavior and current status in `docs/reference.md`.
