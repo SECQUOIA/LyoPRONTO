@@ -128,14 +128,18 @@ Build the documentation site with:
 mkdocs build
 ```
 
-For contributor orientation, start with:
+For contributor orientation and repository references, start with:
 
+- `CONTRIBUTING.md`
+- `AGENTS.md`
 - `docs/README.md`
 - `docs/how-to-guides.md`
 - `docs/reference.md`
 - `docs/dev.md`
 - `tests/README.md`
 - `examples/README.md`
+- `test_data/README.md`
+- `benchmarks/README.md`
 
 ## Citation
 
