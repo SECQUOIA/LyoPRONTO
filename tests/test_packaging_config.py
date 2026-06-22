@@ -539,8 +539,10 @@ def test_docs_inventory_classifies_retained_markdown_files() -> None:
         assert f"`{filename}`" in inventory
 
 
-def test_copilot_instructions_do_not_link_removed_docs() -> None:
-    instructions = _text(".github/copilot-instructions.md")
+def test_agent_instructions_do_not_link_removed_docs() -> None:
+    agent_instructions = _text("AGENTS.md")
+    copilot_instructions = _text(".github/copilot-instructions.md")
+    instructions = "\n".join([agent_instructions, copilot_instructions])
 
     for removed_path in [
         "docs/ARCHITECTURE.md",
@@ -560,6 +562,11 @@ def test_copilot_instructions_do_not_link_removed_docs() -> None:
         "docs/technical/physics-reference.md",
     ]:
         assert current_path in instructions
+
+    assert "AGENTS.md" in copilot_instructions
+    assert "single source of truth" in agent_instructions
+    assert "GitHub Copilot Instructions for LyoPRONTO" not in agent_instructions
+    assert not (ROOT / ".github/copilot-examples.md").exists()
 
 
 def test_legacy_setup_py_metadata_removed() -> None:

@@ -390,4 +390,4 @@ ls test_data/temperature.txt
 - See [how-to-guides.md](../docs/how-to-guides.md) for local setup.
 - See [tests/README.md](../tests/README.md) for testing and CI lanes.
 - See [reference.md](../docs/reference.md) for current code structure.
-- See [.github/copilot-examples.md](../.github/copilot-examples.md) for code snippets.
+- See [AGENTS.md](../AGENTS.md) for coding-agent guidance.
