@@ -116,6 +116,10 @@ Advanced Pyomo workflow builders are also available under
   scenarios;
 - `create_design_space_feasibility_model` and `create_design_space_grid_models`
   for fixed-control feasibility checks;
+- `create_sensitivity_analysis_models` for local finite-difference
+  perturbation studies around fixed controls;
+- `create_robust_optimization_model` for scenario-based minimax optimization
+  with shared pressure and/or shelf-temperature controls;
 - `create_multivial_optimization_model` for optimization with explicit
   batch-capacity diagnostics built on the trajectory model's equipment
   capability constraint.

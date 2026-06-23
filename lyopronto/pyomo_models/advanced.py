@@ -24,10 +24,16 @@ from .trajectory import (
 
 ParameterBounds = Mapping[str, VariableBounds]
 ObservationInput = Mapping[str, float]
+SensitivityModelKey = Tuple[str, float]
+SensitivityPerturbations = Mapping[str, Sequence[float]]
+ScenarioOverrides = Mapping[str, Mapping[str, float]]
+RobustScenarios = Mapping[str, ScenarioOverrides]
 
 _PRODUCT_PARAMETER_NAMES = ("R0", "A1", "A2")
 _HEAT_TRANSFER_PARAMETER_NAMES = ("KC", "KP", "KD")
 _PARAMETER_NAMES = _PRODUCT_PARAMETER_NAMES + _HEAT_TRANSFER_PARAMETER_NAMES
+_BASELINE_SENSITIVITY_LABEL = "baseline"
+_SCENARIO_GROUPS = ("vial", "product", "ht", "eq_cap")
 
 _DEFAULT_PARAMETER_BOUNDS: Dict[str, VariableBounds] = {
     "R0": (0.0, None),
@@ -100,6 +106,133 @@ def _profile_bounds(name: str, profile: ProfileInput) -> VariableBounds:
 
 def _constant_profile(value: float, n_steps: int) -> Tuple[float, ...]:
     return tuple(float(value) for _ in range(int(n_steps) + 1))
+
+
+def _float_dict(data: Mapping[str, float]) -> Dict[str, float]:
+    return {key: float(value) for key, value in data.items()}
+
+
+def _copy_case_inputs(
+    vial: Mapping[str, float],
+    product: Mapping[str, float],
+    ht: Mapping[str, float],
+) -> Tuple[Dict[str, float], Dict[str, float], Dict[str, float]]:
+    return _float_dict(vial), _float_dict(product), _float_dict(ht)
+
+
+def _apply_parameter_perturbation(
+    vial: Mapping[str, float],
+    product: Mapping[str, float],
+    ht: Mapping[str, float],
+    parameter_name: str,
+    perturbation_fraction: float,
+) -> Tuple[Dict[str, float], Dict[str, float], Dict[str, float], float, float]:
+    vial_case, product_case, ht_case = _copy_case_inputs(vial, product, ht)
+    groups = (("vial", vial_case), ("product", product_case), ("ht", ht_case))
+    try:
+        _group_name, target = next(group for group in groups if parameter_name in group[1])
+    except StopIteration as exc:
+        raise KeyError(
+            f"parameter_perturbations contains unknown parameter: {parameter_name}"
+        ) from exc
+
+    base_value = float(target[parameter_name])
+    perturbed_value = base_value * (1.0 + float(perturbation_fraction))
+    if not np.isfinite(perturbed_value):
+        raise ValueError(f"perturbed value for {parameter_name} must be finite")
+    if parameter_name in _PARAMETER_NAMES and perturbed_value < 0.0:
+        raise ValueError(f"perturbed value for {parameter_name} must be nonnegative")
+
+    target[parameter_name] = perturbed_value
+    return vial_case, product_case, ht_case, base_value, perturbed_value
+
+
+def _tag_sensitivity_model(
+    model: pyo.ConcreteModel,
+    parameter_name: str,
+    perturbation_fraction: float,
+    base_value: Optional[float],
+    perturbed_value: Optional[float],
+) -> pyo.ConcreteModel:
+    model.advanced_workflow = "sensitivity_analysis"
+    model.validation_scenario = (
+        "local finite-difference parameter perturbation around fixed "
+        "pressure/shelf-temperature controls"
+    )
+    model.sensitivity_parameter = parameter_name
+    model.sensitivity_perturbation_fraction = float(perturbation_fraction)
+    model.sensitivity_base_value = base_value
+    model.sensitivity_perturbed_value = perturbed_value
+    model.sensitivity_difference_denominator = (
+        None if base_value is None or perturbed_value is None else perturbed_value - base_value
+    )
+    return model
+
+
+def _scenario_case_inputs(
+    vial: Mapping[str, float],
+    product: Mapping[str, float],
+    ht: Mapping[str, float],
+    eq_cap: Optional[Mapping[str, float]],
+    overrides: ScenarioOverrides,
+) -> Tuple[Dict[str, float], Dict[str, float], Dict[str, float], Optional[Dict[str, float]]]:
+    unknown_groups = [name for name in overrides if name not in _SCENARIO_GROUPS]
+    if unknown_groups:
+        joined = ", ".join(unknown_groups)
+        raise KeyError(f"scenario override contains unknown group(s): {joined}")
+
+    vial_case, product_case, ht_case = _copy_case_inputs(vial, product, ht)
+    eq_cap_case = None if eq_cap is None else _float_dict(eq_cap)
+    cases = {
+        "vial": vial_case,
+        "product": product_case,
+        "ht": ht_case,
+        "eq_cap": eq_cap_case,
+    }
+
+    for group_name, group_overrides in overrides.items():
+        if group_name == "eq_cap" and cases[group_name] is None:
+            cases[group_name] = {}
+            eq_cap_case = cases[group_name]
+        target = cases[group_name]
+        if target is None:
+            raise ValueError(f"scenario group {group_name} cannot be overridden without inputs")
+        target.update(_float_dict(group_overrides))
+
+    return vial_case, product_case, ht_case, eq_cap_case
+
+
+def _normalize_scenarios(scenarios: RobustScenarios) -> Tuple[Tuple[str, ScenarioOverrides], ...]:
+    if len(scenarios) == 0:
+        raise ValueError("scenarios must contain at least one scenario")
+
+    normalized = []
+    seen = set()
+    for label, overrides in scenarios.items():
+        scenario_label = str(label)
+        if scenario_label in seen:
+            raise ValueError(f"duplicate scenario label after string conversion: {scenario_label}")
+        seen.add(scenario_label)
+        normalized.append((scenario_label, overrides))
+    return tuple(normalized)
+
+
+def _add_batch_capacity_diagnostics(model: pyo.ConcreteModel) -> None:
+    if not all(hasattr(model, name) for name in ("eq_cap_a", "eq_cap_b", "nvial")):
+        return
+    if hasattr(model, "total_sublimation_rate"):
+        return
+
+    model.batch_capacity_basis = "nvial*dmdt <= eq_cap.a + eq_cap.b*Pch"
+    model.total_sublimation_rate = pyo.Expression(
+        model.TIME, rule=lambda m, t: m.nvial * m.dmdt[t]
+    )
+    model.equipment_capacity_limit = pyo.Expression(
+        model.TIME, rule=lambda m, t: m.eq_cap_a + m.eq_cap_b * m.Pch[t]
+    )
+    model.capacity_margin = pyo.Expression(
+        model.TIME, rule=lambda m, t: m.equipment_capacity_limit[t] - m.total_sublimation_rate[t]
+    )
 
 
 def create_parameter_estimation_model(
@@ -303,6 +436,94 @@ def create_design_space_grid_models(
     return models
 
 
+def create_sensitivity_analysis_models(
+    vial: Mapping[str, float],
+    product: Mapping[str, float],
+    ht: Mapping[str, float],
+    pch_profile: ProfileInput,
+    tsh_profile: ProfileInput,
+    parameter_perturbations: SensitivityPerturbations,
+    *,
+    n_steps: int,
+    dt: float,
+    eq_cap: Optional[Mapping[str, float]] = None,
+    nvial: Optional[int] = None,
+    final_dried_fraction: float = 0.995,
+    tbot_upper: Optional[float] = None,
+    lpr0: Optional[float] = None,
+    include_baseline: bool = True,
+) -> Dict[SensitivityModelKey, pyo.ConcreteModel]:
+    """Create fixed-control perturbation models for local sensitivity analysis.
+
+    ``parameter_perturbations`` maps a vial, product, or heat-transfer
+    parameter name to fractional perturbations, for example
+    ``{"R0": [-0.1, 0.1], "KC": [0.05]}``. Each returned model is a
+    feasibility replay with metadata needed to finite-difference solved
+    trajectory outputs against the optional baseline model.
+    """
+    if len(parameter_perturbations) == 0:
+        raise ValueError("parameter_perturbations must contain at least one parameter")
+
+    models: Dict[SensitivityModelKey, pyo.ConcreteModel] = {}
+    if include_baseline:
+        baseline = create_design_space_feasibility_model(
+            vial,
+            product,
+            ht,
+            pch_profile,
+            tsh_profile,
+            n_steps=n_steps,
+            dt=dt,
+            eq_cap=eq_cap,
+            nvial=nvial,
+            final_dried_fraction=final_dried_fraction,
+            tbot_upper=tbot_upper,
+            lpr0=lpr0,
+        )
+        models[(_BASELINE_SENSITIVITY_LABEL, 0.0)] = _tag_sensitivity_model(
+            baseline,
+            _BASELINE_SENSITIVITY_LABEL,
+            0.0,
+            None,
+            None,
+        )
+
+    for parameter_name, perturbations in parameter_perturbations.items():
+        if len(perturbations) == 0:
+            raise ValueError(f"perturbations for {parameter_name} must not be empty")
+        for perturbation_fraction in perturbations:
+            fraction = float(perturbation_fraction)
+            if not np.isfinite(fraction):
+                raise ValueError(f"perturbation for {parameter_name} must be finite")
+            vial_case, product_case, ht_case, base_value, perturbed_value = (
+                _apply_parameter_perturbation(vial, product, ht, parameter_name, fraction)
+            )
+            model = create_design_space_feasibility_model(
+                vial_case,
+                product_case,
+                ht_case,
+                pch_profile,
+                tsh_profile,
+                n_steps=n_steps,
+                dt=dt,
+                eq_cap=eq_cap,
+                nvial=nvial,
+                final_dried_fraction=final_dried_fraction,
+                tbot_upper=tbot_upper,
+                lpr0=lpr0,
+            )
+            key = (str(parameter_name), fraction)
+            models[key] = _tag_sensitivity_model(
+                model,
+                str(parameter_name),
+                fraction,
+                base_value,
+                perturbed_value,
+            )
+
+    return models
+
+
 def create_multivial_optimization_model(
     vial: Mapping[str, float],
     product: Mapping[str, float],
@@ -358,16 +579,124 @@ def create_multivial_optimization_model(
         "batch-level sublimation-rate constraint with total rate nvial*dmdt "
         "bounded by a + b*Pch"
     )
-    model.batch_capacity_basis = "nvial*dmdt <= eq_cap.a + eq_cap.b*Pch"
-    model.total_sublimation_rate = pyo.Expression(
-        model.TIME, rule=lambda m, t: m.nvial * m.dmdt[t]
+    _add_batch_capacity_diagnostics(model)
+    return model
+
+
+def create_robust_optimization_model(
+    vial: Mapping[str, float],
+    product: Mapping[str, float],
+    ht: Mapping[str, float],
+    pchamber: Mapping[str, Any],
+    tshelf: Mapping[str, Any],
+    scenarios: RobustScenarios,
+    *,
+    n_steps: int,
+    dt: float,
+    mode: ModeInput,
+    eq_cap: Optional[Mapping[str, float]] = None,
+    nvial: Optional[int] = None,
+    final_dried_fraction: float = 0.995,
+    enforce_ramp_rates: bool = False,
+    pch_ramp_rate: Optional[float] = None,
+    tsh_ramp_rate: Optional[float] = None,
+    tbot_upper: Optional[float] = None,
+    lpr0: Optional[float] = None,
+    initialize: Optional[WarmstartInput] = None,
+) -> pyo.ConcreteModel:
+    """Create a scenario-based robust optimization model.
+
+    Each scenario is a deterministic Pyomo optimization block built from the
+    existing optimizer with optional overrides for ``vial``, ``product``,
+    ``ht``, and ``eq_cap`` dictionaries. The optimized control profiles are
+    shared across scenarios, and the top-level objective minimizes the worst
+    scenario value of the existing driving-force objective.
+    """
+    normalized_scenarios = _normalize_scenarios(scenarios)
+    scenario_labels = tuple(label for label, _overrides in normalized_scenarios)
+    reference_label = scenario_labels[0]
+
+    model = pyo.ConcreteModel()
+    model.advanced_workflow = "robust_optimization"
+    model.validation_scenario = (
+        "scenario-based robust optimization with shared control profiles across "
+        "product, heat-transfer, vial, or equipment-capacity uncertainty cases"
     )
-    model.equipment_capacity_limit = pyo.Expression(
-        model.TIME, rule=lambda m, t: m.eq_cap_a + m.eq_cap_b * m.Pch[t]
+    model.robust_objective = "minimize_worst_case_sum_Pch_minus_Psub"
+    model.reference_scenario = reference_label
+    model.scenario_overrides = dict(normalized_scenarios)
+    model.SCENARIOS = pyo.Set(initialize=scenario_labels, ordered=True)
+    model.TIME = pyo.RangeSet(0, int(n_steps))
+    model.scenario_blocks = pyo.Block(model.SCENARIOS)
+
+    for scenario_label, overrides in normalized_scenarios:
+        vial_case, product_case, ht_case, eq_cap_case = _scenario_case_inputs(
+            vial,
+            product,
+            ht,
+            eq_cap,
+            overrides,
+        )
+        scenario_model = create_primary_drying_optimization_model(
+            vial_case,
+            product_case,
+            ht_case,
+            pchamber,
+            tshelf,
+            n_steps=n_steps,
+            dt=dt,
+            mode=mode,
+            eq_cap=eq_cap_case,
+            nvial=nvial,
+            final_dried_fraction=final_dried_fraction,
+            enforce_ramp_rates=enforce_ramp_rates,
+            pch_ramp_rate=pch_ramp_rate,
+            tsh_ramp_rate=tsh_ramp_rate,
+            tbot_upper=tbot_upper,
+            lpr0=lpr0,
+            initialize=initialize,
+        )
+        block = model.scenario_blocks[scenario_label]
+        block.transfer_attributes_from(scenario_model)
+        block.robust_scenario = scenario_label
+        block.robust_overrides = overrides
+        block.obj.deactivate()
+        _add_batch_capacity_diagnostics(block)
+
+    reference_block = model.scenario_blocks[reference_label]
+    optimized_controls = reference_block.optimized_controls
+    model.optimized_controls = optimized_controls
+    model.fixed_controls = reference_block.fixed_controls
+
+    if "Pch" in optimized_controls:
+        model.shared_chamber_pressure = pyo.Constraint(
+            model.SCENARIOS,
+            model.TIME,
+            rule=lambda m, s, t: pyo.Constraint.Skip
+            if s == reference_label
+            else m.scenario_blocks[s].Pch[t] == m.scenario_blocks[reference_label].Pch[t],
+        )
+    if "Tsh" in optimized_controls:
+        model.shared_shelf_temperature = pyo.Constraint(
+            model.SCENARIOS,
+            model.TIME,
+            rule=lambda m, s, t: pyo.Constraint.Skip
+            if s == reference_label
+            else m.scenario_blocks[s].Tsh[t] == m.scenario_blocks[reference_label].Tsh[t],
+        )
+
+    model.scenario_objective = pyo.Expression(
+        model.SCENARIOS,
+        rule=lambda m, s: sum(
+            m.scenario_blocks[s].Pch[t] - m.scenario_blocks[s].Psub[t] for t in m.TIME
+        ),
     )
-    model.capacity_margin = pyo.Expression(
-        model.TIME, rule=lambda m, t: m.equipment_capacity_limit[t] - m.total_sublimation_rate[t]
+    model.worst_case_objective = pyo.Var(domain=pyo.Reals, initialize=0.0)
+    model.worst_case_objective_bound = pyo.Constraint(
+        model.SCENARIOS,
+        rule=lambda m, s: m.worst_case_objective >= m.scenario_objective[s],
     )
+    model.obj = pyo.Objective(expr=model.worst_case_objective, sense=pyo.minimize)
     return model
 
 
@@ -376,4 +705,6 @@ __all__ = [
     "create_design_space_grid_models",
     "create_multivial_optimization_model",
     "create_parameter_estimation_model",
+    "create_robust_optimization_model",
+    "create_sensitivity_analysis_models",
 ]
