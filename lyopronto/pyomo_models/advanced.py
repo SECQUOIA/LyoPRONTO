@@ -178,11 +178,11 @@ def create_parameter_estimation_model(
     )
     model.Rp_model = pyo.Expression(
         model.OBS,
-        rule=lambda m, i: m.R0 + m.A1 * m.Lck_obs[i] / (1.0 + m.A2 * m.Lck_obs[i]),
+        rule=lambda m, i: functions.Rp_FUN(m.Lck_obs[i], m.R0, m.A1, m.A2),
     )
     model.Kv_model = pyo.Expression(
         model.OBS,
-        rule=lambda m, i: m.KC + m.KP * m.Pch_obs[i] / (1.0 + m.KD * m.Pch_obs[i]),
+        rule=lambda m, i: functions.Kv_FUN(m.KC, m.KP, m.KD, m.Pch_obs[i]),
     )
 
     residual_terms = []
@@ -323,7 +323,14 @@ def create_multivial_optimization_model(
     lpr0: Optional[float] = None,
     initialize: Optional[WarmstartInput] = None,
 ) -> pyo.ConcreteModel:
-    """Create a Pyomo optimization model with explicit batch-capacity tracking."""
+    """Create a Pyomo optimization model with explicit batch-capacity tracking.
+
+    This builder uses the trajectory model's existing equipment-capability
+    constraint and requires ``eq_cap``/``nvial`` so batch scope is explicit. It
+    adds named diagnostic expressions for total sublimation rate, capacity
+    limit, and margin; it does not introduce independent per-vial decision
+    variables.
+    """
     if int(nvial) <= 0:
         raise ValueError("nvial must be positive")
 

@@ -204,9 +204,14 @@ Advanced workflow builders remain explicit optional Pyomo prototypes:
   constraints. `create_design_space_grid_models` applies that replay over a
   pressure/shelf-temperature grid.
 - `create_multivial_optimization_model` wraps the existing optimization modes
-  with explicit batch-level capacity diagnostics. The capacity convention is
-  `nvial * dmdt <= eq_cap["a"] + eq_cap["b"] * Pch`, where `dmdt` is the
+  with required batch-capacity inputs and explicit batch-level diagnostics. It
+  uses the trajectory model's existing equipment-capability constraint rather
+  than adding independent per-vial decision variables. The capacity convention
+  is `nvial * dmdt <= eq_cap["a"] + eq_cap["b"] * Pch`, where `dmdt` is the
   per-vial sublimation rate in kg/hr/vial and `Pch` is in Torr.
+
+Sensitivity-analysis and robust-optimization workflows remain future optional
+Pyomo work after the base model and advanced workflow prototypes are validated.
 
 Future Pyomo planning remains in GitHub issue
 [#80](https://github.com/SECQUOIA/LyoPRONTO/issues/80) and its child issues.

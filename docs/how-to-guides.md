@@ -117,7 +117,8 @@ Advanced Pyomo workflow builders are also available under
 - `create_design_space_feasibility_model` and `create_design_space_grid_models`
   for fixed-control feasibility checks;
 - `create_multivial_optimization_model` for optimization with explicit
-  batch-capacity diagnostics.
+  batch-capacity diagnostics built on the trajectory model's equipment
+  capability constraint.
 
 Model construction does not require IPOPT. Solver-backed runs require an NLP
 solver such as IPOPT:
