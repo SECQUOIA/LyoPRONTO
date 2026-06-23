@@ -27,8 +27,10 @@ def pyomo_example():
     return _load_example()
 
 
-def test_pyomo_optimization_example_builds_all_modes(pyomo_example):
+def test_pyomo_optimization_example_builds_all_modes(pyomo_example, capsys):
     summaries = pyomo_example.run_pyomo_optimization_example()
+    pyomo_example._print_summary(summaries)
+    printed = capsys.readouterr().out
 
     assert set(summaries) == {"pressure", "shelf_temperature", "joint"}
     assert summaries["pressure"]["optimized_controls"] == ("Pch",)
@@ -38,8 +40,10 @@ def test_pyomo_optimization_example_builds_all_modes(pyomo_example):
     assert summaries["joint"]["optimized_controls"] == ("Pch", "Tsh")
     assert summaries["joint"]["fixed_controls"] == ()
 
-    for summary in summaries.values():
+    for mode, summary in summaries.items():
+        assert summary["mode"] == mode
         assert summary["objective"] == "sum_Pch_minus_Psub"
         assert summary["time_nodes"] == 5
         assert summary["variables"] > 0
         assert summary["constraints"] > 0
+        assert f"{mode}: optimized=" in printed
