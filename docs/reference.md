@@ -122,6 +122,9 @@ Implemented modules:
 - `lyopronto.pyomo_models.optimization` exposes experimental trajectory
   optimization builders for pressure-only, shelf-temperature-only, and joint
   pressure/shelf-temperature modes.
+- `lyopronto.pyomo_models.advanced` composes the trajectory and optimization
+  builders into optional parameter-estimation, design-space feasibility, and
+  multi-vial capacity workflows.
 
 Pyomo tests are marked `pyomo` and are skip-safe when Pyomo or IPOPT is not
 installed. See `dev.md` for optional solver setup and CI lane policy.
@@ -186,6 +189,29 @@ profiles, output columns, and algebraic constraints. Full trajectories can
 diverge because the Pyomo optimizer solves a simultaneous fixed-horizon
 backward-Euler problem with a final dried-fraction target, while the SciPy
 optimizers solve sequential point problems and advance until complete drying.
+
+Advanced workflow builders remain explicit optional Pyomo prototypes:
+
+- `create_parameter_estimation_model` builds a least-squares model for fitting
+  product-resistance parameters (`R0`, `A1`, `A2`) and heat-transfer parameters
+  (`KC`, `KP`, `KD`) from fixed-time synthetic or experimental observations.
+  Observation units follow the legacy primary-drying conventions: pressure in
+  Torr, dried cake length in cm, sublimation rate in kg/hr/vial, and
+  heat-transfer coefficient in cal/s/K/cm^2.
+- `create_design_space_feasibility_model` fixes chamber-pressure and
+  shelf-temperature profiles and turns the trajectory model into a pure
+  feasibility replay with product-temperature and optional equipment-capacity
+  constraints. `create_design_space_grid_models` applies that replay over a
+  pressure/shelf-temperature grid.
+- `create_multivial_optimization_model` wraps the existing optimization modes
+  with required batch-capacity inputs and explicit batch-level diagnostics. It
+  uses the trajectory model's existing equipment-capability constraint rather
+  than adding independent per-vial decision variables. The capacity convention
+  is `nvial * dmdt <= eq_cap["a"] + eq_cap["b"] * Pch`, where `dmdt` is the
+  per-vial sublimation rate in kg/hr/vial and `Pch` is in Torr.
+
+Sensitivity-analysis and robust-optimization workflows remain future optional
+Pyomo work after the base model and advanced workflow prototypes are validated.
 
 Future Pyomo planning remains in GitHub issue
 [#80](https://github.com/SECQUOIA/LyoPRONTO/issues/80) and its child issues.

@@ -109,6 +109,17 @@ It constructs:
 - shelf-temperature-only optimization with a fixed chamber-pressure profile;
 - joint pressure and shelf-temperature optimization.
 
+Advanced Pyomo workflow builders are also available under
+`lyopronto.pyomo_models`:
+
+- `create_parameter_estimation_model` for optional Rp/Kv parameter-estimation
+  scenarios;
+- `create_design_space_feasibility_model` and `create_design_space_grid_models`
+  for fixed-control feasibility checks;
+- `create_multivial_optimization_model` for optimization with explicit
+  batch-capacity diagnostics built on the trajectory model's equipment
+  capability constraint.
+
 Model construction does not require IPOPT. Solver-backed runs require an NLP
 solver such as IPOPT:
 
