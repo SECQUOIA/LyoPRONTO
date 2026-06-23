@@ -381,6 +381,7 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
 
     assert "--cov-config=.coveragerc.non-pyomo" not in pyomo_tests
     assert "lyopronto/pyomo_models/**" in pyomo_tests
+    assert "examples/example_pyomo_optimization.py" in pyomo_tests
     assert "tests/test_pyomo_models/**" in pyomo_tests
     assert 'pip install -e ".[dev,pyomo]"' in pyomo_tests
     assert "pytest -n 0 -v" in pyomo_tests

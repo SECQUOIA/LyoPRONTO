@@ -125,6 +125,9 @@ Implemented modules:
 
 Pyomo tests are marked `pyomo` and are skip-safe when Pyomo or IPOPT is not
 installed. See `dev.md` for optional solver setup and CI lane policy.
+The maintained construction example lives in
+`examples/example_pyomo_optimization.py` and is covered by the optional Pyomo
+test lane.
 
 The trajectory model uses backward Euler for dried cake length:
 
@@ -163,6 +166,10 @@ profiles, bounds, product-temperature limit, optional equipment capability, and
 optional ramp-rate constraints. These Pyomo APIs are validation prototypes and
 should not be treated as stable replacements for `opt_Pch.dry`,
 `opt_Tsh.dry`, or `opt_Pch_Tsh.dry`.
+
+There is intentionally no unified SciPy/Pyomo optimizer selector. Call the
+legacy SciPy optimizer modules or the explicit Pyomo builders directly so
+solver requirements, formulation differences, and failure modes remain visible.
 
 The final dried target is represented as a lower bound on the final dried cake
 fraction. Targets must remain below 100% because the frozen-layer heat balance

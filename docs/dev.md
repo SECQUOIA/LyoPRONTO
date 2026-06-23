@@ -89,11 +89,11 @@ validation, manual dispatch, version tags, and pushes to `main`.
 Notebook tests run in `.github/workflows/rundocs.yml` for ready PRs, pushes to
 `main`, nightly schedule, version tags, and manual dispatch.
 
-Pyomo model and test changes run `.github/workflows/pyomo-tests.yml`. The
-`pyomo-no-solver` job installs `.[dev,pyomo]` without IPOPT and runs the Pyomo
-light lane. The solver comparison job is job-level non-blocking; inspect its
-logs when it runs because install failures and comparison failures leave the PR
-status green.
+Pyomo model, Pyomo test, and maintained Pyomo example changes run
+`.github/workflows/pyomo-tests.yml`. The `pyomo-no-solver` job installs
+`.[dev,pyomo]` without IPOPT and runs the Pyomo light lane. The solver
+comparison job is job-level non-blocking; inspect its logs when it runs because
+install failures and comparison failures leave the PR status green.
 
 Do not configure path-filtered Pyomo jobs as branch-protection required status checks
 while `.github/workflows/pyomo-tests.yml` uses `paths`, because those jobs do

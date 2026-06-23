@@ -6,11 +6,13 @@ on:
     types: [ opened, synchronize, reopened, ready_for_review, converted_to_draft ]
     paths:
       - 'lyopronto/pyomo_models/**'
+      - 'examples/example_pyomo_optimization.py'
       - 'tests/test_pyomo_models/**'
   push:
     branches: [ main ]
     paths:
       - 'lyopronto/pyomo_models/**'
+      - 'examples/example_pyomo_optimization.py'
       - 'tests/test_pyomo_models/**'
   workflow_dispatch:
 
