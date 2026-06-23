@@ -868,6 +868,17 @@ without solving them:</p>
 <li>shelf-temperature-only optimization with a fixed chamber-pressure profile;</li>
 <li>joint pressure and shelf-temperature optimization.</li>
 </ul>
+<p>Advanced Pyomo workflow builders are also available under
+<code>lyopronto.pyomo_models</code>:</p>
+<ul>
+<li><code>create_parameter_estimation_model</code> for optional Rp/Kv parameter-estimation
+  scenarios;</li>
+<li><code>create_design_space_feasibility_model</code> and <code>create_design_space_grid_models</code>
+  for fixed-control feasibility checks;</li>
+<li><code>create_multivial_optimization_model</code> for optimization with explicit
+  batch-capacity diagnostics built on the trajectory model's equipment
+  capability constraint.</li>
+</ul>
 <p>Model construction does not require IPOPT. Solver-backed runs require an NLP
 solver such as IPOPT:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>idaes<span class="w"> </span>get-extensions<span class="w"> </span>--extra<span class="w"> </span>petsc
