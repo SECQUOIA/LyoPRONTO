@@ -175,11 +175,13 @@ def _scenario_case_inputs(
     ht: Mapping[str, float],
     eq_cap: Optional[Mapping[str, float]],
     overrides: ScenarioOverrides,
+    scenario_label: str,
+    nvial: Optional[int],
 ) -> Tuple[Dict[str, float], Dict[str, float], Dict[str, float], Optional[Dict[str, float]]]:
     unknown_groups = [name for name in overrides if name not in _SCENARIO_GROUPS]
     if unknown_groups:
         joined = ", ".join(unknown_groups)
-        raise KeyError(f"scenario override contains unknown group(s): {joined}")
+        raise KeyError(f"scenario '{scenario_label}' override contains unknown group(s): {joined}")
 
     vial_case, product_case, ht_case = _copy_case_inputs(vial, product, ht)
     eq_cap_case = None if eq_cap is None else _float_dict(eq_cap)
@@ -192,12 +194,30 @@ def _scenario_case_inputs(
 
     for group_name, group_overrides in overrides.items():
         if group_name == "eq_cap" and cases[group_name] is None:
+            if nvial is None or any(key not in group_overrides for key in ("a", "b")):
+                raise ValueError(
+                    f"scenario '{scenario_label}' overrides eq_cap but no base eq_cap/nvial "
+                    "was provided; supply both 'a' and 'b' and a nvial"
+                )
             cases[group_name] = {}
             eq_cap_case = cases[group_name]
         target = cases[group_name]
         if target is None:
-            raise ValueError(f"scenario group {group_name} cannot be overridden without inputs")
+            raise ValueError(
+                f"scenario '{scenario_label}' group {group_name} cannot be overridden "
+                "without inputs"
+            )
         target.update(_float_dict(group_overrides))
+
+    if eq_cap_case is not None:
+        missing = [key for key in ("a", "b") if key not in eq_cap_case]
+        if missing:
+            joined = ", ".join(missing)
+            raise KeyError(
+                f"scenario '{scenario_label}' eq_cap is missing required key(s): {joined}"
+            )
+        if nvial is None:
+            raise ValueError(f"scenario '{scenario_label}' includes eq_cap but nvial is required")
 
     return vial_case, product_case, ht_case, eq_cap_case
 
@@ -636,6 +656,8 @@ def create_robust_optimization_model(
             ht,
             eq_cap,
             overrides,
+            scenario_label,
+            nvial,
         )
         scenario_model = create_primary_drying_optimization_model(
             vial_case,

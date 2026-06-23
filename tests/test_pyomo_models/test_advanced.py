@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 from lyopronto import constant, functions
+from tests.pyomo_solver import require_pyomo_solver
 
 pyo = pytest.importorskip("pyomo.environ")
 
@@ -17,6 +18,7 @@ from lyopronto.pyomo_models.advanced import (
     create_robust_optimization_model,
     create_sensitivity_analysis_models,
 )
+from lyopronto.pyomo_models.trajectory import solve_trajectory
 
 pytestmark = pytest.mark.pyomo
 
@@ -313,6 +315,101 @@ def test_robust_optimization_model_shares_controls_and_tracks_scenario_margins(a
     assert pyo.value(low_capacity.capacity_margin[0]) == pytest.approx(
         expected_capacity - expected_total_rate
     )
+
+
+def test_robust_optimization_names_partial_eq_cap_scenario_without_base_capacity(
+    advanced_case,
+):
+    with pytest.raises(
+        ValueError,
+        match=(
+            "scenario 'partial_capacity' overrides eq_cap but no base eq_cap/nvial "
+            "was provided"
+        ),
+    ):
+        create_robust_optimization_model(
+            advanced_case["vial"],
+            advanced_case["product"],
+            advanced_case["ht"],
+            advanced_case["pchamber"],
+            advanced_case["tshelf"],
+            {"nominal": {}, "partial_capacity": {"eq_cap": {"a": -0.20}}},
+            n_steps=2,
+            dt=0.5,
+            mode="joint",
+            final_dried_fraction=0.10,
+        )
+
+
+def test_robust_optimization_solve_enforces_minimax_shared_controls(advanced_case):
+    solver = require_pyomo_solver("ipopt")
+    scenarios = {
+        "nominal": {},
+        "high_resistance": {"product": {"R0": advanced_case["product"]["R0"] * 1.10}},
+        "low_capacity": {"eq_cap": {"a": -0.20}},
+    }
+
+    model = create_robust_optimization_model(
+        advanced_case["vial"],
+        advanced_case["product"],
+        advanced_case["ht"],
+        advanced_case["pchamber"],
+        advanced_case["tshelf"],
+        scenarios,
+        n_steps=2,
+        dt=0.5,
+        mode="joint",
+        final_dried_fraction=0.10,
+        eq_cap=advanced_case["eq_cap"],
+        nvial=advanced_case["nvial"],
+    )
+
+    results = solver.solve(model)
+
+    assert pyo.check_optimal_termination(results)
+    scenario_values = [pyo.value(model.scenario_objective[scenario]) for scenario in model.SCENARIOS]
+    assert pyo.value(model.worst_case_objective) == pytest.approx(
+        max(scenario_values),
+        abs=1.0e-6,
+    )
+    for scenario in model.SCENARIOS:
+        for time_index in model.TIME:
+            assert pyo.value(model.scenario_blocks[scenario].Pch[time_index]) == pytest.approx(
+                pyo.value(model.scenario_blocks["nominal"].Pch[time_index]),
+                abs=1.0e-7,
+            )
+            assert pyo.value(model.scenario_blocks[scenario].Tsh[time_index]) == pytest.approx(
+                pyo.value(model.scenario_blocks["nominal"].Tsh[time_index]),
+                abs=1.0e-7,
+            )
+
+
+def test_sensitivity_analysis_solve_documents_r0_response(advanced_case):
+    solver = require_pyomo_solver("ipopt")
+    product = dict(advanced_case["product"])
+    product["T_pr_crit"] = -5.0
+    models = create_sensitivity_analysis_models(
+        advanced_case["vial"],
+        product,
+        advanced_case["ht"],
+        pch_profile=[0.05, 0.05, 0.05, 0.05, 0.05],
+        tsh_profile=[-20.0, -15.0, -10.0, -5.0, -5.0],
+        parameter_perturbations={"R0": [0.10]},
+        n_steps=4,
+        dt=0.25,
+        final_dried_fraction=0.01,
+        eq_cap=advanced_case["eq_cap"],
+        nvial=advanced_case["nvial"],
+    )
+
+    baseline = solve_trajectory(models[("baseline", 0.0)], solver=solver)
+    high_r0 = solve_trajectory(models[("R0", 0.10)], solver=solver)
+
+    assert baseline.success, baseline.message
+    assert high_r0.success, high_r0.message
+    assert baseline.values["Lck"][-1] == pytest.approx(0.05965498, abs=5.0e-6)
+    assert high_r0.values["Lck"][-1] == pytest.approx(0.05892290, abs=5.0e-6)
+    assert high_r0.values["Lck"][-1] < baseline.values["Lck"][-1]
 
 
 def test_robust_optimization_requires_scenarios(advanced_case):
