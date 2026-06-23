@@ -14,11 +14,15 @@ def _is_pyomo_available() -> bool:
 PYOMO_AVAILABLE = _is_pyomo_available()
 
 _LAZY_EXPORTS = {
+    "create_design_space_feasibility_model": "advanced",
+    "create_design_space_grid_models": "advanced",
     "OptimizationMode": "optimization",
     "SingleStepResult": "single_step",
     "TrajectoryResult": "trajectory",
     "apply_trajectory_warmstart": "trajectory",
+    "create_multivial_optimization_model": "advanced",
     "create_joint_optimization_model": "optimization",
+    "create_parameter_estimation_model": "advanced",
     "create_pressure_optimization_model": "optimization",
     "create_primary_drying_optimization_model": "optimization",
     "create_shelf_temperature_optimization_model": "optimization",
@@ -48,11 +52,15 @@ def __getattr__(name: str) -> Any:
 
 __all__ = [
     "PYOMO_AVAILABLE",
+    "create_design_space_feasibility_model",
+    "create_design_space_grid_models",
     "OptimizationMode",
     "SingleStepResult",
     "TrajectoryResult",
     "apply_trajectory_warmstart",
+    "create_multivial_optimization_model",
     "create_joint_optimization_model",
+    "create_parameter_estimation_model",
     "create_pressure_optimization_model",
     "create_primary_drying_optimization_model",
     "create_shelf_temperature_optimization_model",
