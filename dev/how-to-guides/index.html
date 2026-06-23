@@ -304,6 +304,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#run-optional-pyomo-optimization-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run Optional Pyomo Optimization Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#run-notebook-examples" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -712,6 +723,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#run-optional-pyomo-optimization-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run Optional Pyomo Optimization Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#run-notebook-examples" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -774,8 +796,9 @@
 
 <h1 id="user-guide">User Guide</h1>
 <p>This page collects the maintained user workflows: install a checkout, run
-examples, use the legacy compatibility path, and validate a local change. For
-contributor CI policy and branch-protection details, use <code>dev.md</code>.</p>
+examples, use the optional Pyomo prototypes, use the legacy compatibility path,
+and validate a local change. For contributor CI policy and branch-protection
+details, use <code>dev.md</code>.</p>
 <p>The hosted web GUI and original video tutorial remain useful orientation:</p>
 <ul>
 <li>Web GUI: <a href="http://lyopronto.geddes.rcac.purdue.edu">http://lyopronto.geddes.rcac.purdue.edu</a></li>
@@ -829,6 +852,32 @@ plots from the selected simulation mode.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>python<span class="w"> </span>-m<span class="w"> </span>examples.typed_api_examples
 </span></code></pre></div>
 <p>These examples are also covered by <code>tests/test_typed_examples.py</code>.</p>
+<h2 id="run-optional-pyomo-optimization-examples">Run Optional Pyomo Optimization Examples</h2>
+<p>Pyomo support is optional. Default installs and <code>.[dev]</code> do not install Pyomo,
+IDAES, or IPOPT. Install the optional Pyomo stack before importing
+<code>lyopronto.pyomo_models</code> or running Pyomo examples:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev,pyomo]&quot;</span>
+</span></code></pre></div>
+<p>The maintained Pyomo example builds the three experimental optimization modes
+without solving them:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>python<span class="w"> </span>examples/example_pyomo_optimization.py
+</span></code></pre></div>
+<p>It constructs:</p>
+<ul>
+<li>pressure-only optimization with a fixed shelf-temperature profile;</li>
+<li>shelf-temperature-only optimization with a fixed chamber-pressure profile;</li>
+<li>joint pressure and shelf-temperature optimization.</li>
+</ul>
+<p>Model construction does not require IPOPT. Solver-backed runs require an NLP
+solver such as IPOPT:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>idaes<span class="w"> </span>get-extensions<span class="w"> </span>--extra<span class="w"> </span>petsc
+</span></code></pre></div>
+<p>The Pyomo APIs intentionally remain explicit under <code>lyopronto.pyomo_models</code>.
+Use <code>lyopronto.opt_Pch</code>, <code>lyopronto.opt_Tsh</code>, and <code>lyopronto.opt_Pch_Tsh</code> for
+the shipped SciPy optimizer workflows. A unified optimizer selector is not
+provided while the Pyomo behavior remains a validation prototype, because a
+selector would blur solver dependency failures and the different fixed-horizon
+trajectory formulation.</p>
 <h2 id="run-notebook-examples">Run Notebook Examples</h2>
 <p>The MkDocs notebook examples are tracked under <code>docs/examples/</code>:</p>
 <ul>
@@ -837,8 +886,8 @@ plots from the selected simulation mode.</p>
 </ul>
 <p>Notebook execution is validated through the explicit notebook CI lane.</p>
 <h2 id="run-local-validation">Run Local Validation</h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>python<span class="w"> </span>-m<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>lyopronto<span class="w"> </span>tests<span class="w"> </span>examples<span class="w"> </span>main.py
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not slow and not notebook and not pyomo&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>python<span class="w"> </span>-m<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>lyopronto<span class="w"> </span>tests<span class="w"> </span>examples<span class="w"> </span>main.py
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not slow and not notebook and not pyomo&quot;</span>
 </span></code></pre></div>
 <p>Use <code>./run_local_ci.sh fast</code>, <code>full</code>, <code>slow</code>, <code>notebook</code>, <code>pyomo-light</code>, or
 <code>pyomo</code> to run the CI-equivalent wrappers. See <code>dev.md</code> for lane commands and
@@ -848,9 +897,9 @@ plots from the selected simulation mode.</p>
 the <code>dt_setpt</code> key include ramp time. This applies to <code>Tshelf</code> and <code>Pchamber</code>
 dictionaries.</p>
 <h2 id="build-documentation">Build Documentation</h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[docs]&quot;</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>mkdocs<span class="w"> </span>build
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>mkdocs<span class="w"> </span>serve
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[docs]&quot;</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>mkdocs<span class="w"> </span>build
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>mkdocs<span class="w"> </span>serve
 </span></code></pre></div>
 
 

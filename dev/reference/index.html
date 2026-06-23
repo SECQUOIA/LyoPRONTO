@@ -5401,7 +5401,10 @@ arrays.</p>
   pressure/shelf-temperature modes.</li>
 </ul>
 <p>Pyomo tests are marked <code>pyomo</code> and are skip-safe when Pyomo or IPOPT is not
-installed. See <code>dev.md</code> for optional solver setup and CI lane policy.</p>
+installed. See <code>dev.md</code> for optional solver setup and CI lane policy.
+The maintained construction example lives in
+<code>examples/example_pyomo_optimization.py</code> and is covered by the optional Pyomo
+test lane.</p>
 <p>The trajectory model uses backward Euler for dried cake length:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Lck[t] = Lck[t - 1] + dt * dLdt[t]
 </span></code></pre></div>
@@ -5435,6 +5438,9 @@ profiles, bounds, product-temperature limit, optional equipment capability, and
 optional ramp-rate constraints. These Pyomo APIs are validation prototypes and
 should not be treated as stable replacements for <code>opt_Pch.dry</code>,
 <code>opt_Tsh.dry</code>, or <code>opt_Pch_Tsh.dry</code>.</p>
+<p>There is intentionally no unified SciPy/Pyomo optimizer selector. Call the
+legacy SciPy optimizer modules or the explicit Pyomo builders directly so
+solver requirements, formulation differences, and failure modes remain visible.</p>
 <p>The final dried target is represented as a lower bound on the final dried cake
 fraction. Targets must remain below 100% because the frozen-layer heat balance
 is singular when no frozen layer remains.</p>

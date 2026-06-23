@@ -824,11 +824,11 @@ validation-sensitive paths, PRs labeled <code>full-validation</code>, nightly sc
 validation, manual dispatch, version tags, and pushes to <code>main</code>.</p>
 <p>Notebook tests run in <code>.github/workflows/rundocs.yml</code> for ready PRs, pushes to
 <code>main</code>, nightly schedule, version tags, and manual dispatch.</p>
-<p>Pyomo model and test changes run <code>.github/workflows/pyomo-tests.yml</code>. The
-<code>pyomo-no-solver</code> job installs <code>.[dev,pyomo]</code> without IPOPT and runs the Pyomo
-light lane. The solver comparison job is job-level non-blocking; inspect its
-logs when it runs because install failures and comparison failures leave the PR
-status green.</p>
+<p>Pyomo model, Pyomo test, and maintained Pyomo example changes run
+<code>.github/workflows/pyomo-tests.yml</code>. The <code>pyomo-no-solver</code> job installs
+<code>.[dev,pyomo]</code> without IPOPT and runs the Pyomo light lane. The solver
+comparison job is job-level non-blocking; inspect its logs when it runs because
+install failures and comparison failures leave the PR status green.</p>
 <p>Do not configure path-filtered Pyomo jobs as branch-protection required status checks
 while <code>.github/workflows/pyomo-tests.yml</code> uses <code>paths</code>, because those jobs do
 not report on non-Pyomo PRs. If Pyomo status must be required
