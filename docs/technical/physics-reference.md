@@ -273,8 +273,9 @@ This is a **nonlinear equation** in Tsub:
 - There is no explicit formula for `Tsub`.
 - Simultaneous optimization backends must represent this relationship as an
   algebraic constraint.
-- Any future Pyomo work should track the details in issue #80 and child issues,
-  not as free-standing roadmap text in this reference.
+- The completed Pyomo roadmap was tracked in issue #80 and child issues; future
+  backend work should use new scoped issues rather than free-standing roadmap
+  text in this reference.
 
 ---
 
