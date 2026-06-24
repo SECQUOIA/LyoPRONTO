@@ -12,7 +12,7 @@ CI workflow and lane command reference is `../docs/dev.md`.
 | Full non-Pyomo | `not pyomo` | Conditional Full Validation workflow, pushes to `main`, and local/manual runs | Main confidence gate with coverage for the tracked SciPy implementation, including slow-marked non-Pyomo checks. |
 | Slow non-Pyomo | `slow and not pyomo` | Manual validation workflow | Targeted optimizer-heavy validation. |
 | Notebook | `notebook` | Explicit notebook workflow | Executes documentation notebooks separately from ordinary fast tests. |
-| Pyomo light | `tests/test_pyomo_models tests/test_pyomo_solver.py` | Path-filtered automatic workflow and `./run_local_ci.sh pyomo-light` | Required import, model-construction, and missing-solver skip coverage without IPOPT. |
+| Pyomo light | `tests/test_pyomo_models tests/test_pyomo_solver.py` | Always-reporting automatic workflow and `./run_local_ci.sh pyomo-light` | Required import, model-construction, and missing-solver skip coverage without IPOPT. |
 | Pyomo solver | `pyomo` | Optional solver comparison workflow and manual validation workflow | Solver-backed SciPy comparison coverage when IPOPT is available. |
 
 ## Marker Policy
@@ -22,9 +22,11 @@ CI workflow and lane command reference is `../docs/dev.md`.
 - `notebook`: Papermill or Jupyter execution tests for documentation examples.
   Keep these in the explicit notebook lane.
 - `pyomo`: Tests that require Pyomo, IPOPT, or the Pyomo optimization stack.
-  Model construction tests run automatically on Pyomo path changes. Tests that
-  need IPOPT should call `tests.pyomo_solver.require_pyomo_solver("ipopt")` so
-  missing solver setup skips with an installation hint.
+  Model construction tests run automatically on Pyomo-sensitive changes while
+  the workflow reports on every PR for branch-protection compatibility. Tests
+  that need IPOPT should call
+  `tests.pyomo_solver.require_pyomo_solver("ipopt")` so missing solver setup
+  skips with an installation hint.
 - `main`: Tests covering behavior that was historically reachable through
   `main.py` or the high-level API. This is a coverage label, not a CI lane.
 - `serial`: Tests that must not run under xdist parallelism. Run them with

@@ -4,36 +4,91 @@ on:
   pull_request:
     branches: [ main ]
     types: [ opened, synchronize, reopened, ready_for_review, converted_to_draft ]
-    paths:
-      - 'lyopronto/pyomo_models/**'
-      - 'examples/example_pyomo_optimization.py'
-      - 'tests/test_pyomo_models/**'
   push:
     branches: [ main ]
-    paths:
-      - 'lyopronto/pyomo_models/**'
-      - 'examples/example_pyomo_optimization.py'
-      - 'tests/test_pyomo_models/**'
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  pyomo-no-solver:
-    name: Pyomo import and construction lane
+  pyomo-scope:
+    name: Pyomo scope
     runs-on: ubuntu-latest
+    outputs:
+      run_pyomo: ${{ steps.scope.outputs.run_pyomo }}
+      reason: ${{ steps.scope.outputs.reason }}
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Decide whether Pyomo validation is required
+      id: scope
+      env:
+        EVENT_NAME: ${{ github.event_name }}
+        PR_DRAFT: ${{ github.event.pull_request.draft || false }}
+        BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      run: |
+        run_pyomo=false
+        reason="not a Pyomo-sensitive change"
+
+        if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+          run_pyomo=true
+          reason="manual dispatch"
+        elif [ "$EVENT_NAME" = "pull_request" ] && [ "$PR_DRAFT" = "true" ]; then
+          reason="draft PR"
+        elif [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
+          run_pyomo=true
+          reason="$EVENT_NAME trigger without comparable base"
+        else
+          changed_paths="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
+          while IFS= read -r path; do
+            case "$path" in
+              lyopronto/pyomo_models/**|\
+              examples/example_pyomo_optimization.py|\
+              tests/test_pyomo_models/**|\
+              tests/test_pyomo_solver.py|\
+              tests/pyomo_solver.py|\
+              pyproject.toml|\
+              .github/workflows/pyomo-tests.yml)
+                run_pyomo=true
+                reason="changed Pyomo-sensitive path: $path"
+                break
+                ;;
+            esac
+          done <<< "$changed_paths"
+        fi
+
+        echo "run_pyomo=$run_pyomo" >> "$GITHUB_OUTPUT"
+        echo "reason=$reason" >> "$GITHUB_OUTPUT"
+        echo "Pyomo validation required: $run_pyomo ($reason)"
+
+  pyomo-no-solver:
+    name: Pyomo import and construction lane
+    needs: pyomo-scope
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Report skipped Pyomo validation
+      if: ${{ needs.pyomo-scope.outputs.run_pyomo != 'true' }}
+      run: |
+        echo "Pyomo validation skipped: ${{ needs.pyomo-scope.outputs.reason }}"
+
+    - uses: actions/checkout@v4
+      if: ${{ needs.pyomo-scope.outputs.run_pyomo == 'true' }}
 
     - name: Read CI version config
+      if: ${{ needs.pyomo-scope.outputs.run_pyomo == 'true' }}
       id: versions
       uses: mikefarah/yq@v4.44.1
       with:
         cmd: yq eval '.python-version' .github/ci-config/ci-versions.yml
 
     - name: Set up Python
+      if: ${{ needs.pyomo-scope.outputs.run_pyomo == 'true' }}
       uses: actions/setup-python@v5
       with:
         python-version: ${{ steps.versions.outputs.result }}
@@ -41,19 +96,21 @@ jobs:
         cache-dependency-path: pyproject.toml
 
     - name: Install Pyomo test dependencies
+      if: ${{ needs.pyomo-scope.outputs.run_pyomo == 'true' }}
       run: |
         python -m pip install --upgrade pip setuptools wheel
         pip install -e ".[dev,pyomo]"
 
     - name: Run Pyomo no-solver tests
+      if: ${{ needs.pyomo-scope.outputs.run_pyomo == 'true' }}
       run: |
         echo "Running Pyomo import, model-construction, and solver-skip tests"
         pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v
 
   pyomo-solver-comparison:
     name: Pyomo solver comparison lane (optional)
-    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
-    needs: pyomo-no-solver
+    if: ${{ needs.pyomo-scope.outputs.run_pyomo == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.draft == false) }}
+    needs: [pyomo-scope, pyomo-no-solver]
     continue-on-error: true
     runs-on: ubuntu-latest
 

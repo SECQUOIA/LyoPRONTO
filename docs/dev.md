@@ -89,16 +89,14 @@ validation, manual dispatch, version tags, and pushes to `main`.
 Notebook tests run in `.github/workflows/rundocs.yml` for ready PRs, pushes to
 `main`, nightly schedule, version tags, and manual dispatch.
 
-Pyomo model, Pyomo test, and maintained Pyomo example changes run
-`.github/workflows/pyomo-tests.yml`. The `pyomo-no-solver` job installs
-`.[dev,pyomo]` without IPOPT and runs the Pyomo light lane. The solver
-comparison job is job-level non-blocking; inspect its logs when it runs because
-install failures and comparison failures leave the PR status green.
-
-Do not configure path-filtered Pyomo jobs as branch-protection required status checks
-while `.github/workflows/pyomo-tests.yml` uses `paths`, because those jobs do
-not report on non-Pyomo PRs. If Pyomo status must be required
-repository-wide, add an always-running gate job first.
+The Pyomo Tests workflow is reportable on every PR so repository maintainers
+can require the `Pyomo import and construction lane` job in branch protection.
+That job reports success quickly when the Pyomo scope check decides validation
+is not needed, and installs `.[dev,pyomo]` without IPOPT only for Pyomo model,
+Pyomo test, maintained Pyomo example, Pyomo dependency, or Pyomo workflow
+changes. The solver comparison job is job-level non-blocking; inspect its logs
+when it runs because install failures and comparison failures leave the PR
+status green.
 
 `.github/workflows/slow-tests.yml` is manual dispatch for focused slow
 non-Pyomo, full non-Pyomo, or optional Pyomo validation.
@@ -110,8 +108,9 @@ IPOPT. Pyomo-marked tests that need IPOPT should call
 `tests.pyomo_solver.require_pyomo_solver("ipopt")` before solving models. That
 helper skips with installation hints when Pyomo or IPOPT is missing.
 
-Keep automatic Pyomo validation isolated behind the Pyomo path filter so
-default non-Pyomo PRs do not install optional dependencies.
+Keep automatic Pyomo validation isolated behind the Pyomo scope check so
+default non-Pyomo PRs do not install optional dependencies while the required
+branch-protection check still reports on every PR.
 
 ## Documentation
 

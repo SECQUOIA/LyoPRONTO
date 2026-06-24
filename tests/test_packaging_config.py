@@ -379,10 +379,18 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
 
     assert "github.event.pull_request.draft == false" in notebook_tests
 
+    assert "paths:" not in pyomo_tests
+    assert "pyomo-scope:" in pyomo_tests
+    assert "Pyomo validation skipped" in pyomo_tests
+    assert "needs.pyomo-scope.outputs.run_pyomo" in pyomo_tests
     assert "--cov-config=.coveragerc.non-pyomo" not in pyomo_tests
     assert "lyopronto/pyomo_models/**" in pyomo_tests
     assert "examples/example_pyomo_optimization.py" in pyomo_tests
     assert "tests/test_pyomo_models/**" in pyomo_tests
+    assert "tests/test_pyomo_solver.py" in pyomo_tests
+    assert "tests/pyomo_solver.py" in pyomo_tests
+    assert ".github/workflows/pyomo-tests.yml" in pyomo_tests
+    assert "pyproject.toml" in pyomo_tests
     assert 'pip install -e ".[dev,pyomo]"' in pyomo_tests
     assert "pytest -n 0 -v" in pyomo_tests
     assert "idaes get-extensions --extra petsc" in pyomo_tests
@@ -510,7 +518,9 @@ def test_contributor_docs_include_ci_and_static_analysis_commands() -> None:
     assert "idaes get-extensions --extra petsc" in docs
     assert "conda install -c conda-forge ipopt" in docs
     assert "./run_local_ci.sh pyomo-light" in docs
-    assert "branch-protection required status checks" in docs
+    assert "branch protection" in docs
+    assert "reports on every PR" in docs
+    assert "Pyomo scope check" in docs
     assert "job-level non-blocking" in docs
 
 
