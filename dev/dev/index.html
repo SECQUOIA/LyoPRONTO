@@ -824,15 +824,14 @@ validation-sensitive paths, PRs labeled <code>full-validation</code>, nightly sc
 validation, manual dispatch, version tags, and pushes to <code>main</code>.</p>
 <p>Notebook tests run in <code>.github/workflows/rundocs.yml</code> for ready PRs, pushes to
 <code>main</code>, nightly schedule, version tags, and manual dispatch.</p>
-<p>Pyomo model, Pyomo test, and maintained Pyomo example changes run
-<code>.github/workflows/pyomo-tests.yml</code>. The <code>pyomo-no-solver</code> job installs
-<code>.[dev,pyomo]</code> without IPOPT and runs the Pyomo light lane. The solver
-comparison job is job-level non-blocking; inspect its logs when it runs because
-install failures and comparison failures leave the PR status green.</p>
-<p>Do not configure path-filtered Pyomo jobs as branch-protection required status checks
-while <code>.github/workflows/pyomo-tests.yml</code> uses <code>paths</code>, because those jobs do
-not report on non-Pyomo PRs. If Pyomo status must be required
-repository-wide, add an always-running gate job first.</p>
+<p>The Pyomo Tests workflow is reportable on every PR so repository maintainers
+can require the <code>Pyomo import and construction lane</code> job in branch protection.
+That job reports success quickly when the Pyomo scope check decides validation
+is not needed, and installs <code>.[dev,pyomo]</code> without IPOPT only for Pyomo model,
+Pyomo test, maintained Pyomo example, Pyomo dependency, or Pyomo workflow
+changes. The solver comparison job is job-level non-blocking; inspect its logs
+when it runs because install failures and comparison failures leave the PR
+status green.</p>
 <p><code>.github/workflows/slow-tests.yml</code> is manual dispatch for focused slow
 non-Pyomo, full non-Pyomo, or optional Pyomo validation.</p>
 <h2 id="pyomo-test-policy">Pyomo Test Policy</h2>
@@ -840,8 +839,9 @@ non-Pyomo, full non-Pyomo, or optional Pyomo validation.</p>
 IPOPT. Pyomo-marked tests that need IPOPT should call
 <code>tests.pyomo_solver.require_pyomo_solver("ipopt")</code> before solving models. That
 helper skips with installation hints when Pyomo or IPOPT is missing.</p>
-<p>Keep automatic Pyomo validation isolated behind the Pyomo path filter so
-default non-Pyomo PRs do not install optional dependencies.</p>
+<p>Keep automatic Pyomo validation isolated behind the Pyomo scope check so
+default non-Pyomo PRs do not install optional dependencies while the required
+branch-protection check still reports on every PR.</p>
 <h2 id="documentation">Documentation</h2>
 <p>Install documentation dependencies:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[docs]&quot;</span>
