@@ -78,7 +78,7 @@ These names are available from the top-level package and from their defining
 modules:
 
 - `lyopronto.typed`: `Q_`, `ureg`, `RpFormFit`, `ConstPhysProp`,
-  `RampedVariable`, `PrimaryDryFit`
+  `RampedVariable`, `PrimaryDryFit`, `extract_ts`
 - `lyopronto.pikal`
 - `lyopronto.rf`
 - `lyopronto.fitting`
@@ -86,6 +86,13 @@ modules:
 - `lyopronto.eccurt`
 - `lyopronto.physical_properties`
 - `lyopronto.vials`
+
+`extract_ts(control, unit="hour")` returns typed-control stop times as float
+magnitudes. Ramped controls expose raw stop times, interpolation-like controls
+may expose `t` or `times`, and unrecognized controls are treated as constant
+from time zero. Raw stop times may include `math.inf` for an unbounded hold;
+callers building finite grids should filter non-finite values, as
+`get_pikal_tstops` and `get_rf_tstops` do.
 
 Runnable typed examples live in `examples/typed_api_examples.py` and are
 covered by `tests/test_typed_examples.py`.

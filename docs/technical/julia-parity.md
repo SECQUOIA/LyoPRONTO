@@ -105,6 +105,7 @@ make the category clear in the test name or assertion comments.
   and direct API behavior that should not drift. Current examples include
   `test_rpformfit_matches_julia_formula_with_quantities`,
   `test_constant_ramped_variable_matches_julia_cases`,
+  `test_extract_ts_matches_julia_public_helper_cases`,
   `test_get_vial_radii_matches_julia_table_for_6r`,
   `test_get_vial_mass_and_thickness_match_julia_table_for_6r`, and
   `test_physical_property_constants_match_julia_units_and_values`.
@@ -122,7 +123,8 @@ make the category clear in the test name or assertion comments.
 ## Non-Exported Julia Helpers
 
 These helpers are not public exports from Julia `LyoPronto.jl`, but they are
-tracked here because downstream typed APIs depend on them.
+tracked here because downstream typed APIs depend on them. Some are also
+marked `public` in Julia 1.11 and later.
 
 | Julia helper | Python status | Python location | Notes |
 | --- | --- | --- | --- |
@@ -130,3 +132,4 @@ tracked here because downstream typed APIs depend on them.
 | `calc_psub` | ported | `lyopronto.physical_properties.calc_psub` | Plain floats use kelvin and pascal; Pint inputs are converted. |
 | `calc_Tsub` | ported | `lyopronto.physical_properties.calc_tsub` | Python also provides `calc_Tsub` as an alias. |
 | `eppf` dielectric helper | ported | `lyopronto.physical_properties.eppf` | Ice dielectric-loss correlation with Julia reference interpolation arrays. |
+| `extract_ts` | ported | `lyopronto.typed.extract_ts` | Julia declares this public in `src/public.jl` at tracked commit `f452ad4`; Python returns hour magnitudes by default and supports Pint unit conversion. |
