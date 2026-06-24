@@ -969,6 +969,7 @@ make the category clear in the test name or assertion comments.</p>
   and direct API behavior that should not drift. Current examples include
   <code>test_rpformfit_matches_julia_formula_with_quantities</code>,
   <code>test_constant_ramped_variable_matches_julia_cases</code>,
+  <code>test_extract_ts_matches_julia_public_helper_cases</code>,
   <code>test_get_vial_radii_matches_julia_table_for_6r</code>,
   <code>test_get_vial_mass_and_thickness_match_julia_table_for_6r</code>, and
   <code>test_physical_property_constants_match_julia_units_and_values</code>.</li>
@@ -985,7 +986,8 @@ make the category clear in the test name or assertion comments.</p>
 </ul>
 <h2 id="non-exported-julia-helpers">Non-Exported Julia Helpers</h2>
 <p>These helpers are not public exports from Julia <code>LyoPronto.jl</code>, but they are
-tracked here because downstream typed APIs depend on them.</p>
+tracked here because downstream typed APIs depend on them. Some are also
+marked <code>public</code> in Julia 1.11 and later.</p>
 <table>
 <thead>
 <tr>
@@ -1019,6 +1021,12 @@ tracked here because downstream typed APIs depend on them.</p>
 <td>ported</td>
 <td><code>lyopronto.physical_properties.eppf</code></td>
 <td>Ice dielectric-loss correlation with Julia reference interpolation arrays.</td>
+</tr>
+<tr>
+<td><code>extract_ts</code></td>
+<td>ported</td>
+<td><code>lyopronto.typed.extract_ts</code></td>
+<td>Julia declares this public in <code>src/public.jl</code> at tracked commit <code>f452ad4</code>; Python returns hour magnitudes by default and supports Pint unit conversion.</td>
 </tr>
 </tbody>
 </table>
