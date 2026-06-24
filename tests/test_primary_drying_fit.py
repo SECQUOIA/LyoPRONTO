@@ -17,6 +17,7 @@ from lyopronto import (
     RpFormFit,
     RpTransform,
     RampedVariable,
+    SharedSeparateUpdates,
     SharedSeparateTransform,
     fit_primary_drying,
     gen_nsol_pd,
@@ -122,6 +123,30 @@ def test_fitting_generators_return_nan_for_transform_overflow(
 
     assert len(sols) == 1
     assert np.isnan(sols[0])
+
+
+def test_dict_only_transforms_reject_shared_separate_updates(
+    primary_drying_fit_case,
+):
+    params, fit, _values = primary_drying_fit_case
+
+    class NestedSharedSeparateTransform:
+        dimension = 0
+
+        def transform(self, _theta):
+            return SharedSeparateUpdates(shared={}, separate=())
+
+    transform = NestedSharedSeparateTransform()
+    with pytest.raises(TypeError, match="parameter-update dict"):
+        gen_sol_pd([], transform, params, fit)
+
+    composed = SharedSeparateTransform(
+        shared=transform,
+        separate=None,
+        n_separate=1,
+    )
+    with pytest.raises(TypeError, match="parameter-update dict"):
+        composed.transform([])
 
 
 @pytest.mark.slow

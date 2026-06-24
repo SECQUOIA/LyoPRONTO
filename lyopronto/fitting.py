@@ -43,13 +43,13 @@ class RpTransform:
         """Return fitted parameter updates for unconstrained ``theta``."""
 
         values = _theta_array(theta, self.dimension)
-        a1 = cast(Any, self.A1)
-        a2 = cast(Any, self.A2)
+        assert self.A1 is not None
+        assert self.A2 is not None
         return {
             "Rp": RpFormFit(
                 self.R0 * math.exp(float(values[0])),
-                a1 * math.exp(float(values[1])),
-                a2 * math.exp(float(values[2])),
+                self.A1 * math.exp(float(values[1])),
+                self.A2 * math.exp(float(values[2])),
             )
         }
 
@@ -103,12 +103,12 @@ class KBBTransform:
         """Return RF fitted parameter updates for unconstrained ``theta``."""
 
         values = _theta_array(theta, self.dimension)
-        bf = cast(Any, self.Bf)
-        bvw = cast(Any, self.Bvw)
+        assert self.Bf is not None
+        assert self.Bvw is not None
         return {
             "Kvwf": self.Kvwf * math.exp(float(values[0])),
-            "Bf": bf * math.exp(float(values[1])),
-            "Bvw": bvw * math.exp(float(values[2])),
+            "Bf": self.Bf * math.exp(float(values[1])),
+            "Bvw": self.Bvw * math.exp(float(values[2])),
         }
 
     __call__ = transform
