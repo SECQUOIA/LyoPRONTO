@@ -756,10 +756,13 @@ def qrf_integrate(solution: RFSolution) -> dict[str, Any]:
         raise ValueError("solution diagnostics do not match solution time points")
 
     n_keys = len(_QRF_INTEGRATE_KEYS)
+    energies: np.ndarray
     if t_hours.size == 1:
         energies = np.zeros(n_keys, dtype=float)
     else:
-        trapezoid = np.trapezoid if hasattr(np, "trapezoid") else np.trapz
+        trapezoid = getattr(np, "trapezoid", None)
+        if trapezoid is None:
+            trapezoid = getattr(np, "trapz")
         energies = np.array(
             [
                 float(trapezoid(heat_watts[:, index], t_hours))
