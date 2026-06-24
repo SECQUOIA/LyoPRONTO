@@ -65,6 +65,43 @@ def to_magnitude_array(values: Any, unit: str | None = None) -> np.ndarray:
     return arr.astype(float)
 
 
+def extract_ts(control: Any, unit: str = "hour") -> list[float]:
+    """Return time stops from a ramped or interpolation-like control.
+
+    This mirrors Julia ``extract_ts`` for typed workflows: ramped controls
+    expose their stop times, interpolation-like controls may expose ``times``,
+    and unknown controls are treated as constant from time zero.
+    """
+
+    if isinstance(control, RampedVariable):
+        return [
+            float(Q_(time, "hour").to(unit).magnitude)
+            for time in control.timestops_hr
+            if math.isfinite(float(time))
+        ]
+    if hasattr(control, "timestops_hr"):
+        return [
+            float(Q_(time, "hour").to(unit).magnitude)
+            for time in control.timestops_hr
+            if math.isfinite(float(time))
+        ]
+    if hasattr(control, "times"):
+        return [
+            float(time)
+            for time in to_magnitude_array(control.times, unit).ravel()
+            if math.isfinite(float(time))
+        ]
+    if hasattr(control, "timestops"):
+        values = []
+        for value in control.timestops:
+            try:
+                values.append(to_magnitude(value, unit))
+            except Exception:
+                values.append(float(value))
+        return [float(time) for time in values if math.isfinite(float(time))]
+    return [0.0]
+
+
 def quantity_list(values: Any) -> list[Any]:
     """Normalize a scalar, iterable, or Pint array into a Python list."""
 
@@ -418,6 +455,7 @@ __all__ = [
     "Q_",
     "is_quantity",
     "as_quantity",
+    "extract_ts",
     "to_magnitude",
     "to_magnitude_array",
     "quantity_list",

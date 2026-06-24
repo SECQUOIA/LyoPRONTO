@@ -3,7 +3,14 @@ import math
 import numpy as np
 import pytest
 
-from lyopronto import ConstPhysProp, PrimaryDryFit, Q_, RampedVariable, RpFormFit
+from lyopronto import (
+    ConstPhysProp,
+    PrimaryDryFit,
+    Q_,
+    RampedVariable,
+    RpFormFit,
+    extract_ts,
+)
 from lyopronto.typed import to_magnitude_array
 
 
@@ -72,6 +79,27 @@ def test_multi_ramped_variable_matches_julia_cases_and_warns_for_wrong_sign():
     assert power(Q_(79, "minute")) == Q_(20, "watt")
     assert power(Q_(81, "minute")) == Q_(10, "watt")
     assert power(Q_(math.inf, "minute")) == Q_(10, "watt")
+
+
+def test_extract_ts_matches_julia_public_helper_cases():
+    constant = RampedVariable.constant(Q_(150, "millitorr"))
+    ramped = RampedVariable.linear(
+        [Q_(228.15, "kelvin"), Q_(248.15, "kelvin")],
+        Q_(1, "kelvin/minute"),
+    )
+
+    class InterpolationLike:
+        times = np.array([0.0, 0.5, 1.0])
+
+    class QuantityStops:
+        timestops = [Q_(0.0, "minute"), Q_(30.0, "minute")]
+
+    assert extract_ts(constant) == [0.0]
+    assert extract_ts(ramped) == pytest.approx([0.0, 20.0 / 60.0])
+    assert extract_ts(ramped, unit="minute") == pytest.approx([0.0, 20.0])
+    assert extract_ts(InterpolationLike()) == pytest.approx([0.0, 0.5, 1.0])
+    assert extract_ts(QuantityStops()) == pytest.approx([0.0, 0.5])
+    assert extract_ts(object()) == [0.0]
 
 
 def test_direct_ramped_variable_construction_requires_consistent_timestops():

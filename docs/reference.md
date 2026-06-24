@@ -78,7 +78,7 @@ These names are available from the top-level package and from their defining
 modules:
 
 - `lyopronto.typed`: `Q_`, `ureg`, `RpFormFit`, `ConstPhysProp`,
-  `RampedVariable`, `PrimaryDryFit`
+  `RampedVariable`, `PrimaryDryFit`, `extract_ts`
 - `lyopronto.pikal`
 - `lyopronto.rf`
 - `lyopronto.fitting`

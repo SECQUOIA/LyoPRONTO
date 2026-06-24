@@ -23,7 +23,7 @@ from scipy.integrate import solve_ivp
 from scipy.optimize import brentq
 
 from . import physical_properties
-from .typed import Q_, RampedVariable, as_quantity, is_quantity, to_magnitude
+from .typed import Q_, as_quantity, extract_ts, is_quantity, to_magnitude
 
 _RP_UNIT = "centimeter ** 2 * hour * torr / gram"
 _KSHF_UNIT = "calorie / second / kelvin / centimeter ** 2"
@@ -352,31 +352,13 @@ def _kshf(params: RFParams, pch: Any) -> Any:
     return _call_pressure_function(params.Kshf, pch, _KSHF_UNIT)
 
 
-def _extract_tstops(control: Any) -> list[float]:
-    if isinstance(control, RampedVariable):
-        return [float(t) for t in control.timestops_hr if math.isfinite(float(t))]
-    if hasattr(control, "timestops_hr"):
-        return [float(t) for t in control.timestops_hr if math.isfinite(float(t))]
-    if hasattr(control, "times"):
-        return [float(t) for t in np.asarray(control.times, dtype=float).ravel()]
-    if hasattr(control, "timestops"):
-        values = []
-        for value in control.timestops:
-            try:
-                values.append(to_magnitude(value, "hour"))
-            except Exception:
-                values.append(float(value))
-        return [float(t) for t in values if math.isfinite(float(t))]
-    return [0.0]
-
-
 def get_rf_tstops(params: RFParams) -> np.ndarray:
     """Return sorted unique time stops from RF, shelf, and pressure controls."""
 
     stops = [0.0]
-    stops.extend(_extract_tstops(params.Tsh))
-    stops.extend(_extract_tstops(params.pch))
-    stops.extend(_extract_tstops(params.P_per_vial))
+    stops.extend(extract_ts(params.Tsh))
+    stops.extend(extract_ts(params.pch))
+    stops.extend(extract_ts(params.P_per_vial))
     return np.asarray(sorted(set(float(t) for t in stops if math.isfinite(t))))
 
 
