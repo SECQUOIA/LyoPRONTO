@@ -222,9 +222,10 @@ Advanced workflow builders remain explicit optional Pyomo prototypes:
   diagnostics use the same `nvial * dmdt <= eq_cap["a"] + eq_cap["b"] * Pch`
   convention as the multi-vial builder.
 
-Future Pyomo planning remains in GitHub issue
+The completed Pyomo implementation roadmap is tracked in GitHub issue
 [#80](https://github.com/SECQUOIA/LyoPRONTO/issues/80) and its child issues.
-Keep this reference focused on implemented behavior and current usage notes.
+Keep this reference focused on implemented behavior and current usage notes;
+track future Pyomo work in new, scoped GitHub issues.
 
 ### Plotting Helpers
 

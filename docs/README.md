@@ -66,9 +66,10 @@ For technical reference and current status, use:
 - `technical/physics-reference.md`
 - `technical/julia-parity.md`
 
-Pyomo roadmap planning lives in GitHub issue
+The completed Pyomo roadmap is tracked in GitHub issue
 [#80](https://github.com/SECQUOIA/LyoPRONTO/issues/80) and its child issues.
-Use GitHub issues, PRs, and git history for historical records.
+Use GitHub issues, PRs, and git history for historical records, and open new
+scoped issues for future Pyomo work.
 
 ## Building The Site
 
