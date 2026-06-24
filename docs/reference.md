@@ -123,8 +123,8 @@ Implemented modules:
   optimization builders for pressure-only, shelf-temperature-only, and joint
   pressure/shelf-temperature modes.
 - `lyopronto.pyomo_models.advanced` composes the trajectory and optimization
-  builders into optional parameter-estimation, design-space feasibility, and
-  multi-vial capacity workflows.
+  builders into optional parameter-estimation, design-space feasibility,
+  sensitivity-analysis, robust-optimization, and multi-vial capacity workflows.
 
 Pyomo tests are marked `pyomo` and are skip-safe when Pyomo or IPOPT is not
 installed. See `dev.md` for optional solver setup and CI lane policy.
@@ -209,9 +209,18 @@ Advanced workflow builders remain explicit optional Pyomo prototypes:
   than adding independent per-vial decision variables. The capacity convention
   is `nvial * dmdt <= eq_cap["a"] + eq_cap["b"] * Pch`, where `dmdt` is the
   per-vial sublimation rate in kg/hr/vial and `Pch` is in Torr.
-
-Sensitivity-analysis and robust-optimization workflows remain future optional
-Pyomo work after the base model and advanced workflow prototypes are validated.
+- `create_sensitivity_analysis_models` creates fixed-control feasibility
+  replays for fractional perturbations of vial, product, or heat-transfer
+  parameters. Returned models carry finite-difference metadata such as the
+  perturbed parameter, base value, perturbed value, and difference
+  denominator.
+- `create_robust_optimization_model` builds a scenario-based minimax Pyomo
+  model. Each scenario is a deterministic optimization block with optional
+  overrides for `vial`, `product`, `ht`, or `eq_cap`; optimized controls are
+  shared across scenarios, and the top-level objective minimizes the worst
+  scenario value of the existing driving-force objective. Scenario capacity
+  diagnostics use the same `nvial * dmdt <= eq_cap["a"] + eq_cap["b"] * Pch`
+  convention as the multi-vial builder.
 
 Future Pyomo planning remains in GitHub issue
 [#80](https://github.com/SECQUOIA/LyoPRONTO/issues/80) and its child issues.
