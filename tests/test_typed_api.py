@@ -94,13 +94,17 @@ def test_extract_ts_matches_julia_public_helper_cases():
     )
 
     class InterpolationLike:
-        times = np.array([0.0, 0.5, 1.0])
+        times = np.array([0.0, 0.5, math.inf])
 
     class JuliaInterpolationLike:
-        t = [Q_(0.0, "minute"), Q_(30.0, "minute")]
+        t = [Q_(0.0, "minute"), Q_(30.0, "minute"), Q_(math.inf, "minute")]
 
     class QuantityStops:
-        timestops = [Q_(0.0, "minute"), Q_(30.0, "minute")]
+        timestops = [
+            Q_(0.0, "minute"),
+            Q_(30.0, "minute"),
+            Q_(math.inf, "minute"),
+        ]
 
     assert extract_ts(constant) == [0.0]
     assert extract_ts(ramped) == pytest.approx([0.0, 20.0 / 60.0])
@@ -108,9 +112,11 @@ def test_extract_ts_matches_julia_public_helper_cases():
     assert extract_ts(infinite_hold) == pytest.approx(
         [0.0, 1.0 / 3.0, math.inf, math.inf]
     )
-    assert extract_ts(InterpolationLike()) == pytest.approx([0.0, 0.5, 1.0])
-    assert extract_ts(JuliaInterpolationLike()) == pytest.approx([0.0, 0.5])
-    assert extract_ts(QuantityStops()) == pytest.approx([0.0, 0.5])
+    assert extract_ts(InterpolationLike()) == pytest.approx([0.0, 0.5, math.inf])
+    assert extract_ts(JuliaInterpolationLike()) == pytest.approx(
+        [0.0, 0.5, math.inf]
+    )
+    assert extract_ts(QuantityStops()) == pytest.approx([0.0, 0.5, math.inf])
     assert extract_ts(object()) == [0.0]
 
 
