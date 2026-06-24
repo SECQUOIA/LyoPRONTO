@@ -132,4 +132,4 @@ marked `public` in Julia 1.11 and later.
 | `calc_psub` | ported | `lyopronto.physical_properties.calc_psub` | Plain floats use kelvin and pascal; Pint inputs are converted. |
 | `calc_Tsub` | ported | `lyopronto.physical_properties.calc_tsub` | Python also provides `calc_Tsub` as an alias. |
 | `eppf` dielectric helper | ported | `lyopronto.physical_properties.eppf` | Ice dielectric-loss correlation with Julia reference interpolation arrays. |
-| `extract_ts` | ported | `lyopronto.typed.extract_ts` | Public Julia 1.11 helper for extracting control stop times; Python returns hour magnitudes by default and supports Pint unit conversion. |
+| `extract_ts` | ported | `lyopronto.typed.extract_ts` | Julia declares this public in `src/public.jl` at tracked commit `f452ad4`; Python returns hour magnitudes by default and supports Pint unit conversion. |

@@ -69,20 +69,25 @@ def extract_ts(control: Any, unit: str = "hour") -> list[float]:
     """Return time stops from a ramped or interpolation-like control.
 
     This mirrors Julia ``extract_ts`` for typed workflows: ramped controls
-    expose their stop times, interpolation-like controls may expose ``times``,
-    and unknown controls are treated as constant from time zero.
+    expose their raw stop times, interpolation-like controls may expose ``t``
+    or ``times``, and unknown controls are intentionally treated as constant
+    from time zero.
     """
 
     if isinstance(control, RampedVariable):
         return [
             float(Q_(time, "hour").to(unit).magnitude)
             for time in control.timestops_hr
-            if math.isfinite(float(time))
         ]
     if hasattr(control, "timestops_hr"):
         return [
             float(Q_(time, "hour").to(unit).magnitude)
             for time in control.timestops_hr
+        ]
+    if hasattr(control, "t"):
+        return [
+            float(time)
+            for time in to_magnitude_array(control.t, unit).ravel()
             if math.isfinite(float(time))
         ]
     if hasattr(control, "times"):
