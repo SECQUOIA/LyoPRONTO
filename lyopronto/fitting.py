@@ -43,6 +43,8 @@ class RpTransform:
         """Return fitted parameter updates for unconstrained ``theta``."""
 
         values = _theta_array(theta, self.dimension)
+        assert self.A1 is not None
+        assert self.A2 is not None
         return {
             "Rp": RpFormFit(
                 self.R0 * math.exp(float(values[0])),
@@ -101,6 +103,8 @@ class KBBTransform:
         """Return RF fitted parameter updates for unconstrained ``theta``."""
 
         values = _theta_array(theta, self.dimension)
+        assert self.Bf is not None
+        assert self.Bvw is not None
         return {
             "Kvwf": self.Kvwf * math.exp(float(values[0])),
             "Bf": self.Bf * math.exp(float(values[1])),
@@ -214,16 +218,18 @@ class SharedSeparateTransform:
         values = _theta_array(theta, self.dimension)
         cursor = 0
         shared_dim = _transform_dimension(self.shared)
-        shared_updates = _call_transform(
+        shared_updates = _call_transform_dict(
             self.shared, values[cursor : cursor + shared_dim]
         )
         cursor += shared_dim
 
         separate_dim = _transform_dimension(self.separate)
-        separate_updates = []
+        separate_updates: list[dict[str, Any]] = []
         for _ in range(self.n_separate):
             separate_updates.append(
-                _call_transform(self.separate, values[cursor : cursor + separate_dim])
+                _call_transform_dict(
+                    self.separate, values[cursor : cursor + separate_dim]
+                )
             )
             cursor += separate_dim
 
@@ -258,7 +264,7 @@ def gen_sol_pd(
     """Generate a typed primary-drying solution for fitted Pikal or RF params."""
 
     try:
-        updates = _call_transform(transform, theta)
+        updates = _call_transform_dict(transform, theta)
         fitted_params = _replace_params(params, updates)
         if badprms is not None and badprms(fitted_params):
             return np.nan
@@ -819,6 +825,13 @@ def _call_transform(
     raise TypeError("transforms must return parameter-update dicts")
 
 
+def _call_transform_dict(transform: Any, theta: Any) -> dict[str, Any]:
+    updates = _call_transform(transform, theta)
+    if isinstance(updates, SharedSeparateUpdates):
+        raise TypeError("transform must return a parameter-update dict")
+    return updates
+
+
 def _replace_params(params: Any, updates: dict[str, Any]) -> Any:
     if not hasattr(params, "__dataclass_fields__"):
         raise TypeError("params must be a dataclass parameter object")
@@ -860,6 +873,7 @@ def _normalize_multi_inputs(
     if not pos:
         raise ValueError("at least one parameter object is required")
 
+    save_values: list[Any]
     if fit_list is not None:
         if len(fit_list) != len(pos):
             raise ValueError("fitdats length must match the number of experiments")
@@ -1001,7 +1015,7 @@ def _series_residuals(
     model_times: np.ndarray,
     model_values: np.ndarray,
 ) -> np.ndarray:
-    errs = np.zeros(iend, dtype=float)
+    errs: np.ndarray = np.zeros(iend, dtype=float)
     ndata = min(iend, len(series), len(fit_times))
     if ndata == 0:
         return errs
