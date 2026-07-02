@@ -784,7 +784,7 @@ non-Pyomo lane when practical:</p>
 </tr>
 <tr>
 <td>Full non-Pyomo</td>
-<td><code>pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing</code></td>
+<td><code>pytest tests/ -n auto -v -m "not notebook and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing</code></td>
 <td><code>.github/workflows/full-validation.yml</code>, <code>.github/workflows/tests.yml</code>, <code>.github/workflows/slow-tests.yml</code></td>
 </tr>
 <tr>
@@ -794,7 +794,7 @@ non-Pyomo lane when practical:</p>
 </tr>
 <tr>
 <td>Notebook</td>
-<td><code>pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing</code></td>
+<td><code>pytest tests/ -n 0 -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing</code></td>
 <td><code>.github/workflows/rundocs.yml</code></td>
 </tr>
 <tr>
@@ -822,8 +822,8 @@ the job reports success quickly when the validation policy decides the full
 lane is not needed. The full lane runs for non-draft PRs that touch
 validation-sensitive paths, PRs labeled <code>full-validation</code>, nightly scheduled
 validation, manual dispatch, version tags, and pushes to <code>main</code>.</p>
-<p>Notebook tests run in <code>.github/workflows/rundocs.yml</code> for ready PRs, pushes to
-<code>main</code>, nightly schedule, version tags, and manual dispatch.</p>
+<p>Notebook tests run serially in <code>.github/workflows/rundocs.yml</code> for ready PRs,
+pushes to <code>main</code>, nightly schedule, version tags, and manual dispatch.</p>
 <p>The Pyomo Tests workflow is reportable on every PR so repository maintainers
 can require the <code>Pyomo import and construction lane</code> job in branch protection.
 That job reports success quickly when the Pyomo scope check decides validation
