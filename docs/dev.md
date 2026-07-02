@@ -64,9 +64,9 @@ non-Pyomo lane when practical:
 | --- | --- | --- |
 | Static analysis | `python -m ruff check lyopronto tests examples main.py`; advisory `python -m mypy lyopronto` | `.github/workflows/pr-tests.yml`, `.github/workflows/tests.yml` |
 | Fast PR | `pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"` | `.github/workflows/pr-tests.yml` |
-| Full non-Pyomo | `pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing` | `.github/workflows/full-validation.yml`, `.github/workflows/tests.yml`, `.github/workflows/slow-tests.yml` |
+| Full non-Pyomo | `pytest tests/ -n auto -v -m "not notebook and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing` | `.github/workflows/full-validation.yml`, `.github/workflows/tests.yml`, `.github/workflows/slow-tests.yml` |
 | Slow non-Pyomo | `pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing` | `.github/workflows/slow-tests.yml` |
-| Notebook | `pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing` | `.github/workflows/rundocs.yml` |
+| Notebook | `pytest tests/ -n 0 -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing` | `.github/workflows/rundocs.yml` |
 | Pyomo light | `pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v` | `.github/workflows/pyomo-tests.yml`, `./run_local_ci.sh pyomo-light` |
 | Pyomo solver | `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=term-missing` | `.github/workflows/pyomo-tests.yml`, `.github/workflows/slow-tests.yml` |
 
@@ -86,8 +86,8 @@ lane is not needed. The full lane runs for non-draft PRs that touch
 validation-sensitive paths, PRs labeled `full-validation`, nightly scheduled
 validation, manual dispatch, version tags, and pushes to `main`.
 
-Notebook tests run in `.github/workflows/rundocs.yml` for ready PRs, pushes to
-`main`, nightly schedule, version tags, and manual dispatch.
+Notebook tests run serially in `.github/workflows/rundocs.yml` for ready PRs,
+pushes to `main`, nightly schedule, version tags, and manual dispatch.
 
 The Pyomo Tests workflow is reportable on every PR so repository maintainers
 can require the `Pyomo import and construction lane` job in branch protection.
