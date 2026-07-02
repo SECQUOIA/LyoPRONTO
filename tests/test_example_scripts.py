@@ -21,6 +21,8 @@ import papermill as pm
 class TestDocsNotebooks:
     """Smoke tests: run example scripts used for documentation."""
 
+    pytestmark = pytest.mark.serial
+
     @pytest.mark.notebook
     def test_knownRp_notebook_execution(self, repo_root):
         """Test that ex_knownRp_PD.py runs without error."""

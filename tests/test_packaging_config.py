@@ -181,6 +181,11 @@ def _assert_no_coverage(command: list[str]) -> None:
     assert "--cov-report=term-missing" not in command
 
 
+def _assert_xdist_workers(command: list[str], workers: str) -> None:
+    worker_index = command.index("-n")
+    assert command[worker_index + 1] == workers
+
+
 def _assert_marker_mentions(expression: str, marker: str) -> None:
     assert re.search(rf"\b{re.escape(marker)}\b", expression)
 
@@ -321,6 +326,7 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     )
     _assert_marker_mentions(lane_expressions["notebook"], "notebook")
     _assert_non_pyomo_coverage(notebook_command)
+    _assert_xdist_workers(notebook_command, "0")
 
     manual_pyomo_command = _single_command_with_marker(
         manual_tests, lane_expressions["pyomo"]
@@ -427,6 +433,7 @@ def test_local_ci_script_matches_documented_lane_expressions() -> None:
     _assert_marker_mentions(lane_expressions["slow"], "slow")
     _assert_marker_excludes(lane_expressions["slow"], "pyomo")
     _assert_marker_mentions(lane_expressions["notebook"], "notebook")
+    _assert_xdist_workers(_single_command_with_marker(script, "$NOTEBOOK_EXPR"), "0")
 
     pyomo_light_commands = [
         command
@@ -480,6 +487,8 @@ def test_contributor_docs_include_ci_and_static_analysis_commands() -> None:
         assert commands
         for command in commands:
             _assert_non_pyomo_coverage(command)
+            if lane == "notebook":
+                _assert_xdist_workers(command, "0")
 
     pyomo_commands = _commands_with_marker(docs, lane_expressions["pyomo"])
     assert pyomo_commands

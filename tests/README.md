@@ -11,7 +11,7 @@ CI workflow and lane command reference is `../docs/dev.md`.
 | Fast PR | `not slow and not notebook and not pyomo` | Every PR update in `.github/workflows/pr-tests.yml` | Quick contributor feedback without solver-heavy, notebook, or Pyomo tests. |
 | Full non-Pyomo | `not pyomo` | Conditional Full Validation workflow, pushes to `main`, and local/manual runs | Main confidence gate with coverage for the tracked SciPy implementation, including slow-marked non-Pyomo checks. |
 | Slow non-Pyomo | `slow and not pyomo` | Manual validation workflow | Targeted optimizer-heavy validation. |
-| Notebook | `notebook` | Explicit notebook workflow | Executes documentation notebooks separately from ordinary fast tests. |
+| Notebook | `notebook` | Explicit notebook workflow | Executes documentation notebooks serially and separately from ordinary fast tests. |
 | Pyomo light | `tests/test_pyomo_models tests/test_pyomo_solver.py` | Always-reporting automatic workflow and `./run_local_ci.sh pyomo-light` | Required import, model-construction, and missing-solver skip coverage without IPOPT. |
 | Pyomo solver | `pyomo` | Optional solver comparison workflow and manual validation workflow | Solver-backed SciPy comparison coverage when IPOPT is available. |
 
@@ -20,7 +20,8 @@ CI workflow and lane command reference is `../docs/dev.md`.
 - `slow`: Long-running or optimizer-heavy tests. These are excluded from the
   fast PR lane and covered by full/manual validation.
 - `notebook`: Papermill or Jupyter execution tests for documentation examples.
-  Keep these in the explicit notebook lane.
+  Keep these in the explicit notebook lane and run that lane with `-n 0` so
+  kernels do not start concurrently.
 - `pyomo`: Tests that require Pyomo, IPOPT, or the Pyomo optimization stack.
   Model construction tests run automatically on Pyomo-sensitive changes while
   the workflow reports on every PR for branch-protection compatibility. Tests
@@ -73,7 +74,7 @@ The underlying pytest commands are:
 pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"
 pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
 pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
-pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
+pytest tests/ -n 0 -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
 pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v
 pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=term-missing
 ```
@@ -144,7 +145,8 @@ Keep marker descriptions here synchronized with that page and `run_local_ci.sh`.
 ## Best Practices
 
 - Mark optimizer-heavy or long-running tests with `@pytest.mark.slow`.
-- Mark papermill/Jupyter execution tests with `@pytest.mark.notebook`.
+- Mark papermill/Jupyter execution tests with `@pytest.mark.notebook` and
+  `@pytest.mark.serial`.
 - Mark Pyomo/IPOPT tests with `@pytest.mark.pyomo`.
 - Mark tests that cannot run under xdist with `@pytest.mark.serial`.
 - Do not use broad marker deselection to hide a failure. If a lane excludes a

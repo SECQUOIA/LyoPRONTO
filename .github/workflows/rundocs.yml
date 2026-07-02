@@ -45,4 +45,4 @@ jobs:
     - name: Run notebook tests
       run: |
         echo "Running explicit notebook validation lane"
-        pytest tests/ -n auto -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
+        pytest tests/ -n 0 -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing

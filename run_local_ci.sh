@@ -130,8 +130,8 @@ case "$LANE" in
         pytest tests/ -n auto -v -m "$SLOW_EXPR" --cov=lyopronto --cov-config="$NON_PYOMO_COV_CONFIG" --cov-report=term-missing
         ;;
     notebook)
-        echo "   Command: pytest tests/ -n auto -v -m \"$NOTEBOOK_EXPR\" --cov=lyopronto --cov-config=$NON_PYOMO_COV_CONFIG --cov-report=term-missing"
-        pytest tests/ -n auto -v -m "$NOTEBOOK_EXPR" --cov=lyopronto --cov-config="$NON_PYOMO_COV_CONFIG" --cov-report=term-missing
+        echo "   Command: pytest tests/ -n 0 -v -m \"$NOTEBOOK_EXPR\" --cov=lyopronto --cov-config=$NON_PYOMO_COV_CONFIG --cov-report=term-missing"
+        pytest tests/ -n 0 -v -m "$NOTEBOOK_EXPR" --cov=lyopronto --cov-config="$NON_PYOMO_COV_CONFIG" --cov-report=term-missing
         ;;
     pyomo-light)
         echo "   Command: pytest $PYOMO_LIGHT_TARGETS -n auto -v"
