@@ -9,7 +9,7 @@ CI workflow and lane command reference is `../docs/dev.md`.
 | Lane | Marker expression | Where it runs | Purpose |
 | --- | --- | --- | --- |
 | Fast PR | `not slow and not notebook and not pyomo` | Every PR update in `.github/workflows/pr-tests.yml` | Quick contributor feedback without solver-heavy, notebook, or Pyomo tests. |
-| Full non-Pyomo | `not pyomo` | Conditional Full Validation workflow, pushes to `main`, and local/manual runs | Main confidence gate with coverage for the tracked SciPy implementation, including slow-marked non-Pyomo checks. |
+| Full non-Pyomo | `not notebook and not pyomo` | Conditional Full Validation workflow, pushes to `main`, and local/manual runs | Main confidence gate with coverage for the tracked SciPy implementation, including slow-marked non-Pyomo checks. |
 | Slow non-Pyomo | `slow and not pyomo` | Manual validation workflow | Targeted optimizer-heavy validation. |
 | Notebook | `notebook` | Explicit notebook workflow | Executes documentation notebooks serially and separately from ordinary fast tests. |
 | Pyomo light | `tests/test_pyomo_models tests/test_pyomo_solver.py` | Always-reporting automatic workflow and `./run_local_ci.sh pyomo-light` | Required import, model-construction, and missing-solver skip coverage without IPOPT. |
@@ -72,7 +72,7 @@ The underlying pytest commands are:
 
 ```bash
 pytest tests/ -n auto -v -m "not slow and not notebook and not pyomo"
-pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
+pytest tests/ -n auto -v -m "not notebook and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
 pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
 pytest tests/ -n 0 -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
 pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v

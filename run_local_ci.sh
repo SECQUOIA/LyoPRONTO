@@ -6,7 +6,7 @@ set -euo pipefail
 LANE="${1:-fast}"
 
 FAST_EXPR="not slow and not notebook and not pyomo"
-FULL_EXPR="not pyomo"
+FULL_EXPR="not notebook and not pyomo"
 SLOW_EXPR="slow and not pyomo"
 NOTEBOOK_EXPR="notebook"
 PYOMO_EXPR="pyomo"

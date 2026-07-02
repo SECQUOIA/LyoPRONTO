@@ -312,6 +312,7 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
         + _commands_with_marker(manual_tests, lane_expressions["full"])
     )
     assert len(full_non_pyomo_commands) == 3
+    _assert_marker_excludes(lane_expressions["full"], "notebook")
     _assert_marker_excludes(lane_expressions["full"], "pyomo")
     for command in full_non_pyomo_commands:
         _assert_non_pyomo_coverage(command)
@@ -429,6 +430,7 @@ def test_local_ci_script_matches_documented_lane_expressions() -> None:
         command = _single_command_with_marker(script, f"${variable}")
         _assert_non_pyomo_coverage(command)
 
+    _assert_marker_excludes(lane_expressions["full"], "notebook")
     _assert_marker_excludes(lane_expressions["full"], "pyomo")
     _assert_marker_mentions(lane_expressions["slow"], "slow")
     _assert_marker_excludes(lane_expressions["slow"], "pyomo")

@@ -103,4 +103,4 @@ jobs:
       if: ${{ needs.validation-scope.outputs.run_full == 'true' }}
       run: |
         echo "Running full non-Pyomo validation with coverage"
-        pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
+        pytest tests/ -n auto -v -m "not notebook and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing

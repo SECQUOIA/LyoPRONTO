@@ -75,7 +75,7 @@ jobs:
             pytest tests/ -n auto -v -m "slow and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
             ;;
           full-non-pyomo)
-            pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
+            pytest tests/ -n auto -v -m "not notebook and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
             ;;
           pyomo)
             run_pytest_allow_empty pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=term-missing
