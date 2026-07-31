@@ -4,12 +4,17 @@ import numpy as np
 import pytest
 
 from lyopronto import constant, functions
+from tests.pyomo_solver import require_pyomo_solver
+
+pytest.importorskip("pyomo.environ")
+
 from lyopronto.pyomo_models import (
     DaeDiscretization,
     create_dae_shelf_temperature_optimization_model,
     solve_dae_shelf_temperature_optimization,
 )
-from tests.pyomo_solver import require_pyomo_solver
+
+pytestmark = pytest.mark.pyomo
 
 
 @pytest.fixture
