@@ -49,7 +49,10 @@ jobs:
             case "$path" in
               lyopronto/pyomo_models/**|\
               examples/example_pyomo_optimization.py|\
+              examples/current_main_optimizer_comparison.py|\
+              docs/examples/current_main_optimizer_comparison.ipynb|\
               tests/test_pyomo_models/**|\
+              tests/test_current_main_optimizer_comparison.py|\
               tests/test_pyomo_solver.py|\
               tests/pyomo_solver.py|\
               pyproject.toml|\
@@ -151,4 +154,6 @@ jobs:
           tests/test_pyomo_models/test_single_step.py::test_single_step_solves_and_matches_scipy_reference \
           tests/test_pyomo_models/test_single_step.py::test_single_step_cold_start_solves_and_matches_scipy_reference \
           tests/test_pyomo_models/test_trajectory.py::test_trajectory_solves_and_matches_scipy_reference \
-          tests/test_pyomo_models/test_trajectory.py::test_trajectory_cold_start_solves_and_matches_scipy_reference
+          tests/test_pyomo_models/test_trajectory.py::test_trajectory_cold_start_solves_and_matches_scipy_reference \
+          tests/test_current_main_optimizer_comparison.py::test_current_main_comparison_helper_solves_smoke_case \
+          tests/test_current_main_optimizer_comparison.py::test_current_main_comparison_notebook_execution

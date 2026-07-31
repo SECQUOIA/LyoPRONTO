@@ -15,6 +15,7 @@ optimization prototypes.
 | `example_parameter_estimation.py` | Product-resistance estimation from temperature data. | CSV and `parameter_estimation_results.png` under `examples/outputs/`. |
 | `typed_api_examples.py` | Typed Pint API examples for simulation, fitting, RF, vial utilities, ECCURT, and Pirani endpoint detection. | Console smoke output. |
 | `example_pyomo_optimization.py` | Optional Pyomo construction example for pressure-only, shelf-temperature-only, and joint optimization modes. | Console model summaries. |
+| `current_main_optimizer_comparison.py` | Analysis and solver helpers for the current-main SciPy/Pyomo comparison notebook. | In-memory normalized trajectories and metrics. |
 
 Run examples from the repository root:
 
@@ -42,6 +43,10 @@ python examples/example_pyomo_optimization.py
 The Pyomo example builds models without solving them, so it does not require
 IPOPT. Solver-backed Pyomo comparisons are covered separately by the optional
 Pyomo validation lane.
+
+The [current-main optimizer comparison notebook](../docs/examples/current_main_optimizer_comparison.ipynb)
+uses these helpers for a solver-backed tutorial. It requires IPOPT and writes
+optional local reproduction records under `benchmarks/results/`.
 
 ## Legacy Scripts
 

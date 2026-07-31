@@ -144,8 +144,11 @@ The MkDocs notebook examples are tracked under `docs/examples/`:
 
 - [known Rp](examples/knownRp_PD.ipynb)
 - [unknown Rp](examples/unknownRp_PD.ipynb)
+- [current SciPy/Pyomo optimizer comparison](examples/current_main_optimizer_comparison.ipynb)
 
 Notebook execution is validated through the explicit notebook CI lane.
+The optimizer-comparison tutorial requires `.[dev,pyomo]` and IPOPT, so its
+solver-backed smoke execution also runs in the optional Pyomo comparison lane.
 
 ## Run Local Validation
 
