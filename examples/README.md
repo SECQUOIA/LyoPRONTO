@@ -15,7 +15,7 @@ optimization prototypes.
 | `example_parameter_estimation.py` | Product-resistance estimation from temperature data. | CSV and `parameter_estimation_results.png` under `examples/outputs/`. |
 | `typed_api_examples.py` | Typed Pint API examples for simulation, fitting, RF, vial utilities, ECCURT, and Pirani endpoint detection. | Console smoke output. |
 | `example_pyomo_optimization.py` | Optional Pyomo construction example for pressure-only, shelf-temperature-only, and joint optimization modes. | Console model summaries. |
-| `current_main_optimizer_comparison.py` | Analysis and solver helpers for the current-main SciPy/Pyomo comparison notebook. | In-memory normalized trajectories and metrics. |
+| `current_main_optimizer_comparison.py` | Reproducible SciPy/Pyomo.DAE final-time comparison helpers for finite differences and collocation. | In-memory normalized trajectories and metrics. |
 
 Run examples from the repository root:
 

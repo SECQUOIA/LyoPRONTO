@@ -129,6 +129,9 @@ Implemented modules:
 - `lyopronto.pyomo_models.optimization` exposes experimental trajectory
   optimization builders for pressure-only, shelf-temperature-only, and joint
   pressure/shelf-temperature modes.
+- `lyopronto.pyomo_models.dae_optimization` exposes a free-final-time
+  shelf-temperature optimizer with selectable Pyomo.DAE finite-difference and
+  orthogonal-collocation transformations.
 - `lyopronto.pyomo_models.advanced` composes the trajectory and optimization
   builders into optional parameter-estimation, design-space feasibility,
   sensitivity-analysis, robust-optimization, and multi-vial capacity workflows.
@@ -173,17 +176,48 @@ All three modes intentionally share the trajectory objective
 `sum(Pch[t] - Psub[t])`, a driving-force proxy inherited from the legacy
 optimizers. Mode-specific behavior comes from the free/fixed controls, fixed
 profiles, bounds, product-temperature limit, optional equipment capability, and
-optional ramp-rate constraints. These Pyomo APIs are validation prototypes and
+optional ramp-rate constraints. These fixed-horizon Pyomo APIs are validation prototypes and
 should not be treated as stable replacements for `opt_Pch.dry`,
 `opt_Tsh.dry`, or `opt_Pch_Tsh.dry`.
+
+The free-final-time DAE shelf-temperature model is a distinct, equivalent
+counterpart to `opt_Tsh.dry`. It uses normalized time, treats final drying time
+as a decision variable, and minimizes that time while enforcing the same
+fixed-pressure control, shelf-temperature bounds, product-temperature limit,
+equipment-capability constraint, and terminal dried fraction. Select the
+algebraic transcription explicitly:
+
+```python
+from lyopronto.pyomo_models import solve_dae_shelf_temperature_optimization
+
+result = solve_dae_shelf_temperature_optimization(
+    vial,
+    product,
+    ht,
+    pchamber,
+    tshelf,
+    eq_cap=eq_cap,
+    nvial=400,
+    nfe=24,
+    ncp=3,
+    discretization="collocation",  # or "finite_difference"
+)
+```
+
+Finite differences use Pyomo.DAE's backward scheme. Collocation uses
+LAGRANGE-RADAU points. A free-final-time run currently requires one constant
+chamber-pressure setpoint; a changing fixed schedule would need its switch
+times parameterized against the optimized real-time horizon.
 
 There is intentionally no unified SciPy/Pyomo optimizer selector. Call the
 legacy SciPy optimizer modules or the explicit Pyomo builders directly so
 solver requirements, formulation differences, and failure modes remain visible.
 
-The final dried target is represented as a lower bound on the final dried cake
-fraction. Targets must remain below 100% because the frozen-layer heat balance
-is singular when no frozen layer remains.
+In the fixed-horizon trajectory model, the final dried target is represented as
+a lower bound and must remain below 100% under that model's existing guardrail.
+The normalized-time DAE model admits an exact 100% terminal target: its
+unrearranged frozen-layer heat balance remains well-defined there and enforces
+`Tbot == Tsub` when the frozen layer vanishes.
 
 `trajectory_initialization_from_scipy_output` converts a legacy SciPy trajectory
 table into Pyomo initial values. It converts pressure from mTorr to Torr,
@@ -193,9 +227,13 @@ mapping, to an existing trajectory model.
 
 Comparison to SciPy optimizer results is direct for variable bounds, fixed
 profiles, output columns, and algebraic constraints. Full trajectories can
-diverge because the Pyomo optimizer solves a simultaneous fixed-horizon
-backward-Euler problem with a final dried-fraction target, while the SciPy
-optimizers solve sequential point problems and advance until complete drying.
+diverge for the fixed-horizon optimization builders because they solve a
+different simultaneous proxy problem. Use the free-final-time DAE
+shelf-temperature model when comparing the `opt_Tsh.dry` completion-time
+objective. The current comparison tutorial checks both available DAE
+transformations:
+
+`docs/examples/current_main_optimizer_comparison.ipynb`
 
 Advanced workflow builders remain explicit optional Pyomo prototypes:
 

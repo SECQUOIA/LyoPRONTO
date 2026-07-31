@@ -1,19 +1,18 @@
-"""Helpers for the current-main SciPy/Pyomo comparison tutorial.
+"""Helpers for the current-main SciPy/Pyomo.DAE comparison tutorial.
 
-The historical comparison optimized free final time with two Pyomo.DAE
-discretizations.  Current ``main`` instead exposes a fixed-horizon,
-backward-Euler Pyomo validation prototype.  These helpers make the comparison
-appropriate for that current formulation:
+The experiment compares equivalent shelf-temperature optimization problems:
 
-* run the legacy SciPy shelf-temperature optimizer to complete drying;
-* use the SciPy completion time as a shared Pyomo horizon;
-* compare an integrated form of the current driving-force objective; and
-* retain the seven-column legacy trajectory convention for plotting.
+* legacy SciPy maximizes sublimation rate at each dried-cake state and advances
+  until complete drying;
+* Pyomo.DAE optimizes the full trajectory simultaneously and minimizes the
+  free final drying time; and
+* the Pyomo model is transcribed with either backward finite differences or
+  LAGRANGE-RADAU orthogonal collocation.
 
-The narrative and full parameter sweep live in
-``docs/examples/current_main_optimizer_comparison.ipynb``.  Pyomo and IPOPT
-are imported only when a Pyomo solve is requested, so non-Pyomo installations
-can still import and test the analysis helpers.
+Both paths use the current LyoPRONTO physics, controls, constraints, completion
+target, and seven-column trajectory convention.  The tutorial notebook owns
+the one-off parameter sweep and visualization; this module keeps its model
+runs importable and testable.
 """
 
 from __future__ import annotations
@@ -23,9 +22,8 @@ from time import perf_counter
 from typing import Any, Sequence, Tuple, Union
 
 import numpy as np
-from scipy.integrate import trapezoid
 
-from lyopronto import constant, functions, opt_Tsh
+from lyopronto import opt_Tsh
 
 
 DEFAULT_A1_VALUES = (16.0, 18.0, 20.0)
@@ -34,34 +32,51 @@ DEFAULT_KC_VALUES = (2.75e-4, 3.30e-4, 4.00e-4)
 
 @dataclass
 class SolverRun:
-    """One timed solver execution and its normalized trajectory."""
+    """One timed optimizer execution and its normalized trajectory."""
 
     trajectory: np.ndarray
     wall_time_s: float
+    objective_time_hr: float
     success: bool
     solver_status: str
     termination_condition: str
     max_constraint_violation: float
+    n_time_points: int
 
 
 @dataclass
 class CaseComparison:
-    """Repeated SciPy/Pyomo measurements for one ``A1``/``KC`` case."""
+    """Repeated SciPy, finite-difference, and collocation measurements."""
 
     a1: float
     kc: float
     scipy_trajectory: np.ndarray
-    pyomo_trajectory: np.ndarray
+    finite_difference_trajectory: np.ndarray
+    collocation_trajectory: np.ndarray
     scipy_wall_times_s: Tuple[float, ...]
-    pyomo_wall_times_s: Tuple[float, ...]
-    pyomo_status: str
-    pyomo_termination: str
-    max_constraint_violation: float
+    finite_difference_wall_times_s: Tuple[float, ...]
+    collocation_wall_times_s: Tuple[float, ...]
+    finite_difference_status: str
+    finite_difference_termination: str
+    collocation_status: str
+    collocation_termination: str
+    finite_difference_max_constraint_violation: float
+    collocation_max_constraint_violation: float
 
     @property
-    def horizon_hr(self) -> float:
-        """Return the common comparison horizon in hours."""
+    def scipy_objective_time_hr(self) -> float:
+        """Return the SciPy completion-time objective."""
         return float(self.scipy_trajectory[-1, 0])
+
+    @property
+    def finite_difference_objective_time_hr(self) -> float:
+        """Return the finite-difference Pyomo.DAE final-time objective."""
+        return float(self.finite_difference_trajectory[-1, 0])
+
+    @property
+    def collocation_objective_time_hr(self) -> float:
+        """Return the collocation Pyomo.DAE final-time objective."""
+        return float(self.collocation_trajectory[-1, 0])
 
     @property
     def scipy_wall_median_s(self) -> float:
@@ -69,40 +84,42 @@ class CaseComparison:
         return float(np.median(self.scipy_wall_times_s))
 
     @property
-    def pyomo_wall_median_s(self) -> float:
-        """Return the median Pyomo wall time."""
-        return float(np.median(self.pyomo_wall_times_s))
+    def finite_difference_wall_median_s(self) -> float:
+        """Return the median finite-difference wall time."""
+        return float(np.median(self.finite_difference_wall_times_s))
 
     @property
-    def speedup(self) -> float:
-        """Return the workflow-level median SciPy/Pyomo runtime ratio."""
-        return self.scipy_wall_median_s / self.pyomo_wall_median_s
+    def collocation_wall_median_s(self) -> float:
+        """Return the median collocation wall time."""
+        return float(np.median(self.collocation_wall_times_s))
 
     @property
-    def scipy_objective(self) -> float:
-        """Return the integrated SciPy driving-force objective."""
-        return integrated_driving_force(self.scipy_trajectory)
+    def finite_difference_speedup(self) -> float:
+        """Return SciPy/finite-difference median runtime."""
+        return self.scipy_wall_median_s / self.finite_difference_wall_median_s
 
     @property
-    def pyomo_objective(self) -> float:
-        """Return the integrated Pyomo driving-force objective."""
-        return integrated_driving_force(self.pyomo_trajectory)
+    def collocation_speedup(self) -> float:
+        """Return SciPy/collocation median runtime."""
+        return self.scipy_wall_median_s / self.collocation_wall_median_s
 
     @property
-    def objective_gap_percent(self) -> float:
-        """Return the Pyomo objective gap relative to SciPy.
+    def finite_difference_objective_gap_percent(self) -> float:
+        """Return the finite-difference drying-time gap from SciPy."""
+        return 100.0 * (
+            self.finite_difference_objective_time_hr - self.scipy_objective_time_hr
+        ) / self.scipy_objective_time_hr
 
-        The denominator uses the absolute SciPy objective because the driving
-        force ``Pch - Psub`` is normally negative.  A positive gap means the
-        Pyomo objective is higher (less negative) than the SciPy reference.
-        """
-        return 100.0 * (self.pyomo_objective - self.scipy_objective) / abs(
-            self.scipy_objective
-        )
+    @property
+    def collocation_objective_gap_percent(self) -> float:
+        """Return the collocation drying-time gap from SciPy."""
+        return 100.0 * (
+            self.collocation_objective_time_hr - self.scipy_objective_time_hr
+        ) / self.scipy_objective_time_hr
 
 
 def comparison_inputs(a1: float, kc: float) -> dict[str, Any]:
-    """Return the explicit baseline dictionaries for one grid point."""
+    """Return the explicit legacy dictionaries for one grid point."""
     return {
         "vial": {"Av": 3.8, "Ap": 3.14, "Vfill": 2.0},
         "product": {
@@ -113,48 +130,15 @@ def comparison_inputs(a1: float, kc: float) -> dict[str, Any]:
             "T_pr_crit": -25.0,
         },
         "ht": {"KC": float(kc), "KP": 8.93e-4, "KD": 0.46},
-        "scipy_pchamber": {
+        "pchamber": {
             "setpt": [0.1],
             "dt_setpt": [1800.0],
             "ramp_rate": 0.5,
         },
-        "scipy_tshelf": {"min": -45.0, "max": 120.0},
-        "pyomo_pchamber": {
-            "min": 0.1,
-            "max": 0.1,
-            "setpt": [0.1],
-            "dt_setpt": [1800.0],
-            "ramp_rate": 0.5,
-        },
-        "pyomo_tshelf": {
-            "min": -45.0,
-            "max": 120.0,
-            "init": -35.0,
-            "setpt": [20.0],
-            "dt_setpt": [1800.0],
-            "ramp_rate": 1.0,
-        },
+        "tshelf": {"min": -45.0, "max": 120.0, "init": -35.0},
         "eq_cap": {"a": -0.182, "b": 11.7},
         "nvial": 400,
     }
-
-
-def integrated_driving_force(trajectory: np.ndarray) -> float:
-    """Integrate ``Pch - Psub`` over a seven-column legacy trajectory.
-
-    Legacy output pressure (column 4) is mTorr, while vapor pressure is Torr.
-    The returned value therefore has units of Torr-hour.
-    """
-    table = np.asarray(trajectory, dtype=float)
-    if table.ndim != 2 or table.shape[1] != 7 or table.shape[0] < 2:
-        raise ValueError("trajectory must be a two-dimensional, seven-column table")
-    if not np.all(np.isfinite(table)):
-        raise ValueError("trajectory must contain only finite values")
-
-    time_hr = table[:, 0]
-    pch_torr = table[:, 4] / constant.Torr_to_mTorr
-    psub_torr = np.asarray(functions.Vapor_pressure(table[:, 1]), dtype=float)
-    return float(trapezoid(pch_torr - psub_torr, time_hr))
 
 
 def run_scipy_reference(a1: float, kc: float, *, dt: float = 0.01) -> SolverRun:
@@ -165,8 +149,8 @@ def run_scipy_reference(a1: float, kc: float, *, dt: float = 0.01) -> SolverRun:
         data["vial"],
         dict(data["product"]),
         data["ht"],
-        dict(data["scipy_pchamber"]),
-        dict(data["scipy_tshelf"]),
+        dict(data["pchamber"]),
+        dict(data["tshelf"]),
         float(dt),
         data["eq_cap"],
         data["nvial"],
@@ -177,49 +161,50 @@ def run_scipy_reference(a1: float, kc: float, *, dt: float = 0.01) -> SolverRun:
         and trajectory.shape[1] == 7
         and trajectory.size
         and np.all(np.isfinite(trajectory))
-        and trajectory[-1, 6] >= 99.0
+        and trajectory[-1, 6] >= 100.0 - 1.0e-6
     )
+    objective = float(trajectory[-1, 0]) if trajectory.size else float("nan")
     return SolverRun(
         trajectory=np.asarray(trajectory, dtype=float),
         wall_time_s=float(wall_time_s),
+        objective_time_hr=objective,
         success=success,
         solver_status="n/a",
         termination_condition="completed" if success else "incomplete",
         max_constraint_violation=0.0,
+        n_time_points=int(trajectory.shape[0]),
     )
 
 
-def run_pyomo_at_horizon(
+def run_pyomo_dae(
     a1: float,
     kc: float,
-    horizon_hr: float,
     *,
-    n_steps: int = 24,
-    final_dried_fraction: float = 0.989,
+    discretization: str,
+    nfe: int = 24,
+    ncp: int = 3,
+    final_dried_fraction: float = 1.0,
+    initialize: np.ndarray | None = None,
     solver: Union[str, Any] = "ipopt",
 ) -> SolverRun:
-    """Run the current fixed-horizon Pyomo shelf-temperature optimizer."""
-    from lyopronto.pyomo_models import solve_primary_drying_optimization
-
-    if horizon_hr <= 0.0:
-        raise ValueError("horizon_hr must be positive")
-    if n_steps < 1:
-        raise ValueError("n_steps must be at least one")
+    """Run one current-physics, free-final-time Pyomo.DAE optimization."""
+    from lyopronto.pyomo_models import solve_dae_shelf_temperature_optimization
 
     data = comparison_inputs(a1, kc)
     start = perf_counter()
-    result = solve_primary_drying_optimization(
+    result = solve_dae_shelf_temperature_optimization(
         data["vial"],
         data["product"],
         data["ht"],
-        data["pyomo_pchamber"],
-        data["pyomo_tshelf"],
-        n_steps=int(n_steps),
-        dt=float(horizon_hr) / int(n_steps),
-        mode="shelf_temperature",
-        final_dried_fraction=float(final_dried_fraction),
+        data["pchamber"],
+        data["tshelf"],
         eq_cap=data["eq_cap"],
         nvial=data["nvial"],
+        nfe=int(nfe),
+        discretization=discretization,
+        ncp=int(ncp),
+        final_dried_fraction=float(final_dried_fraction),
+        initialize=initialize,
         solver=solver,
     )
     wall_time_s = perf_counter() - start
@@ -228,14 +213,29 @@ def run_pyomo_at_horizon(
         (float(value) if value is not None else 0.0)
         for value in result.constraint_violations.values()
     )
+    objective = (
+        float(result.objective_time_hr)
+        if result.objective_time_hr is not None
+        else float("nan")
+    )
     return SolverRun(
         trajectory=trajectory,
         wall_time_s=float(wall_time_s),
+        objective_time_hr=objective,
         success=bool(result.success),
         solver_status=str(result.solver_status),
         termination_condition=str(result.termination_condition),
         max_constraint_violation=max_violation,
+        n_time_points=int(result.discretization["n_time_points"]),
     )
+
+
+def _require_success(run: SolverRun, label: str, a1: float, kc: float) -> None:
+    if not run.success:
+        raise RuntimeError(
+            f"{label} failed for A1={a1}, KC={kc}: "
+            f"{run.solver_status}/{run.termination_condition}"
+        )
 
 
 def run_case_comparison(
@@ -243,88 +243,115 @@ def run_case_comparison(
     kc: float,
     *,
     scipy_dt: float = 0.01,
-    n_steps: int = 24,
-    final_dried_fraction: float = 0.989,
+    nfe: int = 24,
+    ncp: int = 3,
+    final_dried_fraction: float = 1.0,
     timing_repeats: int = 1,
+    warmstart_from_scipy: bool = False,
     solver: Union[str, Any] = "ipopt",
 ) -> CaseComparison:
-    """Run repeated SciPy/Pyomo measurements for one grid point."""
+    """Run repeated equivalent SciPy, FD, and collocation optimizations."""
     if timing_repeats < 1:
         raise ValueError("timing_repeats must be at least one")
 
     scipy_runs = []
-    pyomo_runs = []
+    finite_difference_runs = []
+    collocation_runs = []
     for _ in range(int(timing_repeats)):
         scipy_run = run_scipy_reference(a1, kc, dt=scipy_dt)
-        if not scipy_run.success:
-            raise RuntimeError(f"SciPy did not complete drying for A1={a1}, KC={kc}")
-        pyomo_run = run_pyomo_at_horizon(
+        _require_success(scipy_run, "SciPy", a1, kc)
+        initialization = scipy_run.trajectory if warmstart_from_scipy else None
+        finite_difference_run = run_pyomo_dae(
             a1,
             kc,
-            float(scipy_run.trajectory[-1, 0]),
-            n_steps=n_steps,
+            discretization="finite_difference",
+            nfe=nfe,
+            ncp=ncp,
             final_dried_fraction=final_dried_fraction,
+            initialize=initialization,
             solver=solver,
         )
-        if not pyomo_run.success:
-            raise RuntimeError(
-                "Pyomo did not solve successfully for "
-                f"A1={a1}, KC={kc}: {pyomo_run.solver_status}/"
-                f"{pyomo_run.termination_condition}"
-            )
+        collocation_run = run_pyomo_dae(
+            a1,
+            kc,
+            discretization="collocation",
+            nfe=nfe,
+            ncp=ncp,
+            final_dried_fraction=final_dried_fraction,
+            initialize=initialization,
+            solver=solver,
+        )
+        _require_success(finite_difference_run, "Pyomo.DAE finite difference", a1, kc)
+        _require_success(collocation_run, "Pyomo.DAE collocation", a1, kc)
         scipy_runs.append(scipy_run)
-        pyomo_runs.append(pyomo_run)
+        finite_difference_runs.append(finite_difference_run)
+        collocation_runs.append(collocation_run)
 
     return CaseComparison(
         a1=float(a1),
         kc=float(kc),
         scipy_trajectory=scipy_runs[-1].trajectory,
-        pyomo_trajectory=pyomo_runs[-1].trajectory,
+        finite_difference_trajectory=finite_difference_runs[-1].trajectory,
+        collocation_trajectory=collocation_runs[-1].trajectory,
         scipy_wall_times_s=tuple(run.wall_time_s for run in scipy_runs),
-        pyomo_wall_times_s=tuple(run.wall_time_s for run in pyomo_runs),
-        pyomo_status=pyomo_runs[-1].solver_status,
-        pyomo_termination=pyomo_runs[-1].termination_condition,
-        max_constraint_violation=max(run.max_constraint_violation for run in pyomo_runs),
+        finite_difference_wall_times_s=tuple(
+            run.wall_time_s for run in finite_difference_runs
+        ),
+        collocation_wall_times_s=tuple(run.wall_time_s for run in collocation_runs),
+        finite_difference_status=finite_difference_runs[-1].solver_status,
+        finite_difference_termination=finite_difference_runs[-1].termination_condition,
+        collocation_status=collocation_runs[-1].solver_status,
+        collocation_termination=collocation_runs[-1].termination_condition,
+        finite_difference_max_constraint_violation=max(
+            run.max_constraint_violation for run in finite_difference_runs
+        ),
+        collocation_max_constraint_violation=max(
+            run.max_constraint_violation for run in collocation_runs
+        ),
     )
 
 
-def run_mesh_sensitivity(
+def run_discretization_sensitivity(
     a1: float,
     kc: float,
     scipy_trajectory: np.ndarray,
     *,
-    n_steps_values: Sequence[int] = (12, 24, 48),
-    final_dried_fraction: float = 0.989,
+    nfe_values: Sequence[int] = (8, 16, 24),
+    ncp: int = 3,
+    final_dried_fraction: float = 1.0,
     solver: Union[str, Any] = "ipopt",
-) -> list[dict[str, float]]:
-    """Evaluate current backward-Euler mesh sensitivity on one horizon."""
-    horizon_hr = float(np.asarray(scipy_trajectory)[-1, 0])
-    scipy_objective = integrated_driving_force(scipy_trajectory)
-    rows = []
-    for n_steps in n_steps_values:
-        run = run_pyomo_at_horizon(
-            a1,
-            kc,
-            horizon_hr,
-            n_steps=int(n_steps),
-            final_dried_fraction=final_dried_fraction,
-            solver=solver,
-        )
-        if not run.success:
-            raise RuntimeError(f"Pyomo mesh solve failed for n_steps={n_steps}")
-        objective = integrated_driving_force(run.trajectory)
-        rows.append(
-            {
-                "n_steps": float(n_steps),
-                "objective": objective,
-                "objective_gap_percent": 100.0
-                * (objective - scipy_objective)
-                / abs(scipy_objective),
-                "final_percent_dried": float(run.trajectory[-1, 6]),
-                "wall_time_s": run.wall_time_s,
-                "max_constraint_violation": run.max_constraint_violation,
-            }
-        )
+) -> list[dict[str, Any]]:
+    """Evaluate objective convergence for both DAE transformations."""
+    scipy_objective = float(np.asarray(scipy_trajectory)[-1, 0])
+    rows: list[dict[str, Any]] = []
+    for method in ("finite_difference", "collocation"):
+        for nfe in nfe_values:
+            run = run_pyomo_dae(
+                a1,
+                kc,
+                discretization=method,
+                nfe=int(nfe),
+                ncp=ncp,
+                final_dried_fraction=final_dried_fraction,
+                solver=solver,
+            )
+            if not run.success:
+                raise RuntimeError(f"Pyomo.DAE {method} solve failed for nfe={nfe}")
+            rows.append(
+                {
+                    "method": method,
+                    "nfe": int(nfe),
+                    "ncp": None if method == "finite_difference" else int(ncp),
+                    "n_time_points": run.n_time_points,
+                    "objective_time_hr": run.objective_time_hr,
+                    "objective_gap_percent": 100.0
+                    * (run.objective_time_hr - scipy_objective)
+                    / scipy_objective,
+                    "final_percent_dried": float(run.trajectory[-1, 6]),
+                    "wall_time_s": run.wall_time_s,
+                    "max_constraint_violation": run.max_constraint_violation,
+                }
+            )
     return rows
 
 
@@ -334,9 +361,8 @@ __all__ = [
     "DEFAULT_KC_VALUES",
     "SolverRun",
     "comparison_inputs",
-    "integrated_driving_force",
     "run_case_comparison",
-    "run_mesh_sensitivity",
-    "run_pyomo_at_horizon",
+    "run_discretization_sensitivity",
+    "run_pyomo_dae",
     "run_scipy_reference",
 ]

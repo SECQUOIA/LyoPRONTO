@@ -418,6 +418,10 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
         in pyomo_tests
     )
     assert (
+        "tests/test_pyomo_models/test_dae_optimization.py::test_dae_model_solves_to_complete_drying"
+        in pyomo_tests
+    )
+    assert (
         "tests/test_current_main_optimizer_comparison.py::test_current_main_comparison_notebook_execution"
         in pyomo_tests
     )
