@@ -93,8 +93,7 @@ def _single_fixed_pressure(pchamber: Mapping[str, Any]) -> float:
     setpoints = np.asarray(pchamber["setpt"], dtype=float).reshape(-1)
     if setpoints.size != 1 or not np.isfinite(setpoints[0]):
         raise ValueError(
-            "free-final-time shelf-temperature optimization requires one constant "
-            "pchamber setpoint"
+            "free-final-time shelf-temperature optimization requires one constant pchamber setpoint"
         )
     if setpoints[0] <= 0.0:
         raise ValueError("pchamber setpoint must be positive")
@@ -125,14 +124,9 @@ def _warmstart_from_legacy_table(
         model.Tbot[tau].set_value(np.interp(coordinate, normalized_source_time, table[:, 2]))
         model.Tsh[tau].set_value(np.interp(coordinate, normalized_source_time, table[:, 3]))
         model.Pch[tau].set_value(
-            np.interp(coordinate, normalized_source_time, table[:, 4])
-            / constant.Torr_to_mTorr
+            np.interp(coordinate, normalized_source_time, table[:, 4]) / constant.Torr_to_mTorr
         )
-        dmdt = (
-            np.interp(coordinate, normalized_source_time, table[:, 5])
-            * ap
-            * constant.cm_To_m**2
-        )
+        dmdt = np.interp(coordinate, normalized_source_time, table[:, 5]) * ap * constant.cm_To_m**2
         model.dmdt[tau].set_value(dmdt)
         psub = float(functions.Vapor_pressure(pyo.value(model.Tsub[tau])))
         model.Psub[tau].set_value(psub)
@@ -145,9 +139,7 @@ def _warmstart_from_legacy_table(
                 pyo.value(model.Pch[tau]),
             )
         )
-        model.dLck_dt[tau].set_value(
-            horizon * dmdt * float(pyo.value(model.drying_length_factor))
-        )
+        model.dLck_dt[tau].set_value(horizon * dmdt * float(pyo.value(model.drying_length_factor)))
 
 
 def create_dae_shelf_temperature_optimization_model(
@@ -297,16 +289,12 @@ def create_dae_shelf_temperature_optimization_model(
     )
     model.Tsub = pyo.Var(model.t, domain=pyo.Reals, bounds=(-80.0, 0.0), initialize=-30.0)
     model.Tbot = pyo.Var(model.t, domain=pyo.Reals, bounds=(-80.0, 80.0), initialize=-25.0)
-    model.Psub = pyo.Var(
-        model.t, domain=pyo.PositiveReals, bounds=(1.0e-8, 10.0), initialize=0.2
-    )
+    model.Psub = pyo.Var(model.t, domain=pyo.PositiveReals, bounds=(1.0e-8, 10.0), initialize=0.2)
     model.log_Psub = pyo.Var(model.t, domain=pyo.Reals, bounds=(-20.0, 3.0), initialize=-1.6)
     model.dmdt = pyo.Var(
         model.t, domain=pyo.NonNegativeReals, bounds=(0.0, None), initialize=1.0e-4
     )
-    model.Kv = pyo.Var(
-        model.t, domain=pyo.PositiveReals, bounds=(1.0e-8, None), initialize=3.0e-4
-    )
+    model.Kv = pyo.Var(model.t, domain=pyo.PositiveReals, bounds=(1.0e-8, None), initialize=3.0e-4)
 
     model.Rp = pyo.Expression(
         model.t,
@@ -315,9 +303,7 @@ def create_dae_shelf_temperature_optimization_model(
     model.length_rate = pyo.Expression(
         model.t, rule=lambda m, tau: m.dmdt[tau] * m.drying_length_factor
     )
-    model.percent_dried = pyo.Expression(
-        model.t, rule=lambda m, tau: 100.0 * m.Lck[tau] / m.Lpr0
-    )
+    model.percent_dried = pyo.Expression(model.t, rule=lambda m, tau: 100.0 * m.Lck[tau] / m.Lpr0)
 
     model.initial_dried_cake = pyo.Constraint(expr=model.Lck[model.t.first()] == 0.0)
     model.drying_front_dynamics = pyo.Constraint(
@@ -329,46 +315,45 @@ def create_dae_shelf_temperature_optimization_model(
     )
     model.vapor_pressure_log = pyo.Constraint(
         model.t,
-        rule=lambda m, tau: m.log_Psub[tau]
-        == pyo.log(functions.VAPOR_PRESSURE_PREEXPONENTIAL)
-        - functions.VAPOR_PRESSURE_TEMPERATURE_COEFFICIENT / (273.15 + m.Tsub[tau]),
+        rule=lambda m, tau: (
+            m.log_Psub[tau]
+            == pyo.log(functions.VAPOR_PRESSURE_PREEXPONENTIAL)
+            - functions.VAPOR_PRESSURE_TEMPERATURE_COEFFICIENT / (273.15 + m.Tsub[tau])
+        ),
     )
     model.vapor_pressure_exp = pyo.Constraint(
         model.t, rule=lambda m, tau: m.Psub[tau] == pyo.exp(m.log_Psub[tau])
     )
     model.mass_transfer = pyo.Constraint(
         model.t,
-        rule=lambda m, tau: m.dmdt[tau]
-        == m.Ap / m.Rp[tau] / m.kg_To_g * (m.Psub[tau] - m.Pch[tau]),
+        rule=lambda m, tau: (
+            m.dmdt[tau] == m.Ap / m.Rp[tau] / m.kg_To_g * (m.Psub[tau] - m.Pch[tau])
+        ),
     )
     model.frozen_layer_heat_balance = pyo.Constraint(
         model.t,
-        rule=lambda m, tau: (m.Tsh[tau] - m.Tbot[tau])
-        * m.Av
-        * m.Kv[tau]
-        * (m.Lpr0 - m.Lck[tau])
-        == m.Ap * (m.Tbot[tau] - m.Tsub[tau]) * m.k_ice,
+        rule=lambda m, tau: (
+            (m.Tsh[tau] - m.Tbot[tau]) * m.Av * m.Kv[tau] * (m.Lpr0 - m.Lck[tau])
+            == m.Ap * (m.Tbot[tau] - m.Tsub[tau]) * m.k_ice
+        ),
     )
     model.energy_balance = pyo.Constraint(
         model.t,
-        rule=lambda m, tau: m.Tsh[tau]
-        == m.dmdt[tau] * m.kg_To_g / m.hr_To_s * m.dHs / m.Av / m.Kv[tau]
-        + m.Tbot[tau],
+        rule=lambda m, tau: (
+            m.Tsh[tau]
+            == m.dmdt[tau] * m.kg_To_g / m.hr_To_s * m.dHs / m.Av / m.Kv[tau] + m.Tbot[tau]
+        ),
     )
     model.vial_heat_transfer = pyo.Constraint(
         model.t,
-        rule=lambda m, tau: m.Kv[tau]
-        == m.KC + m.KP * m.Pch[tau] / (1.0 + m.KD * m.Pch[tau]),
+        rule=lambda m, tau: m.Kv[tau] == m.KC + m.KP * m.Pch[tau] / (1.0 + m.KD * m.Pch[tau]),
     )
     model.product_temperature_limit = pyo.Constraint(
         model.t, rule=lambda m, tau: m.Tbot[tau] <= m.T_crit
     )
     model.equipment_capability = pyo.Constraint(
         model.t,
-        rule=lambda m, tau: m.eq_cap_a
-        + m.eq_cap_b * m.Pch[tau]
-        - m.nvial * m.dmdt[tau]
-        >= 0.0,
+        rule=lambda m, tau: m.eq_cap_a + m.eq_cap_b * m.Pch[tau] - m.nvial * m.dmdt[tau] >= 0.0,
     )
 
     if method is DaeDiscretization.FINITE_DIFFERENCE:
@@ -418,9 +403,7 @@ def dae_optimization_values(model: pyo.ConcreteModel) -> dict[str, np.ndarray]:
         values[name] = np.asarray(
             [np.nan if value is None else float(value) for value in raw], dtype=float
         )
-    values["Rp"] = np.asarray(
-        [float(pyo.value(model.Rp[tau])) for tau in coordinates], dtype=float
-    )
+    values["Rp"] = np.asarray([float(pyo.value(model.Rp[tau])) for tau in coordinates], dtype=float)
     values["length_rate"] = np.asarray(
         [float(pyo.value(model.length_rate[tau])) for tau in coordinates], dtype=float
     )
@@ -493,6 +476,11 @@ def solve_dae_shelf_temperature_optimization(
         "nfe": int(nfe),
         "ncp": None if method is DaeDiscretization.FINITE_DIFFERENCE else int(ncp),
         "n_time_points": len(model.t),
+        "n_variables": sum(1 for _ in model.component_data_objects(pyo.Var, descend_into=True)),
+        "n_constraints": sum(
+            1 for _ in model.component_data_objects(pyo.Constraint, active=True, descend_into=True)
+        ),
+        "solver_iterations": None,
     }
     try:
         opt, solver_name = _solver_from_arg(solver, tee)
@@ -515,6 +503,11 @@ def solve_dae_shelf_temperature_optimization(
             discretization=metadata,
         )
 
+    try:
+        metadata["solver_iterations"] = int(results.solver.iterations)
+    except (AttributeError, TypeError, ValueError):
+        pass
+
     status = results.solver.status
     termination = results.solver.termination_condition
     success = _termination_success(termination)
@@ -523,8 +516,7 @@ def solve_dae_shelf_temperature_optimization(
     max_violation = max(finite_violations, default=0.0)
     objective = pyo.value(model.t_final, exception=False)
     message = (
-        f"Pyomo.DAE solve reached {termination}; maximum constraint violation "
-        f"{max_violation:.3e}."
+        f"Pyomo.DAE solve reached {termination}; maximum constraint violation {max_violation:.3e}."
         if success
         else "Pyomo.DAE solve did not reach an optimal solution "
         f"(status={status}, termination_condition={termination}); maximum "

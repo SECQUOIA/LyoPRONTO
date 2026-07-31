@@ -5,6 +5,7 @@ import pytest
 
 from examples.current_main_optimizer_comparison import (
     comparison_inputs,
+    matched_nfe_for_point_budget,
     run_case_comparison,
 )
 from tests.pyomo_solver import require_pyomo_solver
@@ -22,6 +23,30 @@ def test_comparison_inputs_preserve_historical_grid_conventions() -> None:
     assert data["nvial"] == 400
 
 
+@pytest.mark.parametrize(
+    ("point_budget", "expected"),
+    [(25, (24, 8)), (49, (48, 16)), (73, (72, 24))],
+)
+def test_matched_nfe_for_point_budget(point_budget, expected) -> None:
+    assert matched_nfe_for_point_budget(point_budget, ncp=3) == expected
+
+
+def test_matched_nfe_for_point_budget_rejects_inexact_budget() -> None:
+    with pytest.raises(ValueError, match="divisible"):
+        matched_nfe_for_point_budget(24, ncp=3)
+
+
+def test_case_comparison_rejects_unmatched_transcription_points() -> None:
+    with pytest.raises(ValueError, match="same number of transcription points"):
+        run_case_comparison(
+            16.0,
+            2.75e-4,
+            finite_difference_nfe=24,
+            collocation_nfe=24,
+            ncp=3,
+        )
+
+
 @pytest.mark.pyomo
 @pytest.mark.parametrize("warmstart_from_scipy", [False, True])
 def test_current_main_comparison_helper_solves_smoke_case(
@@ -33,7 +58,8 @@ def test_current_main_comparison_helper_solves_smoke_case(
         16.0,
         2.75e-4,
         scipy_dt=0.1,
-        nfe=8,
+        finite_difference_nfe=12,
+        collocation_nfe=4,
         ncp=3,
         final_dried_fraction=1.0,
         timing_repeats=1,
@@ -42,8 +68,8 @@ def test_current_main_comparison_helper_solves_smoke_case(
     )
 
     assert case.scipy_trajectory.shape[1] == 7
-    assert case.finite_difference_trajectory.shape == (9, 7)
-    assert case.collocation_trajectory.shape == (25, 7)
+    assert case.finite_difference_trajectory.shape == (13, 7)
+    assert case.collocation_trajectory.shape == (13, 7)
     assert case.finite_difference_trajectory[-1, 6] >= 100.0 - 1.0e-3
     assert case.collocation_trajectory[-1, 6] >= 100.0 - 1.0e-3
     assert case.finite_difference_max_constraint_violation < 1.0e-4
@@ -54,6 +80,10 @@ def test_current_main_comparison_helper_solves_smoke_case(
     assert abs(case.collocation_objective_gap_percent) < 2.0
     assert case.finite_difference_speedup > 0.0
     assert case.collocation_speedup > 0.0
+    assert case.finite_difference_n_variables > 0
+    assert case.finite_difference_n_constraints > 0
+    assert case.collocation_n_variables > 0
+    assert case.collocation_n_constraints > 0
 
 
 @pytest.mark.serial
@@ -70,11 +100,12 @@ def test_current_main_comparison_notebook_execution(repo_root) -> None:
             "a1_values": [16.0],
             "kc_values": [2.75e-4],
             "scipy_dt": 0.1,
-            "nfe": 8,
+            "point_budget": 13,
             "ncp": 3,
             "final_dried_fraction": 1.0,
             "timing_repeats": 1,
-            "sensitivity_nfe": [4, 8],
+            "sensitivity_point_budgets": [13, 25],
+            "scipy_dt_values": [0.2, 0.1],
             "constraint_tolerance": 1.0e-4,
             "save_results": False,
         },

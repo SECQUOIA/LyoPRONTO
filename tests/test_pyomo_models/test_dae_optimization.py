@@ -116,9 +116,7 @@ def test_dae_warmstart_converts_legacy_trajectory_units(dae_case) -> None:
         assert pyo.value(model.Tsub[tau]) == pytest.approx(row[1])
         assert pyo.value(model.Tbot[tau]) == pytest.approx(row[2])
         assert pyo.value(model.Tsh[tau]) == pytest.approx(row[3])
-        assert pyo.value(model.Pch[tau]) == pytest.approx(
-            row[4] / constant.Torr_to_mTorr
-        )
+        assert pyo.value(model.Pch[tau]) == pytest.approx(row[4] / constant.Torr_to_mTorr)
         assert pyo.value(model.dmdt[tau]) == pytest.approx(dmdt_kg_per_hr_vial)
         assert pyo.value(model.Psub[tau]) == pytest.approx(psub_torr)
         assert pyo.value(model.log_Psub[tau]) == pytest.approx(np.log(psub_torr))
@@ -142,9 +140,7 @@ def test_dae_warmstart_converts_legacy_trajectory_units(dae_case) -> None:
         (np.zeros((2, 7)), "finite positive-time"),
     ],
 )
-def test_dae_model_rejects_invalid_warmstart_tables(
-    dae_case, initialize, message
-) -> None:
+def test_dae_model_rejects_invalid_warmstart_tables(dae_case, initialize, message) -> None:
     with pytest.raises(ValueError, match=message):
         create_dae_shelf_temperature_optimization_model(
             dae_case["vial"],
@@ -212,9 +208,7 @@ def test_dae_model_rejects_nonpositive_pressure(dae_case) -> None:
         ("t_final_bounds", (0.0, 50.0), "positive and increasing"),
     ],
 )
-def test_dae_model_rejects_invalid_numeric_arguments(
-    dae_case, keyword, value, message
-) -> None:
+def test_dae_model_rejects_invalid_numeric_arguments(dae_case, keyword, value, message) -> None:
     arguments = {"eq_cap": dae_case["eq_cap"], "nvial": dae_case["nvial"]}
     arguments[keyword] = value
     with pytest.raises(ValueError, match=message):
@@ -299,6 +293,11 @@ def test_dae_model_solves_to_complete_drying(dae_case, method) -> None:
     table = result.as_table()
     assert result.success, result.message
     assert result.objective_time_hr == pytest.approx(table[-1, 0])
+    assert result.discretization["n_variables"] > 0
+    assert result.discretization["n_constraints"] > 0
+    assert result.discretization["solver_iterations"] is None or (
+        result.discretization["solver_iterations"] >= 0
+    )
     assert table[-1, 6] >= 100.0 - 1.0e-3
     assert np.max(table[:, 2]) <= dae_case["product"]["T_pr_crit"] + 1.0e-4
     assert max(value or 0.0 for value in result.constraint_violations.values()) < 1.0e-4
@@ -314,9 +313,7 @@ def test_dae_model_solves_to_complete_drying(dae_case, method) -> None:
         dmdt = row[5] * dae_case["vial"]["Ap"] * constant.cm_To_m**2
         lck = row[6] / 100.0 * lpr0
         psub = functions.Vapor_pressure(row[1])
-        kv = functions.Kv_FUN(
-            dae_case["ht"]["KC"], dae_case["ht"]["KP"], dae_case["ht"]["KD"], pch
-        )
+        kv = functions.Kv_FUN(dae_case["ht"]["KC"], dae_case["ht"]["KP"], dae_case["ht"]["KD"], pch)
         rp = functions.Rp_FUN(
             lck,
             dae_case["product"]["R0"],
