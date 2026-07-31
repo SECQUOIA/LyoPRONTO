@@ -168,15 +168,56 @@ def create_dae_shelf_temperature_optimization_model(
 ) -> pyo.ConcreteModel:
     """Build the free-final-time DAE counterpart to ``opt_Tsh.dry``.
 
+    Parameters
+    ----------
+    vial
+        Legacy vial geometry mapping.
+    product
+        Legacy product-property mapping.
+    ht
+        Legacy vial heat-transfer mapping.
+    pchamber
+        Legacy chamber-pressure schedule. This formulation requires one
+        positive constant setpoint in Torr.
+    tshelf
+        Legacy shelf-temperature bounds and optional initial value in degrees
+        Celsius.
+    eq_cap
+        Equipment-capability coefficients for the batch sublimation-rate
+        constraint.
+    nvial
+        Number of vials in the batch [-].
+    nfe
+        Number of finite elements in the normalized time domain [-].
+    discretization
+        Pyomo.DAE finite-difference or orthogonal-collocation transformation.
+    ncp
+        LAGRANGE-RADAU collocation points per finite element [-]. Ignored by
+        the finite-difference transformation.
+    final_dried_fraction
+        Dimensionless terminal dried fraction on the interval (0, 1].
+    t_final_bounds
+        Lower and upper bounds for the free final drying time, in hours.
+    initialize
+        Optional legacy seven-column trajectory. Its columns retain the
+        package convention: time [hr], temperatures [degC], pressure [mTorr],
+        sublimation flux [kg/hr/m^2], and percent dried [0-100].
+
+    Returns
+    -------
+    pyomo.environ.ConcreteModel
+        Discretized free-final-time optimization model.
+
+    Notes
+    -----
     Chamber pressure is one fixed setpoint and shelf temperature is the
-    bounded time-dependent control.  The objective minimizes final drying
-    time.  This is the simultaneous form of the legacy sequential policy,
+    bounded time-dependent control. The objective minimizes final drying
+    time. This is the simultaneous form of the legacy sequential policy,
     which maximizes sublimation rate at each dried-cake state and advances
     until completion.
 
-    ``nfe`` is passed directly to the selected Pyomo.DAE transformation.
-    Collocation additionally uses ``ncp`` LAGRANGE-RADAU points per finite
-    element.
+    ``nfe`` is passed directly to the selected Pyomo.DAE transformation;
+    collocation additionally uses ``ncp`` points per finite element.
     """
     _require_keys("vial", vial, ("Av", "Ap", "Vfill"))
     _require_keys("product", product, ("cSolid", "R0", "A1", "A2", "T_pr_crit"))
@@ -405,7 +446,32 @@ def solve_dae_shelf_temperature_optimization(
     solver: Union[str, Any] = "ipopt",
     tee: bool = False,
 ) -> DaeOptimizationResult:
-    """Build and solve the free-final-time DAE shelf-temperature problem."""
+    """Build and solve the free-final-time DAE shelf-temperature problem.
+
+    Parameters
+    ----------
+    vial, product, ht, pchamber, tshelf, eq_cap, nvial, nfe, discretization, ncp
+        Model inputs described by
+        :func:`create_dae_shelf_temperature_optimization_model`.
+    final_dried_fraction
+        Dimensionless terminal dried fraction on the interval (0, 1].
+    t_final_bounds
+        Lower and upper bounds for the free final drying time, in hours.
+    initialize
+        Optional legacy seven-column trajectory using time [hr], temperatures
+        [degC], pressure [mTorr], sublimation flux [kg/hr/m^2], and percent
+        dried [0-100].
+    solver
+        Pyomo solver name or solver object.
+    tee
+        Whether to stream solver output [-].
+
+    Returns
+    -------
+    DaeOptimizationResult
+        Solver status, final-time objective [hr], physical trajectories, and
+        constraint violations.
+    """
     model = create_dae_shelf_temperature_optimization_model(
         vial,
         product,
@@ -429,7 +495,13 @@ def solve_dae_shelf_temperature_optimization(
         "n_time_points": len(model.t),
     }
     try:
-        opt, _solver_name = _solver_from_arg(solver, tee)
+        opt, solver_name = _solver_from_arg(solver, tee)
+        options = getattr(opt, "options", None)
+        if solver_name == "ipopt" and options is not None:
+            # IPOPT otherwise ignores the model's exported scaling_factor
+            # suffix. Keep this option local to the DAE model, which defines
+            # the suffix, and preserve an explicit caller override.
+            options.setdefault("nlp_scaling_method", "user-scaling")
         results = opt.solve(model, tee=tee)
     except Exception as exc:  # pragma: no cover - environment-specific solver failures
         return DaeOptimizationResult(

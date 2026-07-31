@@ -176,9 +176,13 @@ All three modes intentionally share the trajectory objective
 `sum(Pch[t] - Psub[t])`, a driving-force proxy inherited from the legacy
 optimizers. Mode-specific behavior comes from the free/fixed controls, fixed
 profiles, bounds, product-temperature limit, optional equipment capability, and
-optional ramp-rate constraints. These fixed-horizon Pyomo APIs are validation prototypes and
-should not be treated as stable replacements for `opt_Pch.dry`,
+optional ramp-rate constraints. These fixed-horizon Pyomo APIs are validation
+prototypes and should not be treated as stable replacements for `opt_Pch.dry`,
 `opt_Tsh.dry`, or `opt_Pch_Tsh.dry`.
+`OptimizationMode.SHELF_TEMPERATURE` remains supported for fixed-horizon
+validation and for advanced workflows that compose the trajectory optimizer;
+this PR does not deprecate that surface. Use the free-final-time DAE model when
+the question is direct completion-time equivalence with `opt_Tsh.dry`.
 
 The free-final-time DAE shelf-temperature model is a distinct, equivalent
 counterpart to `opt_Tsh.dry`. It uses normalized time, treats final drying time

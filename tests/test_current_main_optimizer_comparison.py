@@ -23,7 +23,10 @@ def test_comparison_inputs_preserve_historical_grid_conventions() -> None:
 
 
 @pytest.mark.pyomo
-def test_current_main_comparison_helper_solves_smoke_case() -> None:
+@pytest.mark.parametrize("warmstart_from_scipy", [False, True])
+def test_current_main_comparison_helper_solves_smoke_case(
+    warmstart_from_scipy,
+) -> None:
     solver = require_pyomo_solver("ipopt")
 
     case = run_case_comparison(
@@ -34,6 +37,7 @@ def test_current_main_comparison_helper_solves_smoke_case() -> None:
         ncp=3,
         final_dried_fraction=1.0,
         timing_repeats=1,
+        warmstart_from_scipy=warmstart_from_scipy,
         solver=solver,
     )
 
