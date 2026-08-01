@@ -57,6 +57,14 @@ jobs:
           exit "$rc"
         }
 
+    - name: Add IDAES solver binaries to PATH
+      if: inputs.lane == 'pyomo'
+      run: echo "$HOME/.idaes/bin" >> "$GITHUB_PATH"
+
+    - name: Verify IPOPT is available
+      if: inputs.lane == 'pyomo'
+      run: python -c "from pyomo.environ import SolverFactory; assert SolverFactory('ipopt').available(exception_flag=False), 'ipopt not on PATH'"
+
     - name: Run selected validation lane
       run: |
         run_pytest_allow_empty() {

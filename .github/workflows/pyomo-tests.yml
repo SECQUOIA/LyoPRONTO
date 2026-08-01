@@ -151,6 +151,12 @@ jobs:
           exit "$rc"
         }
 
+    - name: Add IDAES solver binaries to PATH
+      run: echo "$HOME/.idaes/bin" >> "$GITHUB_PATH"
+
+    - name: Verify IPOPT is available
+      run: python -c "from pyomo.environ import SolverFactory; assert SolverFactory('ipopt').available(exception_flag=False), 'ipopt not on PATH'"
+
     - name: Run Pyomo SciPy comparison tests
       run: |
         pytest -n 0 -v \

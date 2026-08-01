@@ -269,6 +269,9 @@ def test_dae_solver_enables_model_scaling_without_overriding_user_choice(
     )
 
     assert not result.success
+    assert result.discretization["method"] == "finite_difference"
+    assert result.discretization["nfe"] == 2
+    assert result.discretization["ncp"] is None
     assert solver.options["nlp_scaling_method"] == expected_scaling
 
 
@@ -293,6 +296,9 @@ def test_dae_model_solves_to_complete_drying(dae_case, method) -> None:
     table = result.as_table()
     assert result.success, result.message
     assert result.objective_time_hr == pytest.approx(table[-1, 0])
+    assert result.discretization["method"] == method
+    assert result.discretization["nfe"] == 8
+    assert result.discretization["ncp"] == (None if method == "finite_difference" else 3)
     assert result.discretization["n_variables"] > 0
     assert result.discretization["n_constraints"] > 0
     assert result.discretization["solver_iterations"] is None or (

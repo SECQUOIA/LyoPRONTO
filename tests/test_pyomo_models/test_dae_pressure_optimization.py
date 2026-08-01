@@ -136,6 +136,9 @@ def test_pressure_dae_model_solves_equivalent_complete_drying_problem(
     table = result.as_table()
     assert result.success, result.message
     assert result.discretization["optimized_control"] == "chamber_pressure"
+    assert result.discretization["method"] == method
+    assert result.discretization["nfe"] == nfe
+    assert result.discretization["ncp"] == (None if method == "finite_difference" else 2)
     assert result.objective_time_hr == pytest.approx(table[-1, 0])
     assert table[-1, 6] >= 100.0 - 1.0e-3
     assert np.max(table[:, 2]) <= pressure_case["product"]["T_pr_crit"] + 1.0e-4

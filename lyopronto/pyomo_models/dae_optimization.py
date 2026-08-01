@@ -505,18 +505,15 @@ def dae_optimization_values(model: pyo.ConcreteModel) -> dict[str, np.ndarray]:
 def _solve_dae_optimization_model(
     model: pyo.ConcreteModel,
     *,
-    discretization: DaeDiscretizationInput,
-    nfe: int,
-    ncp: int,
     solver: Union[str, Any],
     tee: bool,
 ) -> DaeOptimizationResult:
-    method = _coerce_discretization(discretization)
+    method = _coerce_discretization(model.discretization_method)
     metadata = {
         "optimized_control": model.optimized_control,
         "method": method.value,
-        "nfe": int(nfe),
-        "ncp": None if method is DaeDiscretization.FINITE_DIFFERENCE else int(ncp),
+        "nfe": int(model.nfe),
+        "ncp": None if method is DaeDiscretization.FINITE_DIFFERENCE else int(model.ncp),
         "n_time_points": len(model.t),
         "n_variables": sum(1 for _ in model.component_data_objects(pyo.Var, descend_into=True)),
         "n_constraints": sum(
@@ -637,9 +634,6 @@ def solve_dae_shelf_temperature_optimization(
     )
     return _solve_dae_optimization_model(
         model,
-        discretization=discretization,
-        nfe=nfe,
-        ncp=ncp,
         solver=solver,
         tee=tee,
     )
@@ -687,9 +681,6 @@ def solve_dae_chamber_pressure_optimization(
     )
     return _solve_dae_optimization_model(
         model,
-        discretization=discretization,
-        nfe=nfe,
-        ncp=ncp,
         solver=solver,
         tee=tee,
     )
