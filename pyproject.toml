@@ -113,6 +113,9 @@ addopts = [
     "--timeout-method=thread",
     "-n",
     "auto",
+    # Steal queued tests from busy workers so a few long optimizer tests
+    # don't serialize the end of the run.
+    "--dist=worksteal",
 ]
 filterwarnings = [
     "default",

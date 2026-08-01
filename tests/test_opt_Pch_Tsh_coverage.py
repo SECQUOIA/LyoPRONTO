@@ -77,7 +77,10 @@ def _conservative_setup(vial=None, ht=None):
         "ht": ht or _standard_ht(),
         "Pchamber": {"min": 0.040, "max": 0.100},
         "Tshelf": {"min": -50.0, "max": -20.0},
-        "dt": 0.01,
+        # Edge-case tests built on this setup assert coarse feasibility properties
+        # (completion, constraint respect), not 0.01 hr schedule resolution, so a
+        # coarser step keeps the same code paths at a fraction of the runtime.
+        "dt": 0.05,
         "eq_cap": {"a": 5.0, "b": 10.0},
         "nVial": 398,
     }
@@ -309,8 +312,6 @@ class TestOptPchTshEdgeCases:
         conservative_setup["Pchamber"]["max"] = 0.090
         conservative_setup["Tshelf"]["min"] = -35.0
         conservative_setup["Tshelf"]["max"] = -25.0
-        # This case checks feasibility within narrow bounds, not 0.01 hr resolution.
-        conservative_setup["dt"] = 0.05
 
         output = opt_Pch_Tsh.dry(
             conservative_setup["vial"],
