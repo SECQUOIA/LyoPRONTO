@@ -48,6 +48,7 @@ install_idaes_extensions() {
 verify_ipopt_available() {
     export PATH="$HOME/.idaes/bin:$PATH"
     python -c "from pyomo.environ import SolverFactory; assert SolverFactory('ipopt').available(exception_flag=False), 'ipopt not on PATH'"
+    ipopt -v
 }
 
 run_pytest_allow_empty() {

@@ -101,8 +101,9 @@ Pyomo test, maintained Pyomo example, Pyomo dependency, or Pyomo workflow
 changes. The solver comparison job is job-level non-blocking; inspect its logs
 when it runs because install failures and comparison failures leave the PR
 status green. Solver-backed lanes add IDAES's solver directory to `PATH` and
-verify IPOPT availability before pytest starts, preventing a green run in
-which every solver-backed test was silently skipped.
+install its LAPACK runtime dependency, then verify that IPOPT is both discoverable
+and executable before pytest starts. This prevents a green run in which every
+solver-backed test was silently skipped.
 
 The solver comparison job also executes reduced one-case versions of the
 current-main SciPy/Pyomo shelf-temperature and chamber-pressure comparison

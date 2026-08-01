@@ -141,6 +141,11 @@ jobs:
         python -m pip install --upgrade pip setuptools wheel
         pip install -e ".[dev,pyomo]"
 
+    - name: Install IPOPT runtime libraries
+      run: |
+        sudo apt-get update
+        sudo apt-get install --yes liblapack3
+
     - name: Install optional Pyomo solver extensions
       run: |
         idaes get-extensions --extra petsc || {
@@ -155,7 +160,9 @@ jobs:
       run: echo "$HOME/.idaes/bin" >> "$GITHUB_PATH"
 
     - name: Verify IPOPT is available
-      run: python -c "from pyomo.environ import SolverFactory; assert SolverFactory('ipopt').available(exception_flag=False), 'ipopt not on PATH'"
+      run: |
+        python -c "from pyomo.environ import SolverFactory; assert SolverFactory('ipopt').available(exception_flag=False), 'ipopt not on PATH'"
+        ipopt -v
 
     - name: Run Pyomo SciPy comparison tests
       run: |
