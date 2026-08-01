@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="../unknownRp_PD/">
+        <link rel="prev" href="../current_main_optimizer_comparison/">
       
       
-        <link rel="next" href="../current_main_pressure_optimizer_comparison/">
+        <link rel="next" href="../../reference/">
       
       
         
@@ -23,7 +23,7 @@
     
     
       
-        <title>Current shelf-temperature optimizer comparison - LyoPRONTO Documentation</title>
+        <title>Current chamber-pressure optimizer comparison - LyoPRONTO Documentation</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#compare-the-current-scipy-and-pyomo-shelf-temperature-optimizers" class="md-skip">
+        <a href="#compare-the-current-scipy-and-pyomo-chamber-pressure-optimizers" class="md-skip">
           Skip to content
         </a>
       
@@ -106,7 +106,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Current shelf-temperature optimizer comparison
+              Current chamber-pressure optimizer comparison
             
           </span>
         </div>
@@ -318,6 +318,34 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../current_main_optimizer_comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Current shelf-temperature optimizer comparison
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -337,7 +365,7 @@
   <span class="md-ellipsis">
     
   
-    Current shelf-temperature optimizer comparison
+    Current chamber-pressure optimizer comparison
   
 
     
@@ -355,7 +383,7 @@
   <span class="md-ellipsis">
     
   
-    Current shelf-temperature optimizer comparison
+    Current chamber-pressure optimizer comparison
   
 
     
@@ -483,34 +511,6 @@
   
 </nav>
       
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../current_main_pressure_optimizer_comparison/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Current chamber-pressure optimizer comparison
-  
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -830,8 +830,8 @@
 
 
 
-<h1 id="compare-the-current-scipy-and-pyomo-shelf-temperature-optimizers">Compare the current SciPy and Pyomo shelf-temperature optimizers</h1>
-<p>This tutorial reproduces the historical <span class="arithmatex">\(A_1 \times K_C\)</span> shelf-temperature experiment with the physics and APIs on current <code>main</code>. It compares the legacy sequential SciPy optimizer with an equivalent free-final-time Pyomo.DAE model transcribed by backward finite differences and LAGRANGE-RADAU orthogonal collocation. The headline DAE comparison gives both transformations the same number of transcription points.</p>
+<h1 id="compare-the-current-scipy-and-pyomo-chamber-pressure-optimizers">Compare the current SciPy and Pyomo chamber-pressure optimizers</h1>
+<p>This tutorial reproduces the historical <span class="arithmatex">\(A_1 \times K_C\)</span> chamber-pressure experiment with the physics and APIs on current <code>main</code>. It compares the legacy sequential SciPy optimizer with an equivalent free-final-time Pyomo.DAE model transcribed by backward finite differences and LAGRANGE-RADAU orthogonal collocation. The headline DAE comparison gives both transformations the same number of transcription points.</p>
 <h2 id="what-is-held-equivalent">What is held equivalent?</h2>
 <table>
 <thead>
@@ -854,8 +854,8 @@
 <td>Constrain the terminal state to 100% dried</td>
 </tr>
 <tr>
-<td>Fixed chamber pressure; bounded shelf-temperature control</td>
-<td>The same control definition and bounds</td>
+<td>Fixed <span class="arithmatex">\(-18\,^{\circ}\)</span>C shelf profile; chamber pressure bounded to 50–500 mTorr</td>
+<td>The same fixed profile, control definition, and bounds</td>
 </tr>
 </tbody>
 </table>
@@ -864,14 +864,14 @@
 <p>Run this notebook from the repository root after installing the optional stack:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev,pyomo]&quot;</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>idaes<span class="w"> </span>get-extensions<span class="w"> </span>--extra<span class="w"> </span>petsc
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>jupyter<span class="w"> </span>lab<span class="w"> </span>docs/examples/current_main_optimizer_comparison.ipynb
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>jupyter<span class="w"> </span>lab<span class="w"> </span>docs/examples/current_main_pressure_optimizer_comparison.ipynb
 </span></code></pre></div>
 <p>A conda-forge IPOPT installation can be used instead. The full default grid takes several minutes because every SciPy reference advances with the configured fine time step and timing is repeated.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Papermill parameters: CI overrides these with a small smoke case.</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">a1_values</span> <span class="o">=</span> <span class="p">[</span><span class="mf">16.0</span><span class="p">,</span> <span class="mf">18.0</span><span class="p">,</span> <span class="mf">20.0</span><span class="p">]</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">kc_values</span> <span class="o">=</span> <span class="p">[</span><span class="mf">2.75e-4</span><span class="p">,</span> <span class="mf">3.30e-4</span><span class="p">,</span> <span class="mf">4.00e-4</span><span class="p">]</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">scipy_dt</span> <span class="o">=</span> <span class="mf">0.005</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">scipy_dt_values</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.005</span><span class="p">]</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">scipy_dt</span> <span class="o">=</span> <span class="mf">0.01</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">scipy_dt_values</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">]</span>
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">point_budget</span> <span class="o">=</span> <span class="mi">25</span>
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">ncp</span> <span class="o">=</span> <span class="mi">3</span>
 </span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">final_dried_fraction</span> <span class="o">=</span> <span class="mf">1.0</span>
@@ -879,7 +879,7 @@
 </span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="n">sensitivity_point_budgets</span> <span class="o">=</span> <span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">49</span><span class="p">,</span> <span class="mi">73</span><span class="p">]</span>
 </span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="n">constraint_tolerance</span> <span class="o">=</span> <span class="mf">1.0e-4</span>
 </span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="n">save_results</span> <span class="o">=</span> <span class="kc">False</span>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="n">results_dir</span> <span class="o">=</span> <span class="s2">&quot;benchmarks/results/current_main_tsh_comparison&quot;</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="n">results_dir</span> <span class="o">=</span> <span class="s2">&quot;benchmarks/results/current_main_pch_comparison&quot;</span>
 </span></code></pre></div>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">import</span> <span class="nn">json</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">import</span> <span class="nn">platform</span>
@@ -893,7 +893,7 @@
 </span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="kn">import</span> <span class="nn">pyomo</span>
 </span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="kn">import</span> <span class="nn">scipy</span>
 </span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>
-</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="kn">from</span> <span class="nn">examples.current_main_optimizer_comparison</span> <span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="kn">from</span> <span class="nn">examples.current_main_pressure_optimizer_comparison</span> <span class="kn">import</span> <span class="p">(</span>
 </span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    <span class="n">matched_nfe_for_point_budget</span><span class="p">,</span>
 </span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>    <span class="n">run_case_comparison</span><span class="p">,</span>
 </span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>    <span class="n">run_discretization_sensitivity</span><span class="p">,</span>
@@ -920,7 +920,7 @@
 </span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="p">}</span>
 </span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="n">environment</span>
 </span></code></pre></div>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>{&#39;git_revision&#39;: &#39;de3ce982bccb9273a00f7c7b36424e9aea32001c&#39;,
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>{&#39;git_revision&#39;: &#39;01c8bf1e8c0787fa296eabd64de1eab4bdca7e05&#39;,
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a> &#39;python&#39;: &#39;3.13.5&#39;,
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a> &#39;platform&#39;: &#39;Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39&#39;,
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a> &#39;lyopronto&#39;: &#39;1.1.0&#39;,
@@ -932,8 +932,8 @@
 <h2 id="experimental-protocol">Experimental protocol</h2>
 <p>For each <span class="arithmatex">\((A_1, K_C)\)</span> pair, the helper performs three equivalent runs:</p>
 <ol>
-<li>Run <code>opt_Tsh.dry</code> to 100% dried using the configured sequential step.</li>
-<li>Solve the free-final-time Pyomo.DAE model with <code>dae.finite_difference</code> and the <code>BACKWARD</code> scheme.</li>
+<li>Run <code>opt_Pch.dry</code> to 100% dried using the configured sequential step.</li>
+<li>Solve the free-final-time Pyomo.DAE pressure model with <code>dae.finite_difference</code> and the <code>BACKWARD</code> scheme.</li>
 <li>Solve the same model with <code>dae.collocation</code> and the <code>LAGRANGE-RADAU</code> scheme.</li>
 <li>Require every workflow to reach the same configured terminal dried fraction.</li>
 <li>Compare the final-time objectives directly and report median end-to-end wall times.</li>
@@ -1021,33 +1021,33 @@
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>A1         KC               method   time [h]    gap [%]    wall [s]    speedup points/steps  variables  constraints  iterations
 </span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>-----------------------------------------------------------------------------------------------------------------------------------
-</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a> 16.0   2.75e-04                SciPy    12.1977      0.000      21.762        1.0         2441          -            -           -
-</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a> 16.0   2.75e-04    finite difference    12.6144      3.416       0.053      414.0           25        251          251           -
-</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a> 16.0   2.75e-04          collocation    12.2024      0.038       0.065      332.9           25        251          251           -
-</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a> 16.0   3.30e-04                SciPy    12.1977      0.000      21.625        1.0         2441          -            -           -
-</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a> 16.0   3.30e-04    finite difference    12.6144      3.416       0.066      327.4           25        251          251           -
-</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a> 16.0   3.30e-04          collocation    12.2024      0.038       0.063      345.0           25        251          251           -
-</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a> 16.0   4.00e-04                SciPy    12.1977      0.000      20.920        1.0         2441          -            -           -
-</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a> 16.0   4.00e-04    finite difference    12.6144      3.416       0.059      351.7           25        251          251           -
-</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a> 16.0   4.00e-04          collocation    12.2024      0.038       0.083      251.8           25        251          251           -
-</span><span id="__span-18-12"><a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a> 18.0   2.75e-04                SciPy    13.3362      0.000      24.054        1.0         2669          -            -           -
-</span><span id="__span-18-13"><a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a> 18.0   2.75e-04    finite difference    13.8156      3.595       0.072      334.0           25        251          251           -
-</span><span id="__span-18-14"><a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a> 18.0   2.75e-04          collocation    13.3413      0.038       0.067      360.3           25        251          251           -
-</span><span id="__span-18-15"><a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a> 18.0   3.30e-04                SciPy    13.3362      0.000      24.180        1.0         2669          -            -           -
-</span><span id="__span-18-16"><a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a> 18.0   3.30e-04    finite difference    13.8156      3.595       0.098      247.3           25        251          251           -
-</span><span id="__span-18-17"><a id="__codelineno-18-17" name="__codelineno-18-17" href="#__codelineno-18-17"></a> 18.0   3.30e-04          collocation    13.3413      0.038       0.116      207.8           25        251          251           -
-</span><span id="__span-18-18"><a id="__codelineno-18-18" name="__codelineno-18-18" href="#__codelineno-18-18"></a> 18.0   4.00e-04                SciPy    13.3362      0.000      25.177        1.0         2669          -            -           -
-</span><span id="__span-18-19"><a id="__codelineno-18-19" name="__codelineno-18-19" href="#__codelineno-18-19"></a> 18.0   4.00e-04    finite difference    13.8156      3.595       0.090      278.6           25        251          251           -
-</span><span id="__span-18-20"><a id="__codelineno-18-20" name="__codelineno-18-20" href="#__codelineno-18-20"></a> 18.0   4.00e-04          collocation    13.3413      0.038       0.106      237.1           25        251          251           -
-</span><span id="__span-18-21"><a id="__codelineno-18-21" name="__codelineno-18-21" href="#__codelineno-18-21"></a> 20.0   2.75e-04                SciPy    14.4745      0.000      27.971        1.0         2896          -            -           -
-</span><span id="__span-18-22"><a id="__codelineno-18-22" name="__codelineno-18-22" href="#__codelineno-18-22"></a> 20.0   2.75e-04    finite difference    15.0173      3.750       0.104      270.1           25        251          251           -
-</span><span id="__span-18-23"><a id="__codelineno-18-23" name="__codelineno-18-23" href="#__codelineno-18-23"></a> 20.0   2.75e-04          collocation    14.4801      0.039       0.072      389.1           25        251          251           -
-</span><span id="__span-18-24"><a id="__codelineno-18-24" name="__codelineno-18-24" href="#__codelineno-18-24"></a> 20.0   3.30e-04                SciPy    14.4745      0.000      26.596        1.0         2896          -            -           -
-</span><span id="__span-18-25"><a id="__codelineno-18-25" name="__codelineno-18-25" href="#__codelineno-18-25"></a> 20.0   3.30e-04    finite difference    15.0173      3.750       0.111      239.9           25        251          251           -
-</span><span id="__span-18-26"><a id="__codelineno-18-26" name="__codelineno-18-26" href="#__codelineno-18-26"></a> 20.0   3.30e-04          collocation    14.4801      0.039       0.103      258.4           25        251          251           -
-</span><span id="__span-18-27"><a id="__codelineno-18-27" name="__codelineno-18-27" href="#__codelineno-18-27"></a> 20.0   4.00e-04                SciPy    14.4745      0.000      26.482        1.0         2896          -            -           -
-</span><span id="__span-18-28"><a id="__codelineno-18-28" name="__codelineno-18-28" href="#__codelineno-18-28"></a> 20.0   4.00e-04    finite difference    15.0173      3.750       0.095      279.8           25        251          251           -
-</span><span id="__span-18-29"><a id="__codelineno-18-29" name="__codelineno-18-29" href="#__codelineno-18-29"></a> 20.0   4.00e-04          collocation    14.4801      0.039       0.096      276.6           25        251          251           -
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a> 16.0   2.75e-04                SciPy    22.1878      0.000       6.780        1.0         2220          -            -           -
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a> 16.0   2.75e-04    finite difference    22.4768      1.302       0.049      138.5           25        251          252           -
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a> 16.0   2.75e-04          collocation    22.1910      0.014       0.067      101.2           25        251          252           -
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a> 16.0   3.30e-04                SciPy    20.0926      0.000       5.596        1.0         2011          -            -           -
+</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a> 16.0   3.30e-04    finite difference    20.3686      1.374       0.087       64.2           25        251          252           -
+</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a> 16.0   3.30e-04          collocation    20.0959      0.017       0.061       91.2           25        251          252           -
+</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a> 16.0   4.00e-04                SciPy    18.1249      0.000       5.011        1.0         1814          -            -           -
+</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a> 16.0   4.00e-04    finite difference    18.3881      1.453       0.062       81.1           25        251          252           -
+</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a> 16.0   4.00e-04          collocation    18.1284      0.019       0.049      102.1           25        251          252           -
+</span><span id="__span-18-12"><a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a> 18.0   2.75e-04                SciPy    22.9401      0.000       6.944        1.0         2296          -            -           -
+</span><span id="__span-18-13"><a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a> 18.0   2.75e-04    finite difference    23.2604      1.396       0.066      104.6           25        251          252           -
+</span><span id="__span-18-14"><a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a> 18.0   2.75e-04          collocation    22.9436      0.015       0.053      130.9           25        251          252           -
+</span><span id="__span-18-15"><a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a> 18.0   3.30e-04                SciPy    20.8129      0.000       5.888        1.0         2083          -            -           -
+</span><span id="__span-18-16"><a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a> 18.0   3.30e-04    finite difference    21.1193      1.472       0.062       95.4           25        251          252           -
+</span><span id="__span-18-17"><a id="__codelineno-18-17" name="__codelineno-18-17" href="#__codelineno-18-17"></a> 18.0   3.30e-04          collocation    20.8165      0.017       0.059       99.5           25        251          252           -
+</span><span id="__span-18-18"><a id="__codelineno-18-18" name="__codelineno-18-18" href="#__codelineno-18-18"></a> 18.0   4.00e-04                SciPy    18.8140      0.000       5.156        1.0         1883          -            -           -
+</span><span id="__span-18-19"><a id="__codelineno-18-19" name="__codelineno-18-19" href="#__codelineno-18-19"></a> 18.0   4.00e-04    finite difference    19.1067      1.556       0.054       94.8           25        251          252           -
+</span><span id="__span-18-20"><a id="__codelineno-18-20" name="__codelineno-18-20" href="#__codelineno-18-20"></a> 18.0   4.00e-04          collocation    18.8178      0.020       0.047      109.9           25        251          252           -
+</span><span id="__span-18-21"><a id="__codelineno-18-21" name="__codelineno-18-21" href="#__codelineno-18-21"></a> 20.0   2.75e-04                SciPy    23.6736      0.000       7.243        1.0         2369          -            -           -
+</span><span id="__span-18-22"><a id="__codelineno-18-22" name="__codelineno-18-22" href="#__codelineno-18-22"></a> 20.0   2.75e-04    finite difference    24.0246      1.483       0.063      115.4           25        251          252           -
+</span><span id="__span-18-23"><a id="__codelineno-18-23" name="__codelineno-18-23" href="#__codelineno-18-23"></a> 20.0   2.75e-04          collocation    23.6773      0.015       0.065      111.7           25        251          252           -
+</span><span id="__span-18-24"><a id="__codelineno-18-24" name="__codelineno-18-24" href="#__codelineno-18-24"></a> 20.0   3.30e-04                SciPy    21.5161      0.000       6.040        1.0         2153          -            -           -
+</span><span id="__span-18-25"><a id="__codelineno-18-25" name="__codelineno-18-25" href="#__codelineno-18-25"></a> 20.0   3.30e-04    finite difference    21.8524      1.563       0.075       80.4           25        251          252           -
+</span><span id="__span-18-26"><a id="__codelineno-18-26" name="__codelineno-18-26" href="#__codelineno-18-26"></a> 20.0   3.30e-04          collocation    21.5199      0.018       0.049      123.1           25        251          252           -
+</span><span id="__span-18-27"><a id="__codelineno-18-27" name="__codelineno-18-27" href="#__codelineno-18-27"></a> 20.0   4.00e-04                SciPy    19.4877      0.000       5.221        1.0         1950          -            -           -
+</span><span id="__span-18-28"><a id="__codelineno-18-28" name="__codelineno-18-28" href="#__codelineno-18-28"></a> 20.0   4.00e-04    finite difference    19.8094      1.651       0.069       75.6           25        251          252           -
+</span><span id="__span-18-29"><a id="__codelineno-18-29" name="__codelineno-18-29" href="#__codelineno-18-29"></a> 20.0   4.00e-04          collocation    19.4918      0.021       0.067       78.2           25        251          252           -
 </span></code></pre></div>
 <h2 id="validate-before-interpreting">Validate before interpreting</h2>
 <p>A solver's <code>optimal</code> termination is not sufficient by itself. The experiment also checks the final drying target, finite seven-column outputs, the product-temperature limit, and current Pyomo constraint residuals. Legacy output pressure remains in mTorr and percent dried remains on a 0–100 scale.</p>
@@ -1100,7 +1100,7 @@
 </span><span id="__span-21-30"><a id="__codelineno-21-30" name="__codelineno-21-30" href="#__codelineno-21-30"></a><span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">axes</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;relative final-time difference [%]&quot;</span><span class="p">,</span> <span class="n">shrink</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span>
 </span><span id="__span-21-31"><a id="__codelineno-21-31" name="__codelineno-21-31" href="#__codelineno-21-31"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
-<p><img alt="img" src="../_data/b67fbde686bf4a78895c4a420095cd54.png" /></p>
+<p><img alt="img" src="../_data/ba4b6561372e4776821479e4aa757a1e.png" /></p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="n">speedup_matrices</span> <span class="o">=</span> <span class="p">[</span>
 </span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>    <span class="p">(</span><span class="s2">&quot;Finite difference&quot;</span><span class="p">,</span> <span class="n">matrix_for</span><span class="p">(</span><span class="s2">&quot;finite_difference_speedup&quot;</span><span class="p">)),</span>
 </span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>    <span class="p">(</span><span class="s2">&quot;Orthogonal collocation&quot;</span><span class="p">,</span> <span class="n">matrix_for</span><span class="p">(</span><span class="s2">&quot;collocation_speedup&quot;</span><span class="p">)),</span>
@@ -1116,9 +1116,9 @@
 </span><span id="__span-22-13"><a id="__codelineno-22-13" name="__codelineno-22-13" href="#__codelineno-22-13"></a><span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">axes</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;SciPy median / Pyomo median (</span><span class="si">{</span><span class="n">timing_repeats</span><span class="si">}</span><span class="s2"> repeats)&quot;</span><span class="p">,</span> <span class="n">shrink</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span>
 </span><span id="__span-22-14"><a id="__codelineno-22-14" name="__codelineno-22-14" href="#__codelineno-22-14"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
-<p><img alt="img" src="../_data/898281f132b948c5b1139e82fca3b515.png" /></p>
-<p>The speedup values are machine- and environment-dependent. They also scale roughly with <span class="arithmatex">\(1/\mathtt{scipy\_dt}\)</span> because <code>opt_Tsh.dry</code> performs one SLSQP solve per sequential step, while changing <code>scipy_dt</code> does not change the DAE workload. The SciPy step count and the simultaneous NLP point count are therefore reported but are not equivalent measures of problem size. The configured <code>scipy_dt</code> is the finest step in the convergence study below and is chosen for reference accuracy, so timings should be interpreted together with the step size, NLP sizes, and timing repeats rather than used as regression-test thresholds. The objective gaps and physical acceptance checks are the more portable numerical results.</p>
-<p>The repeated values across <span class="arithmatex">\(K_C\)</span> are physically explainable in this grid: the product-temperature limit is active, while the equipment-capability constraint retains roughly 80% slack. Once <span class="arithmatex">\(T_{bot}\)</span> sits at <span class="arithmatex">\(T_{pr,crit}\)</span>, substituting the energy balance into the frozen-layer heat balance cancels <span class="arithmatex">\(K_v\)</span>, making <span class="arithmatex">\(\dot m(L_{ck})\)</span> and therefore drying time independent of <span class="arithmatex">\(K_C\)</span>. Changing <span class="arithmatex">\(K_C\)</span> changes the shelf temperature required to supply that heat, but not the optimal drying time while the shelf-temperature bounds remain nonbinding.</p>
+<p><img alt="img" src="../_data/66dad2ebc20a494096f73ab6c88575db.png" /></p>
+<p>The speedup values are machine- and environment-dependent. They also scale roughly with <span class="arithmatex">\(1/\mathtt{scipy\_dt}\)</span> because <code>opt_Pch.dry</code> performs one SLSQP solve per sequential step, while changing <code>scipy_dt</code> does not change the DAE workload. The SciPy step count and the simultaneous NLP point count are therefore reported but are not equivalent measures of problem size. The configured <code>scipy_dt</code> is the finest step in the convergence study below and is chosen for reference accuracy, so timings should be interpreted together with the step size, NLP sizes, and timing repeats rather than used as regression-test thresholds. The objective gaps and physical acceptance checks are the more portable numerical results.</p>
+<p>For this fixed <span class="arithmatex">\(-18\,^{\circ}\)</span>C shelf profile, the optimized chamber pressure is at or very near the 50 mTorr lower bound throughout the grid. That agreement is a result, not an extra constraint: lower pressure supplies the best net sublimation driving force in this operating regime while the product-temperature and equipment-capability constraints remain feasible.</p>
 <h2 id="scipy-step-size-convergence">SciPy step-size convergence</h2>
 <p>SciPy is a sequential optimizer/integrator, not a simultaneous transcription, so its number of steps should not be matched to the DAE point budget. Instead, this study quantifies the final-time reference's sensitivity to <code>dt</code>. The configured grid reference must be the finest value listed here. Differences comparable to the change between the two finest steps should be interpreted as within the SciPy reference resolution, not as meaningful method bias.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="n">nominal</span> <span class="o">=</span> <span class="n">case_by_parameter</span><span class="p">[(</span><span class="nb">float</span><span class="p">(</span><span class="n">a1_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">kc_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]))]</span>
@@ -1171,12 +1171,12 @@
 </span><span id="__span-23-48"><a id="__codelineno-23-48" name="__codelineno-23-48" href="#__codelineno-23-48"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>dt [h]    steps     time [h]   gap from finest [%]   wall [s]
-</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>    0.0500      245     12.15918               -0.3158      2.355
-</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>    0.0200      611     12.18494               -0.1047      6.152
-</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a>    0.0100     1221     12.19346               -0.0348     14.727
-</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a>    0.0050     2441     12.19771                0.0000     21.762
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>    0.1000      223     22.15955               -0.1274      0.699
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>    0.0500      445     22.17527               -0.0565      1.350
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a>    0.0200     1111     22.18468               -0.0141      3.373
+</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a>    0.0100     2220     22.18781                0.0000      6.780
 </span></code></pre></div>
-<p><img alt="img" src="../_data/2761ce3ae39842ff9f2d622551a8f6ee.png" /></p>
+<p><img alt="img" src="../_data/52c120fe0320467f91558d58af905696.png" /></p>
 <h2 id="dae-transcription-sensitivity">DAE transcription sensitivity</h2>
 <p>The two transformations have different approximation orders and therefore should not be compared at the same <code>nfe</code>. Each pair below uses exactly the same number of transcription points: finite differences use <code>point_budget - 1</code> elements, while collocation uses <code>(point_budget - 1) / ncp</code>. The plots show accuracy against point count, scalar NLP variables, and end-to-end wall time.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="n">nominal</span> <span class="o">=</span> <span class="n">case_by_parameter</span><span class="p">[(</span><span class="nb">float</span><span class="p">(</span><span class="n">a1_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">kc_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]))]</span>
@@ -1221,54 +1221,49 @@
 </span><span id="__span-25-40"><a id="__codelineno-25-40" name="__codelineno-25-40" href="#__codelineno-25-40"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>method    nfe  points  variables  constraints  iterations  objective gap [%]   wall [s]   max residual
-</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>   finite_difference     24      25        251          251           -              3.416      0.052      2.172e-07
-</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>         collocation      8      25        251          251           -              0.038      0.101      1.576e-07
-</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a>   finite_difference     48      49        491          491           -              1.758      0.125      8.167e-09
-</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a>         collocation     16      49        491          491           -              0.035      0.122      1.773e-08
-</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a>   finite_difference     72      73        731          731           -              1.192      0.086      2.337e-07
-</span><span id="__span-26-7"><a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a>         collocation     24      73        731          731           -              0.035      0.093      2.482e-07
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>   finite_difference     24      25        251          252           -              1.302      0.069      9.991e-09
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>         collocation      8      25        251          252           -              0.014      0.057      9.991e-09
+</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a>   finite_difference     48      49        491          492           -              0.662      0.085      2.234e-08
+</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a>         collocation     16      49        491          492           -              0.014      0.100      2.188e-08
+</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a>   finite_difference     72      73        731          732           -              0.447      0.116      9.994e-09
+</span><span id="__span-26-7"><a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a>         collocation     24      73        731          732           -              0.014      0.117      3.309e-08
 </span></code></pre></div>
-<p><img alt="img" src="../_data/7f05fde64be6495b8f227bdc8707149b.png" /></p>
+<p><img alt="img" src="../_data/29b24e140bfb4ce6999eda798a0d1df7.png" /></p>
 <h2 id="nominal-trajectory-comparison">Nominal trajectory comparison</h2>
-<p>All three results retain the legacy seven-column output shape. Pressure is plotted from column 4 in mTorr and drying progress from column 6 on the 0–100 percent scale. Every method uses the same terminal drying target.</p>
-<p>The DAE model fixes the differential state <span class="arithmatex">\(L_{ck}(0)=0\)</span>, but it does not impose a shelf-temperature initial condition, ramp rate, or dynamics. The algebraic values stored at the isolated <span class="arithmatex">\(t=0\)</span> transcription node therefore do not affect an integration interval or the final-time objective and can be numerically non-unique. The raw result tables below remain unchanged, but the temperature plot replaces each DAE method's isolated endpoint values with its first positive-time values. This right-limit display convention removes the artificial spike; it does <strong>not</strong> add a physical shelf ramp. A ramp-constrained comparison would be a different experiment and would need the same control dynamics in SciPy and Pyomo.</p>
+<p>All three results retain the legacy seven-column output shape. Pressure is plotted from column 4 in mTorr and drying progress from column 6 on the 0–100 percent scale. Every method uses the same terminal drying target, fixed shelf temperature, and chamber-pressure bounds.</p>
+<p>A control value at the isolated <span class="arithmatex">\(t=0\)</span> DAE node has zero measure in the final-time objective. The pressure model therefore constrains that endpoint to equal the first positive-time pressure value. This selects the control's right-limit representative in the raw result itself and prevents the arbitrary initial pressure and temperature jump seen in the historical plot; no display-only smoothing is applied below.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="n">scipy_table</span> <span class="o">=</span> <span class="n">nominal</span><span class="o">.</span><span class="n">scipy_trajectory</span>
 </span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="n">finite_difference_table</span> <span class="o">=</span> <span class="n">nominal</span><span class="o">.</span><span class="n">finite_difference_trajectory</span>
 </span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a><span class="n">collocation_table</span> <span class="o">=</span> <span class="n">nominal</span><span class="o">.</span><span class="n">collocation_trajectory</span>
 </span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a>
-</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="k">def</span> <span class="nf">with_right_limit_algebraic_endpoint</span><span class="p">(</span><span class="n">table</span><span class="p">):</span>
-</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a>    <span class="n">displayed</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-</span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a>    <span class="n">displayed</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="n">displayed</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span>
-</span><span id="__span-27-8"><a id="__codelineno-27-8" name="__codelineno-27-8" href="#__codelineno-27-8"></a>    <span class="k">return</span> <span class="n">displayed</span>
-</span><span id="__span-27-9"><a id="__codelineno-27-9" name="__codelineno-27-9" href="#__codelineno-27-9"></a>
-</span><span id="__span-27-10"><a id="__codelineno-27-10" name="__codelineno-27-10" href="#__codelineno-27-10"></a><span class="n">finite_difference_display</span> <span class="o">=</span> <span class="n">with_right_limit_algebraic_endpoint</span><span class="p">(</span><span class="n">finite_difference_table</span><span class="p">)</span>
-</span><span id="__span-27-11"><a id="__codelineno-27-11" name="__codelineno-27-11" href="#__codelineno-27-11"></a><span class="n">collocation_display</span> <span class="o">=</span> <span class="n">with_right_limit_algebraic_endpoint</span><span class="p">(</span><span class="n">collocation_table</span><span class="p">)</span>
-</span><span id="__span-27-12"><a id="__codelineno-27-12" name="__codelineno-27-12" href="#__codelineno-27-12"></a><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">13</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span id="__span-27-13"><a id="__codelineno-27-13" name="__codelineno-27-13" href="#__codelineno-27-13"></a>
-</span><span id="__span-27-14"><a id="__codelineno-27-14" name="__codelineno-27-14" href="#__codelineno-27-14"></a><span class="k">for</span> <span class="n">table</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">style</span> <span class="ow">in</span> <span class="p">[</span>
-</span><span id="__span-27-15"><a id="__codelineno-27-15" name="__codelineno-27-15" href="#__codelineno-27-15"></a>    <span class="p">(</span><span class="n">scipy_table</span><span class="p">,</span> <span class="s2">&quot;SciPy sequential&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;linewidth&quot;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">}),</span>
-</span><span id="__span-27-16"><a id="__codelineno-27-16" name="__codelineno-27-16" href="#__codelineno-27-16"></a>    <span class="p">(</span><span class="n">finite_difference_display</span><span class="p">,</span> <span class="s2">&quot;Pyomo.DAE finite difference&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;linestyle&quot;</span><span class="p">:</span> <span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="s2">&quot;marker&quot;</span><span class="p">:</span> <span class="s2">&quot;o&quot;</span><span class="p">}),</span>
-</span><span id="__span-27-17"><a id="__codelineno-27-17" name="__codelineno-27-17" href="#__codelineno-27-17"></a>    <span class="p">(</span><span class="n">collocation_display</span><span class="p">,</span> <span class="s2">&quot;Pyomo.DAE collocation&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;linestyle&quot;</span><span class="p">:</span> <span class="s2">&quot;:&quot;</span><span class="p">}),</span>
-</span><span id="__span-27-18"><a id="__codelineno-27-18" name="__codelineno-27-18" href="#__codelineno-27-18"></a><span class="p">]:</span>
-</span><span id="__span-27-19"><a id="__codelineno-27-19" name="__codelineno-27-19" href="#__codelineno-27-19"></a>    <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">table</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">table</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="o">**</span><span class="n">style</span><span class="p">)</span>
-</span><span id="__span-27-20"><a id="__codelineno-27-20" name="__codelineno-27-20" href="#__codelineno-27-20"></a>    <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">table</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">table</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="o">**</span><span class="n">style</span><span class="p">)</span>
-</span><span id="__span-27-21"><a id="__codelineno-27-21" name="__codelineno-27-21" href="#__codelineno-27-21"></a>    <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">table</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">table</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="o">**</span><span class="n">style</span><span class="p">)</span>
-</span><span id="__span-27-22"><a id="__codelineno-27-22" name="__codelineno-27-22" href="#__codelineno-27-22"></a>    <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">table</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">table</span><span class="p">[:,</span> <span class="mi">6</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="o">**</span><span class="n">style</span><span class="p">)</span>
-</span><span id="__span-27-23"><a id="__codelineno-27-23" name="__codelineno-27-23" href="#__codelineno-27-23"></a>
-</span><span id="__span-27-24"><a id="__codelineno-27-24" name="__codelineno-27-24" href="#__codelineno-27-24"></a><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Shelf temperature (DAE t=0 shown as right limit)&quot;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;temperature [°C]&quot;</span><span class="p">)</span>
-</span><span id="__span-27-25"><a id="__codelineno-27-25" name="__codelineno-27-25" href="#__codelineno-27-25"></a><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Sublimation-front temperature (DAE t=0 shown as right limit)&quot;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;temperature [°C]&quot;</span><span class="p">)</span>
-</span><span id="__span-27-26"><a id="__codelineno-27-26" name="__codelineno-27-26" href="#__codelineno-27-26"></a><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="o">-</span><span class="mf">25.0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;tab:red&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;product limit&quot;</span><span class="p">)</span>
-</span><span id="__span-27-27"><a id="__codelineno-27-27" name="__codelineno-27-27" href="#__codelineno-27-27"></a><span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Chamber pressure&quot;</span><span class="p">,</span> <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;time [h]&quot;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;pressure [mTorr]&quot;</span><span class="p">)</span>
-</span><span id="__span-27-28"><a id="__codelineno-27-28" name="__codelineno-27-28" href="#__codelineno-27-28"></a><span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Drying progress&quot;</span><span class="p">,</span> <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;time [h]&quot;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;dried [%]&quot;</span><span class="p">)</span>
-</span><span id="__span-27-29"><a id="__codelineno-27-29" name="__codelineno-27-29" href="#__codelineno-27-29"></a><span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mf">100.0</span> <span class="o">*</span> <span class="n">final_dried_fraction</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;tab:red&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Pyomo target&quot;</span><span class="p">)</span>
-</span><span id="__span-27-30"><a id="__codelineno-27-30" name="__codelineno-27-30" href="#__codelineno-27-30"></a><span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="n">axes</span><span class="o">.</span><span class="n">flat</span><span class="p">:</span>
-</span><span id="__span-27-31"><a id="__codelineno-27-31" name="__codelineno-27-31" href="#__codelineno-27-31"></a>    <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
-</span><span id="__span-27-32"><a id="__codelineno-27-32" name="__codelineno-27-32" href="#__codelineno-27-32"></a>    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-</span><span id="__span-27-33"><a id="__codelineno-27-33" name="__codelineno-27-33" href="#__codelineno-27-33"></a><span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Current-main comparison: A1=</span><span class="si">{</span><span class="n">nominal</span><span class="o">.</span><span class="n">a1</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2">, KC=</span><span class="si">{</span><span class="n">nominal</span><span class="o">.</span><span class="n">kc</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">)</span>
-</span><span id="__span-27-34"><a id="__codelineno-27-34" name="__codelineno-27-34" href="#__codelineno-27-34"></a><span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-</span><span id="__span-27-35"><a id="__codelineno-27-35" name="__codelineno-27-35" href="#__codelineno-27-35"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">13</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a>
+</span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a><span class="k">for</span> <span class="n">table</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">style</span> <span class="ow">in</span> <span class="p">[</span>
+</span><span id="__span-27-8"><a id="__codelineno-27-8" name="__codelineno-27-8" href="#__codelineno-27-8"></a>    <span class="p">(</span><span class="n">scipy_table</span><span class="p">,</span> <span class="s2">&quot;SciPy sequential&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;linewidth&quot;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">}),</span>
+</span><span id="__span-27-9"><a id="__codelineno-27-9" name="__codelineno-27-9" href="#__codelineno-27-9"></a>    <span class="p">(</span><span class="n">finite_difference_table</span><span class="p">,</span> <span class="s2">&quot;Pyomo.DAE finite difference&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;linestyle&quot;</span><span class="p">:</span> <span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="s2">&quot;marker&quot;</span><span class="p">:</span> <span class="s2">&quot;o&quot;</span><span class="p">}),</span>
+</span><span id="__span-27-10"><a id="__codelineno-27-10" name="__codelineno-27-10" href="#__codelineno-27-10"></a>    <span class="p">(</span><span class="n">collocation_table</span><span class="p">,</span> <span class="s2">&quot;Pyomo.DAE collocation&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;linestyle&quot;</span><span class="p">:</span> <span class="s2">&quot;:&quot;</span><span class="p">}),</span>
+</span><span id="__span-27-11"><a id="__codelineno-27-11" name="__codelineno-27-11" href="#__codelineno-27-11"></a><span class="p">]:</span>
+</span><span id="__span-27-12"><a id="__codelineno-27-12" name="__codelineno-27-12" href="#__codelineno-27-12"></a>    <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">table</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">table</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="o">**</span><span class="n">style</span><span class="p">)</span>
+</span><span id="__span-27-13"><a id="__codelineno-27-13" name="__codelineno-27-13" href="#__codelineno-27-13"></a>    <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">table</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">table</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="o">**</span><span class="n">style</span><span class="p">)</span>
+</span><span id="__span-27-14"><a id="__codelineno-27-14" name="__codelineno-27-14" href="#__codelineno-27-14"></a>    <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">table</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">table</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="o">**</span><span class="n">style</span><span class="p">)</span>
+</span><span id="__span-27-15"><a id="__codelineno-27-15" name="__codelineno-27-15" href="#__codelineno-27-15"></a>    <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">table</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">table</span><span class="p">[:,</span> <span class="mi">6</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="o">**</span><span class="n">style</span><span class="p">)</span>
+</span><span id="__span-27-16"><a id="__codelineno-27-16" name="__codelineno-27-16" href="#__codelineno-27-16"></a>
+</span><span id="__span-27-17"><a id="__codelineno-27-17" name="__codelineno-27-17" href="#__codelineno-27-17"></a><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Fixed shelf temperature&quot;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;temperature [°C]&quot;</span><span class="p">)</span>
+</span><span id="__span-27-18"><a id="__codelineno-27-18" name="__codelineno-27-18" href="#__codelineno-27-18"></a><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Vial-bottom temperature&quot;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;temperature [°C]&quot;</span><span class="p">)</span>
+</span><span id="__span-27-19"><a id="__codelineno-27-19" name="__codelineno-27-19" href="#__codelineno-27-19"></a><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="o">-</span><span class="mf">25.0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;tab:red&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;product limit&quot;</span><span class="p">)</span>
+</span><span id="__span-27-20"><a id="__codelineno-27-20" name="__codelineno-27-20" href="#__codelineno-27-20"></a><span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Optimized chamber pressure&quot;</span><span class="p">,</span> <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;time [h]&quot;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;pressure [mTorr]&quot;</span><span class="p">)</span>
+</span><span id="__span-27-21"><a id="__codelineno-27-21" name="__codelineno-27-21" href="#__codelineno-27-21"></a><span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mf">50.0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;tab:red&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;pressure bounds&quot;</span><span class="p">)</span>
+</span><span id="__span-27-22"><a id="__codelineno-27-22" name="__codelineno-27-22" href="#__codelineno-27-22"></a><span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mf">500.0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;tab:red&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+</span><span id="__span-27-23"><a id="__codelineno-27-23" name="__codelineno-27-23" href="#__codelineno-27-23"></a><span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Drying progress&quot;</span><span class="p">,</span> <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;time [h]&quot;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;dried [%]&quot;</span><span class="p">)</span>
+</span><span id="__span-27-24"><a id="__codelineno-27-24" name="__codelineno-27-24" href="#__codelineno-27-24"></a><span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mf">100.0</span> <span class="o">*</span> <span class="n">final_dried_fraction</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;tab:red&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;target&quot;</span><span class="p">)</span>
+</span><span id="__span-27-25"><a id="__codelineno-27-25" name="__codelineno-27-25" href="#__codelineno-27-25"></a><span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="n">axes</span><span class="o">.</span><span class="n">flat</span><span class="p">:</span>
+</span><span id="__span-27-26"><a id="__codelineno-27-26" name="__codelineno-27-26" href="#__codelineno-27-26"></a>    <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+</span><span id="__span-27-27"><a id="__codelineno-27-27" name="__codelineno-27-27" href="#__codelineno-27-27"></a>    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+</span><span id="__span-27-28"><a id="__codelineno-27-28" name="__codelineno-27-28" href="#__codelineno-27-28"></a><span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Current-main pressure comparison: A1=</span><span class="si">{</span><span class="n">nominal</span><span class="o">.</span><span class="n">a1</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2">, KC=</span><span class="si">{</span><span class="n">nominal</span><span class="o">.</span><span class="n">kc</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">)</span>
+</span><span id="__span-27-29"><a id="__codelineno-27-29" name="__codelineno-27-29" href="#__codelineno-27-29"></a><span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+</span><span id="__span-27-30"><a id="__codelineno-27-30" name="__codelineno-27-30" href="#__codelineno-27-30"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
-<p><img alt="img" src="../_data/a8c9fc5b6b84467383e3a9a85e7dead8.png" /></p>
+<p><img alt="img" src="../_data/0e77e740ee5d4bb0991ea3587732376e.png" /></p>
 <h2 id="optionally-save-a-compact-reproduction-record">Optionally save a compact reproduction record</h2>
 <p>Generated experiment outputs belong under <code>benchmarks/results/</code>, which is ignored by default. The JSON file contains environment and scalar summaries; the compressed NumPy archive retains every trajectory used for the plots.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="k">if</span> <span class="n">save_results</span><span class="p">:</span>
@@ -1324,7 +1319,7 @@
 <div class="language-text highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>Set save_results=True to write JSON and NPZ outputs.
 </span></code></pre></div>
 <h2 id="interpretation-boundaries">Interpretation boundaries</h2>
-<p>This notebook reproduces the scientific question with current code rather than preserving historical outputs as golden numbers. Agreement is judged using the common final-time objective, transcription trend, trajectory shape, identical terminal target, product-temperature limit, and constraint residuals together. Exact speedups are machine-dependent. A changing fixed-pressure schedule is intentionally outside this free-final-time formulation because its switch times require an explicit real-time parameterization.</p>
+<p>This notebook reproduces the scientific question with current code rather than preserving historical outputs as golden numbers. Agreement is judged using the common final-time objective, transcription trend, trajectory shape, identical terminal target, pressure bounds, product-temperature limit, and constraint residuals together. Exact speedups are machine-dependent. A changing fixed-shelf schedule is intentionally outside this free-final-time formulation because its switch times require an explicit real-time parameterization shared by both workflows.</p>
 
 
 
