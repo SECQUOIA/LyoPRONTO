@@ -14,8 +14,11 @@ def _is_pyomo_available() -> bool:
 PYOMO_AVAILABLE = _is_pyomo_available()
 
 _LAZY_EXPORTS = {
+    "DaeDiscretization": "dae_optimization",
+    "DaeOptimizationResult": "dae_optimization",
     "create_design_space_feasibility_model": "advanced",
     "create_design_space_grid_models": "advanced",
+    "create_dae_shelf_temperature_optimization_model": "dae_optimization",
     "OptimizationMode": "optimization",
     "SingleStepResult": "single_step",
     "TrajectoryResult": "trajectory",
@@ -32,6 +35,7 @@ _LAZY_EXPORTS = {
     "create_trajectory_model": "trajectory",
     "format_single_step_output": "utils",
     "solve_primary_drying_optimization": "optimization",
+    "solve_dae_shelf_temperature_optimization": "dae_optimization",
     "solve_single_step": "single_step",
     "solve_trajectory": "trajectory",
     "sample_ramp_profile": "trajectory",
@@ -54,8 +58,11 @@ def __getattr__(name: str) -> Any:
 
 __all__ = [
     "PYOMO_AVAILABLE",
+    "DaeDiscretization",
+    "DaeOptimizationResult",
     "create_design_space_feasibility_model",
     "create_design_space_grid_models",
+    "create_dae_shelf_temperature_optimization_model",
     "OptimizationMode",
     "SingleStepResult",
     "TrajectoryResult",
@@ -72,6 +79,7 @@ __all__ = [
     "create_trajectory_model",
     "format_single_step_output",
     "solve_primary_drying_optimization",
+    "solve_dae_shelf_temperature_optimization",
     "solve_single_step",
     "solve_trajectory",
     "sample_ramp_profile",
