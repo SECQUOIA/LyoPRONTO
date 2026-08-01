@@ -57,6 +57,22 @@ jobs:
           exit "$rc"
         }
 
+    - name: Install IPOPT runtime libraries
+      if: inputs.lane == 'pyomo'
+      run: |
+        sudo apt-get update
+        sudo apt-get install --yes liblapack3
+
+    - name: Add IDAES solver binaries to PATH
+      if: inputs.lane == 'pyomo'
+      run: echo "$HOME/.idaes/bin" >> "$GITHUB_PATH"
+
+    - name: Verify IPOPT is available
+      if: inputs.lane == 'pyomo'
+      run: |
+        python -c "from pyomo.environ import SolverFactory; assert SolverFactory('ipopt').available(exception_flag=False), 'ipopt not on PATH'"
+        ipopt -v
+
     - name: Run selected validation lane
       run: |
         run_pytest_allow_empty() {

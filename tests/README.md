@@ -33,9 +33,9 @@ CI workflow and lane command reference is `../docs/dev.md`.
 - `serial`: Tests that must not run under xdist parallelism. Run them with
   `pytest -m serial -n 0`.
 
-The current-main optimizer-comparison notebook smoke test is marked both
-`notebook` and `pyomo`. It skips in the ordinary notebook lane when IPOPT is
-unavailable and is executed with a reduced one-case grid by the optional Pyomo
+The current-main optimizer-comparison notebook smoke tests are marked both
+`notebook` and `pyomo`. They skip in the ordinary notebook lane when IPOPT is
+unavailable and execute with reduced one-case grids in the optional Pyomo
 solver comparison job. Full-grid timing values are never CI assertions.
 
 ## Scientific Reference Scenarios

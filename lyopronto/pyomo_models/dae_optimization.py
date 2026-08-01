@@ -1,10 +1,10 @@
 """Free-final-time Pyomo.DAE optimization for primary drying.
 
-This module provides the simultaneous counterpart to the legacy sequential
-``opt_Tsh.dry`` workflow.  The physical model has one differential state,
-the dried cake length, and quasi-steady algebraic heat- and mass-transfer
-relations.  A normalized time domain keeps the mesh independent of the
-optimized final drying time.
+This module provides simultaneous counterparts to the legacy sequential
+``opt_Tsh.dry`` and ``opt_Pch.dry`` workflows.  The physical model has one
+differential state, the dried cake length, and quasi-steady algebraic heat-
+and mass-transfer relations.  A normalized time domain keeps the mesh
+independent of the optimized final drying time.
 
 Both backward finite differences and LAGRANGE-RADAU orthogonal collocation
 are available through Pyomo.DAE.  The model remains in the optional Pyomo
@@ -34,6 +34,11 @@ class DaeDiscretization(str, Enum):
 
 
 DaeDiscretizationInput = Union[DaeDiscretization, str]
+
+
+class _DaeOptimizedControl(str, Enum):
+    SHELF_TEMPERATURE = "shelf_temperature"
+    CHAMBER_PRESSURE = "chamber_pressure"
 
 
 @dataclass(frozen=True)
@@ -100,6 +105,23 @@ def _single_fixed_pressure(pchamber: Mapping[str, Any]) -> float:
     return float(setpoints[0])
 
 
+def _single_fixed_shelf_temperature(tshelf: Mapping[str, Any]) -> float:
+    _require_keys("tshelf", tshelf, ("init", "setpt"))
+    initial = float(tshelf["init"])
+    setpoints = np.asarray(tshelf["setpt"], dtype=float).reshape(-1)
+    if (
+        not np.isfinite(initial)
+        or setpoints.size != 1
+        or not np.isfinite(setpoints[0])
+        or not np.isclose(setpoints[0], initial)
+    ):
+        raise ValueError(
+            "free-final-time chamber-pressure optimization requires one "
+            "constant tshelf setpoint equal to tshelf init"
+        )
+    return initial
+
+
 def _warmstart_from_legacy_table(
     model: pyo.ConcreteModel,
     trajectory: np.ndarray,
@@ -142,7 +164,7 @@ def _warmstart_from_legacy_table(
         model.dLck_dt[tau].set_value(horizon * dmdt * float(pyo.value(model.drying_length_factor)))
 
 
-def create_dae_shelf_temperature_optimization_model(
+def _create_dae_optimization_model(
     vial: Mapping[str, float],
     product: Mapping[str, float],
     ht: Mapping[str, float],
@@ -157,67 +179,34 @@ def create_dae_shelf_temperature_optimization_model(
     final_dried_fraction: float = 1.0,
     t_final_bounds: Tuple[float, float] = (0.1, 50.0),
     initialize: Optional[np.ndarray] = None,
+    optimized_control: _DaeOptimizedControl,
 ) -> pyo.ConcreteModel:
-    """Build the free-final-time DAE counterpart to ``opt_Tsh.dry``.
-
-    Parameters
-    ----------
-    vial
-        Legacy vial geometry mapping.
-    product
-        Legacy product-property mapping.
-    ht
-        Legacy vial heat-transfer mapping.
-    pchamber
-        Legacy chamber-pressure schedule. This formulation requires one
-        positive constant setpoint in Torr.
-    tshelf
-        Legacy shelf-temperature bounds and optional initial value in degrees
-        Celsius.
-    eq_cap
-        Equipment-capability coefficients for the batch sublimation-rate
-        constraint.
-    nvial
-        Number of vials in the batch [-].
-    nfe
-        Number of finite elements in the normalized time domain [-].
-    discretization
-        Pyomo.DAE finite-difference or orthogonal-collocation transformation.
-    ncp
-        LAGRANGE-RADAU collocation points per finite element [-]. Ignored by
-        the finite-difference transformation.
-    final_dried_fraction
-        Dimensionless terminal dried fraction on the interval (0, 1].
-    t_final_bounds
-        Lower and upper bounds for the free final drying time, in hours.
-    initialize
-        Optional legacy seven-column trajectory. Its columns retain the
-        package convention: time [hr], temperatures [degC], pressure [mTorr],
-        sublimation flux [kg/hr/m^2], and percent dried [0-100].
-
-    Returns
-    -------
-    pyomo.environ.ConcreteModel
-        Discretized free-final-time optimization model.
-
-    Notes
-    -----
-    Chamber pressure is one fixed setpoint and shelf temperature is the
-    bounded time-dependent control. The objective minimizes final drying
-    time. This is the simultaneous form of the legacy sequential policy,
-    which maximizes sublimation rate at each dried-cake state and advances
-    until completion.
-
-    ``nfe`` is passed directly to the selected Pyomo.DAE transformation;
-    collocation additionally uses ``ncp`` points per finite element.
-    """
+    """Build either supported free-final-time DAE optimization model."""
     _require_keys("vial", vial, ("Av", "Ap", "Vfill"))
     _require_keys("product", product, ("cSolid", "R0", "A1", "A2", "T_pr_crit"))
     _require_keys("ht", ht, ("KC", "KP", "KD"))
-    _require_keys("tshelf", tshelf, ("min", "max"))
     _require_keys("eq_cap", eq_cap, ("a", "b"))
     method = _coerce_discretization(discretization)
-    fixed_pressure = _single_fixed_pressure(pchamber)
+    if optimized_control is _DaeOptimizedControl.SHELF_TEMPERATURE:
+        _require_keys("tshelf", tshelf, ("min", "max"))
+        fixed_pressure = _single_fixed_pressure(pchamber)
+        if float(tshelf["max"]) <= float(tshelf["min"]):
+            raise ValueError("tshelf max must be greater than tshelf min")
+        pressure_bounds = (fixed_pressure, fixed_pressure)
+        shelf_bounds = (float(tshelf["min"]), float(tshelf["max"]))
+        initial_pressure = fixed_pressure
+        initial_shelf = float(tshelf.get("init", product["T_pr_crit"]))
+        fixed_shelf = None
+    else:
+        _require_keys("pchamber", pchamber, ("min", "max"))
+        fixed_shelf = _single_fixed_shelf_temperature(tshelf)
+        pressure_bounds = (float(pchamber["min"]), float(pchamber["max"]))
+        if pressure_bounds[0] <= 0.0 or pressure_bounds[1] <= pressure_bounds[0]:
+            raise ValueError("pchamber bounds must be positive and increasing")
+        shelf_bounds = (fixed_shelf, fixed_shelf)
+        initial_pressure = float(np.mean(pressure_bounds))
+        initial_shelf = fixed_shelf
+        fixed_pressure = None
 
     if nfe < 1:
         raise ValueError("nfe must be at least one")
@@ -229,9 +218,6 @@ def create_dae_shelf_temperature_optimization_model(
         raise ValueError("final_dried_fraction must satisfy 0 < value <= 1")
     if t_final_bounds[0] <= 0.0 or t_final_bounds[1] <= t_final_bounds[0]:
         raise ValueError("t_final_bounds must be positive and increasing")
-    if float(tshelf["max"]) <= float(tshelf["min"]):
-        raise ValueError("tshelf max must be greater than tshelf min")
-
     lpr0 = float(functions.Lpr0_FUN(vial["Vfill"], vial["Ap"], product["cSolid"]))
     drying_length_factor = _drying_length_factor(product, vial["Ap"])
     initial_horizon = (
@@ -241,6 +227,7 @@ def create_dae_shelf_temperature_optimization_model(
     )
 
     model = pyo.ConcreteModel()
+    model.optimized_control = optimized_control.value
     model.discretization_method = method.value
     model.nfe = int(nfe)
     model.ncp = None if method is DaeDiscretization.FINITE_DIFFERENCE else int(ncp)
@@ -265,7 +252,10 @@ def create_dae_shelf_temperature_optimization_model(
     model.eq_cap_a = pyo.Param(initialize=float(eq_cap["a"]))
     model.eq_cap_b = pyo.Param(initialize=float(eq_cap["b"]))
     model.nvial = pyo.Param(initialize=int(nvial))
-    model.fixed_Pch = pyo.Param(initialize=fixed_pressure)
+    if fixed_pressure is not None:
+        model.fixed_Pch = pyo.Param(initialize=fixed_pressure)
+    if fixed_shelf is not None:
+        model.fixed_Tsh = pyo.Param(initialize=fixed_shelf)
 
     model.t_final = pyo.Var(bounds=t_final_bounds, initialize=initial_horizon)
     model.Lck = pyo.Var(
@@ -278,14 +268,14 @@ def create_dae_shelf_temperature_optimization_model(
     model.Pch = pyo.Var(
         model.t,
         domain=pyo.PositiveReals,
-        bounds=(fixed_pressure, fixed_pressure),
-        initialize=fixed_pressure,
+        bounds=pressure_bounds,
+        initialize=initial_pressure,
     )
     model.Tsh = pyo.Var(
         model.t,
         domain=pyo.Reals,
-        bounds=(float(tshelf["min"]), float(tshelf["max"])),
-        initialize=float(tshelf.get("init", product["T_pr_crit"])),
+        bounds=shelf_bounds,
+        initialize=initial_shelf,
     )
     model.Tsub = pyo.Var(model.t, domain=pyo.Reals, bounds=(-80.0, 0.0), initialize=-30.0)
     model.Tbot = pyo.Var(model.t, domain=pyo.Reals, bounds=(-80.0, 80.0), initialize=-25.0)
@@ -369,6 +359,15 @@ def create_dae_shelf_temperature_optimization_model(
             scheme="LAGRANGE-RADAU",
         )
 
+    if optimized_control is _DaeOptimizedControl.CHAMBER_PRESSURE:
+        # The control at tau=0 has zero measure in the final-time objective.
+        # Select its right-limit value explicitly so exported pressure curves
+        # do not contain an arbitrary endpoint jump.
+        first = model.t.first()
+        model.initial_pressure_continuity = pyo.Constraint(
+            expr=model.Pch[first] == model.Pch[model.t.next(first)]
+        )
+
     if initialize is not None:
         _warmstart_from_legacy_table(model, initialize)
 
@@ -385,6 +384,98 @@ def create_dae_shelf_temperature_optimization_model(
         model.scaling_factor[model.dmdt[tau]] = 1.0e4
         model.scaling_factor[model.Kv[tau]] = 1.0e4
     return model
+
+
+def create_dae_shelf_temperature_optimization_model(
+    vial: Mapping[str, float],
+    product: Mapping[str, float],
+    ht: Mapping[str, float],
+    pchamber: Mapping[str, Any],
+    tshelf: Mapping[str, Any],
+    *,
+    eq_cap: Mapping[str, float],
+    nvial: int,
+    nfe: int = 24,
+    discretization: DaeDiscretizationInput = DaeDiscretization.FINITE_DIFFERENCE,
+    ncp: int = 3,
+    final_dried_fraction: float = 1.0,
+    t_final_bounds: Tuple[float, float] = (0.1, 50.0),
+    initialize: Optional[np.ndarray] = None,
+) -> pyo.ConcreteModel:
+    """Build the free-final-time DAE counterpart to ``opt_Tsh.dry``.
+
+    Chamber pressure is one fixed setpoint and shelf temperature is the
+    bounded time-dependent control. The objective minimizes final drying
+    time. ``nfe`` is passed directly to the selected Pyomo.DAE transformation;
+    collocation additionally uses ``ncp`` Radau points per finite element.
+
+    ``initialize`` may be a legacy seven-column trajectory with time [hr],
+    temperatures [degC], pressure [mTorr], flux [kg/hr/m^2], and percent dried
+    [0-100].
+    """
+    return _create_dae_optimization_model(
+        vial,
+        product,
+        ht,
+        pchamber,
+        tshelf,
+        eq_cap=eq_cap,
+        nvial=nvial,
+        nfe=nfe,
+        discretization=discretization,
+        ncp=ncp,
+        final_dried_fraction=final_dried_fraction,
+        t_final_bounds=t_final_bounds,
+        initialize=initialize,
+        optimized_control=_DaeOptimizedControl.SHELF_TEMPERATURE,
+    )
+
+
+def create_dae_chamber_pressure_optimization_model(
+    vial: Mapping[str, float],
+    product: Mapping[str, float],
+    ht: Mapping[str, float],
+    pchamber: Mapping[str, Any],
+    tshelf: Mapping[str, Any],
+    *,
+    eq_cap: Mapping[str, float],
+    nvial: int,
+    nfe: int = 24,
+    discretization: DaeDiscretizationInput = DaeDiscretization.FINITE_DIFFERENCE,
+    ncp: int = 3,
+    final_dried_fraction: float = 1.0,
+    t_final_bounds: Tuple[float, float] = (0.1, 50.0),
+    initialize: Optional[np.ndarray] = None,
+) -> pyo.ConcreteModel:
+    """Build the free-final-time DAE counterpart to ``opt_Pch.dry``.
+
+    Shelf temperature must be one constant setpoint, and chamber pressure is
+    the bounded time-dependent control in Torr. The objective minimizes final
+    drying time under the same physics and constraints as the sequential
+    optimizer. ``nfe`` is passed directly to the selected Pyomo.DAE
+    transformation; collocation additionally uses ``ncp`` Radau points per
+    finite element.
+
+    ``initialize`` may be a legacy seven-column trajectory with time [hr],
+    temperatures [degC], pressure [mTorr], flux [kg/hr/m^2], and percent dried
+    [0-100].
+    """
+    return _create_dae_optimization_model(
+        vial,
+        product,
+        ht,
+        pchamber,
+        tshelf,
+        eq_cap=eq_cap,
+        nvial=nvial,
+        nfe=nfe,
+        discretization=discretization,
+        ncp=ncp,
+        final_dried_fraction=final_dried_fraction,
+        t_final_bounds=t_final_bounds,
+        initialize=initialize,
+        optimized_control=_DaeOptimizedControl.CHAMBER_PRESSURE,
+    )
 
 
 def dae_optimization_values(model: pyo.ConcreteModel) -> dict[str, np.ndarray]:
@@ -409,6 +500,77 @@ def dae_optimization_values(model: pyo.ConcreteModel) -> dict[str, np.ndarray]:
     )
     values["percent_dried"] = values["Lck"] / values["Lpr0"] * 100.0
     return values
+
+
+def _solve_dae_optimization_model(
+    model: pyo.ConcreteModel,
+    *,
+    solver: Union[str, Any],
+    tee: bool,
+) -> DaeOptimizationResult:
+    method = _coerce_discretization(model.discretization_method)
+    metadata = {
+        "optimized_control": model.optimized_control,
+        "method": method.value,
+        "nfe": int(model.nfe),
+        "ncp": None if method is DaeDiscretization.FINITE_DIFFERENCE else int(model.ncp),
+        "n_time_points": len(model.t),
+        "n_variables": sum(1 for _ in model.component_data_objects(pyo.Var, descend_into=True)),
+        "n_constraints": sum(
+            1 for _ in model.component_data_objects(pyo.Constraint, active=True, descend_into=True)
+        ),
+        "solver_iterations": None,
+    }
+    try:
+        opt, solver_name = _solver_from_arg(solver, tee)
+        options = getattr(opt, "options", None)
+        if solver_name == "ipopt" and options is not None:
+            # IPOPT otherwise ignores the model's exported scaling_factor
+            # suffix. Keep this option local to the DAE model, which defines
+            # the suffix, and preserve an explicit caller override.
+            options.setdefault("nlp_scaling_method", "user-scaling")
+        results = opt.solve(model, tee=tee)
+    except Exception as exc:  # pragma: no cover - environment-specific solver failures
+        return DaeOptimizationResult(
+            success=False,
+            solver_status="not_available",
+            termination_condition="not_available",
+            message=f"Pyomo.DAE solve failed before returning results: {exc}",
+            objective_time_hr=None,
+            values=dae_optimization_values(model),
+            constraint_violations=_constraint_violations(model),
+            discretization=metadata,
+        )
+
+    try:
+        metadata["solver_iterations"] = int(results.solver.iterations)
+    except (AttributeError, TypeError, ValueError):
+        pass
+
+    status = results.solver.status
+    termination = results.solver.termination_condition
+    success = _termination_success(termination)
+    violations = _constraint_violations(model)
+    finite_violations = [value for value in violations.values() if value is not None]
+    max_violation = max(finite_violations, default=0.0)
+    objective = pyo.value(model.t_final, exception=False)
+    message = (
+        f"Pyomo.DAE solve reached {termination}; maximum constraint violation {max_violation:.3e}."
+        if success
+        else "Pyomo.DAE solve did not reach an optimal solution "
+        f"(status={status}, termination_condition={termination}); maximum "
+        f"constraint violation {max_violation:.3e}."
+    )
+    return DaeOptimizationResult(
+        success=success,
+        solver_status=str(status),
+        termination_condition=str(termination),
+        message=message,
+        objective_time_hr=None if objective is None else float(objective),
+        values=dae_optimization_values(model),
+        constraint_violations=violations,
+        discretization=metadata,
+    )
 
 
 def solve_dae_shelf_temperature_optimization(
@@ -470,74 +632,66 @@ def solve_dae_shelf_temperature_optimization(
         t_final_bounds=t_final_bounds,
         initialize=initialize,
     )
-    method = _coerce_discretization(discretization)
-    metadata = {
-        "method": method.value,
-        "nfe": int(nfe),
-        "ncp": None if method is DaeDiscretization.FINITE_DIFFERENCE else int(ncp),
-        "n_time_points": len(model.t),
-        "n_variables": sum(1 for _ in model.component_data_objects(pyo.Var, descend_into=True)),
-        "n_constraints": sum(
-            1 for _ in model.component_data_objects(pyo.Constraint, active=True, descend_into=True)
-        ),
-        "solver_iterations": None,
-    }
-    try:
-        opt, solver_name = _solver_from_arg(solver, tee)
-        options = getattr(opt, "options", None)
-        if solver_name == "ipopt" and options is not None:
-            # IPOPT otherwise ignores the model's exported scaling_factor
-            # suffix. Keep this option local to the DAE model, which defines
-            # the suffix, and preserve an explicit caller override.
-            options.setdefault("nlp_scaling_method", "user-scaling")
-        results = opt.solve(model, tee=tee)
-    except Exception as exc:  # pragma: no cover - environment-specific solver failures
-        return DaeOptimizationResult(
-            success=False,
-            solver_status="not_available",
-            termination_condition="not_available",
-            message=f"Pyomo.DAE solve failed before returning results: {exc}",
-            objective_time_hr=None,
-            values=dae_optimization_values(model),
-            constraint_violations=_constraint_violations(model),
-            discretization=metadata,
-        )
-
-    try:
-        metadata["solver_iterations"] = int(results.solver.iterations)
-    except (AttributeError, TypeError, ValueError):
-        pass
-
-    status = results.solver.status
-    termination = results.solver.termination_condition
-    success = _termination_success(termination)
-    violations = _constraint_violations(model)
-    finite_violations = [value for value in violations.values() if value is not None]
-    max_violation = max(finite_violations, default=0.0)
-    objective = pyo.value(model.t_final, exception=False)
-    message = (
-        f"Pyomo.DAE solve reached {termination}; maximum constraint violation {max_violation:.3e}."
-        if success
-        else "Pyomo.DAE solve did not reach an optimal solution "
-        f"(status={status}, termination_condition={termination}); maximum "
-        f"constraint violation {max_violation:.3e}."
+    return _solve_dae_optimization_model(
+        model,
+        solver=solver,
+        tee=tee,
     )
-    return DaeOptimizationResult(
-        success=success,
-        solver_status=str(status),
-        termination_condition=str(termination),
-        message=message,
-        objective_time_hr=None if objective is None else float(objective),
-        values=dae_optimization_values(model),
-        constraint_violations=violations,
-        discretization=metadata,
+
+
+def solve_dae_chamber_pressure_optimization(
+    vial: Mapping[str, float],
+    product: Mapping[str, float],
+    ht: Mapping[str, float],
+    pchamber: Mapping[str, Any],
+    tshelf: Mapping[str, Any],
+    *,
+    eq_cap: Mapping[str, float],
+    nvial: int,
+    nfe: int = 24,
+    discretization: DaeDiscretizationInput = DaeDiscretization.FINITE_DIFFERENCE,
+    ncp: int = 3,
+    final_dried_fraction: float = 1.0,
+    t_final_bounds: Tuple[float, float] = (0.1, 50.0),
+    initialize: Optional[np.ndarray] = None,
+    solver: Union[str, Any] = "ipopt",
+    tee: bool = False,
+) -> DaeOptimizationResult:
+    """Build and solve the free-final-time DAE chamber-pressure problem.
+
+    Inputs follow :func:`create_dae_chamber_pressure_optimization_model`.
+    The result contains solver status, the final-time objective [hr], physical
+    trajectories in package units, discretization size, and constraint
+    violations.
+    """
+    model = create_dae_chamber_pressure_optimization_model(
+        vial,
+        product,
+        ht,
+        pchamber,
+        tshelf,
+        eq_cap=eq_cap,
+        nvial=nvial,
+        nfe=nfe,
+        discretization=discretization,
+        ncp=ncp,
+        final_dried_fraction=final_dried_fraction,
+        t_final_bounds=t_final_bounds,
+        initialize=initialize,
+    )
+    return _solve_dae_optimization_model(
+        model,
+        solver=solver,
+        tee=tee,
     )
 
 
 __all__ = [
     "DaeDiscretization",
     "DaeOptimizationResult",
+    "create_dae_chamber_pressure_optimization_model",
     "create_dae_shelf_temperature_optimization_model",
     "dae_optimization_values",
+    "solve_dae_chamber_pressure_optimization",
     "solve_dae_shelf_temperature_optimization",
 ]

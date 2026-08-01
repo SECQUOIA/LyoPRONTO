@@ -381,6 +381,10 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert 'rc" -eq 5' in manual_tests
     assert 'pip install -e ".[dev,pyomo]"' in manual_tests
     assert "idaes get-extensions --extra petsc" in manual_tests
+    assert "sudo apt-get install --yes liblapack3" in manual_tests
+    assert 'echo "$HOME/.idaes/bin" >> "$GITHUB_PATH"' in manual_tests
+    assert "SolverFactory('ipopt').available(exception_flag=False)" in manual_tests
+    assert "ipopt -v" in manual_tests
     assert "pip install pyomo idaes-pse" not in manual_tests
     assert "RUN_SLOW_TESTS" not in manual_tests
 
@@ -394,9 +398,12 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert "lyopronto/pyomo_models/**" in pyomo_tests
     assert "examples/example_pyomo_optimization.py" in pyomo_tests
     assert "examples/current_main_optimizer_comparison.py" in pyomo_tests
+    assert "examples/current_main_pressure_optimizer_comparison.py" in pyomo_tests
     assert "docs/examples/current_main_optimizer_comparison.ipynb" in pyomo_tests
+    assert "docs/examples/current_main_pressure_optimizer_comparison.ipynb" in pyomo_tests
     assert "tests/test_pyomo_models/**" in pyomo_tests
     assert "tests/test_current_main_optimizer_comparison.py" in pyomo_tests
+    assert "tests/test_current_main_pressure_optimizer_comparison.py" in pyomo_tests
     assert "tests/test_pyomo_solver.py" in pyomo_tests
     assert "tests/pyomo_solver.py" in pyomo_tests
     assert ".github/workflows/pyomo-tests.yml" in pyomo_tests
@@ -404,6 +411,10 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert 'pip install -e ".[dev,pyomo]"' in pyomo_tests
     assert "pytest -n 0 -v" in pyomo_tests
     assert "idaes get-extensions --extra petsc" in pyomo_tests
+    assert "sudo apt-get install --yes liblapack3" in pyomo_tests
+    assert 'echo "$HOME/.idaes/bin" >> "$GITHUB_PATH"' in pyomo_tests
+    assert "SolverFactory('ipopt').available(exception_flag=False)" in pyomo_tests
+    assert "ipopt -v" in pyomo_tests
     assert "Install IPOPT with: idaes get-extensions --extra petsc" in pyomo_tests
     assert (
         "Alternative local install: conda install -c conda-forge ipopt" in pyomo_tests
@@ -423,6 +434,14 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     )
     assert (
         "tests/test_current_main_optimizer_comparison.py::test_current_main_comparison_notebook_execution"
+        in pyomo_tests
+    )
+    assert (
+        "tests/test_pyomo_models/test_dae_pressure_optimization.py::test_pressure_dae_model_solves_equivalent_complete_drying_problem"
+        in pyomo_tests
+    )
+    assert (
+        "tests/test_current_main_pressure_optimizer_comparison.py::test_current_main_pressure_comparison_notebook_execution"
         in pyomo_tests
     )
 
@@ -471,6 +490,9 @@ def test_local_ci_script_matches_documented_lane_expressions() -> None:
     assert "pyomo-light" in script
     assert 'pip install -e ".[dev,pyomo]"' in script
     assert "idaes get-extensions --extra petsc" in script
+    assert 'export PATH="$HOME/.idaes/bin:$PATH"' in script
+    assert "SolverFactory('ipopt').available(exception_flag=False)" in script
+    assert "ipopt -v" in script
     assert "pip install pyomo idaes-pse" not in script
     assert "run_pytest_allow_empty" in script
     assert "SKIP_INSTALL=1" in script
