@@ -837,8 +837,8 @@ non-Pyomo lane when practical:</p>
 </tr>
 </tbody>
 </table>
-<p>All pytest lanes inherit <code>--durations=25</code>, <code>--timeout=600</code>, and
-<code>--timeout-method=thread</code> from <code>pyproject.toml</code>. Non-Pyomo coverage lanes use
+<p>All pytest lanes inherit <code>--durations=25</code>, <code>--timeout=600</code>,
+<code>--timeout-method=thread</code>, and <code>--dist=worksteal</code> from <code>pyproject.toml</code>. Non-Pyomo coverage lanes use
 <code>.coveragerc.non-pyomo</code> so optional Pyomo modules are omitted from SciPy-only
 coverage totals. Codecov uploads are not configured; coverage remains visible
 in terminal reports from the coverage lanes.</p>
@@ -847,9 +847,13 @@ in terminal reports from the coverage lanes.</p>
 The Full Validation workflow is reportable on every PR. Repository maintainers
 should require the <code>Full non-Pyomo validation</code> job in branch protection because
 the job reports success quickly when the validation policy decides the full
-lane is not needed. The full lane runs for non-draft PRs that touch
-validation-sensitive paths, PRs labeled <code>full-validation</code>, nightly scheduled
-validation, manual dispatch, version tags, and pushes to <code>main</code>.</p>
+lane is not needed. For non-draft PRs that touch validation-sensitive paths the
+job runs only the slow-marked complement (<code>slow and not notebook and not
+pyomo</code>, no coverage), because the fast PR lane already runs every non-slow test
+on the same events; together the two lanes execute the whole non-Pyomo suite on
+each PR. The full lane with coverage runs for PRs labeled <code>full-validation</code>,
+nightly scheduled validation, manual dispatch, version tags, and pushes to
+<code>main</code>.</p>
 <p>Notebook tests run serially in <code>.github/workflows/rundocs.yml</code> for ready PRs,
 pushes to <code>main</code>, nightly schedule, version tags, and manual dispatch.</p>
 <p>The Pyomo Tests workflow is reportable on every PR so repository maintainers
