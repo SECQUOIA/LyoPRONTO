@@ -48,6 +48,7 @@ nav:
     - Examples:
         - examples/knownRp_PD.ipynb
         - examples/unknownRp_PD.ipynb
+        - Current SciPy/Pyomo comparison: examples/current_main_optimizer_comparison.ipynb
     - Reference:
         - API and Package: reference.md
         - Physics: technical/physics-reference.md

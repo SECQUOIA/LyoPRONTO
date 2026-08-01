@@ -393,7 +393,10 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert "--cov-config=.coveragerc.non-pyomo" not in pyomo_tests
     assert "lyopronto/pyomo_models/**" in pyomo_tests
     assert "examples/example_pyomo_optimization.py" in pyomo_tests
+    assert "examples/current_main_optimizer_comparison.py" in pyomo_tests
+    assert "docs/examples/current_main_optimizer_comparison.ipynb" in pyomo_tests
     assert "tests/test_pyomo_models/**" in pyomo_tests
+    assert "tests/test_current_main_optimizer_comparison.py" in pyomo_tests
     assert "tests/test_pyomo_solver.py" in pyomo_tests
     assert "tests/pyomo_solver.py" in pyomo_tests
     assert ".github/workflows/pyomo-tests.yml" in pyomo_tests
@@ -412,6 +415,14 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     )
     assert (
         "tests/test_pyomo_models/test_trajectory.py::test_trajectory_solves_and_matches_scipy_reference"
+        in pyomo_tests
+    )
+    assert (
+        "tests/test_pyomo_models/test_dae_optimization.py::test_dae_model_solves_to_complete_drying"
+        in pyomo_tests
+    )
+    assert (
+        "tests/test_current_main_optimizer_comparison.py::test_current_main_comparison_notebook_execution"
         in pyomo_tests
     )
 

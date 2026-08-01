@@ -102,6 +102,11 @@ changes. The solver comparison job is job-level non-blocking; inspect its logs
 when it runs because install failures and comparison failures leave the PR
 status green.
 
+The solver comparison job also executes a reduced one-case version of the
+current-main SciPy/Pyomo comparison notebook. The notebook's default 3x3 sweep
+and repeated timings remain a local tutorial experiment rather than a CI timing
+gate.
+
 `.github/workflows/slow-tests.yml` is manual dispatch for focused slow
 non-Pyomo, full non-Pyomo, or optional Pyomo validation.
 

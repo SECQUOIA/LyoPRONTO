@@ -37,6 +37,7 @@ def _is_ignored(path: str) -> bool:
         ".ruff_cache/0.12.0/foo",
         "docs/examples/knownRp_PD_output.ipynb",
         "docs/examples/new_notebook_output.ipynb",
+        "docs/examples/current_main_optimizer_comparison_output.ipynb",
         "examples/outputs/lyopronto_primary_drying_20260610.csv",
         "examples/outputs/primary_drying_results.png",
         "benchmarks/results/local_case.jsonl",
@@ -69,6 +70,7 @@ def test_generated_artifacts_are_ignored(path: str) -> None:
     [
         "docs/examples/knownRp_PD.ipynb",
         "docs/examples/new_source_notebook.ipynb",
+        "docs/examples/current_main_optimizer_comparison.ipynb",
         "docs/examples/temperature.txt",
         "examples/outputs/README.md",
         "examples/outputs/.gitkeep",
