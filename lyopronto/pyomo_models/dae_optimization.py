@@ -1,10 +1,10 @@
 """Free-final-time Pyomo.DAE optimization for primary drying.
 
 This module provides simultaneous counterparts to the legacy sequential
-``opt_Tsh.dry`` and ``opt_Pch.dry`` workflows.  The physical model has one
-differential state, the dried cake length, and quasi-steady algebraic heat-
-and mass-transfer relations.  A normalized time domain keeps the mesh
-independent of the optimized final drying time.
+``opt_Tsh.dry``, ``opt_Pch.dry``, and ``opt_Pch_Tsh.dry`` workflows.  The
+physical model has one differential state, the dried cake length, and
+quasi-steady algebraic heat- and mass-transfer relations.  A normalized time
+domain keeps the mesh independent of the optimized final drying time.
 
 Both backward finite differences and LAGRANGE-RADAU orthogonal collocation
 are available through Pyomo.DAE.  The model remains in the optional Pyomo
@@ -39,6 +39,7 @@ DaeDiscretizationInput = Union[DaeDiscretization, str]
 class _DaeOptimizedControl(str, Enum):
     SHELF_TEMPERATURE = "shelf_temperature"
     CHAMBER_PRESSURE = "chamber_pressure"
+    JOINT = "joint"
 
 
 @dataclass(frozen=True)
@@ -197,7 +198,7 @@ def _create_dae_optimization_model(
         initial_pressure = fixed_pressure
         initial_shelf = float(tshelf.get("init", product["T_pr_crit"]))
         fixed_shelf = None
-    else:
+    elif optimized_control is _DaeOptimizedControl.CHAMBER_PRESSURE:
         _require_keys("pchamber", pchamber, ("min", "max"))
         fixed_shelf = _single_fixed_shelf_temperature(tshelf)
         pressure_bounds = (float(pchamber["min"]), float(pchamber["max"]))
@@ -207,6 +208,19 @@ def _create_dae_optimization_model(
         initial_pressure = float(np.mean(pressure_bounds))
         initial_shelf = fixed_shelf
         fixed_pressure = None
+    else:
+        _require_keys("pchamber", pchamber, ("min", "max"))
+        _require_keys("tshelf", tshelf, ("min", "max"))
+        pressure_bounds = (float(pchamber["min"]), float(pchamber["max"]))
+        if pressure_bounds[0] <= 0.0 or pressure_bounds[1] <= pressure_bounds[0]:
+            raise ValueError("pchamber bounds must be positive and increasing")
+        shelf_bounds = (float(tshelf["min"]), float(tshelf["max"]))
+        if shelf_bounds[1] <= shelf_bounds[0]:
+            raise ValueError("tshelf max must be greater than tshelf min")
+        initial_pressure = float(np.mean(pressure_bounds))
+        initial_shelf = float(tshelf.get("init", product["T_pr_crit"]))
+        fixed_pressure = None
+        fixed_shelf = None
 
     if nfe < 1:
         raise ValueError("nfe must be at least one")
@@ -359,13 +373,24 @@ def _create_dae_optimization_model(
             scheme="LAGRANGE-RADAU",
         )
 
-    if optimized_control is _DaeOptimizedControl.CHAMBER_PRESSURE:
+    if optimized_control in (
+        _DaeOptimizedControl.CHAMBER_PRESSURE,
+        _DaeOptimizedControl.JOINT,
+    ):
         # The control at tau=0 has zero measure in the final-time objective.
         # Select its right-limit value explicitly so exported pressure curves
         # do not contain an arbitrary endpoint jump.
         first = model.t.first()
         model.initial_pressure_continuity = pyo.Constraint(
             expr=model.Pch[first] == model.Pch[model.t.next(first)]
+        )
+    if optimized_control is _DaeOptimizedControl.JOINT:
+        # Shelf temperature at tau=0 is likewise an isolated control value.
+        # Match its first right-limit value so the exported joint-control
+        # trajectory contains no arbitrary endpoint jump.
+        first = model.t.first()
+        model.initial_shelf_temperature_continuity = pyo.Constraint(
+            expr=model.Tsh[first] == model.Tsh[model.t.next(first)]
         )
 
     if initialize is not None:
@@ -475,6 +500,47 @@ def create_dae_chamber_pressure_optimization_model(
         t_final_bounds=t_final_bounds,
         initialize=initialize,
         optimized_control=_DaeOptimizedControl.CHAMBER_PRESSURE,
+    )
+
+
+def create_dae_joint_optimization_model(
+    vial: Mapping[str, float],
+    product: Mapping[str, float],
+    ht: Mapping[str, float],
+    pchamber: Mapping[str, Any],
+    tshelf: Mapping[str, Any],
+    *,
+    eq_cap: Mapping[str, float],
+    nvial: int,
+    nfe: int = 24,
+    discretization: DaeDiscretizationInput = DaeDiscretization.FINITE_DIFFERENCE,
+    ncp: int = 3,
+    final_dried_fraction: float = 1.0,
+    t_final_bounds: Tuple[float, float] = (0.1, 50.0),
+    initialize: Optional[np.ndarray] = None,
+) -> pyo.ConcreteModel:
+    """Build the free-final-time DAE counterpart to ``opt_Pch_Tsh.dry``.
+
+    Chamber pressure and shelf temperature are bounded time-dependent
+    controls. The objective minimizes final drying time under the same
+    quasi-steady physics, product-temperature limit, equipment constraint,
+    and completion target as the sequential optimizer.
+    """
+    return _create_dae_optimization_model(
+        vial,
+        product,
+        ht,
+        pchamber,
+        tshelf,
+        eq_cap=eq_cap,
+        nvial=nvial,
+        nfe=nfe,
+        discretization=discretization,
+        ncp=ncp,
+        final_dried_fraction=final_dried_fraction,
+        t_final_bounds=t_final_bounds,
+        initialize=initialize,
+        optimized_control=_DaeOptimizedControl.JOINT,
     )
 
 
@@ -686,12 +752,55 @@ def solve_dae_chamber_pressure_optimization(
     )
 
 
+def solve_dae_joint_optimization(
+    vial: Mapping[str, float],
+    product: Mapping[str, float],
+    ht: Mapping[str, float],
+    pchamber: Mapping[str, Any],
+    tshelf: Mapping[str, Any],
+    *,
+    eq_cap: Mapping[str, float],
+    nvial: int,
+    nfe: int = 24,
+    discretization: DaeDiscretizationInput = DaeDiscretization.FINITE_DIFFERENCE,
+    ncp: int = 3,
+    final_dried_fraction: float = 1.0,
+    t_final_bounds: Tuple[float, float] = (0.1, 50.0),
+    initialize: Optional[np.ndarray] = None,
+    solver: Union[str, Any] = "ipopt",
+    tee: bool = False,
+) -> DaeOptimizationResult:
+    """Build and solve the joint pressure/temperature DAE optimization."""
+    model = create_dae_joint_optimization_model(
+        vial,
+        product,
+        ht,
+        pchamber,
+        tshelf,
+        eq_cap=eq_cap,
+        nvial=nvial,
+        nfe=nfe,
+        discretization=discretization,
+        ncp=ncp,
+        final_dried_fraction=final_dried_fraction,
+        t_final_bounds=t_final_bounds,
+        initialize=initialize,
+    )
+    return _solve_dae_optimization_model(
+        model,
+        solver=solver,
+        tee=tee,
+    )
+
+
 __all__ = [
     "DaeDiscretization",
     "DaeOptimizationResult",
     "create_dae_chamber_pressure_optimization_model",
+    "create_dae_joint_optimization_model",
     "create_dae_shelf_temperature_optimization_model",
     "dae_optimization_values",
     "solve_dae_chamber_pressure_optimization",
+    "solve_dae_joint_optimization",
     "solve_dae_shelf_temperature_optimization",
 ]

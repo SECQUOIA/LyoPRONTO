@@ -135,7 +135,8 @@ The Pyomo APIs intentionally remain explicit under `lyopronto.pyomo_models`.
 Use `lyopronto.opt_Pch`, `lyopronto.opt_Tsh`, and `lyopronto.opt_Pch_Tsh` for
 the shipped SciPy optimizer workflows. For an equivalent simultaneous
 completion-time problem, use `solve_dae_shelf_temperature_optimization` or
-`solve_dae_chamber_pressure_optimization` and select either
+`solve_dae_chamber_pressure_optimization`, or use
+`solve_dae_joint_optimization` to release both controls, and select either
 `finite_difference` or `collocation`. The older fixed-horizon builders remain
 available for validation and advanced workflow composition. A unified selector
 is not provided while those formulations have different objectives and solver
@@ -149,6 +150,7 @@ The MkDocs notebook examples are tracked under `docs/examples/`:
 - [unknown Rp](examples/unknownRp_PD.ipynb)
 - [current SciPy/Pyomo.DAE shelf-temperature comparison](examples/current_main_optimizer_comparison.ipynb)
 - [current SciPy/Pyomo.DAE chamber-pressure comparison](examples/current_main_pressure_optimizer_comparison.ipynb)
+- [current SciPy/Pyomo.DAE joint-control comparison](examples/current_main_joint_optimizer_comparison.ipynb)
 
 Notebook execution is validated through the explicit notebook CI lane.
 The optimizer-comparison tutorials require `.[dev,pyomo]` and IPOPT, so their

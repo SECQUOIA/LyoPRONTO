@@ -130,8 +130,9 @@ Implemented modules:
   optimization builders for pressure-only, shelf-temperature-only, and joint
   pressure/shelf-temperature modes.
 - `lyopronto.pyomo_models.dae_optimization` exposes free-final-time
-  shelf-temperature and chamber-pressure optimizers with selectable Pyomo.DAE
-  finite-difference and orthogonal-collocation transformations.
+  shelf-temperature, chamber-pressure, and joint-control optimizers with
+  selectable Pyomo.DAE finite-difference and orthogonal-collocation
+  transformations.
 - `lyopronto.pyomo_models.advanced` composes the trajectory and optimization
   builders into optional parameter-estimation, design-space feasibility,
   sensitivity-analysis, robust-optimization, and multi-vial capacity workflows.
@@ -182,15 +183,15 @@ prototypes and should not be treated as stable replacements for `opt_Pch.dry`,
 `OptimizationMode.SHELF_TEMPERATURE` remains supported for fixed-horizon
 validation and for advanced workflows that compose the trajectory optimizer;
 the fixed-horizon surface remains available. Use a free-final-time DAE model
-when the question is direct completion-time equivalence with `opt_Tsh.dry` or
-`opt_Pch.dry`.
+when the question is direct completion-time equivalence with `opt_Tsh.dry`,
+`opt_Pch.dry`, or `opt_Pch_Tsh.dry`.
 
 The free-final-time DAE models are distinct, equivalent counterparts to
-`opt_Tsh.dry` and `opt_Pch.dry`. They use normalized time, treat final drying
-time as a decision variable, and minimize that time while enforcing the same
-fixed control, optimized-control bounds, product-temperature limit,
-equipment-capability constraint, and terminal dried fraction. Select the
-control and algebraic transcription explicitly:
+`opt_Tsh.dry`, `opt_Pch.dry`, and `opt_Pch_Tsh.dry`. They use normalized time,
+treat final drying time as a decision variable, and minimize that time while
+enforcing the same fixed controls where applicable, optimized-control bounds,
+product-temperature limit, equipment-capability constraint, and terminal dried
+fraction. Select the controls and algebraic transcription explicitly:
 
 ```python
 from lyopronto.pyomo_models import solve_dae_shelf_temperature_optimization
@@ -222,13 +223,29 @@ pressure_result = solve_dae_chamber_pressure_optimization(
     ncp=3,
     discretization="collocation",
 )
+
+from lyopronto.pyomo_models import solve_dae_joint_optimization
+
+joint_result = solve_dae_joint_optimization(
+    vial,
+    product,
+    ht,
+    {"min": 0.05, "max": 0.5},
+    {"min": -45.0, "max": 120.0, "init": -35.0},
+    eq_cap=eq_cap,
+    nvial=400,
+    nfe=8,
+    ncp=3,
+    discretization="collocation",
+)
 ```
 
 Finite differences use Pyomo.DAE's backward scheme. Collocation uses
 LAGRANGE-RADAU points. The shelf-temperature optimizer requires one constant
 chamber-pressure setpoint; the chamber-pressure optimizer requires one
-constant shelf-temperature setpoint. A changing fixed schedule would need its
-switch times parameterized against the optimized real-time horizon.
+constant shelf-temperature setpoint; the joint optimizer frees both bounded
+controls. A changing fixed schedule would need its switch times parameterized
+against the optimized real-time horizon.
 
 There is intentionally no unified SciPy/Pyomo optimizer selector. Call the
 legacy SciPy optimizer modules or the explicit Pyomo builders directly so
@@ -250,13 +267,15 @@ Comparison to SciPy optimizer results is direct for variable bounds, fixed
 profiles, output columns, and algebraic constraints. Full trajectories can
 diverge for the fixed-horizon optimization builders because they solve a
 different simultaneous proxy problem. Use the matching free-final-time DAE
-model when comparing the `opt_Tsh.dry` or `opt_Pch.dry` completion-time
-objective. The current comparison tutorials check both available DAE
+model when comparing the `opt_Tsh.dry`, `opt_Pch.dry`, or `opt_Pch_Tsh.dry`
+completion-time objective. The current comparison tutorials check both DAE
 transformations:
 
 `docs/examples/current_main_optimizer_comparison.ipynb`
 
 `docs/examples/current_main_pressure_optimizer_comparison.ipynb`
+
+`docs/examples/current_main_joint_optimizer_comparison.ipynb`
 
 Advanced workflow builders remain explicit optional Pyomo prototypes:
 
