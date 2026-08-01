@@ -129,9 +129,9 @@ Implemented modules:
 - `lyopronto.pyomo_models.optimization` exposes experimental trajectory
   optimization builders for pressure-only, shelf-temperature-only, and joint
   pressure/shelf-temperature modes.
-- `lyopronto.pyomo_models.dae_optimization` exposes a free-final-time
-  shelf-temperature optimizer with selectable Pyomo.DAE finite-difference and
-  orthogonal-collocation transformations.
+- `lyopronto.pyomo_models.dae_optimization` exposes free-final-time
+  shelf-temperature and chamber-pressure optimizers with selectable Pyomo.DAE
+  finite-difference and orthogonal-collocation transformations.
 - `lyopronto.pyomo_models.advanced` composes the trajectory and optimization
   builders into optional parameter-estimation, design-space feasibility,
   sensitivity-analysis, robust-optimization, and multi-vial capacity workflows.
@@ -181,15 +181,16 @@ prototypes and should not be treated as stable replacements for `opt_Pch.dry`,
 `opt_Tsh.dry`, or `opt_Pch_Tsh.dry`.
 `OptimizationMode.SHELF_TEMPERATURE` remains supported for fixed-horizon
 validation and for advanced workflows that compose the trajectory optimizer;
-this PR does not deprecate that surface. Use the free-final-time DAE model when
-the question is direct completion-time equivalence with `opt_Tsh.dry`.
+the fixed-horizon surface remains available. Use a free-final-time DAE model
+when the question is direct completion-time equivalence with `opt_Tsh.dry` or
+`opt_Pch.dry`.
 
-The free-final-time DAE shelf-temperature model is a distinct, equivalent
-counterpart to `opt_Tsh.dry`. It uses normalized time, treats final drying time
-as a decision variable, and minimizes that time while enforcing the same
-fixed-pressure control, shelf-temperature bounds, product-temperature limit,
+The free-final-time DAE models are distinct, equivalent counterparts to
+`opt_Tsh.dry` and `opt_Pch.dry`. They use normalized time, treat final drying
+time as a decision variable, and minimize that time while enforcing the same
+fixed control, optimized-control bounds, product-temperature limit,
 equipment-capability constraint, and terminal dried fraction. Select the
-algebraic transcription explicitly:
+control and algebraic transcription explicitly:
 
 ```python
 from lyopronto.pyomo_models import solve_dae_shelf_temperature_optimization
@@ -206,12 +207,28 @@ result = solve_dae_shelf_temperature_optimization(
     ncp=3,
     discretization="collocation",  # or "finite_difference"
 )
+
+from lyopronto.pyomo_models import solve_dae_chamber_pressure_optimization
+
+pressure_result = solve_dae_chamber_pressure_optimization(
+    vial,
+    product,
+    ht,
+    {"min": 0.05, "max": 0.5},
+    {"init": -18.0, "setpt": [-18.0]},
+    eq_cap=eq_cap,
+    nvial=400,
+    nfe=8,
+    ncp=3,
+    discretization="collocation",
+)
 ```
 
 Finite differences use Pyomo.DAE's backward scheme. Collocation uses
-LAGRANGE-RADAU points. A free-final-time run currently requires one constant
-chamber-pressure setpoint; a changing fixed schedule would need its switch
-times parameterized against the optimized real-time horizon.
+LAGRANGE-RADAU points. The shelf-temperature optimizer requires one constant
+chamber-pressure setpoint; the chamber-pressure optimizer requires one
+constant shelf-temperature setpoint. A changing fixed schedule would need its
+switch times parameterized against the optimized real-time horizon.
 
 There is intentionally no unified SciPy/Pyomo optimizer selector. Call the
 legacy SciPy optimizer modules or the explicit Pyomo builders directly so
@@ -232,12 +249,14 @@ mapping, to an existing trajectory model.
 Comparison to SciPy optimizer results is direct for variable bounds, fixed
 profiles, output columns, and algebraic constraints. Full trajectories can
 diverge for the fixed-horizon optimization builders because they solve a
-different simultaneous proxy problem. Use the free-final-time DAE
-shelf-temperature model when comparing the `opt_Tsh.dry` completion-time
-objective. The current comparison tutorial checks both available DAE
+different simultaneous proxy problem. Use the matching free-final-time DAE
+model when comparing the `opt_Tsh.dry` or `opt_Pch.dry` completion-time
+objective. The current comparison tutorials check both available DAE
 transformations:
 
 `docs/examples/current_main_optimizer_comparison.ipynb`
+
+`docs/examples/current_main_pressure_optimizer_comparison.ipynb`
 
 Advanced workflow builders remain explicit optional Pyomo prototypes:
 
