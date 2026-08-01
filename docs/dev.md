@@ -70,8 +70,8 @@ non-Pyomo lane when practical:
 | Pyomo light | `pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v` | `.github/workflows/pyomo-tests.yml`, `./run_local_ci.sh pyomo-light` |
 | Pyomo solver | `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=term-missing` | `.github/workflows/pyomo-tests.yml`, `.github/workflows/slow-tests.yml` |
 
-All pytest lanes inherit `--durations=25`, `--timeout=600`, and
-`--timeout-method=thread` from `pyproject.toml`. Non-Pyomo coverage lanes use
+All pytest lanes inherit `--durations=25`, `--timeout=600`,
+`--timeout-method=thread`, and `--dist=worksteal` from `pyproject.toml`. Non-Pyomo coverage lanes use
 `.coveragerc.non-pyomo` so optional Pyomo modules are omitted from SciPy-only
 coverage totals. Codecov uploads are not configured; coverage remains visible
 in terminal reports from the coverage lanes.
@@ -82,9 +82,13 @@ Pull requests targeting `main` always run static analysis and the fast PR lane.
 The Full Validation workflow is reportable on every PR. Repository maintainers
 should require the `Full non-Pyomo validation` job in branch protection because
 the job reports success quickly when the validation policy decides the full
-lane is not needed. The full lane runs for non-draft PRs that touch
-validation-sensitive paths, PRs labeled `full-validation`, nightly scheduled
-validation, manual dispatch, version tags, and pushes to `main`.
+lane is not needed. For non-draft PRs that touch validation-sensitive paths the
+job runs only the slow-marked complement (`slow and not notebook and not
+pyomo`, no coverage), because the fast PR lane already runs every non-slow test
+on the same events; together the two lanes execute the whole non-Pyomo suite on
+each PR. The full lane with coverage runs for PRs labeled `full-validation`,
+nightly scheduled validation, manual dispatch, version tags, and pushes to
+`main`.
 
 Notebook tests run serially in `.github/workflows/rundocs.yml` for ready PRs,
 pushes to `main`, nightly schedule, version tags, and manual dispatch.

@@ -238,14 +238,36 @@ def Eq_Constraints(Pch,dmdt,Tbot,Tsh,Psub,Tsub,Kv,Lpr0,Lck,Av,Ap,Rp):
     """
 
     C1 = Psub - Vapor_pressure(Tsub)   # Vapor pressure at the sublimation temperature [Torr]
-    
+
     C2 = dmdt - Ap/Rp/constant.kg_To_g*(Psub-Pch)  # Sublimation rate [kg/hr]
-    
+
     C3 = (Tsh-Tbot)*Av*Kv*(Lpr0-Lck) - Ap*(Tbot-Tsub)*constant.k_ice  # Vial heat transfer balance
 
     C4 = Tsh - dmdt*constant.kg_To_g/constant.hr_To_s*constant.dHs/Av/Kv - Tbot  # Shelf temperature [degC]
 
     return C1,C2,C3,C4
+
+##
+
+def memoize_by_x(fn):
+    """
+    Wraps a function of a single optimization vector x so repeated calls with the
+    same x reuse the previously computed result. SLSQP evaluates each constraint
+    dict entry independently, including during finite-difference gradient sweeps,
+    so exposing the components of Eq_Constraints/Ineq_Constraints through one
+    cached call avoids solving the full constraint system once per component.
+    """
+
+    cache = {}
+
+    def wrapped(x):
+        key = np.asarray(x).tobytes()
+        hit = cache.get(key)
+        if hit is None:
+            hit = cache[key] = fn(x)
+        return hit
+
+    return wrapped
 
 ##
 

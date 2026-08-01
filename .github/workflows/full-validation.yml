@@ -21,6 +21,7 @@ jobs:
     outputs:
       run_full: ${{ steps.scope.outputs.run_full }}
       reason: ${{ steps.scope.outputs.reason }}
+      lane: ${{ steps.scope.outputs.lane }}
 
     steps:
     - uses: actions/checkout@v4
@@ -38,6 +39,11 @@ jobs:
       run: |
         run_full=false
         reason="not requested"
+        # "full" runs the whole non-Pyomo suite with coverage.
+        # "slow" runs only slow-marked tests: the fast PR lane (pr-tests.yml)
+        # already runs every non-slow test on the same PR events, so running
+        # them again here only duplicates work.
+        lane="full"
 
         if [ "$EVENT_NAME" != "pull_request" ]; then
           run_full=true
@@ -53,6 +59,7 @@ jobs:
             case "$path" in
               lyopronto/*.py|tests/*.py|test_data/*|examples/*.py|pyproject.toml|requirements*.txt)
                 run_full=true
+                lane="slow"
                 reason="changed validation-sensitive path: $path"
                 break
                 ;;
@@ -62,7 +69,8 @@ jobs:
 
         echo "run_full=$run_full" >> "$GITHUB_OUTPUT"
         echo "reason=$reason" >> "$GITHUB_OUTPUT"
-        echo "Full validation required: $run_full ($reason)"
+        echo "lane=$lane" >> "$GITHUB_OUTPUT"
+        echo "Full validation required: $run_full ($reason, lane: $lane)"
 
   full-non-pyomo:
     name: Full non-Pyomo validation
@@ -102,5 +110,21 @@ jobs:
     - name: Run full non-Pyomo validation
       if: ${{ needs.validation-scope.outputs.run_full == 'true' }}
       run: |
-        echo "Running full non-Pyomo validation with coverage"
-        pytest tests/ -n auto -v -m "not notebook and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
+        run_pytest_allow_empty() {
+          "$@" || {
+            rc=$?
+            if [ "$rc" -eq 5 ]; then
+              echo "No tests collected for selected lane; treating this as a no-op."
+              return 0
+            fi
+            return $rc
+          }
+        }
+
+        if [ "${{ needs.validation-scope.outputs.lane }}" = "slow" ]; then
+          echo "Running slow-only non-Pyomo validation (fast tests covered by the PR lane)"
+          run_pytest_allow_empty pytest tests/ -n auto -v -m "slow and not notebook and not pyomo"
+        else
+          echo "Running full non-Pyomo validation with coverage"
+          pytest tests/ -n auto -v -m "not notebook and not pyomo" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing
+        fi
