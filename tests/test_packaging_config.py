@@ -402,6 +402,8 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert "examples/current_main_joint_optimizer_comparison.py" in pyomo_tests
     assert "examples/current_main_pressure_optimizer_comparison.py" in pyomo_tests
     assert "docs/examples/current_main_joint_optimizer_comparison.ipynb" in pyomo_tests
+    assert "docs/examples/current_main_optimizer_comparison.ipynb" not in pyomo_tests
+    assert "docs/examples/current_main_pressure_optimizer_comparison.ipynb" not in pyomo_tests
     assert "tests/test_pyomo_models/**" in pyomo_tests
     assert "tests/test_current_main_optimizer_comparison.py" in pyomo_tests
     assert "tests/test_current_main_joint_optimizer_comparison.py" in pyomo_tests
@@ -457,6 +459,8 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
         "tests/test_current_main_joint_optimizer_comparison.py::test_implementability_analysis_solves_and_decomposes_smoke_case"
         in pyomo_tests
     )
+    assert "test_current_main_comparison_notebook_execution" not in pyomo_tests
+    assert "test_current_main_pressure_comparison_notebook_execution" not in pyomo_tests
 
 
 def test_local_ci_script_matches_documented_lane_expressions() -> None:
