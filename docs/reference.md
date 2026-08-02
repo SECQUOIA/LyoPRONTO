@@ -255,6 +255,28 @@ all four options unset preserves the rate-unlimited counterpart to the legacy
 SciPy optimizer. A changing fixed schedule would need its switch times
 parameterized against the optimized real-time horizon.
 
+A successful solve also reports `shadow_prices`, the change in optimal drying
+time [hr] per unit increase in each limit the model defines. The sign
+convention is uniform: a positive value means raising that limit costs time
+and a negative value means it saves time, whether the number comes from a
+constraint multiplier or a variable-bound multiplier. Values near zero mark
+limits that are inactive at the optimum, so relaxing them buys nothing.
+
+```python
+result = solve_dae_joint_optimization(...)
+result.shadow_prices["product_temperature_limit"]     # [hr/degC]
+result.shadow_prices["chamber_pressure_lower_bound"]  # [hr/Torr]
+```
+
+This turns the optimizer into a decision-support tool: it answers which
+process improvement is worth pursuing rather than only what the optimal cycle
+is. Multipliers are summed over the time domain because a limit expressed as a
+model parameter is relaxed simultaneously at every transcription node, and
+they are reported only for a successful solve. The sequential SciPy optimizers
+expose no equivalent quantity. Ramp-rate sensitivities are intentionally not
+reported: those constraint right-hand sides couple to the free final time, so
+sweeping the rate and re-solving is the reliable way to price actuator speed.
+
 The rate-unlimited formulation represents an idealized algebraic operating
 policy, not an implementable actuator trajectory: pressure or shelf temperature
 may move to a bound immediately. Ramp limits make the control sequence more

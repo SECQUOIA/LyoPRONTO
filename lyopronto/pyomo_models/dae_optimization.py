@@ -13,7 +13,7 @@ dependency boundary.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Mapping, Optional, Tuple, Union
 
@@ -54,6 +54,19 @@ class DaeOptimizationResult:
     values: Mapping[str, np.ndarray]
     constraint_violations: Mapping[str, Optional[float]]
     discretization: Mapping[str, Any]
+    shadow_prices: Mapping[str, float] = field(default_factory=dict)
+    """Change in optimal drying time [hr] per unit increase in each named limit.
+
+    Populated only for a successful solve, and only for limits the model
+    actually defines. A value near zero means the limit is inactive at the
+    optimum, so relaxing it buys nothing. Keys and their units are:
+
+    ``product_temperature_limit`` [hr/degC], ``equipment_capability``
+    [hr/(kg/hr)], ``final_drying_target`` [hr/cm],
+    ``chamber_pressure_lower_bound`` and ``chamber_pressure_upper_bound``
+    [hr/Torr], and ``shelf_temperature_lower_bound`` and
+    ``shelf_temperature_upper_bound`` [hr/degC].
+    """
 
     def as_table(self) -> np.ndarray:
         """Return values in the legacy seven-column trajectory shape."""
@@ -471,6 +484,12 @@ def _create_dae_optimization_model(
         model.Tsh[first].fix(float(requested_initial_shelf_temperature))
 
     model.obj = pyo.Objective(expr=model.t_final, sense=pyo.minimize)
+    # Import constraint and bound multipliers so a solved model can report how
+    # many hours each active limit is worth. IPOPT populates the bound suffixes;
+    # other solvers simply leave them empty.
+    model.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
+    model.ipopt_zL_out = pyo.Suffix(direction=pyo.Suffix.IMPORT)
+    model.ipopt_zU_out = pyo.Suffix(direction=pyo.Suffix.IMPORT)
     model.scaling_factor = pyo.Suffix(direction=pyo.Suffix.EXPORT)
     model.scaling_factor[model.t_final] = 0.1
     for tau in model.t:
@@ -659,6 +678,52 @@ def dae_optimization_values(model: pyo.ConcreteModel) -> dict[str, np.ndarray]:
     return values
 
 
+def _shadow_prices(model: pyo.ConcreteModel) -> dict[str, float]:
+    """Return the drying-time sensitivity [hr] of each active limit.
+
+    Every entry is the change in the optimal final drying time per unit
+    increase in the named limit, so the sign convention is uniform across
+    constraint multipliers and variable-bound multipliers. Values are summed
+    over the time domain because a limit expressed as a model parameter (the
+    critical product temperature, a control bound) is relaxed simultaneously
+    at every transcription node.
+    """
+
+    def _suffix_total(suffix_name: str, components: Any) -> Optional[float]:
+        suffix = getattr(model, suffix_name, None)
+        if suffix is None:
+            return None
+        values = [suffix.get(component, None) for component in components]
+        present = [float(value) for value in values if value is not None]
+        return float(sum(present)) if present else None
+
+    prices: dict[str, float] = {}
+    for key, component_name in (
+        ("product_temperature_limit", "product_temperature_limit"),
+        ("equipment_capability", "equipment_capability"),
+    ):
+        component = getattr(model, component_name, None)
+        if component is not None:
+            total = _suffix_total("dual", list(component.values()))
+            if total is not None:
+                prices[key] = total
+    target = getattr(model, "final_drying_target", None)
+    if target is not None:
+        total = _suffix_total("dual", [target])
+        if total is not None:
+            prices["final_drying_target"] = total
+    for key, variable, suffix_name in (
+        ("chamber_pressure_lower_bound", model.Pch, "ipopt_zL_out"),
+        ("chamber_pressure_upper_bound", model.Pch, "ipopt_zU_out"),
+        ("shelf_temperature_lower_bound", model.Tsh, "ipopt_zL_out"),
+        ("shelf_temperature_upper_bound", model.Tsh, "ipopt_zU_out"),
+    ):
+        total = _suffix_total(suffix_name, [variable[tau] for tau in model.t])
+        if total is not None:
+            prices[key] = total
+    return prices
+
+
 def _solve_dae_optimization_model(
     model: pyo.ConcreteModel,
     *,
@@ -727,6 +792,9 @@ def _solve_dae_optimization_model(
         values=dae_optimization_values(model),
         constraint_violations=violations,
         discretization=metadata,
+        # Multipliers describe the optimum, so they are meaningless for a
+        # solve that did not reach one.
+        shadow_prices=_shadow_prices(model) if success else {},
     )
 
 
