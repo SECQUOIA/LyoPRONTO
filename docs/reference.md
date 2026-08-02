@@ -239,8 +239,8 @@ joint_result = solve_dae_joint_optimization(
     discretization="collocation",
     initial_pressure=0.15,             # Torr at physical time zero
     initial_shelf_temperature=-35.0,   # degC at physical time zero
-    pressure_ramp_rate=0.6,            # Torr/hr between adjacent nodes
-    shelf_temperature_ramp_rate=60.0,  # degC/hr between adjacent nodes
+    pressure_ramp_rate=0.05,           # Torr/hr between adjacent nodes
+    shelf_temperature_ramp_rate=10.0,  # degC/hr between adjacent nodes
 )
 ```
 
