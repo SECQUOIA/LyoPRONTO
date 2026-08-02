@@ -1332,7 +1332,7 @@ jupyter lab docs/examples/current_main_joint_optimizer_comparison.ipynb
 </span><span id="__span-20-80"><a id="__codelineno-20-80" name="__codelineno-20-80" href="#__codelineno-20-80"></a><span class="p">)</span>
 </span><span id="__span-20-81"><a id="__codelineno-20-81" name="__codelineno-20-81" href="#__codelineno-20-81"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
-<p><img alt="img" src="../_data/6f279a35dbab4a518a663028c04266e5.png" /></p>
+<p><img alt="img" src="../_data/f4d8925360444807b0521df64a026f1f.png" /></p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="n">speedup_matrices</span> <span class="o">=</span> <span class="p">[</span>
 </span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>    <span class="p">(</span><span class="s2">&quot;Finite difference&quot;</span><span class="p">,</span> <span class="n">matrix_for</span><span class="p">(</span><span class="s2">&quot;finite_difference_speedup&quot;</span><span class="p">)),</span>
 </span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>    <span class="p">(</span><span class="s2">&quot;Orthogonal collocation&quot;</span><span class="p">,</span> <span class="n">matrix_for</span><span class="p">(</span><span class="s2">&quot;collocation_speedup&quot;</span><span class="p">)),</span>
@@ -1365,7 +1365,7 @@ jupyter lab docs/examples/current_main_joint_optimizer_comparison.ipynb
 </span><span id="__span-21-30"><a id="__codelineno-21-30" name="__codelineno-21-30" href="#__codelineno-21-30"></a><span class="p">)</span>
 </span><span id="__span-21-31"><a id="__codelineno-21-31" name="__codelineno-21-31" href="#__codelineno-21-31"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
-<p><img alt="img" src="../_data/00c851fa5f184ddd9f7cecb8429df757.png" /></p>
+<p><img alt="img" src="../_data/5d47d4f703a642508dc2b0a7e959c09e.png" /></p>
 <p>The speedup values are machine- and environment-dependent. They scale roughly with <span class="arithmatex">\(1/\mathtt{scipy\_dt}\)</span> because <code>opt_Pch_Tsh.dry</code> performs one SLSQP solve per sequential step, while changing <code>scipy_dt</code> does not change the DAE workload. SciPy step count and simultaneous NLP point count are therefore both reported but are not equivalent measures of problem size. Objective gaps, convergence trends, and physical acceptance checks are the portable numerical results.</p>
 <p>The nearly constant 50 mTorr pressure is not evidence that pressure was accidentally fixed. Pressure is a free variable, but the optimizer drives it to its lower bound while the product-temperature constraint is active and equipment capacity has positive margin. The pressure-bound sensitivity below verifies this active-set explanation directly.</p>
 <h2 id="scipy-step-size-convergence">SciPy step-size convergence</h2>
@@ -1445,7 +1445,7 @@ jupyter lab docs/examples/current_main_joint_optimizer_comparison.ipynb
 </span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a>    0.0200      539     10.74327               -0.0797      2.062
 </span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a>    0.0100     1077     10.75185                0.0000      4.138
 </span></code></pre></div>
-<p><img alt="img" src="../_data/71f35ce7506c44d88df5bd1c260a6fdd.png" /></p>
+<p><img alt="img" src="../_data/1a9b1fe9965548d383bd4871afa0c3c6.png" /></p>
 <h2 id="dae-transcription-sensitivity">DAE transcription sensitivity</h2>
 <p>The two transformations have different approximation orders and therefore should not be compared at the same <code>nfe</code>. Each pair below uses exactly the same number of transcription points: finite differences use <code>point_budget - 1</code> elements, while collocation uses <code>(point_budget - 1) / ncp</code>. The plots show accuracy against point count, scalar NLP variables, and end-to-end wall time.</p>
 <p>The table also reports the first positive physical time and the raw <span class="arithmatex">\(T_{bot}(0)\)</span> value. In the rate-unlimited DAE, the isolated control at <span class="arithmatex">\(t=0\)</span> is tied to the first positive transcription point to select a unique endpoint representative. On a coarse mesh that representative belongs to a comparatively distant process state, so evaluating the algebraic temperature equations at zero cake length produces a visible endpoint offset. Its shrinkage under mesh refinement identifies it as a transcription/representative artifact rather than thermal physics.</p>
@@ -1536,7 +1536,7 @@ jupyter lab docs/examples/current_main_joint_optimizer_comparison.ipynb
 </span><span id="__span-25-6"><a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a>   finite_difference     72      73        731          733    0.1512        -26.763              1.243      0.077      2.494e-07
 </span><span id="__span-25-7"><a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a>         collocation     24      73        731          733    0.0695        -25.977              0.079      0.084      1.342e-07
 </span></code></pre></div>
-<p><img alt="img" src="../_data/876370aa2acd46d6ae34876050734459.png" /></p>
+<p><img alt="img" src="../_data/1752886b72d94ba987f3a15c96c69765.png" /></p>
 <h2 id="rate-unlimited-operating-policy">Rate-unlimited operating policy</h2>
 <p>All three results retain the legacy seven-column output shape. Because neither exact-comparison workflow includes actuator dynamics, the clearest common independent variable is drying progress, not clock time. The following plot therefore presents the controls and algebraic state as an idealized policy against percent dried.</p>
 <p>For each DAE curve only, the isolated zero-measure endpoint is omitted from this policy visualization. The raw endpoint remains in the numerical results and in all acceptance checks above; it is not smoothed or overwritten. This avoids drawing a straight time-domain segment from an endpoint representative to a distant first transcription point and mistaking that segment for physical actuator or thermal dynamics. The pressure and constrained-temperature axes use physical tolerances rather than magnifying solver residuals of order <span class="arithmatex">\(10^{-5}\)</span> mTorr or <span class="arithmatex">\(10^{-7}\,^{\circ}\)</span>C.</p>
@@ -1599,7 +1599,7 @@ jupyter lab docs/examples/current_main_joint_optimizer_comparison.ipynb
 </span><span id="__span-26-57"><a id="__codelineno-26-57" name="__codelineno-26-57" href="#__codelineno-26-57"></a><span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 </span><span id="__span-26-58"><a id="__codelineno-26-58" name="__codelineno-26-58" href="#__codelineno-26-58"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
-<p><img alt="img" src="../_data/df35b945f321450d9ec9db75e188785e.png" /></p>
+<p><img alt="img" src="../_data/db033af79ae74cbb920b1dc56d0384b0.png" /></p>
 <h2 id="why-is-optimized-pressure-constant">Why is optimized pressure constant?</h2>
 <p>Pressure is released in every run above. A constant profile can still be the optimum when a bound is active over the whole state path. To distinguish that result from an accidentally fixed variable, the next diagnostic re-solves the nominal collocation model while moving only the allowed pressure lower bound. If pressure is genuinely free and lower-bound limited, the realized minimum pressure should follow the new bound and completion time should worsen monotonically as that bound rises.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="n">pressure_bound_rows</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1679,7 +1679,7 @@ jupyter lab docs/examples/current_main_joint_optimizer_comparison.ipynb
 </span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a>                 0.150                  0.150      14.0877
 </span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a>                 0.200                  0.200      16.6591
 </span></code></pre></div>
-<p><img alt="img" src="../_data/432ef7ba8ea34ea890bcdf7fbd3dcf7e.png" /></p>
+<p><img alt="img" src="../_data/e96d1bef1f1c4bb6b5a370fbe7eb9760.png" /></p>
 <h2 id="separate-rate-limited-implementability-extension">Separate rate-limited implementability extension</h2>
 <p>The exact comparison above deliberately has no actuator memory. Earlier trajectory studies used limits of 10 °C/hr for shelf temperature and 0.05 Torr/hr for chamber pressure; this extension now applies those same nodal limits. It also anchors the problem at <span class="arithmatex">\(P_{ch}(0)=150\)</span> mTorr and <span class="arithmatex">\(T_{sh}(0)=-35\,^{\circ}\)</span>C. A rate bound without an initial value limits movement but does not define a physical starting control.</p>
 <p>Both DAE transformations receive the same 97-point budget and the same constraints. The current sequential SciPy optimizer cannot impose constraints linking controls at successive process states, so its rate-unlimited result is shown below only as context—not as an equivalent member of this extension.</p>
@@ -1837,7 +1837,7 @@ jupyter lab docs/examples/current_main_joint_optimizer_comparison.ipynb
 </span><span id="__span-31-62"><a id="__codelineno-31-62" name="__codelineno-31-62" href="#__codelineno-31-62"></a><span class="p">)</span>
 </span><span id="__span-31-63"><a id="__codelineno-31-63" name="__codelineno-31-63" href="#__codelineno-31-63"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
-<p><img alt="img" src="../_data/c09f5b6d9f3e4716939c042efeaf3b04.png" /></p>
+<p><img alt="img" src="../_data/1d7bcb31cc8549978926ee783222fb2f.png" /></p>
 <h2 id="temperature-trajectories-and-operating-planes">Temperature trajectories and operating planes</h2>
 <p>The ramp plot already shows <span class="arithmatex">\(T_{sh}(t)\)</span>. The next figures complete the temperature view with <span class="arithmatex">\(T_{bot}(t)\)</span> and <span class="arithmatex">\(T_{sub}(t)\)</span>, then project each trajectory into temperature operating planes.</p>
 <p>The distinction matters: the implemented product-safety constraint is <span class="arithmatex">\(T_{bot} \leq T_{crit}=-25\,^{\circ}\)</span>C. Sublimation-front temperature <span class="arithmatex">\(T_{sub}\)</span> is an algebraic state used in vapor pressure and mass transfer, but it is not compared directly with <code>T_pr_crit</code>. Consequently, the <span class="arithmatex">\(T_{bot}\)</span> plane carries the unsafe region and the <span class="arithmatex">\(T_{sub}\)</span> plane is diagnostic only.</p>
@@ -1875,7 +1875,7 @@ jupyter lab docs/examples/current_main_joint_optimizer_comparison.ipynb
 </span><span id="__span-32-32"><a id="__codelineno-32-32" name="__codelineno-32-32" href="#__codelineno-32-32"></a><span class="p">)</span>
 </span><span id="__span-32-33"><a id="__codelineno-32-33" name="__codelineno-32-33" href="#__codelineno-32-33"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
-<p><img alt="img" src="../_data/936153de1bf94e00acd03bd039d95e15.png" /></p>
+<p><img alt="img" src="../_data/90889376995c471da89f4ccf657841aa.png" /></p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a><span class="n">data</span> <span class="o">=</span> <span class="n">comparison_inputs</span><span class="p">(</span><span class="n">nominal</span><span class="o">.</span><span class="n">a1</span><span class="p">,</span> <span class="n">nominal</span><span class="o">.</span><span class="n">kc</span><span class="p">)</span>
 </span><span id="__span-33-2"><a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a><span class="n">temperature_floor</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
 </span><span id="__span-33-3"><a id="__codelineno-33-3" name="__codelineno-33-3" href="#__codelineno-33-3"></a>    <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">table</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]))</span> <span class="k">for</span> <span class="n">table</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span> <span class="ow">in</span> <span class="n">rate_analysis_series</span>
@@ -1921,7 +1921,7 @@ jupyter lab docs/examples/current_main_joint_optimizer_comparison.ipynb
 </span><span id="__span-33-43"><a id="__codelineno-33-43" name="__codelineno-33-43" href="#__codelineno-33-43"></a><span class="p">)</span>
 </span><span id="__span-33-44"><a id="__codelineno-33-44" name="__codelineno-33-44" href="#__codelineno-33-44"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
-<p><img alt="img" src="../_data/d80b7d779acc402995bda79c81f08c06.png" /></p>
+<p><img alt="img" src="../_data/047d6d8fefc94ba4a5990f8c9b7dc5a8.png" /></p>
 <p>The rate limits are active over part of both optimized trajectories, so they are not cosmetic: they change the feasible controls and increase the nominal completion time relative to the rate-unlimited optimum. At the same time, finite difference and collocation now agree closely on completion time and on the resolved control and temperature paths.</p>
 <p>The time-domain and operating-plane plots also explain the earlier apparent temperature “peaks.” Shelf temperature, vial-bottom temperature, and sublimation-front temperature are now shown as distinct quantities. Only <span class="arithmatex">\(T_{bot}\)</span> is constrained by <code>T_pr_crit</code>; shading a <span class="arithmatex">\(T_{sub}\)</span> plot against that limit would test the wrong state. Any fast <span class="arithmatex">\(T_{bot}\)</span> response that remains is the response of this quasi-steady algebraic model, not a prediction of thermal inertia. Modeling thermal lag requires additional differential states and independently validated capacitance parameters.</p>
 <h2 id="optionally-save-a-compact-reproduction-record">Optionally save a compact reproduction record</h2>
