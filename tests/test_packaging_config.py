@@ -456,6 +456,9 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
         "tests/test_pyomo_models/test_dae_joint_optimization.py::test_joint_dae_model_solves_rate_limited_extension"
         in pyomo_tests
     )
+    # Whole-file target so a later solver-backed test in this file cannot be
+    # added without the lane picking it up.
+    assert "tests/test_pyomo_models/test_dae_shadow_prices.py" in pyomo_tests
     assert (
         "tests/test_current_main_joint_optimizer_comparison.py::test_current_main_joint_comparison_notebook_execution"
         in pyomo_tests
