@@ -331,9 +331,13 @@ def run_slew_rate_sweep(
         raise ValueError("idealized_time_hr must be finite and positive")
     pressure_rates = tuple(float(value) for value in pressure_ramp_rates_torr_hr)
     shelf_rates = tuple(float(value) for value in shelf_temperature_ramp_rates_c_hr)
-    if not pressure_rates or any(value <= 0.0 for value in pressure_rates):
+    if not pressure_rates or any(
+        not np.isfinite(value) or value <= 0.0 for value in pressure_rates
+    ):
         raise ValueError("pressure_ramp_rates_torr_hr must contain positive values")
-    if not shelf_rates or any(value <= 0.0 for value in shelf_rates):
+    if not shelf_rates or any(
+        not np.isfinite(value) or value <= 0.0 for value in shelf_rates
+    ):
         raise ValueError("shelf_temperature_ramp_rates_c_hr must contain positive values")
 
     _, collocation_nfe = matched_nfe_for_point_budget(point_budget, ncp)

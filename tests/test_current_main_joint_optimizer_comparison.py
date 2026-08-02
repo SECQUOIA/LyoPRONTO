@@ -102,7 +102,9 @@ def test_implementability_penalty_decomposition_is_additive() -> None:
     ("pressure_rates", "shelf_rates", "message"),
     [
         ([], [30.0], "pressure_ramp_rates_torr_hr"),
+        ([np.nan], [30.0], "pressure_ramp_rates_torr_hr"),
         ([0.05], [0.0], "shelf_temperature_ramp_rates_c_hr"),
+        ([0.05], [np.inf], "shelf_temperature_ramp_rates_c_hr"),
     ],
 )
 def test_slew_rate_sweep_rejects_empty_or_nonpositive_rates(
