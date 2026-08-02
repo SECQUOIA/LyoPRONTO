@@ -256,11 +256,16 @@ SciPy optimizer. A changing fixed schedule would need its switch times
 parameterized against the optimized real-time horizon.
 
 A successful solve also reports `shadow_prices`, the change in optimal drying
-time [hr] per unit increase in each limit the model defines. The sign
+time [hr] per unit increase in each limit it prices. The sign
 convention is uniform: a positive value means raising that limit costs time
 and a negative value means it saves time, whether the number comes from a
 constraint multiplier or a variable-bound multiplier. Values near zero mark
 limits that are inactive at the optimum, so relaxing them buys nothing.
+`equipment_capability` is the sensitivity to an additive increase [kg/hr] in
+the capacity curve at every pressure. Control-bound entries are included only
+for controls optimized by the selected formulation; fixed setpoints are not
+reported as independently movable lower or upper bounds. Only entries whose
+multipliers the requested solver exports are present.
 
 ```python
 result = solve_dae_joint_optimization(...)

@@ -57,15 +57,19 @@ class DaeOptimizationResult:
     shadow_prices: Mapping[str, float] = field(default_factory=dict)
     """Change in optimal drying time [hr] per unit increase in each named limit.
 
-    Populated only for a successful solve, and only for limits the model
-    actually defines. A value near zero means the limit is inactive at the
-    optimum, so relaxing it buys nothing. Keys and their units are:
+    Populated only for a successful solve, and only for limits whose
+    multipliers the requested solver exports. A value near zero means the
+    limit is inactive at the optimum, so relaxing it buys nothing. Keys and
+    their units are:
 
     ``product_temperature_limit`` [hr/degC], ``equipment_capability``
-    [hr/(kg/hr)], ``final_drying_target`` [hr/cm],
+    [hr/(kg/hr)] for an additive shift of the capacity curve,
+    ``final_drying_target`` [hr/cm],
     ``chamber_pressure_lower_bound`` and ``chamber_pressure_upper_bound``
     [hr/Torr], and ``shelf_temperature_lower_bound`` and
-    ``shelf_temperature_upper_bound`` [hr/degC].
+    ``shelf_temperature_upper_bound`` [hr/degC]. Control-bound keys are
+    included only when that control is optimized; a fixed setpoint is not
+    reported as a one-sided bound.
     """
 
     def as_table(self) -> np.ndarray:
@@ -698,26 +702,36 @@ def _shadow_prices(model: pyo.ConcreteModel) -> dict[str, float]:
         return float(sum(present)) if present else None
 
     prices: dict[str, float] = {}
-    for key, component_name in (
-        ("product_temperature_limit", "product_temperature_limit"),
-        ("equipment_capability", "equipment_capability"),
+    for key, component_name, sign in (
+        ("product_temperature_limit", "product_temperature_limit", 1.0),
+        ("equipment_capability", "equipment_capability", -1.0),
     ):
         component = getattr(model, component_name, None)
         if component is not None:
             total = _suffix_total("dual", list(component.values()))
             if total is not None:
-                prices[key] = total
+                prices[key] = sign * total
     target = getattr(model, "final_drying_target", None)
     if target is not None:
         total = _suffix_total("dual", [target])
         if total is not None:
             prices["final_drying_target"] = total
-    for key, variable, suffix_name in (
-        ("chamber_pressure_lower_bound", model.Pch, "ipopt_zL_out"),
-        ("chamber_pressure_upper_bound", model.Pch, "ipopt_zU_out"),
-        ("shelf_temperature_lower_bound", model.Tsh, "ipopt_zL_out"),
-        ("shelf_temperature_upper_bound", model.Tsh, "ipopt_zU_out"),
-    ):
+    bound_prices: list[tuple[str, Any, str]] = []
+    if model.optimized_control in ("chamber_pressure", "joint"):
+        bound_prices.extend(
+            (
+                ("chamber_pressure_lower_bound", model.Pch, "ipopt_zL_out"),
+                ("chamber_pressure_upper_bound", model.Pch, "ipopt_zU_out"),
+            )
+        )
+    if model.optimized_control in ("shelf_temperature", "joint"):
+        bound_prices.extend(
+            (
+                ("shelf_temperature_lower_bound", model.Tsh, "ipopt_zL_out"),
+                ("shelf_temperature_upper_bound", model.Tsh, "ipopt_zU_out"),
+            )
+        )
+    for key, variable, suffix_name in bound_prices:
         total = _suffix_total(suffix_name, [variable[tau] for tau in model.t])
         if total is not None:
             prices[key] = total
