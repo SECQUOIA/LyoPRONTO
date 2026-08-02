@@ -182,4 +182,5 @@ jobs:
           tests/test_current_main_pressure_optimizer_comparison.py::test_current_main_pressure_comparison_helper_solves_smoke_case \
           tests/test_current_main_pressure_optimizer_comparison.py::test_current_main_pressure_comparison_notebook_execution \
           tests/test_current_main_joint_optimizer_comparison.py::test_current_main_joint_comparison_helper_solves_smoke_case \
-          tests/test_current_main_joint_optimizer_comparison.py::test_current_main_joint_comparison_notebook_execution
+          tests/test_current_main_joint_optimizer_comparison.py::test_current_main_joint_comparison_notebook_execution \
+          tests/test_pyomo_models/test_dae_joint_optimization.py::test_joint_dae_model_solves_rate_limited_extension

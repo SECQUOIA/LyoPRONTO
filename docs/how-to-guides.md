@@ -145,6 +145,9 @@ requirements.
 For an implementability diagnostic, the joint solver also accepts
 `initial_pressure` [Torr], `initial_shelf_temperature` [degC],
 `pressure_ramp_rate` [Torr/hr], and `shelf_temperature_ramp_rate` [degC/hr].
+The fixed-horizon trajectory builder names the same per-hour quantities
+`pch_ramp_rate` and `tsh_ramp_rate`; in contrast, legacy dictionary keys such
+as `Tshelf["ramp_rate"]` are expressed in degC/min.
 Ramp limits act between adjacent transcription nodes and require the matching
 initial value. They are disabled by default so the exact rate-unlimited legacy
 comparison remains available. This extension constrains control movement but
