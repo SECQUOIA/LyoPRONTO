@@ -72,8 +72,6 @@ def test_generated_artifacts_are_ignored(path: str) -> None:
     [
         "docs/examples/knownRp_PD.ipynb",
         "docs/examples/new_source_notebook.ipynb",
-        "docs/examples/current_main_optimizer_comparison.ipynb",
-        "docs/examples/current_main_pressure_optimizer_comparison.ipynb",
         "docs/examples/current_main_joint_optimizer_comparison.ipynb",
         "docs/examples/temperature.txt",
         "examples/outputs/README.md",

@@ -53,9 +53,7 @@ jobs:
               examples/current_main_optimizer_comparison.py|\
               examples/current_main_joint_optimizer_comparison.py|\
               examples/current_main_pressure_optimizer_comparison.py|\
-              docs/examples/current_main_optimizer_comparison.ipynb|\
               docs/examples/current_main_joint_optimizer_comparison.ipynb|\
-              docs/examples/current_main_pressure_optimizer_comparison.ipynb|\
               tests/test_pyomo_models/**|\
               tests/test_current_main_optimizer_comparison.py|\
               tests/test_current_main_joint_optimizer_comparison.py|\
@@ -179,10 +177,9 @@ jobs:
           tests/test_pyomo_models/test_dae_pressure_optimization.py::test_pressure_dae_model_solves_equivalent_complete_drying_problem \
           tests/test_pyomo_models/test_dae_joint_optimization.py::test_joint_dae_model_solves_equivalent_complete_drying_problem \
           tests/test_current_main_optimizer_comparison.py::test_current_main_comparison_helper_solves_smoke_case \
-          tests/test_current_main_optimizer_comparison.py::test_current_main_comparison_notebook_execution \
           tests/test_current_main_pressure_optimizer_comparison.py::test_current_main_pressure_comparison_helper_solves_smoke_case \
-          tests/test_current_main_pressure_optimizer_comparison.py::test_current_main_pressure_comparison_notebook_execution \
           tests/test_current_main_joint_optimizer_comparison.py::test_current_main_joint_comparison_helper_solves_smoke_case \
+          tests/test_current_main_joint_optimizer_comparison.py::test_implementability_analysis_solves_and_decomposes_smoke_case \
           tests/test_current_main_joint_optimizer_comparison.py::test_current_main_joint_comparison_notebook_execution \
           tests/test_pyomo_models/test_dae_joint_optimization.py::test_joint_dae_model_solves_rate_limited_extension \
           tests/test_pyomo_models/test_dae_shadow_prices.py

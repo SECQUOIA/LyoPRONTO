@@ -84,29 +84,3 @@ def test_current_main_comparison_helper_solves_smoke_case(
     assert case.finite_difference_n_constraints > 0
     assert case.collocation_n_variables > 0
     assert case.collocation_n_constraints > 0
-
-
-@pytest.mark.serial
-@pytest.mark.notebook
-@pytest.mark.pyomo
-def test_current_main_comparison_notebook_execution(repo_root) -> None:
-    require_pyomo_solver("ipopt")
-    papermill = pytest.importorskip("papermill")
-
-    papermill.execute_notebook(
-        repo_root / "docs/examples/current_main_optimizer_comparison.ipynb",
-        repo_root / "docs/examples/current_main_optimizer_comparison_output.ipynb",
-        parameters={
-            "a1_values": [16.0],
-            "kc_values": [2.75e-4],
-            "scipy_dt": 0.1,
-            "point_budget": 13,
-            "ncp": 3,
-            "final_dried_fraction": 1.0,
-            "timing_repeats": 1,
-            "sensitivity_point_budgets": [13, 25],
-            "scipy_dt_values": [0.2, 0.1],
-            "constraint_tolerance": 1.0e-4,
-            "save_results": False,
-        },
-    )

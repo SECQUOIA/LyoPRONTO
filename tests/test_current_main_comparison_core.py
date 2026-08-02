@@ -221,6 +221,7 @@ def test_solver_run_from_dae_result_normalizes_shared_metadata() -> None:
         success=True,
         solver_status="ok",
         termination_condition="optimal",
+        shadow_prices={"product_temperature_limit": -1.2},
         discretization={
             "n_time_points": 25,
             "n_variables": 100,
@@ -238,3 +239,4 @@ def test_solver_run_from_dae_result_normalizes_shared_metadata() -> None:
     assert run.n_variables == 100
     assert run.n_constraints == 80
     assert run.solver_iterations == 6
+    assert run.shadow_prices == {"product_temperature_limit": -1.2}

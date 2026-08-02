@@ -310,14 +310,14 @@ profiles, output columns, and algebraic constraints. Full trajectories can
 diverge for the fixed-horizon optimization builders because they solve a
 different simultaneous proxy problem. Use the matching free-final-time DAE
 model when comparing the `opt_Tsh.dry`, `opt_Pch.dry`, or `opt_Pch_Tsh.dry`
-completion-time objective. The current comparison tutorials check both DAE
-transformations:
-
-`docs/examples/current_main_optimizer_comparison.ipynb`
-
-`docs/examples/current_main_pressure_optimizer_comparison.ipynb`
+completion-time objective. The implementable-cycle tutorial checks both DAE
+transformations, reports accuracy beside runtime, and uses rate sweeps plus
+shadow prices for equipment decisions:
 
 `docs/examples/current_main_joint_optimizer_comparison.ipynb`
+
+Shelf-only and pressure-only comparison helpers remain covered as regression
+fixtures, but are special cases of the published joint-control tutorial.
 
 Advanced workflow builders remain explicit optional Pyomo prototypes:
 

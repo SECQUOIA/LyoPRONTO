@@ -8,7 +8,7 @@ their public entry points.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Callable, Mapping, Sequence, Tuple
 
 import numpy as np
@@ -29,6 +29,8 @@ class SolverRun:
     n_variables: int | None
     n_constraints: int | None
     solver_iterations: int | None
+    shadow_prices: Mapping[str, float] = field(default_factory=dict)
+    """Optimal drying-time sensitivities in the units documented by the solver."""
 
 
 @dataclass
@@ -159,6 +161,7 @@ def solver_run_from_dae_result(result: Any, *, wall_time_s: float) -> SolverRun:
         n_variables=int(result.discretization["n_variables"]),
         n_constraints=int(result.discretization["n_constraints"]),
         solver_iterations=result.discretization["solver_iterations"],
+        shadow_prices=dict(result.shadow_prices),
     )
 
 
