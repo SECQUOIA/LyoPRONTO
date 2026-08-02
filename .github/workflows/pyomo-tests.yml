@@ -49,6 +49,7 @@ jobs:
             case "$path" in
               lyopronto/pyomo_models/**|\
               examples/example_pyomo_optimization.py|\
+              examples/current_main_comparison.py|\
               examples/current_main_optimizer_comparison.py|\
               examples/current_main_joint_optimizer_comparison.py|\
               examples/current_main_pressure_optimizer_comparison.py|\

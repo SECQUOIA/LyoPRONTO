@@ -15,6 +15,7 @@ optimization prototypes.
 | `example_parameter_estimation.py` | Product-resistance estimation from temperature data. | CSV and `parameter_estimation_results.png` under `examples/outputs/`. |
 | `typed_api_examples.py` | Typed Pint API examples for simulation, fitting, RF, vial utilities, ECCURT, and Pirani endpoint detection. | Console smoke output. |
 | `example_pyomo_optimization.py` | Optional Pyomo construction example for pressure-only, shelf-temperature-only, and joint optimization modes. | Console model summaries. |
+| `current_main_comparison.py` | Shared result, timing, matched-point-budget, and discretization-sensitivity orchestration for the three current-main comparisons. | In-memory normalized trajectories and metrics. |
 | `current_main_optimizer_comparison.py` | Reproducible shelf-temperature SciPy/Pyomo.DAE final-time comparison helpers for finite differences and collocation. | In-memory normalized trajectories and metrics. |
 | `current_main_pressure_optimizer_comparison.py` | Reproducible chamber-pressure SciPy/Pyomo.DAE final-time comparison helpers for finite differences and collocation. | In-memory normalized trajectories and metrics. |
 | `current_main_joint_optimizer_comparison.py` | Reproducible joint pressure/temperature SciPy/Pyomo.DAE final-time comparison helpers, constraint diagnostics, and an optional rate-limited Pyomo extension. | In-memory normalized trajectories and metrics. |
@@ -54,7 +55,9 @@ and
 [joint-control](../docs/examples/current_main_joint_optimizer_comparison.ipynb)
 comparison notebooks use these helpers for solver-backed tutorials. They
 require IPOPT and write optional local reproduction records under
-`benchmarks/results/`.
+`benchmarks/results/`. Shared orchestration lives in
+`current_main_comparison.py`; each experiment module keeps its physical inputs,
+units, optimizer calls, and diagnostics explicit.
 
 ## Legacy Scripts
 

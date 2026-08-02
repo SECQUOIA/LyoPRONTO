@@ -23,10 +23,13 @@ import warnings
 
 import numpy as np
 
-from examples.current_main_optimizer_comparison import (
+from examples.current_main_comparison import (
     CaseComparison,
     SolverRun,
+    collect_case_comparison,
+    collect_discretization_sensitivity,
     matched_nfe_for_point_budget,
+    solver_run_from_dae_result,
 )
 from lyopronto import opt_Pch
 
@@ -138,35 +141,7 @@ def run_pyomo_dae(
         solver=solver,
     )
     wall_time_s = perf_counter() - start
-    trajectory = result.as_table()
-    max_violation = max(
-        (float(value) if value is not None else 0.0)
-        for value in result.constraint_violations.values()
-    )
-    objective = (
-        float(result.objective_time_hr) if result.objective_time_hr is not None else float("nan")
-    )
-    return SolverRun(
-        trajectory=trajectory,
-        wall_time_s=float(wall_time_s),
-        objective_time_hr=objective,
-        success=bool(result.success),
-        solver_status=str(result.solver_status),
-        termination_condition=str(result.termination_condition),
-        max_constraint_violation=max_violation,
-        n_time_points=int(result.discretization["n_time_points"]),
-        n_variables=int(result.discretization["n_variables"]),
-        n_constraints=int(result.discretization["n_constraints"]),
-        solver_iterations=result.discretization["solver_iterations"],
-    )
-
-
-def _require_success(run: SolverRun, label: str, a1: float, kc: float) -> None:
-    if not run.success:
-        raise RuntimeError(
-            f"{label} failed for A1={a1}, KC={kc}: "
-            f"{run.solver_status}/{run.termination_condition}"
-        )
+    return solver_run_from_dae_result(result, wall_time_s=wall_time_s)
 
 
 def run_case_comparison(
@@ -183,74 +158,19 @@ def run_case_comparison(
     solver: Union[str, Any] = "ipopt",
 ) -> CaseComparison:
     """Run repeated equivalent pressure optimizations at a matched point budget."""
-    if timing_repeats < 1:
-        raise ValueError("timing_repeats must be at least one")
-    finite_difference_points = int(finite_difference_nfe) + 1
-    collocation_points = int(collocation_nfe) * int(ncp) + 1
-    if finite_difference_points != collocation_points:
-        raise ValueError(
-            "finite_difference_nfe and collocation_nfe must create the same "
-            "number of transcription points"
-        )
-
-    scipy_runs = []
-    finite_difference_runs = []
-    collocation_runs = []
-    for _ in range(int(timing_repeats)):
-        scipy_run = run_scipy_reference(a1, kc, dt=scipy_dt)
-        _require_success(scipy_run, "SciPy", a1, kc)
-        initialization = scipy_run.trajectory if warmstart_from_scipy else None
-        finite_difference_run = run_pyomo_dae(
-            a1,
-            kc,
-            discretization="finite_difference",
-            nfe=finite_difference_nfe,
-            ncp=ncp,
-            final_dried_fraction=final_dried_fraction,
-            initialize=initialization,
-            solver=solver,
-        )
-        collocation_run = run_pyomo_dae(
-            a1,
-            kc,
-            discretization="collocation",
-            nfe=collocation_nfe,
-            ncp=ncp,
-            final_dried_fraction=final_dried_fraction,
-            initialize=initialization,
-            solver=solver,
-        )
-        _require_success(finite_difference_run, "Pyomo.DAE finite difference", a1, kc)
-        _require_success(collocation_run, "Pyomo.DAE collocation", a1, kc)
-        scipy_runs.append(scipy_run)
-        finite_difference_runs.append(finite_difference_run)
-        collocation_runs.append(collocation_run)
-
-    return CaseComparison(
-        a1=float(a1),
-        kc=float(kc),
-        scipy_trajectory=scipy_runs[-1].trajectory,
-        finite_difference_trajectory=finite_difference_runs[-1].trajectory,
-        collocation_trajectory=collocation_runs[-1].trajectory,
-        scipy_wall_times_s=tuple(run.wall_time_s for run in scipy_runs),
-        finite_difference_wall_times_s=tuple(run.wall_time_s for run in finite_difference_runs),
-        collocation_wall_times_s=tuple(run.wall_time_s for run in collocation_runs),
-        finite_difference_status=finite_difference_runs[-1].solver_status,
-        finite_difference_termination=finite_difference_runs[-1].termination_condition,
-        collocation_status=collocation_runs[-1].solver_status,
-        collocation_termination=collocation_runs[-1].termination_condition,
-        finite_difference_max_constraint_violation=max(
-            run.max_constraint_violation for run in finite_difference_runs
-        ),
-        collocation_max_constraint_violation=max(
-            run.max_constraint_violation for run in collocation_runs
-        ),
-        finite_difference_n_variables=int(finite_difference_runs[-1].n_variables),
-        finite_difference_n_constraints=int(finite_difference_runs[-1].n_constraints),
-        finite_difference_solver_iterations=finite_difference_runs[-1].solver_iterations,
-        collocation_n_variables=int(collocation_runs[-1].n_variables),
-        collocation_n_constraints=int(collocation_runs[-1].n_constraints),
-        collocation_solver_iterations=collocation_runs[-1].solver_iterations,
+    return collect_case_comparison(
+        a1,
+        kc,
+        run_scipy=run_scipy_reference,
+        run_dae=run_pyomo_dae,
+        scipy_dt=scipy_dt,
+        finite_difference_nfe=finite_difference_nfe,
+        collocation_nfe=collocation_nfe,
+        ncp=ncp,
+        final_dried_fraction=final_dried_fraction,
+        timing_repeats=timing_repeats,
+        warmstart_from_scipy=warmstart_from_scipy,
+        solver=solver,
     )
 
 
@@ -265,47 +185,17 @@ def run_discretization_sensitivity(
     solver: Union[str, Any] = "ipopt",
 ) -> list[dict[str, Any]]:
     """Evaluate both DAE transformations at exactly matched point budgets."""
-    scipy_objective = float(np.asarray(scipy_trajectory)[-1, 0])
-    rows: list[dict[str, Any]] = []
-    for point_budget in point_budgets:
-        finite_difference_nfe, collocation_nfe = matched_nfe_for_point_budget(
-            int(point_budget), ncp
-        )
-        for method, nfe in (
-            ("finite_difference", finite_difference_nfe),
-            ("collocation", collocation_nfe),
-        ):
-            run = run_pyomo_dae(
-                a1,
-                kc,
-                discretization=method,
-                nfe=int(nfe),
-                ncp=ncp,
-                final_dried_fraction=final_dried_fraction,
-                solver=solver,
-            )
-            if not run.success:
-                raise RuntimeError(f"Pyomo.DAE {method} solve failed for nfe={nfe}")
-            rows.append(
-                {
-                    "method": method,
-                    "point_budget": int(point_budget),
-                    "nfe": int(nfe),
-                    "ncp": None if method == "finite_difference" else int(ncp),
-                    "n_time_points": run.n_time_points,
-                    "objective_time_hr": run.objective_time_hr,
-                    "objective_gap_percent": 100.0
-                    * (run.objective_time_hr - scipy_objective)
-                    / scipy_objective,
-                    "final_percent_dried": float(run.trajectory[-1, 6]),
-                    "wall_time_s": run.wall_time_s,
-                    "n_variables": run.n_variables,
-                    "n_constraints": run.n_constraints,
-                    "solver_iterations": run.solver_iterations,
-                    "max_constraint_violation": run.max_constraint_violation,
-                }
-            )
-    return rows
+    return collect_discretization_sensitivity(
+        a1,
+        kc,
+        scipy_trajectory,
+        run_dae=run_pyomo_dae,
+        point_budgets=point_budgets,
+        ncp=ncp,
+        final_dried_fraction=final_dried_fraction,
+        solver=solver,
+        extra_row_values=None,
+    )
 
 
 __all__ = [
