@@ -525,6 +525,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/current_main_joint_optimizer_comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Current joint-control optimizer comparison
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -947,11 +975,22 @@ solver such as IPOPT:</p>
 Use <code>lyopronto.opt_Pch</code>, <code>lyopronto.opt_Tsh</code>, and <code>lyopronto.opt_Pch_Tsh</code> for
 the shipped SciPy optimizer workflows. For an equivalent simultaneous
 completion-time problem, use <code>solve_dae_shelf_temperature_optimization</code> or
-<code>solve_dae_chamber_pressure_optimization</code> and select either
+<code>solve_dae_chamber_pressure_optimization</code>, or use
+<code>solve_dae_joint_optimization</code> to release both controls, and select either
 <code>finite_difference</code> or <code>collocation</code>. The older fixed-horizon builders remain
 available for validation and advanced workflow composition. A unified selector
 is not provided while those formulations have different objectives and solver
 requirements.</p>
+<p>For an implementability diagnostic, the joint solver also accepts
+<code>initial_pressure</code> [Torr], <code>initial_shelf_temperature</code> [degC],
+<code>pressure_ramp_rate</code> [Torr/hr], and <code>shelf_temperature_ramp_rate</code> [degC/hr].
+The fixed-horizon trajectory builder names the same per-hour quantities
+<code>pch_ramp_rate</code> and <code>tsh_ramp_rate</code>; in contrast, legacy dictionary keys such
+as <code>Tshelf["ramp_rate"]</code> are expressed in degC/min.
+Ramp limits act between adjacent transcription nodes and require the matching
+initial value. They are disabled by default so the exact rate-unlimited legacy
+comparison remains available. This extension constrains control movement but
+does not introduce thermal-capacitance dynamics.</p>
 <h2 id="run-notebook-examples">Run Notebook Examples</h2>
 <p>The MkDocs notebook examples are tracked under <code>docs/examples/</code>:</p>
 <ul>
@@ -959,6 +998,7 @@ requirements.</p>
 <li><a href="../examples/unknownRp_PD/">unknown Rp</a></li>
 <li><a href="../examples/current_main_optimizer_comparison/">current SciPy/Pyomo.DAE shelf-temperature comparison</a></li>
 <li><a href="../examples/current_main_pressure_optimizer_comparison/">current SciPy/Pyomo.DAE chamber-pressure comparison</a></li>
+<li><a href="../examples/current_main_joint_optimizer_comparison/">current SciPy/Pyomo.DAE joint-control comparison</a></li>
 </ul>
 <p>Notebook execution is validated through the explicit notebook CI lane.
 The optimizer-comparison tutorials require <code>.[dev,pyomo]</code> and IPOPT, so their

@@ -366,6 +366,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/current_main_joint_optimizer_comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Current joint-control optimizer comparison
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -896,9 +924,9 @@ install its LAPACK runtime dependency, then verify that IPOPT is both discoverab
 and executable before pytest starts. This prevents a green run in which every
 solver-backed test was silently skipped.</p>
 <p>The solver comparison job also executes reduced one-case versions of the
-current-main SciPy/Pyomo shelf-temperature and chamber-pressure comparison
-notebooks. Their default 3x3 sweeps and repeated timings remain local tutorial
-experiments rather than CI timing gates.</p>
+current-main SciPy/Pyomo shelf-temperature, chamber-pressure, and joint-control
+comparison notebooks. Their default 3x3 sweeps and repeated timings remain
+local tutorial experiments rather than CI timing gates.</p>
 <p><code>.github/workflows/slow-tests.yml</code> is manual dispatch for focused slow
 non-Pyomo, full non-Pyomo, or optional Pyomo validation.</p>
 <h2 id="pyomo-test-policy">Pyomo Test Policy</h2>
