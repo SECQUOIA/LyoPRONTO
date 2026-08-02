@@ -106,9 +106,9 @@ and executable before pytest starts. This prevents a green run in which every
 solver-backed test was silently skipped.
 
 The solver comparison job also executes reduced one-case versions of the
-current-main SciPy/Pyomo shelf-temperature and chamber-pressure comparison
-notebooks. Their default 3x3 sweeps and repeated timings remain local tutorial
-experiments rather than CI timing gates.
+current-main SciPy/Pyomo shelf-temperature, chamber-pressure, and joint-control
+comparison notebooks. Their default 3x3 sweeps and repeated timings remain
+local tutorial experiments rather than CI timing gates.
 
 `.github/workflows/slow-tests.yml` is manual dispatch for focused slow
 non-Pyomo, full non-Pyomo, or optional Pyomo validation.
