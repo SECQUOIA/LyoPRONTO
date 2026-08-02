@@ -17,7 +17,7 @@ optimization prototypes.
 | `example_pyomo_optimization.py` | Optional Pyomo construction example for pressure-only, shelf-temperature-only, and joint optimization modes. | Console model summaries. |
 | `current_main_optimizer_comparison.py` | Reproducible shelf-temperature SciPy/Pyomo.DAE final-time comparison helpers for finite differences and collocation. | In-memory normalized trajectories and metrics. |
 | `current_main_pressure_optimizer_comparison.py` | Reproducible chamber-pressure SciPy/Pyomo.DAE final-time comparison helpers for finite differences and collocation. | In-memory normalized trajectories and metrics. |
-| `current_main_joint_optimizer_comparison.py` | Reproducible joint pressure/temperature SciPy/Pyomo.DAE final-time comparison helpers for finite differences and collocation. | In-memory normalized trajectories and metrics. |
+| `current_main_joint_optimizer_comparison.py` | Reproducible joint pressure/temperature SciPy/Pyomo.DAE final-time comparison helpers, constraint diagnostics, and an optional rate-limited Pyomo extension. | In-memory normalized trajectories and metrics. |
 
 Run examples from the repository root:
 

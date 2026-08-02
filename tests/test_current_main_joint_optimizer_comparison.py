@@ -7,6 +7,7 @@ from examples.current_main_joint_optimizer_comparison import (
     comparison_inputs,
     matched_nfe_for_point_budget,
     run_case_comparison,
+    trajectory_constraint_diagnostics,
 )
 from tests.pyomo_solver import require_pyomo_solver
 
@@ -32,6 +33,26 @@ def test_joint_case_comparison_rejects_unmatched_transcription_points() -> None:
             collocation_nfe=24,
             ncp=3,
         )
+
+
+def test_trajectory_constraint_diagnostics_cover_sequential_outputs() -> None:
+    """Notebook acceptance diagnostics apply independently to SciPy tables."""
+    data = comparison_inputs(16.0, 2.75e-4)
+    table = np.array(
+        [
+            [0.0, -30.0, -25.0, 20.0, 50.0, 1.0, 0.0],
+            [1.0, -29.0, -24.4, 20.0, 40.0, 1.0, 100.0],
+        ]
+    )
+
+    diagnostics = trajectory_constraint_diagnostics(table, data)
+
+    assert diagnostics["product_temperature_violation_c"] == pytest.approx(0.6)
+    assert diagnostics["pressure_lower_violation_mtorr"] == pytest.approx(10.0)
+    assert diagnostics["pressure_upper_violation_mtorr"] == pytest.approx(0.0)
+    assert diagnostics["shelf_lower_violation_c"] == pytest.approx(0.0)
+    assert diagnostics["shelf_upper_violation_c"] == pytest.approx(0.0)
+    assert diagnostics["final_dried_percent"] == pytest.approx(100.0)
 
 
 @pytest.mark.pyomo
@@ -93,6 +114,8 @@ def test_current_main_joint_comparison_notebook_execution(repo_root) -> None:
             "final_dried_fraction": 1.0,
             "timing_repeats": 1,
             "sensitivity_point_budgets": [13, 25],
+            "pressure_lower_bound_values_torr": [0.05, 0.10],
+            "implementability_point_budget": 13,
             "scipy_dt_values": [0.2, 0.1],
             "constraint_tolerance": 1.0e-4,
             "save_results": False,

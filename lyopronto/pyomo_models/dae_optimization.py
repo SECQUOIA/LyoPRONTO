@@ -180,9 +180,15 @@ def _create_dae_optimization_model(
     final_dried_fraction: float = 1.0,
     t_final_bounds: Tuple[float, float] = (0.1, 50.0),
     initialize: Optional[np.ndarray] = None,
+    initial_pressure: Optional[float] = None,
+    initial_shelf_temperature: Optional[float] = None,
+    pressure_ramp_rate: Optional[float] = None,
+    shelf_temperature_ramp_rate: Optional[float] = None,
     optimized_control: _DaeOptimizedControl,
 ) -> pyo.ConcreteModel:
     """Build either supported free-final-time DAE optimization model."""
+    requested_initial_pressure = initial_pressure
+    requested_initial_shelf_temperature = initial_shelf_temperature
     _require_keys("vial", vial, ("Av", "Ap", "Vfill"))
     _require_keys("product", product, ("cSolid", "R0", "A1", "A2", "T_pr_crit"))
     _require_keys("ht", ht, ("KC", "KP", "KD"))
@@ -195,8 +201,8 @@ def _create_dae_optimization_model(
             raise ValueError("tshelf max must be greater than tshelf min")
         pressure_bounds = (fixed_pressure, fixed_pressure)
         shelf_bounds = (float(tshelf["min"]), float(tshelf["max"]))
-        initial_pressure = fixed_pressure
-        initial_shelf = float(tshelf.get("init", product["T_pr_crit"]))
+        pressure_initialization = fixed_pressure
+        shelf_initialization = float(tshelf.get("init", product["T_pr_crit"]))
         fixed_shelf = None
     elif optimized_control is _DaeOptimizedControl.CHAMBER_PRESSURE:
         _require_keys("pchamber", pchamber, ("min", "max"))
@@ -205,8 +211,8 @@ def _create_dae_optimization_model(
         if pressure_bounds[0] <= 0.0 or pressure_bounds[1] <= pressure_bounds[0]:
             raise ValueError("pchamber bounds must be positive and increasing")
         shelf_bounds = (fixed_shelf, fixed_shelf)
-        initial_pressure = float(np.mean(pressure_bounds))
-        initial_shelf = fixed_shelf
+        pressure_initialization = float(np.mean(pressure_bounds))
+        shelf_initialization = fixed_shelf
         fixed_pressure = None
     else:
         _require_keys("pchamber", pchamber, ("min", "max"))
@@ -217,8 +223,16 @@ def _create_dae_optimization_model(
         shelf_bounds = (float(tshelf["min"]), float(tshelf["max"]))
         if shelf_bounds[1] <= shelf_bounds[0]:
             raise ValueError("tshelf max must be greater than tshelf min")
-        initial_pressure = float(np.mean(pressure_bounds))
-        initial_shelf = float(tshelf.get("init", product["T_pr_crit"]))
+        pressure_initialization = (
+            float(requested_initial_pressure)
+            if requested_initial_pressure is not None
+            else float(np.mean(pressure_bounds))
+        )
+        shelf_initialization = (
+            float(requested_initial_shelf_temperature)
+            if requested_initial_shelf_temperature is not None
+            else float(tshelf.get("init", product["T_pr_crit"]))
+        )
         fixed_pressure = None
         fixed_shelf = None
 
@@ -232,6 +246,26 @@ def _create_dae_optimization_model(
         raise ValueError("final_dried_fraction must satisfy 0 < value <= 1")
     if t_final_bounds[0] <= 0.0 or t_final_bounds[1] <= t_final_bounds[0]:
         raise ValueError("t_final_bounds must be positive and increasing")
+    if requested_initial_pressure is not None and not (
+        pressure_bounds[0] <= float(requested_initial_pressure) <= pressure_bounds[1]
+    ):
+        raise ValueError("initial_pressure must be within the chamber-pressure bounds")
+    if requested_initial_shelf_temperature is not None and not (
+        shelf_bounds[0] <= float(requested_initial_shelf_temperature) <= shelf_bounds[1]
+    ):
+        raise ValueError("initial_shelf_temperature must be within the shelf-temperature bounds")
+    if pressure_ramp_rate is not None:
+        if float(pressure_ramp_rate) <= 0.0:
+            raise ValueError("pressure_ramp_rate must be positive")
+        if requested_initial_pressure is None:
+            raise ValueError("initial_pressure is required when pressure_ramp_rate is set")
+    if shelf_temperature_ramp_rate is not None:
+        if float(shelf_temperature_ramp_rate) <= 0.0:
+            raise ValueError("shelf_temperature_ramp_rate must be positive")
+        if requested_initial_shelf_temperature is None:
+            raise ValueError(
+                "initial_shelf_temperature is required when shelf_temperature_ramp_rate is set"
+            )
     lpr0 = float(functions.Lpr0_FUN(vial["Vfill"], vial["Ap"], product["cSolid"]))
     drying_length_factor = _drying_length_factor(product, vial["Ap"])
     initial_horizon = (
@@ -283,13 +317,13 @@ def _create_dae_optimization_model(
         model.t,
         domain=pyo.PositiveReals,
         bounds=pressure_bounds,
-        initialize=initial_pressure,
+        initialize=pressure_initialization,
     )
     model.Tsh = pyo.Var(
         model.t,
         domain=pyo.Reals,
         bounds=shelf_bounds,
-        initialize=initial_shelf,
+        initialize=shelf_initialization,
     )
     model.Tsub = pyo.Var(model.t, domain=pyo.Reals, bounds=(-80.0, 0.0), initialize=-30.0)
     model.Tbot = pyo.Var(model.t, domain=pyo.Reals, bounds=(-80.0, 80.0), initialize=-25.0)
@@ -299,6 +333,7 @@ def _create_dae_optimization_model(
         model.t, domain=pyo.NonNegativeReals, bounds=(0.0, None), initialize=1.0e-4
     )
     model.Kv = pyo.Var(model.t, domain=pyo.PositiveReals, bounds=(1.0e-8, None), initialize=3.0e-4)
+    first = model.t.first()
 
     model.Rp = pyo.Expression(
         model.t,
@@ -373,28 +408,67 @@ def _create_dae_optimization_model(
             scheme="LAGRANGE-RADAU",
         )
 
-    if optimized_control in (
-        _DaeOptimizedControl.CHAMBER_PRESSURE,
-        _DaeOptimizedControl.JOINT,
+    points = sorted(model.t)
+    if pressure_ramp_rate is not None:
+        pressure_rate = float(pressure_ramp_rate)  # [Torr/hr]
+        model.chamber_pressure_ramp_up = pyo.ConstraintList()
+        model.chamber_pressure_ramp_down = pyo.ConstraintList()
+        for previous, current in zip(points, points[1:]):
+            normalized_interval = float(current - previous)  # [-]
+            maximum_change = pressure_rate * normalized_interval * model.t_final
+            model.chamber_pressure_ramp_up.add(
+                model.Pch[current] - model.Pch[previous] <= maximum_change
+            )
+            model.chamber_pressure_ramp_down.add(
+                model.Pch[previous] - model.Pch[current] <= maximum_change
+            )
+    if shelf_temperature_ramp_rate is not None:
+        shelf_rate = float(shelf_temperature_ramp_rate)  # [degC/hr]
+        model.shelf_temperature_ramp_up = pyo.ConstraintList()
+        model.shelf_temperature_ramp_down = pyo.ConstraintList()
+        for previous, current in zip(points, points[1:]):
+            normalized_interval = float(current - previous)  # [-]
+            maximum_change = shelf_rate * normalized_interval * model.t_final
+            model.shelf_temperature_ramp_up.add(
+                model.Tsh[current] - model.Tsh[previous] <= maximum_change
+            )
+            model.shelf_temperature_ramp_down.add(
+                model.Tsh[previous] - model.Tsh[current] <= maximum_change
+            )
+
+    if (
+        optimized_control
+        in (
+            _DaeOptimizedControl.CHAMBER_PRESSURE,
+            _DaeOptimizedControl.JOINT,
+        )
+        and requested_initial_pressure is None
     ):
         # The control at tau=0 has zero measure in the final-time objective.
         # Select its right-limit value explicitly so exported pressure curves
         # do not contain an arbitrary endpoint jump.
-        first = model.t.first()
         model.initial_pressure_continuity = pyo.Constraint(
             expr=model.Pch[first] == model.Pch[model.t.next(first)]
         )
-    if optimized_control is _DaeOptimizedControl.JOINT:
+    if (
+        optimized_control is _DaeOptimizedControl.JOINT
+        and requested_initial_shelf_temperature is None
+    ):
         # Shelf temperature at tau=0 is likewise an isolated control value.
         # Match its first right-limit value so the exported joint-control
         # trajectory contains no arbitrary endpoint jump.
-        first = model.t.first()
         model.initial_shelf_temperature_continuity = pyo.Constraint(
             expr=model.Tsh[first] == model.Tsh[model.t.next(first)]
         )
 
     if initialize is not None:
         _warmstart_from_legacy_table(model, initialize)
+    # Explicit physical initial conditions take precedence over an optional
+    # trajectory warm start, including its zero-time control values.
+    if requested_initial_pressure is not None:
+        model.Pch[first].fix(float(requested_initial_pressure))
+    if requested_initial_shelf_temperature is not None:
+        model.Tsh[first].fix(float(requested_initial_shelf_temperature))
 
     model.obj = pyo.Objective(expr=model.t_final, sense=pyo.minimize)
     model.scaling_factor = pyo.Suffix(direction=pyo.Suffix.EXPORT)
@@ -403,8 +477,10 @@ def _create_dae_optimization_model(
         model.scaling_factor[model.Lck[tau]] = 1.0 / lpr0
         model.scaling_factor[model.Tsub[tau]] = 0.1
         model.scaling_factor[model.Tbot[tau]] = 0.1
-        model.scaling_factor[model.Tsh[tau]] = 0.05
-        model.scaling_factor[model.Pch[tau]] = 5.0
+        if not model.Tsh[tau].fixed:
+            model.scaling_factor[model.Tsh[tau]] = 0.05
+        if not model.Pch[tau].fixed:
+            model.scaling_factor[model.Pch[tau]] = 5.0
         model.scaling_factor[model.Psub[tau]] = 5.0
         model.scaling_factor[model.dmdt[tau]] = 1.0e4
         model.scaling_factor[model.Kv[tau]] = 1.0e4
@@ -518,6 +594,10 @@ def create_dae_joint_optimization_model(
     final_dried_fraction: float = 1.0,
     t_final_bounds: Tuple[float, float] = (0.1, 50.0),
     initialize: Optional[np.ndarray] = None,
+    initial_pressure: Optional[float] = None,
+    initial_shelf_temperature: Optional[float] = None,
+    pressure_ramp_rate: Optional[float] = None,
+    shelf_temperature_ramp_rate: Optional[float] = None,
 ) -> pyo.ConcreteModel:
     """Build the free-final-time DAE counterpart to ``opt_Pch_Tsh.dry``.
 
@@ -525,6 +605,13 @@ def create_dae_joint_optimization_model(
     controls. The objective minimizes final drying time under the same
     quasi-steady physics, product-temperature limit, equipment constraint,
     and completion target as the sequential optimizer.
+
+    ``initial_pressure`` [Torr] and ``initial_shelf_temperature`` [degC]
+    optionally fix the two controls at physical time zero. The corresponding
+    ramp rates are expressed in Torr/hr and degC/hr and constrain every pair
+    of adjacent transcription nodes using the optimized physical-time
+    interval. Ramp-rate options require their matching initial value. Leaving
+    these options unset preserves the rate-unlimited legacy comparison.
     """
     return _create_dae_optimization_model(
         vial,
@@ -540,6 +627,10 @@ def create_dae_joint_optimization_model(
         final_dried_fraction=final_dried_fraction,
         t_final_bounds=t_final_bounds,
         initialize=initialize,
+        initial_pressure=initial_pressure,
+        initial_shelf_temperature=initial_shelf_temperature,
+        pressure_ramp_rate=pressure_ramp_rate,
+        shelf_temperature_ramp_rate=shelf_temperature_ramp_rate,
         optimized_control=_DaeOptimizedControl.JOINT,
     )
 
@@ -767,6 +858,10 @@ def solve_dae_joint_optimization(
     final_dried_fraction: float = 1.0,
     t_final_bounds: Tuple[float, float] = (0.1, 50.0),
     initialize: Optional[np.ndarray] = None,
+    initial_pressure: Optional[float] = None,
+    initial_shelf_temperature: Optional[float] = None,
+    pressure_ramp_rate: Optional[float] = None,
+    shelf_temperature_ramp_rate: Optional[float] = None,
     solver: Union[str, Any] = "ipopt",
     tee: bool = False,
 ) -> DaeOptimizationResult:
@@ -785,6 +880,10 @@ def solve_dae_joint_optimization(
         final_dried_fraction=final_dried_fraction,
         t_final_bounds=t_final_bounds,
         initialize=initialize,
+        initial_pressure=initial_pressure,
+        initial_shelf_temperature=initial_shelf_temperature,
+        pressure_ramp_rate=pressure_ramp_rate,
+        shelf_temperature_ramp_rate=shelf_temperature_ramp_rate,
     )
     return _solve_dae_optimization_model(
         model,

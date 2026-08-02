@@ -237,6 +237,10 @@ joint_result = solve_dae_joint_optimization(
     nfe=8,
     ncp=3,
     discretization="collocation",
+    initial_pressure=0.15,             # Torr at physical time zero
+    initial_shelf_temperature=-35.0,   # degC at physical time zero
+    pressure_ramp_rate=0.6,            # Torr/hr between adjacent nodes
+    shelf_temperature_ramp_rate=60.0,  # degC/hr between adjacent nodes
 )
 ```
 
@@ -244,8 +248,19 @@ Finite differences use Pyomo.DAE's backward scheme. Collocation uses
 LAGRANGE-RADAU points. The shelf-temperature optimizer requires one constant
 chamber-pressure setpoint; the chamber-pressure optimizer requires one
 constant shelf-temperature setpoint; the joint optimizer frees both bounded
-controls. A changing fixed schedule would need its switch times parameterized
-against the optimized real-time horizon.
+controls. The joint optimizer can optionally fix both initial controls and
+bound their changes between adjacent transcription nodes in physical-time
+units. Each ramp-rate option requires its corresponding initial value. Leaving
+all four options unset preserves the rate-unlimited counterpart to the legacy
+SciPy optimizer. A changing fixed schedule would need its switch times
+parameterized against the optimized real-time horizon.
+
+The rate-unlimited formulation represents an idealized algebraic operating
+policy, not an implementable actuator trajectory: pressure or shelf temperature
+may move to a bound immediately. Ramp limits make the control sequence more
+implementable, but the primary-drying model remains quasi-steady and does not
+add shelf, vial, or product thermal capacitance. Consequently, it should not be
+interpreted as a full transient equipment model.
 
 There is intentionally no unified SciPy/Pyomo optimizer selector. Call the
 legacy SciPy optimizer modules or the explicit Pyomo builders directly so

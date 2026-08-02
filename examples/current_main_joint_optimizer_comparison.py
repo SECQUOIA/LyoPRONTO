@@ -19,7 +19,7 @@ experiment runs importable and testable.
 from __future__ import annotations
 
 from time import perf_counter
-from typing import Any, Sequence, Union
+from typing import Any, Mapping, Sequence, Union
 
 import numpy as np
 
@@ -28,7 +28,7 @@ from examples.current_main_optimizer_comparison import (
     SolverRun,
     matched_nfe_for_point_budget,
 )
-from lyopronto import opt_Pch_Tsh
+from lyopronto import constant, opt_Pch_Tsh
 
 
 DEFAULT_A1_VALUES = (16.0, 18.0, 20.0)
@@ -103,12 +103,22 @@ def run_pyomo_dae(
     ncp: int = 3,
     final_dried_fraction: float = 1.0,
     initialize: np.ndarray | None = None,
+    pressure_bounds: tuple[float, float] | None = None,
+    initial_pressure: float | None = None,
+    initial_shelf_temperature: float | None = None,
+    pressure_ramp_rate: float | None = None,
+    shelf_temperature_ramp_rate: float | None = None,
     solver: Union[str, Any] = "ipopt",
 ) -> SolverRun:
     """Run one current-physics, free-final-time joint optimization."""
     from lyopronto.pyomo_models import solve_dae_joint_optimization
 
     data = comparison_inputs(a1, kc)
+    if pressure_bounds is not None:
+        data["pchamber"] = {
+            "min": float(pressure_bounds[0]),
+            "max": float(pressure_bounds[1]),
+        }
     start = perf_counter()
     result = solve_dae_joint_optimization(
         data["vial"],
@@ -123,6 +133,10 @@ def run_pyomo_dae(
         ncp=int(ncp),
         final_dried_fraction=float(final_dried_fraction),
         initialize=initialize,
+        initial_pressure=initial_pressure,
+        initial_shelf_temperature=initial_shelf_temperature,
+        pressure_ramp_rate=pressure_ramp_rate,
+        shelf_temperature_ramp_rate=shelf_temperature_ramp_rate,
         solver=solver,
     )
     wall_time_s = perf_counter() - start
@@ -132,9 +146,7 @@ def run_pyomo_dae(
         for value in result.constraint_violations.values()
     )
     objective = (
-        float(result.objective_time_hr)
-        if result.objective_time_hr is not None
-        else float("nan")
+        float(result.objective_time_hr) if result.objective_time_hr is not None else float("nan")
     )
     return SolverRun(
         trajectory=trajectory,
@@ -151,11 +163,62 @@ def run_pyomo_dae(
     )
 
 
+def trajectory_constraint_diagnostics(
+    trajectory: np.ndarray,
+    data: Mapping[str, Any],
+) -> dict[str, float]:
+    """Evaluate exported legacy-table constraints without trusting solver status.
+
+    The trajectory columns use the package contract: time [hr], temperatures
+    [degC], chamber pressure [mTorr], sublimation flux [kg/hr/m^2], and dried
+    percentage [0-100]. Equipment margin is returned in kg/hr for the batch.
+    """
+    table = np.asarray(trajectory, dtype=float)
+    if table.ndim != 2 or table.shape[1] != 7 or not np.all(np.isfinite(table)):
+        raise ValueError("trajectory must be a finite two-dimensional, seven-column table")
+
+    pressure_mtorr = table[:, 4]  # [mTorr]
+    shelf_temperature = table[:, 3]  # [degC]
+    vial_bottom_temperature = table[:, 2]  # [degC]
+    total_sublimation_rate = (
+        table[:, 5] * float(data["vial"]["Ap"]) * constant.cm_To_m**2
+    )  # [kg/hr/vial]
+    pressure_torr = pressure_mtorr / constant.Torr_to_mTorr  # [Torr]
+    equipment_margin = (
+        float(data["eq_cap"]["a"])
+        + float(data["eq_cap"]["b"]) * pressure_torr
+        - int(data["nvial"]) * total_sublimation_rate
+    )  # [kg/hr]
+
+    critical_temperature = float(data["product"]["T_pr_crit"])  # [degC]
+    pressure_min_mtorr = float(data["pchamber"]["min"]) * constant.Torr_to_mTorr  # [mTorr]
+    pressure_max_mtorr = float(data["pchamber"]["max"]) * constant.Torr_to_mTorr  # [mTorr]
+    shelf_min = float(data["tshelf"]["min"])  # [degC]
+    shelf_max = float(data["tshelf"]["max"])  # [degC]
+    return {
+        "final_dried_percent": float(table[-1, 6]),
+        "product_temperature_violation_c": max(
+            0.0, float(np.max(vial_bottom_temperature)) - critical_temperature
+        ),
+        "pressure_lower_violation_mtorr": max(
+            0.0, pressure_min_mtorr - float(np.min(pressure_mtorr))
+        ),
+        "pressure_upper_violation_mtorr": max(
+            0.0, float(np.max(pressure_mtorr)) - pressure_max_mtorr
+        ),
+        "shelf_lower_violation_c": max(0.0, shelf_min - float(np.min(shelf_temperature))),
+        "shelf_upper_violation_c": max(0.0, float(np.max(shelf_temperature)) - shelf_max),
+        "minimum_equipment_margin_kg_hr": float(np.min(equipment_margin)),
+        "pressure_lower_bound_fraction": float(
+            np.mean(np.isclose(pressure_mtorr, pressure_min_mtorr, atol=1.0e-3))
+        ),
+    }
+
+
 def _require_success(run: SolverRun, label: str, a1: float, kc: float) -> None:
     if not run.success:
         raise RuntimeError(
-            f"{label} failed for A1={a1}, KC={kc}: "
-            f"{run.solver_status}/{run.termination_condition}"
+            f"{label} failed for A1={a1}, KC={kc}: {run.solver_status}/{run.termination_condition}"
         )
 
 
@@ -223,9 +286,7 @@ def run_case_comparison(
         finite_difference_trajectory=finite_difference_runs[-1].trajectory,
         collocation_trajectory=collocation_runs[-1].trajectory,
         scipy_wall_times_s=tuple(run.wall_time_s for run in scipy_runs),
-        finite_difference_wall_times_s=tuple(
-            run.wall_time_s for run in finite_difference_runs
-        ),
+        finite_difference_wall_times_s=tuple(run.wall_time_s for run in finite_difference_runs),
         collocation_wall_times_s=tuple(run.wall_time_s for run in collocation_runs),
         finite_difference_status=finite_difference_runs[-1].solver_status,
         finite_difference_termination=finite_difference_runs[-1].termination_condition,
@@ -289,6 +350,9 @@ def run_discretization_sensitivity(
                     "objective_gap_percent": 100.0
                     * (run.objective_time_hr - scipy_objective)
                     / scipy_objective,
+                    "first_positive_time_hr": float(run.trajectory[1, 0]),
+                    "initial_product_temperature_c": float(run.trajectory[0, 2]),
+                    "first_positive_product_temperature_c": float(run.trajectory[1, 2]),
                     "final_percent_dried": float(run.trajectory[-1, 6]),
                     "wall_time_s": run.wall_time_s,
                     "n_variables": run.n_variables,
@@ -311,4 +375,5 @@ __all__ = [
     "run_discretization_sensitivity",
     "run_pyomo_dae",
     "run_scipy_reference",
+    "trajectory_constraint_diagnostics",
 ]

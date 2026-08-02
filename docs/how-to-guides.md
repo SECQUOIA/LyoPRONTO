@@ -142,6 +142,14 @@ available for validation and advanced workflow composition. A unified selector
 is not provided while those formulations have different objectives and solver
 requirements.
 
+For an implementability diagnostic, the joint solver also accepts
+`initial_pressure` [Torr], `initial_shelf_temperature` [degC],
+`pressure_ramp_rate` [Torr/hr], and `shelf_temperature_ramp_rate` [degC/hr].
+Ramp limits act between adjacent transcription nodes and require the matching
+initial value. They are disabled by default so the exact rate-unlimited legacy
+comparison remains available. This extension constrains control movement but
+does not introduce thermal-capacitance dynamics.
+
 ## Run Notebook Examples
 
 The MkDocs notebook examples are tracked under `docs/examples/`:
