@@ -151,6 +151,7 @@ def test_current_main_joint_comparison_notebook_execution(repo_root) -> None:
             # smoke run stays short.
             "sensitivity_point_budgets": [25, 49],
             "scipy_refinement_dt_values": [0.02, 0.01],
+            "shelf_sweep_rates_c_hr": [30.0, 60.0],
         },
     )
 
