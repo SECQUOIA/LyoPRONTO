@@ -136,6 +136,14 @@ Implemented modules:
 - `lyopronto.pyomo_models.advanced` composes the trajectory and optimization
   builders into optional parameter-estimation, design-space feasibility,
   sensitivity-analysis, robust-optimization, and multi-vial capacity workflows.
+- `lyopronto.pyomo_models.paper_ocp` transcribes the external primary-drying
+  optimal-control benchmark of Srisuma and Braatz, arXiv:2509.10826v1, as a
+  free-final-time collocation problem, and classifies which of that paper's
+  three control policies is active along a solved trajectory. It is a
+  validation benchmark rather than a production optimizer, and it is the one
+  module that uses the paper's SI convention (K, Pa, m, s) instead of the
+  legacy LyoPRONTO cm/Torr/degC units. Do not mix its parameters with the
+  vial-scale APIs without an explicit adapter.
 
 Pyomo tests are marked `pyomo` and are skip-safe when Pyomo or IPOPT is not
 installed. See `dev.md` for optional solver setup and CI lane policy.

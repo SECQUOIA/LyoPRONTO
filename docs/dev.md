@@ -110,6 +110,12 @@ current-main SciPy/Pyomo shelf-temperature, chamber-pressure, and joint-control
 comparison notebooks. Their default 3x3 sweeps and repeated timings remain
 local tutorial experiments rather than CI timing gates.
 
+The same job executes the Srisuma and Braatz optimal-control replication
+notebook on a coarse spatial mesh. That notebook reports wall times against the
+timings published with the upstream paper, but those comparisons are narrative
+only: they are measured on whatever runner the job lands on and are never
+asserted.
+
 `.github/workflows/slow-tests.yml` is manual dispatch for focused slow
 non-Pyomo, full non-Pyomo, or optional Pyomo validation.
 
