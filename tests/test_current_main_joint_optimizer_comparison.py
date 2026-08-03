@@ -144,6 +144,9 @@ def test_current_main_joint_comparison_notebook_execution(repo_root) -> None:
             "final_dried_fraction": 1.0,
             "pressure_ramp_rate_torr_hr": 0.05,
             "shelf_temperature_ramp_rate_c_hr": 30.0,
+            # Two budgets keep the mesh-sensitivity trend checkable while the
+            # smoke run stays short.
+            "sensitivity_point_budgets": [25, 49],
         },
     )
 
