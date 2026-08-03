@@ -468,12 +468,16 @@ def _create_dae_optimization_model(
             expr=model.Pch[first] == model.Pch[model.t.next(first)]
         )
     if (
-        optimized_control is _DaeOptimizedControl.JOINT
+        optimized_control
+        in (
+            _DaeOptimizedControl.SHELF_TEMPERATURE,
+            _DaeOptimizedControl.JOINT,
+        )
         and requested_initial_shelf_temperature is None
     ):
-        # Shelf temperature at tau=0 is likewise an isolated control value.
-        # Match its first right-limit value so the exported joint-control
-        # trajectory contains no arbitrary endpoint jump.
+        # Shelf temperature at tau=0 is likewise an isolated control value
+        # whenever it is optimized. Match its first right-limit value so the
+        # exported trajectory contains no arbitrary endpoint jump.
         model.initial_shelf_temperature_continuity = pyo.Constraint(
             expr=model.Tsh[first] == model.Tsh[model.t.next(first)]
         )

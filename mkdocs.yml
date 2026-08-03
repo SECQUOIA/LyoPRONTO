@@ -48,9 +48,7 @@ nav:
     - Examples:
         - examples/knownRp_PD.ipynb
         - examples/unknownRp_PD.ipynb
-        - Current shelf-temperature optimizer comparison: examples/current_main_optimizer_comparison.ipynb
-        - Current chamber-pressure optimizer comparison: examples/current_main_pressure_optimizer_comparison.ipynb
-        - Current joint-control optimizer comparison: examples/current_main_joint_optimizer_comparison.ipynb
+        - SciPy and Pyomo on the paper optimizer cases: examples/current_main_joint_optimizer_comparison.ipynb
     - Reference:
         - API and Package: reference.md
         - Physics: technical/physics-reference.md

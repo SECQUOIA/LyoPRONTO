@@ -1,7 +1,7 @@
-"""Helpers for the current-main joint-control optimizer tutorial.
+"""Joint-control comparison for the mannitol case in the LyoPRONTO paper.
 
-The experiment compares equivalent pressure-and-temperature optimization
-problems:
+The module compares equivalent rate-unlimited pressure-and-temperature
+optimizations:
 
 * legacy SciPy maximizes sublimation rate at each dried-cake state and advances
   until complete drying;
@@ -10,10 +10,11 @@ problems:
 * the Pyomo model is transcribed with either backward finite differences or
   LAGRANGE-RADAU orthogonal collocation.
 
-Both paths use the same pressure and shelf-temperature bounds, physics,
-constraints, completion target, and seven-column trajectory contract. The
-tutorial notebook owns the one-off sweep and plots; this module keeps the
-experiment runs importable and testable.
+Both paths use the paper's mannitol inputs, pressure and shelf-temperature
+bounds, physics, constraints, completion target, and seven-column trajectory
+contract. The published paper reports a 1.96 hr drying time for this case.
+The Pyomo wrapper also exposes its optional initial-control and rate limits for
+one direct capability comparison in the notebook.
 """
 
 from __future__ import annotations
@@ -39,7 +40,7 @@ DEFAULT_KC_VALUES = (2.75e-4, 3.30e-4, 4.00e-4)
 
 
 def comparison_inputs(a1: float, kc: float) -> dict[str, Any]:
-    """Return explicit legacy dictionaries for one historical grid point."""
+    """Return the paper's 5% mannitol inputs with selected A1 and KC values."""
     return {
         "vial": {"Av": 3.8, "Ap": 3.14, "Vfill": 2.0},
         "product": {
@@ -47,13 +48,13 @@ def comparison_inputs(a1: float, kc: float) -> dict[str, Any]:
             "R0": 1.4,
             "A1": float(a1),
             "A2": 0.0,
-            "T_pr_crit": -25.0,
+            "T_pr_crit": -5.0,
         },
         "ht": {"KC": float(kc), "KP": 8.93e-4, "KD": 0.46},
         "pchamber": {"min": 0.05, "max": 0.5},
         "tshelf": {"min": -45.0, "max": 120.0, "init": -35.0},
         "eq_cap": {"a": -0.182, "b": 11.7},
-        "nvial": 400,
+        "nvial": 398,
     }
 
 

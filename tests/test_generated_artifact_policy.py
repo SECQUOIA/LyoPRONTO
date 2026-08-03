@@ -72,8 +72,6 @@ def test_generated_artifacts_are_ignored(path: str) -> None:
     [
         "docs/examples/knownRp_PD.ipynb",
         "docs/examples/new_source_notebook.ipynb",
-        "docs/examples/current_main_optimizer_comparison.ipynb",
-        "docs/examples/current_main_pressure_optimizer_comparison.ipynb",
         "docs/examples/current_main_joint_optimizer_comparison.ipynb",
         "docs/examples/temperature.txt",
         "examples/outputs/README.md",
@@ -92,3 +90,14 @@ def test_generated_artifacts_are_ignored(path: str) -> None:
 )
 def test_source_and_reference_files_remain_trackable(path: str) -> None:
     assert not _is_ignored(path), f"{path} should remain visible to git"
+
+
+def test_retired_optimizer_comparisons_are_not_published_as_tutorials() -> None:
+    """Shelf-only and pressure-only comparisons remain code fixtures, not notebooks."""
+    retired = [
+        "docs/examples/current_main_optimizer_comparison.ipynb",
+        "docs/examples/current_main_pressure_optimizer_comparison.ipynb",
+    ]
+
+    for path in retired:
+        assert not (ROOT / path).exists(), f"{path} should remain retired"

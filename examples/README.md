@@ -16,9 +16,9 @@ optimization prototypes.
 | `typed_api_examples.py` | Typed Pint API examples for simulation, fitting, RF, vial utilities, ECCURT, and Pirani endpoint detection. | Console smoke output. |
 | `example_pyomo_optimization.py` | Optional Pyomo construction example for pressure-only, shelf-temperature-only, and joint optimization modes. | Console model summaries. |
 | `current_main_comparison.py` | Shared result, timing, matched-point-budget, and discretization-sensitivity orchestration for the three current-main comparisons. | In-memory normalized trajectories and metrics. |
-| `current_main_optimizer_comparison.py` | Reproducible shelf-temperature SciPy/Pyomo.DAE final-time comparison helpers for finite differences and collocation. | In-memory normalized trajectories and metrics. |
-| `current_main_pressure_optimizer_comparison.py` | Reproducible chamber-pressure SciPy/Pyomo.DAE final-time comparison helpers for finite differences and collocation. | In-memory normalized trajectories and metrics. |
-| `current_main_joint_optimizer_comparison.py` | Reproducible joint pressure/temperature SciPy/Pyomo.DAE final-time comparison helpers, constraint diagnostics, and an optional rate-limited Pyomo extension. | In-memory normalized trajectories and metrics. |
+| `current_main_optimizer_comparison.py` | Shelf-temperature SciPy/Pyomo.DAE comparison for the paper's mannitol case. | In-memory normalized trajectories and metrics. |
+| `current_main_pressure_optimizer_comparison.py` | Chamber-pressure SciPy/Pyomo.DAE comparison for the paper's mannitol case. | In-memory normalized trajectories and metrics. |
+| `current_main_joint_optimizer_comparison.py` | Joint-control SciPy/Pyomo.DAE comparison and optional rate-limited extension for the paper's mannitol case. | In-memory normalized trajectories and metrics. |
 
 Run examples from the repository root:
 
@@ -48,16 +48,12 @@ IPOPT. Solver-backed Pyomo comparisons are covered separately by the optional
 Pyomo validation lane.
 
 The current-main
-[shelf-temperature](../docs/examples/current_main_optimizer_comparison.ipynb)
-and
-[chamber-pressure](../docs/examples/current_main_pressure_optimizer_comparison.ipynb)
-and
-[joint-control](../docs/examples/current_main_joint_optimizer_comparison.ipynb)
-comparison notebooks use these helpers for solver-backed tutorials. They
-require IPOPT and write optional local reproduction records under
-`benchmarks/results/`. Shared orchestration lives in
-`current_main_comparison.py`; each experiment module keeps its physical inputs,
-units, optimizer calls, and diagnostics explicit.
+[paper optimizer comparison](../docs/examples/current_main_joint_optimizer_comparison.ipynb)
+runs the pressure-only, shelf-only, and joint-control examples with both
+backends and requires IPOPT. The retired shelf-only and pressure-only notebooks
+remain as tested helper modules. Shared orchestration lives in
+`current_main_comparison.py`; each module keeps its physical inputs, units,
+optimizer calls, and diagnostics explicit.
 
 ## Legacy Scripts
 

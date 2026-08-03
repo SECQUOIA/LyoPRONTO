@@ -159,13 +159,13 @@ The MkDocs notebook examples are tracked under `docs/examples/`:
 
 - [known Rp](examples/knownRp_PD.ipynb)
 - [unknown Rp](examples/unknownRp_PD.ipynb)
-- [current SciPy/Pyomo.DAE shelf-temperature comparison](examples/current_main_optimizer_comparison.ipynb)
-- [current SciPy/Pyomo.DAE chamber-pressure comparison](examples/current_main_pressure_optimizer_comparison.ipynb)
-- [current SciPy/Pyomo.DAE joint-control comparison](examples/current_main_joint_optimizer_comparison.ipynb)
+- [SciPy and Pyomo on the LyoPRONTO paper optimizer cases](examples/current_main_joint_optimizer_comparison.ipynb)
 
 Notebook execution is validated through the explicit notebook CI lane.
-The optimizer-comparison tutorials require `.[dev,pyomo]` and IPOPT, so their
-solver-backed smoke executions also run in the optional Pyomo comparison lane.
+The optimizer-comparison notebook requires `.[dev,pyomo]` and IPOPT, so its
+solver-backed smoke execution also runs in the optional Pyomo comparison lane.
+The former shelf-only and pressure-only comparisons remain solver-backed
+regression fixtures under `tests/`, rather than separate reader-facing tutorials.
 
 ## Run Local Validation
 

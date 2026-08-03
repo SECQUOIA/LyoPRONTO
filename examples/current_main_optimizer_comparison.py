@@ -1,4 +1,4 @@
-"""Helpers for the current-main SciPy/Pyomo.DAE comparison tutorial.
+"""Shelf-temperature comparison for the mannitol case in the LyoPRONTO paper.
 
 The experiment compares equivalent shelf-temperature optimization problems:
 
@@ -9,10 +9,9 @@ The experiment compares equivalent shelf-temperature optimization problems:
 * the Pyomo model is transcribed with either backward finite differences or
   LAGRANGE-RADAU orthogonal collocation.
 
-Both paths use the current LyoPRONTO physics, controls, constraints, completion
-target, and seven-column trajectory convention.  The tutorial notebook owns
-the one-off parameter sweep and visualization; this module keeps its model
-runs importable and testable.
+Both paths use the current LyoPRONTO physics, the paper's 150 mTorr fixed
+pressure, product and equipment limits, and seven-column trajectory convention.
+The published paper reports a 2.11 hr drying time for this case.
 """
 
 from __future__ import annotations
@@ -46,17 +45,17 @@ def comparison_inputs(a1: float, kc: float) -> dict[str, Any]:
             "R0": 1.4,
             "A1": float(a1),
             "A2": 0.0,
-            "T_pr_crit": -25.0,
+            "T_pr_crit": -5.0,
         },
         "ht": {"KC": float(kc), "KP": 8.93e-4, "KD": 0.46},
         "pchamber": {
-            "setpt": [0.1],
+            "setpt": [0.15],
             "dt_setpt": [1800.0],
             "ramp_rate": 0.5,
         },
         "tshelf": {"min": -45.0, "max": 120.0, "init": -35.0},
         "eq_cap": {"a": -0.182, "b": 11.7},
-        "nvial": 400,
+        "nvial": 398,
     }
 
 

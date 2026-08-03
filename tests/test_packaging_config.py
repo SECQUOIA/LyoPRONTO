@@ -401,9 +401,9 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert "examples/current_main_optimizer_comparison.py" in pyomo_tests
     assert "examples/current_main_joint_optimizer_comparison.py" in pyomo_tests
     assert "examples/current_main_pressure_optimizer_comparison.py" in pyomo_tests
-    assert "docs/examples/current_main_optimizer_comparison.ipynb" in pyomo_tests
     assert "docs/examples/current_main_joint_optimizer_comparison.ipynb" in pyomo_tests
-    assert "docs/examples/current_main_pressure_optimizer_comparison.ipynb" in pyomo_tests
+    assert "docs/examples/current_main_optimizer_comparison.ipynb" not in pyomo_tests
+    assert "docs/examples/current_main_pressure_optimizer_comparison.ipynb" not in pyomo_tests
     assert "tests/test_pyomo_models/**" in pyomo_tests
     assert "tests/test_current_main_optimizer_comparison.py" in pyomo_tests
     assert "tests/test_current_main_joint_optimizer_comparison.py" in pyomo_tests
@@ -437,15 +437,7 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
         in pyomo_tests
     )
     assert (
-        "tests/test_current_main_optimizer_comparison.py::test_current_main_comparison_notebook_execution"
-        in pyomo_tests
-    )
-    assert (
         "tests/test_pyomo_models/test_dae_pressure_optimization.py::test_pressure_dae_model_solves_equivalent_complete_drying_problem"
-        in pyomo_tests
-    )
-    assert (
-        "tests/test_current_main_pressure_optimizer_comparison.py::test_current_main_pressure_comparison_notebook_execution"
         in pyomo_tests
     )
     assert (
@@ -463,6 +455,12 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
         "tests/test_current_main_joint_optimizer_comparison.py::test_current_main_joint_comparison_notebook_execution"
         in pyomo_tests
     )
+    assert (
+        "tests/test_current_main_joint_optimizer_comparison.py::test_joint_pyomo_rate_limited_paper_extension_solves"
+        in pyomo_tests
+    )
+    assert "test_current_main_comparison_notebook_execution" not in pyomo_tests
+    assert "test_current_main_pressure_comparison_notebook_execution" not in pyomo_tests
 
 
 def test_local_ci_script_matches_documented_lane_expressions() -> None:

@@ -7,21 +7,22 @@ from examples.current_main_joint_optimizer_comparison import (
     comparison_inputs,
     matched_nfe_for_point_budget,
     run_case_comparison,
+    run_pyomo_dae,
     trajectory_constraint_diagnostics,
 )
 from tests.pyomo_solver import require_pyomo_solver
 
 
-def test_joint_comparison_inputs_preserve_historical_grid_conventions() -> None:
+def test_joint_comparison_inputs_match_paper_mannitol_joint_case() -> None:
     data = comparison_inputs(18.0, 3.3e-4)
 
     assert data["product"]["A1"] == pytest.approx(18.0)
-    assert data["product"]["T_pr_crit"] == pytest.approx(-25.0)
+    assert data["product"]["T_pr_crit"] == pytest.approx(-5.0)
     assert data["ht"]["KC"] == pytest.approx(3.3e-4)
     assert data["pchamber"] == {"min": 0.05, "max": 0.5}
     assert data["tshelf"]["min"] == pytest.approx(-45.0)
     assert data["tshelf"]["max"] == pytest.approx(120.0)
-    assert data["nvial"] == 400
+    assert data["nvial"] == 398
 
 
 def test_joint_case_comparison_rejects_unmatched_transcription_points() -> None:
@@ -40,8 +41,8 @@ def test_trajectory_constraint_diagnostics_cover_sequential_outputs() -> None:
     data = comparison_inputs(16.0, 2.75e-4)
     table = np.array(
         [
-            [0.0, -30.0, -25.0, 20.0, 50.0, 1.0, 0.0],
-            [1.0, -29.0, -24.4, 20.0, 40.0, 1.0, 100.0],
+            [0.0, -7.0, -5.0, 20.0, 50.0, 1.0, 0.0],
+            [1.0, -6.0, -4.4, 20.0, 40.0, 1.0, 100.0],
         ]
     )
 
@@ -95,6 +96,35 @@ def test_current_main_joint_comparison_helper_solves_smoke_case(
     assert case.collocation_n_constraints > 0
 
 
+@pytest.mark.pyomo
+def test_joint_pyomo_rate_limited_paper_extension_solves() -> None:
+    """Pyomo adds coupled initial-control and rate limits to the paper case."""
+    solver = require_pyomo_solver("ipopt")
+
+    run = run_pyomo_dae(
+        16.0,
+        2.75e-4,
+        discretization="collocation",
+        nfe=8,
+        ncp=3,
+        initial_pressure=0.15,
+        initial_shelf_temperature=30.0,
+        pressure_ramp_rate=0.05,
+        shelf_temperature_ramp_rate=30.0,
+        solver=solver,
+    )
+    table = run.trajectory
+    dt = np.diff(table[:, 0])  # [hr]
+
+    assert run.success
+    assert table.shape == (25, 7)
+    assert table[-1, 6] >= 100.0 - 1.0e-3
+    assert table[0, 4] == pytest.approx(150.0, abs=1.0e-3)  # [mTorr]
+    assert table[0, 3] == pytest.approx(30.0, abs=1.0e-3)  # [degC]
+    assert np.max(np.abs(np.diff(table[:, 4]) / 1000.0) / dt) <= 0.05 + 1.0e-5
+    assert np.max(np.abs(np.diff(table[:, 3])) / dt) <= 30.0 + 1.0e-5
+
+
 @pytest.mark.serial
 @pytest.mark.notebook
 @pytest.mark.pyomo
@@ -106,19 +136,18 @@ def test_current_main_joint_comparison_notebook_execution(repo_root) -> None:
         repo_root / "docs/examples/current_main_joint_optimizer_comparison.ipynb",
         repo_root / "docs/examples/current_main_joint_optimizer_comparison_output.ipynb",
         parameters={
-            "a1_values": [16.0],
-            "kc_values": [2.75e-4],
+            "a1": 16.0,
+            "kc": 2.75e-4,
             "scipy_dt": 0.1,
-            "point_budget": 13,
+            "point_budget": 25,
             "ncp": 3,
             "final_dried_fraction": 1.0,
-            "timing_repeats": 1,
-            "sensitivity_point_budgets": [13, 25],
-            "pressure_lower_bound_values_torr": [0.05, 0.10],
-            "implementability_point_budget": 13,
-            "scipy_dt_values": [0.2, 0.1],
-            "constraint_tolerance": 1.0e-4,
-            "save_results": False,
+            "pressure_ramp_rate_torr_hr": 0.05,
+            "shelf_temperature_ramp_rate_c_hr": 30.0,
+            # Two budgets keep the mesh-sensitivity trend checkable while the
+            # smoke run stays short.
+            "sensitivity_point_budgets": [25, 49],
+            "scipy_refinement_dt_values": [0.02, 0.01],
         },
     )
 
