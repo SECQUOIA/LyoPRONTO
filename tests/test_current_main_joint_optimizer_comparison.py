@@ -4,6 +4,9 @@ import numpy as np
 import pytest
 
 from examples.current_main_joint_optimizer_comparison import (
+    ImplementabilityAnalysis,
+    run_implementability_analysis,
+    run_slew_rate_sweep,
     comparison_inputs,
     matched_nfe_for_point_budget,
     run_case_comparison,
@@ -149,6 +152,142 @@ def test_current_main_joint_comparison_notebook_execution(repo_root) -> None:
             "sensitivity_point_budgets": [25, 49],
             "scipy_refinement_dt_values": [0.02, 0.01],
         },
+    )
+
+
+def test_implementability_penalty_decomposition_is_additive() -> None:
+    """Anchoring and slew increments sum to the total drying-time penalty [hr]."""
+    from examples.current_main_comparison import SolverRun
+
+    def run(objective_time_hr: float) -> SolverRun:
+        return SolverRun(
+            trajectory=np.zeros((2, 7)),
+            wall_time_s=0.0,
+            objective_time_hr=objective_time_hr,
+            success=True,
+            solver_status="ok",
+            termination_condition="optimal",
+            max_constraint_violation=0.0,
+            n_time_points=2,
+            n_variables=1,
+            n_constraints=1,
+            solver_iterations=1,
+        )
+
+    analysis = ImplementabilityAnalysis(
+        idealized=run(10.0),
+        anchored_unlimited=run(10.1),
+        pressure_preconditioned=run(12.0),
+        implementable=run(12.5),
+    )
+
+    assert analysis.anchor_only_penalty_hr == pytest.approx(0.1)
+    assert analysis.rate_and_interaction_penalty_hr == pytest.approx(2.4)
+    assert analysis.pressure_start_penalty_hr == pytest.approx(0.5)
+    assert analysis.preconditioned_penalty_hr == pytest.approx(2.0)
+    assert analysis.total_penalty_hr == pytest.approx(2.5)
+    assert analysis.total_penalty_percent == pytest.approx(25.0)
+    assert analysis.total_penalty_hr == pytest.approx(
+        analysis.anchor_only_penalty_hr + analysis.rate_and_interaction_penalty_hr
+    )
+    assert analysis.total_penalty_hr == pytest.approx(
+        analysis.preconditioned_penalty_hr + analysis.pressure_start_penalty_hr
+    )
+
+
+@pytest.mark.parametrize(
+    ("pressure_rates", "shelf_rates", "message"),
+    [
+        ([], [30.0], "pressure_ramp_rates_torr_hr"),
+        ([np.nan], [30.0], "pressure_ramp_rates_torr_hr"),
+        ([0.05], [0.0], "shelf_temperature_ramp_rates_c_hr"),
+        ([0.05], [np.inf], "shelf_temperature_ramp_rates_c_hr"),
+    ],
+)
+def test_slew_rate_sweep_rejects_empty_or_nonpositive_rates(
+    pressure_rates, shelf_rates, message
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        run_slew_rate_sweep(
+            16.0,
+            2.75e-4,
+            10.0,
+            pressure_ramp_rates_torr_hr=pressure_rates,
+            shelf_temperature_ramp_rates_c_hr=shelf_rates,
+        )
+
+
+@pytest.mark.pyomo
+def test_implementability_analysis_solves_and_decomposes_smoke_case() -> None:
+    """The real optimizer runs preserve both penalty identities [hr]."""
+    solver = require_pyomo_solver("ipopt")
+
+    analysis = run_implementability_analysis(
+        16.0,
+        2.75e-4,
+        point_budget=25,
+        ncp=3,
+        initial_pressure_torr=0.15,
+        initial_shelf_temperature_c=-35.0,
+        pressure_ramp_rate_torr_hr=0.05,
+        shelf_temperature_ramp_rate_c_hr=10.0,
+        solver=solver,
+    )
+
+    for run in (
+        analysis.idealized,
+        analysis.anchored_unlimited,
+        analysis.pressure_preconditioned,
+        analysis.implementable,
+    ):
+        assert run.success
+        assert run.trajectory.shape == (25, 7)
+        assert run.trajectory[-1, 6] >= 100.0 - 1.0e-3
+    assert analysis.anchored_unlimited.objective_time_hr == pytest.approx(
+        analysis.idealized.objective_time_hr, abs=1.0e-3
+    )
+    assert analysis.pressure_preconditioned.trajectory[0, 4] == pytest.approx(
+        50.0, abs=1.0e-3
+    )  # [mTorr]
+    assert analysis.implementable.trajectory[0, 4] == pytest.approx(
+        150.0, abs=1.0e-3
+    )  # [mTorr]
+    # The pressure-start term is signed and case-dependent: preconditioning to
+    # the pressure floor is slower here, because a higher starting pressure
+    # improves early vial heat transfer. Assert the invariants instead.
+    assert analysis.pressure_preconditioned.success
+    assert analysis.pressure_start_penalty_hr == pytest.approx(
+        analysis.implementable.objective_time_hr
+        - analysis.pressure_preconditioned.objective_time_hr
+    )
+    # Rate limits can never beat the unconstrained optimum.
+    assert analysis.total_penalty_hr > 0.0
+    assert (
+        analysis.implementable.objective_time_hr
+        >= analysis.idealized.objective_time_hr
+    )
+    assert analysis.idealized.shadow_prices["product_temperature_limit"] < 0.0
+    assert analysis.total_penalty_hr == pytest.approx(
+        analysis.anchor_only_penalty_hr + analysis.rate_and_interaction_penalty_hr
+    )
+    assert analysis.total_penalty_hr == pytest.approx(
+        analysis.preconditioned_penalty_hr + analysis.pressure_start_penalty_hr
+    )
+
+    sweep_rows = run_slew_rate_sweep(
+        16.0,
+        2.75e-4,
+        analysis.idealized.objective_time_hr,
+        pressure_ramp_rates_torr_hr=[0.05],
+        shelf_temperature_ramp_rates_c_hr=[30.0],
+        point_budget=25,
+        ncp=3,
+        solver=solver,
+    )
+    assert len(sweep_rows) == 1
+    assert sweep_rows[0]["objective_time_hr"] > analysis.idealized.objective_time_hr
+    assert sweep_rows[0]["penalty_hr"] == pytest.approx(
+        sweep_rows[0]["objective_time_hr"] - analysis.idealized.objective_time_hr
     )
 
 
