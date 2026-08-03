@@ -147,6 +147,7 @@ def test_current_main_joint_comparison_notebook_execution(repo_root) -> None:
             # Two budgets keep the mesh-sensitivity trend checkable while the
             # smoke run stays short.
             "sensitivity_point_budgets": [25, 49],
+            "scipy_refinement_dt_values": [0.02, 0.01],
         },
     )
 
