@@ -379,62 +379,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../current_main_optimizer_comparison/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Current shelf-temperature optimizer comparison
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../current_main_pressure_optimizer_comparison/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Current chamber-pressure optimizer comparison
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../current_main_joint_optimizer_comparison/" class="md-nav__link">
         
   
@@ -442,7 +386,7 @@
   <span class="md-ellipsis">
     
   
-    Current joint-control optimizer comparison
+    SciPy and Pyomo on the paper optimizer cases
   
 
     
@@ -1197,7 +1141,7 @@ However, this step will in general not be necessary.</p>
 </span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="c1"># plt.savefig(figure_name)</span>
 </span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="c1"># plt.close()</span>
 </span></code></pre></div>
-<p><img alt="img" src="../_data/3954006abbe64d7e8ca725c755f4a16c.png" /></p>
+<p><img alt="img" src="../_data/f98594512b13473d9ebf23c560c668d3.png" /></p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="n">figwidth</span><span class="p">,</span><span class="n">figheight</span><span class="p">))</span>
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
 </span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">plot_styling</span><span class="o">.</span><span class="n">axis_style_percdried</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
@@ -1207,7 +1151,7 @@ However, this step will in general not be necessary.</p>
 </span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="c1"># plt.savefig(figure_name)</span>
 </span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="c1"># plt.close()</span>
 </span></code></pre></div>
-<p><img alt="img" src="../_data/6ac15b83919942c7a0721c2be733e74f.png" /></p>
+<p><img alt="img" src="../_data/20d2cf19a54040e9be6024a04438951c.png" /></p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="n">figwidth</span><span class="p">,</span><span class="n">figheight</span><span class="p">))</span>
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
 </span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="n">plot_styling</span><span class="o">.</span><span class="n">axis_style_temperature</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
@@ -1222,7 +1166,7 @@ However, this step will in general not be necessary.</p>
 </span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="c1"># plt.savefig(figure_name)</span>
 </span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="c1"># plt.close()</span>
 </span></code></pre></div>
-<p><img alt="img" src="../_data/5752aaaeabf049899b51bf875db455bb.png" /></p>
+<p><img alt="img" src="../_data/e409461c6cc54e3191c8a129f36e113d.png" /></p>
 
 
 

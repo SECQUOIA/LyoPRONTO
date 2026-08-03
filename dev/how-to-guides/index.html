@@ -476,62 +476,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../examples/current_main_optimizer_comparison/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Current shelf-temperature optimizer comparison
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../examples/current_main_pressure_optimizer_comparison/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Current chamber-pressure optimizer comparison
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../examples/current_main_joint_optimizer_comparison/" class="md-nav__link">
         
   
@@ -539,7 +483,7 @@
   <span class="md-ellipsis">
     
   
-    Current joint-control optimizer comparison
+    SciPy and Pyomo on the paper optimizer cases
   
 
     
@@ -996,13 +940,13 @@ does not introduce thermal-capacitance dynamics.</p>
 <ul>
 <li><a href="../examples/knownRp_PD/">known Rp</a></li>
 <li><a href="../examples/unknownRp_PD/">unknown Rp</a></li>
-<li><a href="../examples/current_main_optimizer_comparison/">current SciPy/Pyomo.DAE shelf-temperature comparison</a></li>
-<li><a href="../examples/current_main_pressure_optimizer_comparison/">current SciPy/Pyomo.DAE chamber-pressure comparison</a></li>
-<li><a href="../examples/current_main_joint_optimizer_comparison/">current SciPy/Pyomo.DAE joint-control comparison</a></li>
+<li><a href="../examples/current_main_joint_optimizer_comparison/">SciPy and Pyomo on the LyoPRONTO paper optimizer cases</a></li>
 </ul>
 <p>Notebook execution is validated through the explicit notebook CI lane.
-The optimizer-comparison tutorials require <code>.[dev,pyomo]</code> and IPOPT, so their
-solver-backed smoke executions also run in the optional Pyomo comparison lane.</p>
+The optimizer-comparison notebook requires <code>.[dev,pyomo]</code> and IPOPT, so its
+solver-backed smoke execution also runs in the optional Pyomo comparison lane.
+The former shelf-only and pressure-only comparisons remain solver-backed
+regression fixtures under <code>tests/</code>, rather than separate reader-facing tutorials.</p>
 <h2 id="run-local-validation">Run Local Validation</h2>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>python<span class="w"> </span>-m<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>lyopronto<span class="w"> </span>tests<span class="w"> </span>examples<span class="w"> </span>main.py
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not slow and not notebook and not pyomo&quot;</span>
