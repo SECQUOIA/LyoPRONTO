@@ -319,7 +319,13 @@ def mesh_sensitivity_rows(
     ncp: int = 3,
     solver: str = "ipopt",
 ) -> list[dict[str, Any]]:
-    """Return drying time and switch times across ``(n_z, nfe)`` mesh pairs."""
+    """Return per-mesh convergence diagnostics across ``(n_z, nfe)`` pairs.
+
+    Each row carries the drying time, the bracket around the *first* policy
+    switch and whether it contains the published value, whether the transcribed
+    control stayed cleanly on its bound, the recovered policy sequence, and the
+    solve time.
+    """
     rows: list[dict[str, Any]] = []
     for n_z, nfe in meshes:
         run = run_paper_case(problem, n_z=n_z, nfe=nfe, ncp=ncp, solver=solver)
