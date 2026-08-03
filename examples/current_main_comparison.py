@@ -30,7 +30,7 @@ class SolverRun:
     n_constraints: int | None
     solver_iterations: int | None
     shadow_prices: Mapping[str, float] = field(default_factory=dict)
-    """Optimal drying-time sensitivities in the units documented by the solver."""
+    """Pass-through of ``DaeOptimizationResult.shadow_prices``, which documents the per-limit units."""
 
 
 @dataclass
