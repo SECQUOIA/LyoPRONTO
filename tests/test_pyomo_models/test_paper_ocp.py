@@ -13,7 +13,6 @@ from lyopronto.pyomo_models.paper_ocp import (
     extract_paper_solution,
     generate_problem1_policy_initialization,
     generate_problem2_policy_initialization,
-    initialize_paper_problem1_from_trajectory,
     initialize_paper_problem_from_trajectory,
     interface_velocity,
     load_upstream_matlab_trajectory,
@@ -337,26 +336,6 @@ def test_initialize_problem2_model_from_policy_trajectory_sets_limits():
         < PaperPrimaryDryingConfig().problem2_shelf_temperature_max
     )
     assert hasattr(model, "interface_velocity_limit")
-
-
-def test_problem_specific_initializer_alias_matches_general_initializer():
-    discretization = PaperDiscretization(n_z=5, nfe=4, ncp=2)
-    trajectory = generate_problem1_policy_initialization(
-        discretization=discretization,
-        n_time_points=80,
-    )
-    general_model = create_paper_problem1_model(discretization=discretization)
-    alias_model = create_paper_problem1_model(discretization=discretization)
-
-    initialize_paper_problem_from_trajectory(general_model, trajectory)
-    initialize_paper_problem1_from_trajectory(alias_model, trajectory)
-
-    t_points = sorted(general_model.t)
-    assert np.isclose(pyo.value(alias_model.t_final), pyo.value(general_model.t_final))
-    assert np.isclose(
-        pyo.value(alias_model.S[t_points[-1]]),
-        pyo.value(general_model.S[t_points[-1]]),
-    )
 
 
 def test_load_upstream_matlab_trajectory_from_segment_file(tmp_path):

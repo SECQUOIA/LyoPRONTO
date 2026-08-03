@@ -817,19 +817,6 @@ def initialize_paper_problem_from_trajectory(
             model.dS_dtau[tau].set_value(final_time * velocity)
 
 
-def initialize_paper_problem1_from_trajectory(
-    model: Any,
-    trajectory: Mapping[str, Any],
-    set_final_time: bool = True,
-) -> None:
-    """Backward-compatible alias for ``initialize_paper_problem_from_trajectory``."""
-    initialize_paper_problem_from_trajectory(
-        model,
-        trajectory,
-        set_final_time=set_final_time,
-    )
-
-
 def load_upstream_matlab_trajectory(mat_path: str | Path) -> dict[str, Any]:
     """Load an upstream MATLAB trajectory saved from ``Sim_1stDrying_OCP``.
 

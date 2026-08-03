@@ -143,7 +143,12 @@ Implemented modules:
   validation benchmark rather than a production optimizer, and it is the one
   module that uses the paper's SI convention (K, Pa, m, s) instead of the
   legacy LyoPRONTO cm/Torr/degC units. Do not mix its parameters with the
-  vial-scale APIs without an explicit adapter.
+  vial-scale APIs without an explicit adapter. Its solves stop at
+  `PaperDiscretization.terminal_drying_fraction` of the product height rather
+  than at the paper's `S = H`, because the Landau-transformed frozen-region
+  equations are singular there; drying times from this module are therefore
+  short of a complete cycle by the remaining sliver and should be reported with
+  the cutoff that produced them.
 
 Pyomo tests are marked `pyomo` and are skip-safe when Pyomo or IPOPT is not
 installed. See `dev.md` for optional solver setup and CI lane policy.

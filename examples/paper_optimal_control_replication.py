@@ -64,8 +64,10 @@ PAPER_REFERENCE: dict[str, Any] = {
         "policy_sequence": ("policy_1_max_heat_input", "policy_2_temperature_tracking"),
         "simulation_based_runtime_s": 0.58,
         "simulation_based_runtime_tolerance_s": 0.01,
-        # Read from Figure 2; the text does not state the final time.
+        # Read from Figure 2; the text does not state the final time. The
+        # uncertainty is the width of the read, not a model tolerance.
         "drying_time_hr": 6.2,
+        "drying_time_uncertainty_hr": 0.1,
         "drying_time_source": "read from Figure 2",
         "temperature_limit_K": 243.0,
         "shelf_temperature_bounds_K": (228.0, 273.0),
@@ -79,6 +81,7 @@ PAPER_REFERENCE: dict[str, Any] = {
             "policy_2_temperature_tracking",
         ),
         "drying_time_hr": 8.9,
+        "drying_time_uncertainty_hr": 0.05,
         "drying_time_source": "stated in Section V-B",
         "simulation_based_runtime_s": 0.98,
         "simulation_based_runtime_tolerance_s": 0.02,
@@ -101,6 +104,24 @@ PAPER_REFERENCE: dict[str, Any] = {
 # Paper model: Pyomo.DAE direct transcription
 # ---------------------------------------------------------------------------
 
+#: Fraction of the product height at which the interface is declared arrived.
+#:
+#: The paper's own termination is ``S = H`` exactly. That endpoint is not
+#: reachable in this transcription: the model is written on the Landau
+#: coordinate ``psi = (z - S)/(H - S)``, whose conduction term carries a
+#: ``1/(H - S)^2`` factor, so the frozen-region equations are singular as
+#: ``S -> H`` and ``paper_ocp`` rejects a fraction of 1. Tightening the cutoff
+#: also makes the solve progressively harder for the same reason: at this mesh
+#: 0.99 and 0.995 terminate optimally in about two seconds, while 0.999 and
+#: 0.9995 exhaust IPOPT's iteration limit after roughly four minutes and return
+#: a non-optimal point. 0.995 is therefore the tightest cutoff that still gives
+#: a converged answer, and the residual to ``S = H`` is recovered by
+#: extrapolation rather than by tightening further. The drying time is always
+#: approached from below and must be reported with the cutoff that produced it;
+#: see :func:`extrapolated_complete_drying_time_hr` and
+#: :func:`terminal_fraction_sensitivity_rows`.
+DEFAULT_TERMINAL_DRYING_FRACTION = 0.995
+
 
 @dataclass(frozen=True)
 class PaperCaseRun:
@@ -113,6 +134,7 @@ class PaperCaseRun:
     nfe: int
     ncp: int
     initialization: str
+    terminal_drying_fraction: float
 
     @property
     def wall_median_s(self) -> float:
@@ -148,22 +170,32 @@ def run_paper_case(
     n_z: int = 20,
     nfe: int = 24,
     ncp: int = 3,
-    initialization: str | None = "policy",
+    initialization: str | None = None,
+    terminal_drying_fraction: float = DEFAULT_TERMINAL_DRYING_FRACTION,
     solver: str = "ipopt",
     timing_repeats: int = 1,
 ) -> PaperCaseRun:
     """Solve one paper case study by simultaneous collocation and time it.
 
     ``n_z`` is the number of spatial nodes in the frozen region; the paper uses
-    20. ``initialization`` selects the deterministic policy-sequenced warm start
-    (``"policy"``) or a cold start (``None``).
+    20. ``initialization`` defaults to a cold start (``None``) so that the
+    recovered policy sequence is not seeded from the published one; pass
+    ``"policy"`` for the deterministic policy-sequenced warm start.
+    ``terminal_drying_fraction`` is the fraction of the product height at which
+    the interface is declared arrived; see
+    :data:`DEFAULT_TERMINAL_DRYING_FRACTION` for why it cannot be 1.
     """
     if problem not in {"problem1", "problem2"}:
         raise ValueError(f"unsupported paper problem: {problem!r}")
     if timing_repeats < 1:
         raise ValueError("timing_repeats must be at least 1")
 
-    discretization = paper_ocp.PaperDiscretization(n_z=int(n_z), nfe=int(nfe), ncp=int(ncp))
+    discretization = paper_ocp.PaperDiscretization(
+        n_z=int(n_z),
+        nfe=int(nfe),
+        ncp=int(ncp),
+        terminal_drying_fraction=float(terminal_drying_fraction),
+    )
     solve = (
         paper_ocp.solve_paper_problem1
         if problem == "problem1"
@@ -191,6 +223,7 @@ def run_paper_case(
         nfe=int(nfe),
         ncp=int(ncp),
         initialization="cold" if initialization is None else str(initialization),
+        terminal_drying_fraction=float(terminal_drying_fraction),
     )
 
 
@@ -214,20 +247,25 @@ def shelf_bound_switch_brackets_hr(
     shelf starts on its bound, as in Problem 1, only the exit bracket is
     returned.
 
-    The first and last contact points define the window, rather than requiring
-    the contact set to be one contiguous run. At fine time meshes the control
-    polynomial rings inside the Policy 1 window, briefly leaving the bound at
-    interior collocation points; see :func:`shelf_bound_contact_is_contiguous`.
-    That ringing does not move the switch itself, which is where the control
-    leaves the bound for good.
+    The window is the *longest* contiguous run of bound contact, not simply the
+    first and last contact points. Two things put stray contact outside the real
+    window. At the initial mesh point the control is degenerate: the shelf has
+    had no time to influence the interface, so nothing in the objective pins
+    ``Tb(0)`` and the solver parks it on whichever bound its initialization
+    favours -- the cold start leaves Problem 2 at 260 K there while the policy
+    warm start leaves it at 228 K, and the two trajectories are identical from
+    the next mesh point onward. At fine time meshes the control polynomial can
+    also ring inside the window, briefly leaving the bound at interior points;
+    see :func:`shelf_bound_contact_is_contiguous`. Neither moves the switch
+    itself, which is where the control settles onto or leaves the bound for good.
     """
     time_hr = np.asarray(run.solution["states"]["time_hr"], dtype=float)
-    indices = _shelf_bound_contact_indices(run, tolerance_K=tolerance_K)
-    if indices.size == 0:
+    window = _longest_shelf_bound_window(run, tolerance_K=tolerance_K)
+    if window is None:
         return []
 
+    first, last = window
     brackets: list[tuple[float, float]] = []
-    first, last = int(indices[0]), int(indices[-1])
     if first > 0:
         brackets.append((float(time_hr[first - 1]), float(time_hr[first])))
     if last < time_hr.size - 1:
@@ -246,36 +284,66 @@ def _shelf_bound_contact_indices(
     return np.flatnonzero(shelf_K >= shelf_max - tolerance_K)
 
 
+def _longest_shelf_bound_window(
+    run: PaperCaseRun,
+    *,
+    tolerance_K: float = 1.0e-3,
+) -> tuple[int, int] | None:
+    """Return the index span of the longest unbroken run of bound contact."""
+    indices = _shelf_bound_contact_indices(run, tolerance_K=tolerance_K)
+    if indices.size == 0:
+        return None
+
+    breaks = np.flatnonzero(np.diff(indices) != 1)
+    starts = np.concatenate(([0], breaks + 1))
+    ends = np.concatenate((breaks, [indices.size - 1]))
+    longest = int(np.argmax(ends - starts))
+    return int(indices[starts[longest]]), int(indices[ends[longest]])
+
+
 def shelf_bound_contact_is_contiguous(
     run: PaperCaseRun,
     *,
     tolerance_K: float = 1.0e-3,
 ) -> bool:
-    """Return whether the Policy 1 window is one unbroken run of mesh points.
+    """Return whether the Policy 1 window is one unbroken run of interior points.
 
     The optimal control is exactly constant at the bound through Policy 1, so a
     broken contact set means the transcribed control polynomial is ringing
     within its finite elements rather than that the policy is switching back and
     forth. It is a discretization-quality signal, not a physical one: the states
     and the objective stay converged while it happens.
+
+    The initial mesh point is excluded because the control is degenerate there
+    (see :func:`shelf_bound_switch_brackets_hr`), so a lone contact at ``t = 0``
+    is expected rather than a sign of ringing.
     """
     indices = _shelf_bound_contact_indices(run, tolerance_K=tolerance_K)
-    if indices.size == 0:
+    interior = indices[indices > 0]
+    if interior.size == 0:
         return False
-    return bool(np.all(np.diff(indices) == 1))
+    return bool(np.all(np.diff(interior) == 1))
 
 
 def paper_comparison_rows(run: PaperCaseRun) -> list[dict[str, Any]]:
     """Return published-versus-LyoPRONTO rows for one solved case."""
     reference = PAPER_REFERENCE[run.problem]
+    fraction = run.terminal_drying_fraction
     rows: list[dict[str, Any]] = [
         {
-            "quantity": "drying time [hr]",
-            "paper": float(reference["drying_time_hr"]),
+            "quantity": f"drying time to S={fraction:g}H [hr]",
+            "paper": float("nan"),
             "lyopronto_low": run.drying_time_hr,
             "lyopronto_high": run.drying_time_hr,
+            "note": "solver endpoint, short of the paper's S=H",
+        },
+        {
+            "quantity": "drying time to S=H [hr]",
+            "paper": float(reference["drying_time_hr"]),
+            "lyopronto_low": extrapolated_complete_drying_time_hr(run),
+            "lyopronto_high": extrapolated_complete_drying_time_hr(run),
             "note": str(reference["drying_time_source"]),
-        }
+        },
     ]
 
     paper_switches = tuple(reference["switch_times_hr"])
@@ -306,10 +374,84 @@ def switch_brackets_contain_published(run: PaperCaseRun) -> list[bool]:
     ]
 
 
-def paper_reference_deviation_percent(run: PaperCaseRun) -> float:
-    """Return the drying-time deviation from the published value [%]."""
+def complete_drying_residual_hr(run: PaperCaseRun) -> float:
+    """Return the time [hr] still needed to carry the interface from ``S`` to ``H``.
+
+    The solved trajectory stops at ``terminal_drying_fraction`` of the product
+    height, so it is short of the paper's ``S = H`` endpoint by the remaining
+    frozen thickness. Late in primary drying the interface velocity is smooth
+    and slowly varying, so holding it at its terminal value over that last
+    sliver is an accurate first-order estimate of the missing time.
+    """
+    metrics = run.solution["metrics"]
+    height_m = float(run.solution["derived"]["product_height"])
+    remaining_m = height_m - float(metrics["terminal_interface_position_m"])
+    terminal_velocity = float(
+        np.asarray(run.solution["states"]["interface_velocity_m_per_s"])[-1]
+    )
+    if terminal_velocity <= 0.0:
+        return float("nan")
+    return remaining_m / terminal_velocity / 3600.0
+
+
+def extrapolated_complete_drying_time_hr(run: PaperCaseRun) -> float:
+    """Return the drying time [hr] extrapolated to the paper's ``S = H`` endpoint."""
+    return run.drying_time_hr + complete_drying_residual_hr(run)
+
+
+def paper_reference_deviation_percent(
+    run: PaperCaseRun,
+    *,
+    extrapolated: bool = True,
+) -> float:
+    """Return the drying-time deviation from the published value [%].
+
+    Compares the extrapolated complete-drying time by default, because that is
+    the quantity the paper reports; pass ``extrapolated=False`` to compare the
+    truncated value the solver actually returned.
+    """
     published = float(PAPER_REFERENCE[run.problem]["drying_time_hr"])
-    return 100.0 * (run.drying_time_hr - published) / published
+    solved = (
+        extrapolated_complete_drying_time_hr(run) if extrapolated else run.drying_time_hr
+    )
+    return 100.0 * (solved - published) / published
+
+
+def terminal_fraction_sensitivity_rows(
+    problem: str,
+    fractions: Sequence[float],
+    *,
+    n_z: int = 20,
+    nfe: int = 36,
+    ncp: int = 3,
+    solver: str = "ipopt",
+) -> list[dict[str, Any]]:
+    """Return how the drying time moves with the terminal-cutoff fraction.
+
+    The extrapolated column should be flat across fractions if the linear
+    residual estimate is sound, while the raw column rises toward it.
+    """
+    rows: list[dict[str, Any]] = []
+    for fraction in fractions:
+        run = run_paper_case(
+            problem,
+            n_z=n_z,
+            nfe=nfe,
+            ncp=ncp,
+            terminal_drying_fraction=fraction,
+            solver=solver,
+        )
+        rows.append(
+            {
+                "terminal_drying_fraction": float(fraction),
+                "drying_time_hr": run.drying_time_hr,
+                "residual_hr": complete_drying_residual_hr(run),
+                "extrapolated_hr": extrapolated_complete_drying_time_hr(run),
+                "termination": str(run.solution["metadata"]["termination_condition"]),
+                "wall_time_s": run.wall_median_s,
+            }
+        )
+    return rows
 
 
 def mesh_sensitivity_rows(
