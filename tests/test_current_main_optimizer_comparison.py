@@ -11,16 +11,16 @@ from examples.current_main_optimizer_comparison import (
 from tests.pyomo_solver import require_pyomo_solver
 
 
-def test_comparison_inputs_preserve_historical_grid_conventions() -> None:
+def test_comparison_inputs_match_paper_mannitol_shelf_case() -> None:
     data = comparison_inputs(18.0, 3.3e-4)
 
     assert data["product"]["A1"] == pytest.approx(18.0)
-    assert data["product"]["T_pr_crit"] == pytest.approx(-25.0)
+    assert data["product"]["T_pr_crit"] == pytest.approx(-5.0)
     assert data["ht"]["KC"] == pytest.approx(3.3e-4)
-    assert data["pchamber"]["setpt"] == [0.1]
+    assert data["pchamber"]["setpt"] == [0.15]
     assert data["tshelf"]["min"] == pytest.approx(-45.0)
     assert data["tshelf"]["max"] == pytest.approx(120.0)
-    assert data["nvial"] == 400
+    assert data["nvial"] == 398
 
 
 @pytest.mark.parametrize(

@@ -1,4 +1,4 @@
-"""Helpers for the current-main chamber-pressure optimizer tutorial.
+"""Pressure comparison for the mannitol case in the LyoPRONTO paper.
 
 The experiment compares equivalent chamber-pressure optimization problems:
 
@@ -9,10 +9,10 @@ The experiment compares equivalent chamber-pressure optimization problems:
 * the Pyomo model is transcribed with either backward finite differences or
   LAGRANGE-RADAU orthogonal collocation.
 
-Both paths use the same constant shelf-temperature profile, pressure bounds,
-physics, constraints, completion target, and seven-column trajectory contract.
-The tutorial notebook owns the one-off sweep and plots; this module keeps the
-experiment runs importable and testable.
+Both paths use the paper's 30 degC shelf setpoint, product and equipment
+limits, and seven-column trajectory contract. The 2 Torr numerical upper bound
+is inactive and replaces the original input's effectively unbounded 1000 Torr
+value. The published paper reports a 2.99 hr drying time for this case.
 """
 
 from __future__ import annotations
@@ -47,18 +47,18 @@ def comparison_inputs(a1: float, kc: float) -> dict[str, Any]:
             "R0": 1.4,
             "A1": float(a1),
             "A2": 0.0,
-            "T_pr_crit": -25.0,
+            "T_pr_crit": -5.0,
         },
         "ht": {"KC": float(kc), "KP": 8.93e-4, "KD": 0.46},
-        "pchamber": {"min": 0.05, "max": 0.5},
+        "pchamber": {"min": 0.05, "max": 2.0},
         "tshelf": {
-            "init": -18.0,
-            "setpt": [-18.0],
+            "init": 30.0,
+            "setpt": [30.0],
             "dt_setpt": [6000.0],
             "ramp_rate": 1.0,
         },
         "eq_cap": {"a": -0.182, "b": 11.7},
-        "nvial": 400,
+        "nvial": 398,
     }
 
 

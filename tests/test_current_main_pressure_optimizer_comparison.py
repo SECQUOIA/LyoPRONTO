@@ -11,16 +11,16 @@ from examples.current_main_pressure_optimizer_comparison import (
 from tests.pyomo_solver import require_pyomo_solver
 
 
-def test_pressure_comparison_inputs_preserve_historical_grid_conventions() -> None:
+def test_pressure_comparison_inputs_match_paper_mannitol_pressure_case() -> None:
     data = comparison_inputs(18.0, 3.3e-4)
 
     assert data["product"]["A1"] == pytest.approx(18.0)
-    assert data["product"]["T_pr_crit"] == pytest.approx(-25.0)
+    assert data["product"]["T_pr_crit"] == pytest.approx(-5.0)
     assert data["ht"]["KC"] == pytest.approx(3.3e-4)
-    assert data["pchamber"] == {"min": 0.05, "max": 0.5}
-    assert data["tshelf"]["init"] == pytest.approx(-18.0)
-    assert data["tshelf"]["setpt"] == [-18.0]
-    assert data["nvial"] == 400
+    assert data["pchamber"] == {"min": 0.05, "max": 2.0}
+    assert data["tshelf"]["init"] == pytest.approx(30.0)
+    assert data["tshelf"]["setpt"] == [30.0]
+    assert data["nvial"] == 398
 
 
 def test_pressure_case_comparison_rejects_unmatched_transcription_points() -> None:

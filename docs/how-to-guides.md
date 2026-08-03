@@ -159,10 +159,10 @@ The MkDocs notebook examples are tracked under `docs/examples/`:
 
 - [known Rp](examples/knownRp_PD.ipynb)
 - [unknown Rp](examples/unknownRp_PD.ipynb)
-- [fastest implementable primary-drying cycle](examples/current_main_joint_optimizer_comparison.ipynb)
+- [SciPy and Pyomo on the LyoPRONTO paper optimizer cases](examples/current_main_joint_optimizer_comparison.ipynb)
 
 Notebook execution is validated through the explicit notebook CI lane.
-The implementable-cycle tutorial requires `.[dev,pyomo]` and IPOPT, so its
+The optimizer-comparison notebook requires `.[dev,pyomo]` and IPOPT, so its
 solver-backed smoke execution also runs in the optional Pyomo comparison lane.
 The former shelf-only and pressure-only comparisons remain solver-backed
 regression fixtures under `tests/`, rather than separate reader-facing tutorials.

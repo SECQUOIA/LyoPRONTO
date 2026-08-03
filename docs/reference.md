@@ -310,14 +310,15 @@ profiles, output columns, and algebraic constraints. Full trajectories can
 diverge for the fixed-horizon optimization builders because they solve a
 different simultaneous proxy problem. Use the matching free-final-time DAE
 model when comparing the `opt_Tsh.dry`, `opt_Pch.dry`, or `opt_Pch_Tsh.dry`
-completion-time objective. The implementable-cycle tutorial checks both DAE
-transformations, reports accuracy beside runtime, and uses rate sweeps plus
-shadow prices for equipment decisions:
+completion-time objective. The optimizer-comparison notebook reruns the
+pressure-only, shelf-only, and joint-control mannitol examples from Figure 15
+of the original LyoPRONTO paper with SciPy and Pyomo.DAE. It then shows the
+Pyomo-only initial-control, rate-limit, and shadow-price capabilities:
 
 `docs/examples/current_main_joint_optimizer_comparison.ipynb`
 
-Shelf-only and pressure-only comparison helpers remain covered as regression
-fixtures, but are special cases of the published joint-control tutorial.
+The three comparison helpers remain covered as solver-backed regression
+fixtures, while the reader-facing material stays in one notebook.
 
 Advanced workflow builders remain explicit optional Pyomo prototypes:
 

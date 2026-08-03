@@ -456,7 +456,7 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
         in pyomo_tests
     )
     assert (
-        "tests/test_current_main_joint_optimizer_comparison.py::test_implementability_analysis_solves_and_decomposes_smoke_case"
+        "tests/test_current_main_joint_optimizer_comparison.py::test_joint_pyomo_rate_limited_paper_extension_solves"
         in pyomo_tests
     )
     assert "test_current_main_comparison_notebook_execution" not in pyomo_tests
