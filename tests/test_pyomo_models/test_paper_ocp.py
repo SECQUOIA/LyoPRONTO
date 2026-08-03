@@ -28,6 +28,18 @@ pyo = pytest.importorskip("pyomo.environ", reason="Pyomo not available")
 
 pytestmark = pytest.mark.pyomo
 
+#: ``paper_ocp`` sets IPOPT's ``bound_relax_factor`` to 1e-8, so IPOPT is
+#: entitled to sit that far outside a bound, scaled by the bound's magnitude. A
+#: 243 K limit therefore admits about 2.4e-6 K of reported violation by
+#: construction, which is not an infeasibility. Deriving the tolerance from the
+#: factor keeps these assertions tight without pinning them to one IPOPT build.
+IPOPT_BOUND_RELAX_FACTOR = 1.0e-8
+
+
+def _bound_relaxation_tolerance_K(limit_K):
+    """Return the violation [K] IPOPT may report at ``limit_K``, with margin."""
+    return 2.0 * IPOPT_BOUND_RELAX_FACTOR * limit_K
+
 
 def _ipopt_available():
     try:
@@ -551,7 +563,9 @@ def test_problem1_nz10_solve_matches_reference_policy_sequence():
 
     assert result["metadata"]["status"] == "ok"
     assert metrics["terminal_gap_m"] <= 1.0e-7
-    assert metrics["max_temperature_violation_K"] <= 2.0e-6
+    assert metrics["max_temperature_violation_K"] <= _bound_relaxation_tolerance_K(
+        243.0
+    )
     assert np.isclose(metrics["drying_time_hr"], 6.19, atol=0.08)
     assert policies["segments"][0]["label"] == "policy_1_max_heat_input"
     assert policies["segments"][1]["label"] == "policy_2_temperature_tracking"
@@ -574,7 +588,6 @@ def test_problem1_nz20_solve_matches_reference_policy_sequence():
             "max_cpu_time": 120,
             "tol": 1.0e-5,
             "acceptable_tol": 1.0e-3,
-            "acceptable_iter": 5,
             "print_level": 0,
         },
         require_success=True,
@@ -585,7 +598,9 @@ def test_problem1_nz20_solve_matches_reference_policy_sequence():
 
     assert result["metadata"]["status"] == "ok"
     assert metrics["terminal_gap_m"] <= 1.0e-7
-    assert metrics["max_temperature_violation_K"] <= 2.0e-6
+    assert metrics["max_temperature_violation_K"] <= _bound_relaxation_tolerance_K(
+        243.0
+    )
     assert metrics["shelf_lower_violation_K"] <= 1.0e-6
     assert metrics["shelf_upper_violation_K"] <= 1.0e-6
     assert np.isclose(metrics["drying_time_hr"], 6.19, atol=0.08)
@@ -609,7 +624,6 @@ def test_problem2_coarse_solve_reaches_terminal_target_and_classifies_policy():
             "max_iter": 3000,
             "tol": 1.0e-5,
             "acceptable_tol": 1.0e-3,
-            "acceptable_iter": 5,
             "print_level": 0,
         },
         require_success=True,
@@ -653,7 +667,6 @@ def test_problem2_nz20_solve_keeps_velocity_feasible_and_classifies_policy():
             "max_cpu_time": 240,
             "tol": 1.0e-5,
             "acceptable_tol": 1.0e-3,
-            "acceptable_iter": 5,
             "print_level": 0,
         },
         require_success=True,

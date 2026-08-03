@@ -1805,10 +1805,13 @@ def _solve_paper_problem(
         opt = pyo.SolverFactory(solver)
 
     if solver == "ipopt" and hasattr(opt, "options"):
+        # Keep to options the AMPL/ASL interface accepts across supported IPOPT
+        # builds. An unrecognized keyword is fatal there -- IPOPT reports
+        # `Unknown keyword` and exits non-zero before solving -- and the 3.13.2
+        # build shipped by `idaes get-extensions` rejects `acceptable_iter`.
         opt.options.setdefault("max_iter", 5000)
         opt.options.setdefault("tol", 1.0e-6)
         opt.options.setdefault("acceptable_tol", 1.0e-3)
-        opt.options.setdefault("acceptable_iter", 5)
         opt.options.setdefault("constr_viol_tol", 1.0e-6)
         opt.options.setdefault("mu_strategy", "adaptive")
         opt.options.setdefault("bound_relax_factor", 1.0e-8)
