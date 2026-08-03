@@ -65,6 +65,11 @@ def test_dae_model_constructs_with_selected_transformation(
     assert model.obj.expr is model.t_final
     assert np.isclose(model.final_dried_fraction.value, 1.0)
 
+    # The tau=0 control node has zero measure in the final-time objective, so
+    # without this constraint the solver may leave it anywhere feasible and the
+    # exported shelf-temperature curve starts with an arbitrary jump.
+    assert hasattr(model, "initial_shelf_temperature_continuity")
+
 
 def test_dae_model_rejects_changing_fixed_pressure_profile(dae_case) -> None:
     dae_case["pchamber"]["setpt"] = [0.1, 0.2]
@@ -296,6 +301,8 @@ def test_dae_model_solves_to_complete_drying(dae_case, method) -> None:
     table = result.as_table()
     assert result.success, result.message
     assert result.objective_time_hr == pytest.approx(table[-1, 0])
+    # Optimized shelf temperature must not jump at the isolated first node.
+    assert table[0, 3] == pytest.approx(table[1, 3], abs=1.0e-6)
     assert result.discretization["method"] == method
     assert result.discretization["nfe"] == 8
     assert result.discretization["ncp"] == (None if method == "finite_difference" else 3)
