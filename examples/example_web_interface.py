@@ -24,7 +24,10 @@ Based on the web interface inputs from the screenshot:
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from examples.original_workflow_parity import known_rp_case, run_known_rp_scipy
+if __package__:
+    from .original_workflow_parity import known_rp_case, run_known_rp_scipy
+else:
+    from original_workflow_parity import known_rp_case, run_known_rp_scipy
 
 # ============================================================================
 # INPUTS (matching web interface screenshot)

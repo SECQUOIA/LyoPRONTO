@@ -18,12 +18,20 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
-from examples.original_workflow_parity import (
-    TEMPERATURE_DATA,
-    fit_unknown_rp_scipy,
-    load_temperature_data,
-    preprocess_unknown_rp,
-)
+if __package__:
+    from .original_workflow_parity import (
+        TEMPERATURE_DATA,
+        fit_unknown_rp_scipy,
+        load_temperature_data,
+        preprocess_unknown_rp,
+    )
+else:
+    from original_workflow_parity import (
+        TEMPERATURE_DATA,
+        fit_unknown_rp_scipy,
+        load_temperature_data,
+        preprocess_unknown_rp,
+    )
 
 
 OUTPUT_DIR = Path(__file__).parent / "outputs"
