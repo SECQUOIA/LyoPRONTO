@@ -153,11 +153,13 @@ Implemented modules:
   validation-only multiphase GDP formulation. Free phase durations and
   uninitialized policy indicators select Policy `1 -> 2` for Paper Problem 1
   and Policy `3 -> 1 -> 2` for Paper Problem 2; no production cycle-design API
-  is added. GDPopt RIC uses GLPK for the discrete master and IPOPT for local
-  nonlinear subproblems. Its result is a locally solved nonconvex GDP, not a
-  globally certified optimum. Agreement with `paper_ocp` independently checks
-  the switching representation, but not the physical equations shared by the
-  two models.
+  is added. The phase count is fixed per problem (two for Problem 1 and three
+  for Problem 2) to match the published number of policy segments; only the
+  policy identity, phase durations, and switch times are free. GDPopt RIC uses
+  GLPK for the discrete master and IPOPT for local nonlinear subproblems. Its
+  result is a locally solved nonconvex GDP, not a globally certified optimum.
+  Agreement with `paper_ocp` independently checks the switching representation,
+  but not the physical equations shared by the two models.
 
 Pyomo tests are marked `pyomo` and are skip-safe when Pyomo or a required
 solver such as IPOPT or GLPK is not installed. See `dev.md` for optional solver
