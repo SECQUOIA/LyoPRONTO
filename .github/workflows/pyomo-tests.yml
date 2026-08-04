@@ -54,6 +54,9 @@ jobs:
               examples/current_main_joint_optimizer_comparison.py|\
               examples/current_main_pressure_optimizer_comparison.py|\
               docs/examples/current_main_joint_optimizer_comparison.ipynb|\
+              examples/paper_optimal_control_replication.py|\
+              docs/examples/paper_optimal_control_replication.ipynb|\
+              tests/test_paper_optimal_control_replication.py|\
               tests/test_pyomo_models/**|\
               tests/test_current_main_optimizer_comparison.py|\
               tests/test_current_main_joint_optimizer_comparison.py|\
@@ -182,4 +185,6 @@ jobs:
           tests/test_current_main_joint_optimizer_comparison.py::test_joint_pyomo_rate_limited_paper_extension_solves \
           tests/test_current_main_joint_optimizer_comparison.py::test_current_main_joint_comparison_notebook_execution \
           tests/test_pyomo_models/test_dae_joint_optimization.py::test_joint_dae_model_solves_rate_limited_extension \
-          tests/test_pyomo_models/test_dae_shadow_prices.py
+          tests/test_pyomo_models/test_dae_shadow_prices.py \
+          tests/test_pyomo_models/test_paper_ocp.py \
+          tests/test_paper_optimal_control_replication.py

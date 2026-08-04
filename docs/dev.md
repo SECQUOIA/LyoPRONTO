@@ -110,6 +110,31 @@ current-main SciPy/Pyomo shelf-temperature, chamber-pressure, and joint-control
 comparison notebooks. Their default 3x3 sweeps and repeated timings remain
 local tutorial experiments rather than CI timing gates.
 
+The same job executes the Srisuma and Braatz optimal-control replication
+notebook on a coarse spatial mesh. That notebook reports wall times against the
+timings published with the upstream paper, but those comparisons are narrative
+only: they are measured on whatever runner the job lands on and are never
+asserted.
+
+Validate solver-backed changes against the IPOPT that `idaes get-extensions`
+installs, not only against a conda or system build. That lane runs IPOPT 3.13.2
+through the AMPL/ASL interface, where an option the build does not recognize is
+fatal rather than ignored: IPOPT prints `Unknown keyword` and exits non-zero
+before solving, which surfaces as `Solver (ipopt) did not exit normally`. Newer
+IPOPT builds accept options that one does not, so keep solver options to the
+common subset. To reproduce the lane locally, put IDAES's solver directory first
+on `PATH`:
+
+```bash
+PATH="$HOME/.idaes/bin:$PATH" pytest tests/ -n 0 -v -m "pyomo"
+```
+
+For the same reason, avoid asserting constraint violations tighter than the
+relaxation IPOPT is entitled to. With `bound_relax_factor` at 1e-8, a 243 K
+bound admits about 2.4e-6 K of reported violation by construction; derive such
+tolerances from the factor instead of hard-coding a number that happens to hold
+for one build.
+
 `.github/workflows/slow-tests.yml` is manual dispatch for focused slow
 non-Pyomo, full non-Pyomo, or optional Pyomo validation.
 

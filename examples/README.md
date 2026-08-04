@@ -19,6 +19,7 @@ optimization prototypes.
 | `current_main_optimizer_comparison.py` | Shelf-temperature SciPy/Pyomo.DAE comparison for the paper's mannitol case. | In-memory normalized trajectories and metrics. |
 | `current_main_pressure_optimizer_comparison.py` | Chamber-pressure SciPy/Pyomo.DAE comparison for the paper's mannitol case. | In-memory normalized trajectories and metrics. |
 | `current_main_joint_optimizer_comparison.py` | Joint-control SciPy/Pyomo.DAE comparison and optional rate-limited extension for the paper's mannitol case. | In-memory normalized trajectories and metrics. |
+| `paper_optimal_control_replication.py` | Replication of the two optimal-control case studies in Srisuma and Braatz, arXiv:2509.10826v1, plus the same three-policy classification applied to the vial-scale model. | In-memory solutions, policy segments, and metrics. |
 
 Run examples from the repository root:
 
