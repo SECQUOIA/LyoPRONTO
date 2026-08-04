@@ -401,6 +401,7 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert "examples/current_main_optimizer_comparison.py" in pyomo_tests
     assert "examples/current_main_joint_optimizer_comparison.py" in pyomo_tests
     assert "examples/current_main_pressure_optimizer_comparison.py" in pyomo_tests
+    assert "examples/paper_gdp_validation.py" in pyomo_tests
     assert "docs/examples/current_main_joint_optimizer_comparison.ipynb" in pyomo_tests
     assert "docs/examples/dae_optimizer_walkthrough.ipynb" in pyomo_tests
     assert "docs/examples/current_main_optimizer_comparison.ipynb" not in pyomo_tests
@@ -410,6 +411,7 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert "tests/test_current_main_joint_optimizer_comparison.py" in pyomo_tests
     assert "tests/test_dae_optimizer_walkthrough.py" in pyomo_tests
     assert "tests/test_current_main_pressure_optimizer_comparison.py" in pyomo_tests
+    assert "tests/test_paper_gdp_validation.py" in pyomo_tests
     assert "tests/test_pyomo_solver.py" in pyomo_tests
     assert "tests/pyomo_solver.py" in pyomo_tests
     assert ".github/workflows/pyomo-tests.yml" in pyomo_tests
@@ -417,10 +419,12 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert 'pip install -e ".[dev,pyomo]"' in pyomo_tests
     assert "pytest -n 0 -v" in pyomo_tests
     assert "idaes get-extensions --extra petsc" in pyomo_tests
-    assert "sudo apt-get install --yes liblapack3" in pyomo_tests
+    assert "sudo apt-get install --yes glpk-utils liblapack3" in pyomo_tests
     assert 'echo "$HOME/.idaes/bin" >> "$GITHUB_PATH"' in pyomo_tests
     assert "SolverFactory('ipopt').available(exception_flag=False)" in pyomo_tests
     assert "ipopt -v" in pyomo_tests
+    assert "SolverFactory('glpk').available(exception_flag=False)" in pyomo_tests
+    assert "glpsol --version" in pyomo_tests
     assert "Install IPOPT with: idaes get-extensions --extra petsc" in pyomo_tests
     assert (
         "Alternative local install: conda install -c conda-forge ipopt" in pyomo_tests
@@ -457,6 +461,7 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     # walkthrough notebook test is solver-backed and must not be able to grow
     # sibling tests the lane silently skips.
     assert "tests/test_dae_optimizer_walkthrough.py" in pyomo_tests
+    assert "tests/test_pyomo_models/test_paper_gdp.py" in pyomo_tests
     assert (
         "tests/test_current_main_joint_optimizer_comparison.py::test_current_main_joint_comparison_notebook_execution"
         in pyomo_tests

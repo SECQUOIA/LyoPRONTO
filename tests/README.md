@@ -102,6 +102,7 @@ Install the optional Pyomo test stack with:
 ```bash
 python -m pip install -e ".[dev,pyomo]"
 idaes get-extensions --extra petsc
+sudo apt-get install glpk-utils
 ```
 
 If your local environment manages solvers with conda, install IPOPT there and
@@ -109,6 +110,7 @@ keep it on PATH:
 
 ```bash
 conda install -c conda-forge ipopt
+conda install -c conda-forge glpk
 ```
 
 For quick debugging, it is still fine to run a single file or test directly:
