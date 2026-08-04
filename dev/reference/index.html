@@ -9,7 +9,7 @@
       
       
       
-        <link rel="prev" href="../examples/paper_optimal_control_replication/">
+        <link rel="prev" href="../examples/dae_optimizer_walkthrough/">
       
       
         <link rel="next" href="../technical/physics-reference/">
@@ -355,6 +355,34 @@
     
   
     Replicating Srisuma and Braatz optimal control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/dae_optimizer_walkthrough/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How the DAE optimizer is built and checked
   
 
     
@@ -6694,6 +6722,12 @@ Pyomo-only initial-control, rate-limit, and shadow-price capabilities:</p>
 <p><code>docs/examples/current_main_joint_optimizer_comparison.ipynb</code></p>
 <p>The three comparison helpers remain covered as solver-backed regression
 fixtures, while the reader-facing material stays in one notebook.</p>
+<p>A companion notebook covers the machinery rather than the process results:
+how the normalized-time model is assembled from the same physics the legacy
+optimizers use, how the three control modes differ, and the checks behind the
+documented behavior, including constraint-activity cross-checks against solver
+shadow prices and a mutation battery over the warmstart unit conversions:</p>
+<p><code>docs/examples/dae_optimizer_walkthrough.ipynb</code></p>
 <p>Advanced workflow builders remain explicit optional Pyomo prototypes:</p>
 <ul>
 <li><code>create_parameter_estimation_model</code> builds a least-squares model for fitting

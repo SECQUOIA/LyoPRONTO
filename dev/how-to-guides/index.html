@@ -525,6 +525,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/dae_optimizer_walkthrough/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How the DAE optimizer is built and checked
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -970,11 +998,12 @@ does not introduce thermal-capacitance dynamics.</p>
 <li><a href="../examples/unknownRp_PD/">unknown Rp</a></li>
 <li><a href="../examples/current_main_joint_optimizer_comparison/">SciPy and Pyomo on the LyoPRONTO paper optimizer cases</a></li>
 <li><a href="../examples/paper_optimal_control_replication/">Replicating the Srisuma and Braatz optimal-control cases</a></li>
+<li><a href="../examples/dae_optimizer_walkthrough/">How the DAE optimizer is built and checked</a></li>
 </ul>
 <p>Notebook execution is validated through the explicit notebook CI lane.
-The optimizer-comparison and optimal-control replication notebooks require
-<code>.[dev,pyomo]</code> and IPOPT, so their solver-backed smoke executions also run in the
-optional Pyomo comparison lane.
+The optimizer-comparison, optimal-control replication, and DAE walkthrough
+notebooks require <code>.[dev,pyomo]</code> and IPOPT, so their solver-backed smoke
+executions also run in the optional Pyomo comparison lane.
 The former shelf-only and pressure-only comparisons remain solver-backed
 regression fixtures under <code>tests/</code>, rather than separate reader-facing tutorials.</p>
 <h2 id="run-local-validation">Run Local Validation</h2>
