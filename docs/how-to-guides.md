@@ -161,11 +161,12 @@ The MkDocs notebook examples are tracked under `docs/examples/`:
 - [unknown Rp](examples/unknownRp_PD.ipynb)
 - [SciPy and Pyomo on the LyoPRONTO paper optimizer cases](examples/current_main_joint_optimizer_comparison.ipynb)
 - [Replicating the Srisuma and Braatz optimal-control cases](examples/paper_optimal_control_replication.ipynb)
+- [How the DAE optimizer is built and checked](examples/dae_optimizer_walkthrough.ipynb)
 
 Notebook execution is validated through the explicit notebook CI lane.
-The optimizer-comparison and optimal-control replication notebooks require
-`.[dev,pyomo]` and IPOPT, so their solver-backed smoke executions also run in the
-optional Pyomo comparison lane.
+The optimizer-comparison, optimal-control replication, and DAE walkthrough
+notebooks require `.[dev,pyomo]` and IPOPT, so their solver-backed smoke
+executions also run in the optional Pyomo comparison lane.
 The former shelf-only and pressure-only comparisons remain solver-backed
 regression fixtures under `tests/`, rather than separate reader-facing tutorials.
 

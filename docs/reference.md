@@ -333,6 +333,14 @@ Pyomo-only initial-control, rate-limit, and shadow-price capabilities:
 The three comparison helpers remain covered as solver-backed regression
 fixtures, while the reader-facing material stays in one notebook.
 
+A companion notebook covers the machinery rather than the process results:
+how the normalized-time model is assembled from the same physics the legacy
+optimizers use, how the three control modes differ, and the checks behind the
+documented behavior, including constraint-activity cross-checks against solver
+shadow prices and a mutation battery over the warmstart unit conversions:
+
+`docs/examples/dae_optimizer_walkthrough.ipynb`
+
 Advanced workflow builders remain explicit optional Pyomo prototypes:
 
 - `create_parameter_estimation_model` builds a least-squares model for fitting
