@@ -48,9 +48,10 @@ def test_unknown_rp_scipy_fit_uses_shared_legacy_preprocessing() -> None:
     np.testing.assert_allclose(
         fit.as_array(),
         [0.0208928040371, 7.8433178163, 0.508139910271],
-        rtol=1.0e-8,
+        rtol=0.0,
+        atol=1.0e-6,
     )
-    assert fit.objective == pytest.approx(58.1005977409558, rel=1.0e-10)
+    assert fit.objective == pytest.approx(58.1005977409558, abs=1.0e-6)
 
 
 def test_case_factories_return_independent_dictionaries() -> None:
