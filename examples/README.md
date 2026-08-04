@@ -20,6 +20,7 @@ optimization prototypes.
 | `current_main_pressure_optimizer_comparison.py` | Chamber-pressure SciPy/Pyomo.DAE comparison for the paper's mannitol case. | In-memory normalized trajectories and metrics. |
 | `current_main_joint_optimizer_comparison.py` | Joint-control SciPy/Pyomo.DAE comparison and optional rate-limited extension for the paper's mannitol case. | In-memory normalized trajectories and metrics. |
 | `paper_optimal_control_replication.py` | Replication of the two optimal-control case studies in Srisuma and Braatz, arXiv:2509.10826v1, plus the same three-policy classification applied to the vial-scale model. | In-memory solutions, policy segments, and metrics. |
+| `paper_gdp_validation.py` | Validation-only paper benchmark with free multiphase GDP policy selection, compared with the published and continuous-NLP results. | In-memory comparison rows, indicator-derived policies, trajectories, and solver metadata. |
 
 Run examples from the repository root:
 
@@ -47,6 +48,14 @@ python examples/example_pyomo_optimization.py
 The Pyomo example builds models without solving them, so it does not require
 IPOPT. Solver-backed Pyomo comparisons are covered separately by the optional
 Pyomo validation lane.
+
+The GDP paper comparison requires IPOPT and GLPK:
+
+```bash
+idaes get-extensions --extra petsc
+sudo apt-get install glpk-utils
+python -m examples.paper_gdp_validation
+```
 
 The current-main
 [paper optimizer comparison](../docs/examples/current_main_joint_optimizer_comparison.ipynb)

@@ -153,6 +153,28 @@ initial value. They are disabled by default so the exact rate-unlimited legacy
 comparison remains available. This extension constrains control movement but
 does not introduce thermal-capacitance dynamics.
 
+### Validate paper policy selection with GDP
+
+`examples/paper_gdp_validation.py` compares the published Srisuma--Braatz
+results with two switching routes over the same SI-unit physical equations:
+the continuous `paper_ocp` NLP classifies active constraints after the solve,
+while `paper_gdp` selects each phase's policy from free GDP indicators. Install
+GLPK in addition to the Pyomo/IPOPT setup above:
+
+```bash
+sudo apt-get install glpk-utils
+python -m examples.paper_gdp_validation
+```
+
+Conda environments may use `conda install -c conda-forge glpk` instead. The
+example records GDPopt RIC, GLPK, IPOPT, tolerances, and initialization in its
+result metadata. It reports indicator-derived sequences, free switch times and
+collocation intervals, trajectories, path feasibility, the solver endpoint,
+and an extrapolation to the paper's `S = H` endpoint. Because IPOPT solves the
+nonlinear subproblems locally, the result is not a global optimality
+certificate. Agreement checks the GDP switching formulation independently;
+it does not independently validate the shared physical equations.
+
 ## Run Notebook Examples
 
 The MkDocs notebook examples are tracked under `docs/examples/`:

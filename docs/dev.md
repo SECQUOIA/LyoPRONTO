@@ -23,12 +23,14 @@ stay non-Pyomo:
 ```bash
 python -m pip install -e ".[dev,pyomo]"
 idaes get-extensions --extra petsc
+sudo apt-get install glpk-utils
 ```
 
 A conda-managed local environment may instead install IPOPT with:
 
 ```bash
 conda install -c conda-forge ipopt
+conda install -c conda-forge glpk
 ```
 
 ## Local Validation
@@ -115,6 +117,12 @@ notebook on a coarse spatial mesh. That notebook reports wall times against the
 timings published with the upstream paper, but those comparisons are narrative
 only: they are measured on whatever runner the job lands on and are never
 asserted.
+
+The optional lane also runs the coarse multiphase GDP paper benchmark. GDPopt
+RIC uses GLPK for the discrete master and the lane's IPOPT 3.13.2 build for
+local nonlinear subproblems. Structural tests remain skip-safe in the
+no-solver lane; solver tests require both executables and provide separate
+installation hints when either is absent.
 
 Validate solver-backed changes against the IPOPT that `idaes get-extensions`
 installs, not only against a conda or system build. That lane runs IPOPT 3.13.2
