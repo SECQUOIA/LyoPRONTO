@@ -321,14 +321,125 @@ def collect_discretization_sensitivity(
     return rows
 
 
+#: Legacy equality constraints returned by ``functions.Eq_Constraints``, with
+#: the unit each residual carries and the term used to normalize it.
+#:
+#: The four residuals are dimensionally distinct, so a single absolute
+#: tolerance over all of them is meaningless: the same numeric threshold is
+#: loose for one equation and impossibly tight for another. Each is therefore
+#: divided by a representative magnitude of its own terms, which makes the
+#: reported quantity a dimensionless relative residual comparable across
+#: equations.
+LEGACY_EQUALITY_CONSTRAINTS: Tuple[Tuple[str, str, str], ...] = (
+    ("vapor_pressure", "Torr", "sublimation-front pressure"),
+    ("sublimation_rate", "kg/hr", "sublimation rate"),
+    ("vial_heat_balance", "cal cm/s", "conducted heat through the frozen layer"),
+    ("shelf_temperature", "degC", "shelf-to-bottom temperature difference"),
+)
+
+
+def legacy_equality_residuals(
+    trajectory: np.ndarray,
+    data: Mapping[str, Any],
+) -> dict[str, dict[str, float]]:
+    """Evaluate the legacy SciPy equality constraints along a DAE trajectory.
+
+    The Pyomo.DAE models restate the physics that ``functions.Eq_Constraints``
+    encodes for the sequential optimizers, so those legacy residuals must
+    vanish at a DAE solution even though the DAE never calls them. This
+    evaluates them independently and reports each equation separately.
+
+    ``trajectory`` uses the package's seven-column contract: time [hr],
+    temperatures [degC], chamber pressure [mTorr], sublimation flux
+    [kg/hr/m^2], and dried percentage [0-100]. ``data`` is one of the
+    ``comparison_inputs`` mappings.
+
+    Returns one entry per equation in :data:`LEGACY_EQUALITY_CONSTRAINTS`,
+    each carrying ``max_absolute`` in that equation's own unit, the
+    ``scale`` [same unit] it was normalized by, and the dimensionless
+    ``max_relative`` residual. Compare ``max_relative`` across equations;
+    ``max_absolute`` alone is not comparable between them.
+    """
+    from lyopronto import constant, functions
+
+    table = np.asarray(trajectory, dtype=float)
+    if table.ndim != 2 or table.shape[1] != 7 or not np.all(np.isfinite(table)):
+        raise ValueError("trajectory must be a finite two-dimensional, seven-column table")
+
+    vial, product, ht = data["vial"], data["product"], data["ht"]
+    lpr0_cm = functions.Lpr0_FUN(vial["Vfill"], vial["Ap"], product["cSolid"])
+
+    residuals: list[Tuple[float, ...]] = []
+    scales: list[Tuple[float, ...]] = []
+    for row in table:
+        pressure_torr = row[4] / constant.Torr_to_mTorr
+        rate_kg_per_hr = row[5] * vial["Ap"] * constant.cm_To_m**2
+        cake_length_cm = row[6] / 100.0 * lpr0_cm
+        front_pressure_torr = functions.Vapor_pressure(row[1])
+        kv = functions.Kv_FUN(ht["KC"], ht["KP"], ht["KD"], pressure_torr)
+        rp = functions.Rp_FUN(cake_length_cm, product["R0"], product["A1"], product["A2"])
+        residuals.append(
+            functions.Eq_Constraints(
+                pressure_torr,
+                rate_kg_per_hr,
+                row[2],
+                row[3],
+                front_pressure_torr,
+                row[1],
+                kv,
+                lpr0_cm,
+                cake_length_cm,
+                vial["Av"],
+                vial["Ap"],
+                rp,
+            )
+        )
+        # One representative magnitude per equation, taken from the same row.
+        scales.append(
+            (
+                abs(front_pressure_torr),
+                abs(rate_kg_per_hr),
+                abs(vial["Ap"] * (row[2] - row[1]) * constant.k_ice),
+                abs(row[3] - row[2]),
+            )
+        )
+
+    absolute = np.abs(np.asarray(residuals, dtype=float))
+    magnitude = np.abs(np.asarray(scales, dtype=float))
+
+    # Normalize by the largest magnitude each equation reaches anywhere on the
+    # trajectory, not row by row. Several of these terms legitimately vanish at
+    # an endpoint -- the frozen layer disappears at complete drying, so the
+    # conducted-heat term and its residual both go to zero -- and a row-local
+    # ratio there is 0/0, which reports a meaningless O(1) relative residual on
+    # a perfectly converged solve. A trajectory-level scale keeps the quantity
+    # interpretable: residual as a fraction of the largest value that equation
+    # actually takes on this solution.
+    scale = np.maximum(magnitude.max(axis=0), np.finfo(float).tiny)
+    relative = absolute / scale
+
+    return {
+        name: {
+            "unit": unit,
+            "scale_term": scale_term,
+            "max_absolute": float(absolute[:, index].max()),
+            "scale": float(scale[index]),
+            "max_relative": float(relative[:, index].max()),
+        }
+        for index, (name, unit, scale_term) in enumerate(LEGACY_EQUALITY_CONSTRAINTS)
+    }
+
+
 __all__ = [
     "CaseComparison",
     "DaeRunner",
+    "LEGACY_EQUALITY_CONSTRAINTS",
     "ScipyRunner",
     "SensitivityRowValues",
     "SolverRun",
     "collect_case_comparison",
     "collect_discretization_sensitivity",
+    "legacy_equality_residuals",
     "matched_nfe_for_point_budget",
     "solver_run_from_dae_result",
 ]

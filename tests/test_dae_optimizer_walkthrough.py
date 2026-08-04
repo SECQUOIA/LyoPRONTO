@@ -62,6 +62,16 @@ def test_walkthrough_notebook_ships_executed_outputs(repo_root) -> None:
     ], "committed notebook contains an execution error"
 
 
+#: Dimensionless bound on each legacy equality residual, normalized by that
+#: equation's own scale. A converged solve lands near 1e-9, so this leaves
+#: roughly three orders of headroom for solver tolerance while still catching
+#: a sub-0.1% error in any single equation. A shared *absolute* bound cannot
+#: do this job: the four residuals carry Torr, kg/hr, cal cm/s, and degC, and
+#: the kg/hr terms are O(1e-3), so one threshold loose enough for degC hides a
+#: 10% mass-transfer error.
+MAX_RELATIVE_EQUALITY_RESIDUAL = 1.0e-6
+
+
 @pytest.mark.pyomo
 def test_shelf_temperature_dae_reproduces_legacy_equality_residuals() -> None:
     """The DAE optimum satisfies the legacy SciPy equality constraints.
@@ -69,14 +79,20 @@ def test_shelf_temperature_dae_reproduces_legacy_equality_residuals() -> None:
     This is the notebook's central identity claim in section 1.3: the Pyomo
     model encodes the same physics as ``functions.Eq_Constraints``, so those
     residuals must vanish at a solution the DAE found without ever calling
-    them. Units follow the legacy seven-column convention: time [hr],
-    temperatures [degC], pressure [mTorr], sublimation flux [kg/hr/m^2], and
-    percent dried [0-100].
+    them.
+
+    Each equation is checked against its own normalized tolerance. Scaling a
+    10% error into the mass-transfer equation moves that equation's relative
+    residual to 9.1e-2, and a 0.1% error to 1.0e-3, both far above the bound;
+    the remaining equations stay near 1e-9.
     """
     require_pyomo_solver("ipopt")
 
+    from examples.current_main_comparison import (
+        LEGACY_EQUALITY_CONSTRAINTS,
+        legacy_equality_residuals,
+    )
     from examples.current_main_optimizer_comparison import comparison_inputs
-    from lyopronto import constant, functions
     from lyopronto.pyomo_models import solve_dae_shelf_temperature_optimization
 
     case = comparison_inputs(16.0, 2.75e-4)
@@ -94,39 +110,15 @@ def test_shelf_temperature_dae_reproduces_legacy_equality_residuals() -> None:
     )
     assert result.success, result.message
 
-    lpr0_cm = functions.Lpr0_FUN(
-        case["vial"]["Vfill"], case["vial"]["Ap"], case["product"]["cSolid"]
-    )
-    residuals = []
-    for row in result.as_table():
-        pch_torr = row[4] / constant.Torr_to_mTorr
-        dmdt_kg_per_hr = row[5] * case["vial"]["Ap"] * constant.cm_To_m**2
-        lck_cm = row[6] / 100.0 * lpr0_cm
-        residuals.append(
-            functions.Eq_Constraints(
-                pch_torr,
-                dmdt_kg_per_hr,
-                row[2],
-                row[3],
-                functions.Vapor_pressure(row[1]),
-                row[1],
-                functions.Kv_FUN(
-                    case["ht"]["KC"], case["ht"]["KP"], case["ht"]["KD"], pch_torr
-                ),
-                lpr0_cm,
-                lck_cm,
-                case["vial"]["Av"],
-                case["vial"]["Ap"],
-                functions.Rp_FUN(
-                    lck_cm,
-                    case["product"]["R0"],
-                    case["product"]["A1"],
-                    case["product"]["A2"],
-                ),
-            )
-        )
+    diagnostics = legacy_equality_residuals(result.as_table(), case)
 
-    assert np.max(np.abs(residuals)) < 1.0e-4
+    assert set(diagnostics) == {name for name, _, _ in LEGACY_EQUALITY_CONSTRAINTS}
+    for name, entry in diagnostics.items():
+        assert entry["max_relative"] < MAX_RELATIVE_EQUALITY_RESIDUAL, (
+            f"{name} residual {entry['max_relative']:.3e} (absolute "
+            f"{entry['max_absolute']:.3e} {entry['unit']}, scale "
+            f"{entry['scale']:.3e} {entry['unit']}) exceeds the normalized bound"
+        )
 
 
 @pytest.mark.pyomo
@@ -145,7 +137,7 @@ def test_drying_time_loses_kc_dependence_once_the_shelf_ceiling_is_slack() -> No
     from examples.current_main_optimizer_comparison import comparison_inputs
     from lyopronto.pyomo_models import solve_dae_shelf_temperature_optimization
 
-    def drying_time_hr(kc: float, shelf_max_c: float | None) -> float:
+    def solve(kc: float, shelf_max_c: float | None):
         case = comparison_inputs(16.0, kc)
         if shelf_max_c is not None:
             case["tshelf"] = {**case["tshelf"], "max": shelf_max_c}
@@ -162,16 +154,42 @@ def test_drying_time_loses_kc_dependence_once_the_shelf_ceiling_is_slack() -> No
             ncp=3,
         )
         assert result.success, result.message
-        return float(result.objective_time_hr)
+        return result, case
 
     kc_values = (2.75e-4, 4.00e-4)
+    shipped_ceiling_c = comparison_inputs(16.0, kc_values[0])["tshelf"]["max"]
+    relaxed_ceiling_c = 400.0
 
-    # Shipped ceiling binds, so a better vial heat transfer really does help.
-    binding = [drying_time_hr(kc, None) for kc in kc_values]
+    # The derivation only applies where the product-temperature limit pins
+    # Tbot, so every endpoint must reach that bound for the claim to be about
+    # the mechanism rather than about some other regime.
+    def assert_product_limit_active(result, case) -> None:
+        reached_c = float(np.max(result.values["Tbot"]))
+        assert reached_c == pytest.approx(case["product"]["T_pr_crit"], abs=1.0e-4)
+
+    # Shipped ceiling binds: shelf pinned at its bound with a priced multiplier,
+    # so a better vial heat-transfer coefficient really does shorten the cycle.
+    binding = []
+    for kc in kc_values:
+        result, case = solve(kc, None)
+        assert_product_limit_active(result, case)
+        assert float(np.max(result.values["Tsh"])) == pytest.approx(
+            shipped_ceiling_c, abs=1.0e-4
+        )
+        assert abs(result.shadow_prices["shelf_temperature_upper_bound"]) > 1.0e-6
+        binding.append(float(result.objective_time_hr))
     assert binding[0] - binding[1] > 1.0e-3
 
-    # Lift the ceiling clear and the cancellation takes over.
-    slack = [drying_time_hr(kc, 400.0) for kc in kc_values]
+    # Ceiling lifted clear: the shelf stays well inside its bound and prices at
+    # zero, so the Kv cancellation governs and KC drops out of the drying time.
+    slack = []
+    for kc in kc_values:
+        result, case = solve(kc, relaxed_ceiling_c)
+        assert_product_limit_active(result, case)
+        reached_c = float(np.max(result.values["Tsh"]))
+        assert reached_c < relaxed_ceiling_c - 1.0
+        assert abs(result.shadow_prices["shelf_temperature_upper_bound"]) < 1.0e-9
+        slack.append(float(result.objective_time_hr))
     assert abs(slack[0] - slack[1]) < 1.0e-4
 
 
