@@ -14,8 +14,7 @@ def test_validation_example_rejects_an_unknown_problem_before_solver_use() -> No
         run_paper_gdp_validation("problem3")
 
 
-def test_comparison_rows_keep_paper_nlp_and_gdp_results_distinct() -> None:
-    """The compact table preserves endpoint and policy provenance."""
+def _comparison_fixtures() -> tuple[dict, dict, dict]:
     gdp = {
         "problem": {"terminal_drying_fraction": 0.995},
         "metrics": {
@@ -29,6 +28,7 @@ def test_comparison_rows_keep_paper_nlp_and_gdp_results_distinct() -> None:
     }
     continuous = {
         "derived": {"product_height": 1.0},
+        "problem": {"terminal_drying_fraction_target": 0.995},
         "metrics": {
             "drying_time_hr": 6.18,
             "terminal_interface_position_m": 0.99,
@@ -44,6 +44,12 @@ def test_comparison_rows_keep_paper_nlp_and_gdp_results_distinct() -> None:
         "policy_sequence": ("policy_1", "policy_2"),
         "switch_times_hr": (2.4,),
     }
+    return gdp, continuous, paper
+
+
+def test_comparison_rows_keep_paper_nlp_and_gdp_results_distinct() -> None:
+    """The compact table preserves endpoint and policy provenance."""
+    gdp, continuous, paper = _comparison_fixtures()
 
     rows = paper_gdp_comparison_rows(gdp, continuous, paper)
 
@@ -69,3 +75,13 @@ def test_comparison_rows_keep_paper_nlp_and_gdp_results_distinct() -> None:
             "gdp": (2.37,),
         },
     ]
+
+
+
+def test_comparison_rows_reject_mismatched_terminal_fractions() -> None:
+    """Endpoint rows from differently targeted runs must not be mixed."""
+    gdp, continuous, paper = _comparison_fixtures()
+    continuous["problem"]["terminal_drying_fraction_target"] = 0.99
+
+    with pytest.raises(ValueError, match="different terminal drying"):
+        paper_gdp_comparison_rows(gdp, continuous, paper)

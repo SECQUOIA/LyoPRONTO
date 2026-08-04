@@ -728,6 +728,15 @@ def paper_gdp_comparison_rows(
 ) -> list[dict[str, Any]]:
     """Return a compact paper/continuous-NLP/GDP comparison table."""
     terminal_fraction = float(gdp_result["problem"]["terminal_drying_fraction"])
+    continuous_fraction = float(
+        continuous_result["problem"]["terminal_drying_fraction_target"]
+    )
+    if not np.isclose(terminal_fraction, continuous_fraction):
+        raise ValueError(
+            "GDP and continuous results target different terminal drying "
+            f"fractions ({terminal_fraction:g} vs {continuous_fraction:g}), "
+            "so their solver-endpoint drying times are not comparable"
+        )
     continuous_height_m = float(continuous_result["derived"]["product_height"])
     continuous_terminal_m = float(
         continuous_result["metrics"]["terminal_interface_position_m"]
