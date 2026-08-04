@@ -43,6 +43,7 @@ def test_unknown_rp_scipy_fit_uses_shared_legacy_preprocessing() -> None:
     output, product_resistance = preprocess_unknown_rp()
     fit = fit_unknown_rp_scipy(product_resistance)
 
+    assert fit.success, fit.message
     assert output.shape == (453, 7)
     assert product_resistance.shape == (453, 3)
     np.testing.assert_allclose(

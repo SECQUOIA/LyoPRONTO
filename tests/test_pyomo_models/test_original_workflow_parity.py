@@ -7,6 +7,8 @@ mTorr, flux in kg/hr/m^2, and percent dried on the 0-100 scale.
 
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import numpy as np
 import pytest
 
@@ -24,6 +26,20 @@ from tests.pyomo_solver import require_pyomo_solver
 pyo = pytest.importorskip("pyomo.environ")
 
 pytestmark = pytest.mark.pyomo
+
+
+class NonOptimalSolver:
+    """Return an infeasible result without changing initialized model values."""
+
+    def solve(self, model):
+        """Return non-optimal diagnostics for a dimensionless test double."""
+        del model
+        return SimpleNamespace(
+            solver=SimpleNamespace(
+                status=pyo.SolverStatus.warning,
+                termination_condition=pyo.TerminationCondition.infeasible,
+            )
+        )
 
 
 def test_original_workflow_models_construct_without_a_solver() -> None:
@@ -65,6 +81,7 @@ def test_unknown_rp_hybrid_pyomo_fit_matches_scipy() -> None:
     scipy_fit = fit_unknown_rp_scipy(product_resistance)
     pyomo_fit = fit_unknown_rp_pyomo(product_resistance, solver=solver)
 
+    assert pyomo_fit.success, pyomo_fit.message
     assert pyomo_fit.termination_condition == "optimal"
     np.testing.assert_allclose(
         pyomo_fit.as_array(),
@@ -73,3 +90,23 @@ def test_unknown_rp_hybrid_pyomo_fit_matches_scipy() -> None:
         atol=2.0e-5,
     )
     assert pyomo_fit.objective == pytest.approx(scipy_fit.objective, abs=1.0e-6)
+
+
+def test_unknown_rp_nonoptimal_result_is_not_exposed_as_a_fit() -> None:
+    """Initialized parameters are not scientific output after infeasible termination."""
+    _output, product_resistance = preprocess_unknown_rp()
+    failed_fit = fit_unknown_rp_pyomo(
+        product_resistance,
+        solver=NonOptimalSolver(),
+    )
+
+    assert not failed_fit.success
+    assert failed_fit.solver_status == "warning"
+    assert failed_fit.termination_condition == "infeasible"
+    assert failed_fit.R0 is None  # [cm^2 hr Torr/g]
+    assert failed_fit.A1 is None  # [cm hr Torr/g]
+    assert failed_fit.A2 is None  # [1/cm]
+    assert failed_fit.objective is None  # [(cm^2 hr Torr/g)^2]
+    assert "fitted parameters and objective are unavailable" in failed_fit.message
+    with pytest.raises(RuntimeError, match="did not reach an optimal solution"):
+        failed_fit.as_array()

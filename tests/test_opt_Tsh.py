@@ -17,6 +17,27 @@ from .utils import (
 )
 
 
+def assert_optimizer_time_progression(output):
+    """Assert the optimizer's seven-column table has strictly increasing time [hr]."""
+    assert output.ndim == 2 and output.shape[1] == 7, (
+        "Optimizer output should have seven columns"
+    )
+    time_hr = output[:, 0]  # [hr]
+    assert time_hr[0] == pytest.approx(0.0)
+    assert np.all(np.diff(time_hr) > 0.0), (
+        "Optimizer time should be strictly increasing"
+    )
+
+
+def test_optimizer_time_progression_guard_rejects_duplicate_timestamp():
+    """The consolidated strict-time guard rejects a duplicate interior time [hr]."""
+    output = np.zeros((3, 7), dtype=float)
+    output[:, 0] = [0.0, 0.01, 0.01]  # [hr]
+
+    with pytest.raises(AssertionError, match="strictly increasing"):
+        assert_optimizer_time_progression(output)
+
+
 def opt_tsh_consistency(output, setup):
     vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial = setup
 
@@ -158,10 +179,10 @@ class TestOptTsh:
 
         # Check shape (should have 7 columns)
         assert output.shape[1] == 7
+        assert_optimizer_time_progression(output)
 
         # Check that all values are finite
         assert_physically_reasonable_output(output, Tmax=120)
-        assert output[0, 0] == pytest.approx(0.0)  # time [hr]
         assert output[0, 6] == pytest.approx(0.0)  # percent dried [0-100]
         assert np.all(output[:, 5] > 0.0)  # sublimation flux [kg/hr/m^2]
 

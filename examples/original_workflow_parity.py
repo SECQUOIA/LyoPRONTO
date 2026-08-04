@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 from scipy.optimize import curve_fit
@@ -30,15 +30,24 @@ TEMPERATURE_DATA = ROOT / "test_data" / "temperature.txt"
 class ResistanceFit:
     """Product-resistance fit in the legacy ``Rp(Lck)`` parameterization."""
 
-    R0: float  # [cm^2 hr Torr/g]
-    A1: float  # [cm hr Torr/g]
-    A2: float  # [1/cm]
-    objective: float  # sum of squared Rp residuals [(cm^2 hr Torr/g)^2]
+    success: bool
     solver_status: str
     termination_condition: str
+    message: str
+    R0: Optional[float]  # [cm^2 hr Torr/g]
+    A1: Optional[float]  # [cm hr Torr/g]
+    A2: Optional[float]  # [1/cm]
+    objective: Optional[float]  # sum of squared Rp residuals [(cm^2 hr Torr/g)^2]
 
     def as_array(self) -> np.ndarray:
-        """Return ``R0``, ``A1``, and ``A2`` in parameter order."""
+        """Return successful ``R0``, ``A1``, and ``A2`` in parameter order."""
+        if (
+            not self.success
+            or self.R0 is None
+            or self.A1 is None
+            or self.A2 is None
+        ):
+            raise RuntimeError(self.message)
         return np.array([self.R0, self.A1, self.A2], dtype=float)
 
 
@@ -183,12 +192,14 @@ def fit_unknown_rp_scipy(product_resistance: np.ndarray) -> ResistanceFit:
     )
     residual = rp_observed - functions.Rp_FUN(lck_cm, *params)
     return ResistanceFit(
+        success=True,
+        solver_status="success",
+        termination_condition="curve_fit converged",
+        message="SciPy curve_fit converged.",
         R0=float(params[0]),
         A1=float(params[1]),
         A2=float(params[2]),
         objective=float(np.dot(residual, residual)),
-        solver_status="success",
-        termination_condition="curve_fit converged",
     )
 
 
@@ -218,19 +229,63 @@ def fit_unknown_rp_pyomo(
     *,
     solver: Any = "ipopt",
 ) -> ResistanceFit:
-    """Fit shared legacy Rp observations with the optional Pyomo model."""
+    """Fit shared legacy Rp observations with the optional Pyomo model.
+
+    Non-optimal solver outcomes return diagnostics with ``success=False`` and
+    no fitted parameters or objective.  This prevents initialized model values
+    from being mistaken for a scientific fit.
+    """
     import pyomo.environ as pyo
+    from lyopronto.pyomo_models.single_step import _termination_success
 
     model = build_unknown_rp_pyomo_model(product_resistance)
-    results = solver.solve(model) if not isinstance(solver, str) else pyo.SolverFactory(solver).solve(model)
+    try:
+        results = (
+            solver.solve(model)
+            if not isinstance(solver, str)
+            else pyo.SolverFactory(solver).solve(model)
+        )
+    except Exception as exc:  # pragma: no cover - solver failures are environment specific
+        return ResistanceFit(
+            success=False,
+            solver_status="not_available",
+            termination_condition="not_available",
+            message=f"Pyomo resistance fit failed before returning results: {exc}",
+            R0=None,
+            A1=None,
+            A2=None,
+            objective=None,
+        )
+
     solver_info = results.solver
+    termination = solver_info.termination_condition
+    status = solver_info.status
+    success = _termination_success(termination)
+    if not success:
+        return ResistanceFit(
+            success=False,
+            solver_status=str(status),
+            termination_condition=str(termination),
+            message=(
+                "Pyomo resistance fit did not reach an optimal solution "
+                f"(status={status}, termination_condition={termination}); "
+                "fitted parameters and objective are unavailable."
+            ),
+            R0=None,
+            A1=None,
+            A2=None,
+            objective=None,
+        )
+
     return ResistanceFit(
+        success=True,
+        solver_status=str(status),
+        termination_condition=str(termination),
+        message=f"Pyomo resistance fit reached {termination}.",
         R0=float(pyo.value(model.R0)),
         A1=float(pyo.value(model.A1)),
         A2=float(pyo.value(model.A2)),
         objective=float(pyo.value(model.obj)),
-        solver_status=str(solver_info.status),
-        termination_condition=str(solver_info.termination_condition),
     )
 
 
