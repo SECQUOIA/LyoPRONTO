@@ -338,6 +338,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/paper_optimal_control_replication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Replicating Srisuma and Braatz optimal control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -871,6 +899,26 @@ solver-backed test was silently skipped.</p>
 current-main SciPy/Pyomo shelf-temperature, chamber-pressure, and joint-control
 comparison notebooks. Their default 3x3 sweeps and repeated timings remain
 local tutorial experiments rather than CI timing gates.</p>
+<p>The same job executes the Srisuma and Braatz optimal-control replication
+notebook on a coarse spatial mesh. That notebook reports wall times against the
+timings published with the upstream paper, but those comparisons are narrative
+only: they are measured on whatever runner the job lands on and are never
+asserted.</p>
+<p>Validate solver-backed changes against the IPOPT that <code>idaes get-extensions</code>
+installs, not only against a conda or system build. That lane runs IPOPT 3.13.2
+through the AMPL/ASL interface, where an option the build does not recognize is
+fatal rather than ignored: IPOPT prints <code>Unknown keyword</code> and exits non-zero
+before solving, which surfaces as <code>Solver (ipopt) did not exit normally</code>. Newer
+IPOPT builds accept options that one does not, so keep solver options to the
+common subset. To reproduce the lane locally, put IDAES's solver directory first
+on <code>PATH</code>:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/.idaes/bin:</span><span class="nv">$PATH</span><span class="s2">&quot;</span><span class="w"> </span>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span><span class="m">0</span><span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;pyomo&quot;</span>
+</span></code></pre></div>
+<p>For the same reason, avoid asserting constraint violations tighter than the
+relaxation IPOPT is entitled to. With <code>bound_relax_factor</code> at 1e-8, a 243 K
+bound admits about 2.4e-6 K of reported violation by construction; derive such
+tolerances from the factor instead of hard-coding a number that happens to hold
+for one build.</p>
 <p><code>.github/workflows/slow-tests.yml</code> is manual dispatch for focused slow
 non-Pyomo, full non-Pyomo, or optional Pyomo validation.</p>
 <h2 id="pyomo-test-policy">Pyomo Test Policy</h2>
@@ -883,23 +931,23 @@ default non-Pyomo PRs do not install optional dependencies while the required
 branch-protection check still reports on every PR.</p>
 <h2 id="documentation">Documentation</h2>
 <p>Install documentation dependencies:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[docs]&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[docs]&quot;</span>
 </span></code></pre></div>
 <p>Build and preview locally:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>mkdocs<span class="w"> </span>build
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>mkdocs<span class="w"> </span>serve
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>mkdocs<span class="w"> </span>build
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>mkdocs<span class="w"> </span>serve
 </span></code></pre></div>
 <p>Docs publishing uses <code>mike</code> in <code>.github/workflows/docs.yml</code>. Pull requests
 build a <code>pr-&lt;number&gt;</code> docs version, pushes to <code>main</code> deploy <code>dev</code>, and
 published releases deploy the release version plus <code>latest</code>.</p>
 <p>If a published documentation version needs to be replaced, update it from the
 branch with the desired docs:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>git<span class="w"> </span>fetch
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>git<span class="w"> </span>switch<span class="w"> </span><span class="o">[</span>branch<span class="w"> </span>with<span class="w"> </span>desired<span class="w"> </span>docs<span class="o">]</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>mike<span class="w"> </span>delete<span class="w"> </span><span class="o">[</span>broken<span class="w"> </span>docs<span class="w"> </span>version<span class="o">]</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>mike<span class="w"> </span>deploy<span class="w"> </span><span class="o">[</span>new<span class="w"> </span>docs<span class="w"> </span>version<span class="o">]</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>git<span class="w"> </span>switch<span class="w"> </span>gh-pages
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>gh-pages
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>git<span class="w"> </span>fetch
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>git<span class="w"> </span>switch<span class="w"> </span><span class="o">[</span>branch<span class="w"> </span>with<span class="w"> </span>desired<span class="w"> </span>docs<span class="o">]</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>mike<span class="w"> </span>delete<span class="w"> </span><span class="o">[</span>broken<span class="w"> </span>docs<span class="w"> </span>version<span class="o">]</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>mike<span class="w"> </span>deploy<span class="w"> </span><span class="o">[</span>new<span class="w"> </span>docs<span class="w"> </span>version<span class="o">]</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>git<span class="w"> </span>switch<span class="w"> </span>gh-pages
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>gh-pages
 </span></code></pre></div>
 <h2 id="maintenance-notes">Maintenance Notes</h2>
 <ul>
