@@ -11,6 +11,7 @@ from lyopronto.pyomo_models.paper_gdp import (
     PaperGDPDiscretization,
     create_paper_problem1_gdp_model,
     create_paper_problem2_gdp_model,
+    extract_paper_gdp_solution,
     solve_paper_problem1_gdp,
     solve_paper_problem2_gdp,
 )
@@ -170,6 +171,27 @@ def test_policy_disjuncts_encode_the_three_physical_equalities() -> None:
     assert abs(pyo.value(velocity.body) - pyo.value(velocity.lower)) <= 1.0e-10
 
 
+def test_temperature_violation_metric_scans_every_spatial_node() -> None:
+    """A hot non-bottom node must remain visible in feasibility evidence."""
+    model = create_paper_problem1_gdp_model(discretization=_coarse_discretization())
+    for phase_index, selected_policy in (
+        (1, POLICY_MAX_HEAT),
+        (2, POLICY_TEMPERATURE),
+    ):
+        for policy_name in model.policy_names:
+            model.policy[phase_index, policy_name].indicator_var.set_value(
+                policy_name == selected_policy
+            )
+    phase = model.phase[2]
+    phase.T[0, phase.t.last()].set_value(
+        model._paper_problem_settings.temperature_limit + 1.0
+    )
+
+    result = extract_paper_gdp_solution(model)
+
+    assert np.isclose(result["metrics"]["max_temperature_violation_K"], 1.0)
+
+
 def test_duration_initialization_can_change_without_seeding_policy_identity() -> None:
     """Alternative continuous starts leave every discrete choice unset."""
     model = create_paper_problem2_gdp_model(
@@ -213,6 +235,7 @@ def test_problem1_gdp_selects_policy_1_then_2_without_indicator_seed() -> None:
 
     assert result["metadata"]["termination_condition"] == "optimal"
     assert result["metadata"]["global_optimality_certified"] is False
+    assert result["metrics"]["max_temperature_violation_K"] <= 1.0e-4
     assert result["policies"]["indicator_sequence"] == (
         POLICY_MAX_HEAT,
         POLICY_TEMPERATURE,
@@ -240,6 +263,8 @@ def test_problem2_gdp_selects_policy_3_1_2_from_two_neutral_initializations() ->
 
     for result in (default, alternative):
         assert result["metadata"]["termination_condition"] == "optimal"
+        assert result["metrics"]["max_temperature_violation_K"] <= 1.0e-4
+        assert result["metrics"]["max_interface_velocity_violation_m_per_s"] <= 1.0e-10
         assert result["policies"]["indicator_sequence"] == expected
         assert np.isclose(result["metrics"]["complete_drying_time_hr"], 8.9, atol=0.15)
         classifier_labels = tuple(

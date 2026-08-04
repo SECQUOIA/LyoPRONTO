@@ -706,7 +706,7 @@ def extract_paper_gdp_solution(
             "complete_drying_time_hr": (elapsed_s + residual_s) / 3600.0,
             "terminal_gap_m": terminal_gap_m,
             "max_temperature_violation_K": max(
-                0.0, float(np.max(temperature_K[:, -1]) - settings.temperature_limit)
+                0.0, float(np.max(temperature_K) - settings.temperature_limit)
             ),
             "max_interface_velocity_violation_m_per_s": (
                 0.0
@@ -727,6 +727,7 @@ def paper_gdp_comparison_rows(
     published_reference: Mapping[str, Any],
 ) -> list[dict[str, Any]]:
     """Return a compact paper/continuous-NLP/GDP comparison table."""
+    terminal_fraction = float(gdp_result["problem"]["terminal_drying_fraction"])
     continuous_height_m = float(continuous_result["derived"]["product_height"])
     continuous_terminal_m = float(
         continuous_result["metrics"]["terminal_interface_position_m"]
@@ -742,7 +743,13 @@ def paper_gdp_comparison_rows(
     )
     return [
         {
-            "quantity": "complete drying time [hr]",
+            "quantity": f"drying time to S={terminal_fraction:g}H [hr]",
+            "paper": float("nan"),
+            "continuous_nlp": float(continuous_result["metrics"]["drying_time_hr"]),
+            "gdp": float(gdp_result["metrics"]["solver_endpoint_time_hr"]),
+        },
+        {
+            "quantity": "drying time to S=H [hr]",
             "paper": float(published_reference["drying_time_hr"]),
             "continuous_nlp": continuous_complete_hr,
             "gdp": float(gdp_result["metrics"]["complete_drying_time_hr"]),

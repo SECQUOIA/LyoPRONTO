@@ -17,7 +17,11 @@ def test_validation_example_rejects_an_unknown_problem_before_solver_use() -> No
 def test_comparison_rows_keep_paper_nlp_and_gdp_results_distinct() -> None:
     """The compact table preserves endpoint and policy provenance."""
     gdp = {
-        "metrics": {"complete_drying_time_hr": 6.24},
+        "problem": {"terminal_drying_fraction": 0.995},
+        "metrics": {
+            "solver_endpoint_time_hr": 6.18,
+            "complete_drying_time_hr": 6.24,
+        },
         "policies": {
             "indicator_sequence": ("policy_1", "policy_2"),
             "switch_times_hr": (2.37,),
@@ -43,11 +47,15 @@ def test_comparison_rows_keep_paper_nlp_and_gdp_results_distinct() -> None:
 
     rows = paper_gdp_comparison_rows(gdp, continuous, paper)
 
-    assert rows[0]["quantity"] == "complete drying time [hr]"
-    assert np.isclose(rows[0]["paper"], 6.2)
-    assert np.isclose(rows[0]["continuous_nlp"], 6.19)
-    assert np.isclose(rows[0]["gdp"], 6.24)
-    assert rows[1:] == [
+    assert rows[0]["quantity"] == "drying time to S=0.995H [hr]"
+    assert np.isnan(rows[0]["paper"])
+    assert np.isclose(rows[0]["continuous_nlp"], 6.18)
+    assert np.isclose(rows[0]["gdp"], 6.18)
+    assert rows[1]["quantity"] == "drying time to S=H [hr]"
+    assert np.isclose(rows[1]["paper"], 6.2)
+    assert np.isclose(rows[1]["continuous_nlp"], 6.19)
+    assert np.isclose(rows[1]["gdp"], 6.24)
+    assert rows[2:] == [
         {
             "quantity": "policy sequence",
             "paper": ("policy_1", "policy_2"),
