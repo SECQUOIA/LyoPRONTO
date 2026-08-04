@@ -112,6 +112,12 @@ current-main SciPy/Pyomo shelf-temperature, chamber-pressure, and joint-control
 comparison notebooks. Their default 3x3 sweeps and repeated timings remain
 local tutorial experiments rather than CI timing gates.
 
+The same job executes the original known-Rp fixed-control replay and the
+unknown-Rp hybrid parameter-fit comparison, plus both reader-facing notebooks.
+The no-solver lane constructs both models; the solver lane checks the known-Rp
+seven-column endpoint within its backward-Euler tolerance and the unknown-Rp
+parameters/objective against SciPy after shared legacy preprocessing.
+
 The same job executes the Srisuma and Braatz optimal-control replication
 notebook on a coarse spatial mesh. That notebook reports wall times against the
 timings published with the upstream paper, but those comparisons are narrative

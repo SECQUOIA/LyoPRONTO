@@ -8,6 +8,7 @@ optimizer functionality with fixed chamber pressure and shelf temperature optimi
 import pytest
 import numpy as np
 import pandas as pd
+from examples.example_optimizer import run_optimizer_example
 from lyopronto import opt_Tsh, constant, functions
 from .utils import (
     assert_physically_reasonable_output,
@@ -160,6 +161,9 @@ class TestOptTsh:
 
         # Check that all values are finite
         assert_physically_reasonable_output(output, Tmax=120)
+        assert output[0, 0] == pytest.approx(0.0)  # time [hr]
+        assert output[0, 6] == pytest.approx(0.0)  # percent dried [0-100]
+        assert np.all(output[:, 5] > 0.0)  # sublimation flux [kg/hr/m^2]
 
         T_bot = output[:, 2]  # Vial bottom (product) temperature
         T_crit = product["T_pr_crit"]
@@ -244,11 +248,12 @@ class TestOptTsh:
             f"Max product temp mismatch: got {max_T_bot:.2f}°C, expected {ref_max_T_bot:.2f}°C"
         )
 
-    @pytest.mark.skip(reason="Example notebook not yet implemented")
     def test_optimizer_example_script_runs(self):
-        """Test that the optimizer example script runs successfully."""
-        # Import and run the example
-        pass
+        """The maintained shelf-optimizer script returns a complete trajectory."""
+        output = run_optimizer_example()
+
+        assert output.shape[1] == 7
+        assert_complete_drying(output)
 
 
 @pytest.mark.slow
@@ -365,4 +370,4 @@ class TestOptimizerEdgeCases:
         assert_incomplete_drying(output)
 
 
-# Run with: pytest tests/test_optimizer.py -v
+# Run with: pytest tests/test_opt_Tsh.py -v

@@ -169,6 +169,15 @@ The maintained construction example lives in
 in `examples/paper_gdp_validation.py`. Both are covered by the optional Pyomo
 test lane.
 
+`examples/original_workflow_parity.py` provides the original-case tutorial
+boundary. Its known-Rp path compares the legacy SciPy trajectory with a
+fixed-control, fixed-horizon backward-Euler Pyomo replay and returns the same
+seven-column presentation shape. Its unknown-Rp path is hybrid: legacy
+inverse-temperature preprocessing supplies cake-length/product-resistance
+observations, and `create_parameter_estimation_model` fits those observations.
+The current Pyomo package does not implement an end-to-end inverse trajectory
+from measured vial-bottom temperature.
+
 The trajectory model uses backward Euler for dried cake length:
 
 ```text

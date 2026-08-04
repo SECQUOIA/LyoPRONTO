@@ -401,8 +401,11 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert "examples/current_main_optimizer_comparison.py" in pyomo_tests
     assert "examples/current_main_joint_optimizer_comparison.py" in pyomo_tests
     assert "examples/current_main_pressure_optimizer_comparison.py" in pyomo_tests
+    assert "examples/original_workflow_parity.py" in pyomo_tests
     assert "examples/paper_gdp_validation.py" in pyomo_tests
     assert "docs/examples/current_main_joint_optimizer_comparison.ipynb" in pyomo_tests
+    assert "docs/examples/knownRp_PD.ipynb" in pyomo_tests
+    assert "docs/examples/unknownRp_PD.ipynb" in pyomo_tests
     assert "docs/examples/dae_optimizer_walkthrough.ipynb" in pyomo_tests
     assert "docs/examples/current_main_optimizer_comparison.ipynb" not in pyomo_tests
     assert "docs/examples/current_main_pressure_optimizer_comparison.ipynb" not in pyomo_tests
@@ -412,6 +415,8 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert "tests/test_dae_optimizer_walkthrough.py" in pyomo_tests
     assert "tests/test_current_main_pressure_optimizer_comparison.py" in pyomo_tests
     assert "tests/test_paper_gdp_validation.py" in pyomo_tests
+    assert "tests/test_pyomo_models/test_original_workflow_parity.py" in pyomo_tests
+    assert "tests/test_original_workflow_notebooks.py" in pyomo_tests
     assert "tests/test_pyomo_solver.py" in pyomo_tests
     assert "tests/pyomo_solver.py" in pyomo_tests
     assert ".github/workflows/pyomo-tests.yml" in pyomo_tests

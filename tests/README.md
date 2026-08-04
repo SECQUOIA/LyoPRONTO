@@ -38,6 +38,18 @@ The current-main optimizer-comparison notebook smoke tests are marked both
 unavailable and execute with reduced one-case grids in the optional Pyomo
 solver comparison job. Full-grid timing values are never CI assertions.
 
+`tests/test_original_workflow_notebooks.py` owns fresh-kernel execution of the
+known/unknown-Rp documentation notebooks. Their SciPy calculations always run;
+the notebook cells skip the optional comparison with an installation hint when
+Pyomo or IPOPT is absent. Construction and IPOPT-backed parity assertions live
+in `tests/test_pyomo_models/test_original_workflow_parity.py`.
+
+Tests are organized by behavior rather than by how coverage was added. The
+shelf-temperature optimizer contract and its sole independent reference are
+owned by `tests/test_opt_Tsh.py` and `test_data/reference_opt_Tsh.csv`; the
+redundant historical `test_optimizer.py` suite has been retired. Broader
+coverage-named-suite consolidation remains tracked separately in issue #132.
+
 ## Scientific Reference Scenarios
 
 `tests/scientific_reference_scenarios.py` records the pinned scientific
