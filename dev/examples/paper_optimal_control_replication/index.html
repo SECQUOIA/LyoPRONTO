@@ -1271,7 +1271,7 @@
 </span><span id="__span-8-54"><a id="__codelineno-8-54" name="__codelineno-8-54" href="#__codelineno-8-54"></a><span class="p">)</span>
 </span><span id="__span-8-55"><a id="__codelineno-8-55" name="__codelineno-8-55" href="#__codelineno-8-55"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
-<p><img alt="img" src="../_data/36a1dea60edd42bb8c20b916b7de20f0.png" /></p>
+<p><img alt="img" src="../_data/854ccff294984442a42a26f275c67898.png" /></p>
 <h2 id="problem-2-adding-an-interface-velocity-constraint">Problem 2: adding an interface-velocity constraint</h2>
 <div class="arithmatex">\[\min_{T_\mathrm{b}(t)}\ t_f \quad \text{s.t.}\quad T(z,t) \le 240\ \mathrm{K},\qquad \frac{\mathrm{d}S}{\mathrm{d}t} \le 2.8 \times 10^{-7}\ \mathrm{m/s},\qquad 228\ \mathrm{K} \le T_\mathrm{b}(t) \le 260\ \mathrm{K}\]</div>
 <p>Capping the interface velocity caps the sublimation flux, which is how a real cycle avoids overwhelming the condenser or choking the vapour path. It changes the structure of the answer: as the parameter cell above showed, the interface velocity at <span class="arithmatex">\(t = 0\)</span> is already above the cap, so the cycle <em>starts</em> on Policy 3, and the paper reports the sequence Policy 3 → Policy 1 → Policy 2 with switches at 2.0 h and 3.9 h.</p>
@@ -1357,7 +1357,7 @@
 </span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="p">)</span>
 </span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
-<p><img alt="img" src="../_data/342babaf00424800880cdf9ca68663bf.png" /></p>
+<p><img alt="img" src="../_data/f8462bbd619c449b8d248d31f86368c6.png" /></p>
 <h2 id="the-terminal-endpoint-and-what-the-drying-time-is-actually-measuring">The terminal endpoint, and what the drying time is actually measuring</h2>
 <p>Every drying time above stops at <span class="arithmatex">\(S = 0.995H\)</span>, not at the paper's <span class="arithmatex">\(S = H\)</span>. That is not a tuning choice that could be tightened away. On the Landau coordinate the conduction term carries a <span class="arithmatex">\(1/(H-S)^2\)</span> factor, so the frozen-region equations become singular exactly at the endpoint the paper terminates on, and <code>paper_ocp</code> rejects a cutoff fraction of 1 outright.</p>
 <p>Tightening the cutoff does not help either, for the same reason: at <span class="arithmatex">\(n_z = 20\)</span>, <span class="arithmatex">\(nfe = 36\)</span> the 0.99 and 0.995 cutoffs terminate optimally in about two seconds, while 0.999 and 0.9995 exhaust IPOPT's iteration limit after roughly four minutes and return a non-optimal point. Reporting one of those as the headline would be worse than reporting a converged truncated one.</p>
@@ -1687,7 +1687,7 @@
 </span><span id="__span-24-51"><a id="__codelineno-24-51" name="__codelineno-24-51" href="#__codelineno-24-51"></a><span class="p">)</span>
 </span><span id="__span-24-52"><a id="__codelineno-24-52" name="__codelineno-24-52" href="#__codelineno-24-52"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
-<p><img alt="img" src="../_data/c628594e24ef4e09af10ae053d046ec8.png" /></p>
+<p><img alt="img" src="../_data/89e95f531f4547d98843b04f153dadd7.png" /></p>
 <h2 id="scope-and-limitations">Scope and limitations</h2>
 <p><strong>What was reproduced.</strong> Both case studies, at the paper's <span class="arithmatex">\(n_z = 20\)</span> spatial mesh and cold started, recover the published policy sequences exactly and bracket all three published switch times. After extrapolation to the paper's <span class="arithmatex">\(S = H\)</span> endpoint, Problem 2 agrees with the published 8.9 h to within a few seconds and Problem 1 falls inside the width of the Figure 2 read it is compared against. The interface-velocity limit in Problem 2 is respected to solver tolerance after the initial point.</p>
 <p><strong>How switch times are compared.</strong> Not as instants. A collocation solution resolves a switch only to the interval between adjacent mesh points, so this notebook reports that interval and locates it from the shelf control rather than the product temperature. The distinction is not cosmetic: a tolerance test on the product temperature places the Problem 1 switch near 2.2 h, while the shelf actually leaves its bound near 2.37 h, which is where the upstream MATLAB event detection puts it.</p>

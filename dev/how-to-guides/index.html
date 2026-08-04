@@ -312,6 +312,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Run Optional Pyomo Optimization Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#validate-paper-policy-selection-with-gdp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validate paper policy selection with GDP
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -815,6 +832,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Run Optional Pyomo Optimization Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#validate-paper-policy-selection-with-gdp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validate paper policy selection with GDP
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -991,6 +1025,23 @@ Ramp limits act between adjacent transcription nodes and require the matching
 initial value. They are disabled by default so the exact rate-unlimited legacy
 comparison remains available. This extension constrains control movement but
 does not introduce thermal-capacitance dynamics.</p>
+<h3 id="validate-paper-policy-selection-with-gdp">Validate paper policy selection with GDP</h3>
+<p><code>examples/paper_gdp_validation.py</code> compares the published Srisuma--Braatz
+results with two switching routes over the same SI-unit physical equations:
+the continuous <code>paper_ocp</code> NLP classifies active constraints after the solve,
+while <code>paper_gdp</code> selects each phase's policy from free GDP indicators. Install
+GLPK in addition to the Pyomo/IPOPT setup above:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>glpk-utils
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>python<span class="w"> </span>-m<span class="w"> </span>examples.paper_gdp_validation
+</span></code></pre></div>
+<p>Conda environments may use <code>conda install -c conda-forge glpk</code> instead. The
+example records GDPopt RIC, GLPK, IPOPT, tolerances, and initialization in its
+result metadata. It reports indicator-derived sequences, free switch times and
+collocation intervals, trajectories, path feasibility, the solver endpoint,
+and an extrapolation to the paper's <code>S = H</code> endpoint. Because IPOPT solves the
+nonlinear subproblems locally, the result is not a global optimality
+certificate. Agreement checks the GDP switching formulation independently;
+it does not independently validate the shared physical equations.</p>
 <h2 id="run-notebook-examples">Run Notebook Examples</h2>
 <p>The MkDocs notebook examples are tracked under <code>docs/examples/</code>:</p>
 <ul>
@@ -1007,8 +1058,8 @@ executions also run in the optional Pyomo comparison lane.
 The former shelf-only and pressure-only comparisons remain solver-backed
 regression fixtures under <code>tests/</code>, rather than separate reader-facing tutorials.</p>
 <h2 id="run-local-validation">Run Local Validation</h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>python<span class="w"> </span>-m<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>lyopronto<span class="w"> </span>tests<span class="w"> </span>examples<span class="w"> </span>main.py
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not slow and not notebook and not pyomo&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>python<span class="w"> </span>-m<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>lyopronto<span class="w"> </span>tests<span class="w"> </span>examples<span class="w"> </span>main.py
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not slow and not notebook and not pyomo&quot;</span>
 </span></code></pre></div>
 <p>Use <code>./run_local_ci.sh fast</code>, <code>full</code>, <code>slow</code>, <code>notebook</code>, <code>pyomo-light</code>, or
 <code>pyomo</code> to run the CI-equivalent wrappers. See <code>dev.md</code> for lane commands and
@@ -1018,9 +1069,9 @@ regression fixtures under <code>tests/</code>, rather than separate reader-facin
 the <code>dt_setpt</code> key include ramp time. This applies to <code>Tshelf</code> and <code>Pchamber</code>
 dictionaries.</p>
 <h2 id="build-documentation">Build Documentation</h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[docs]&quot;</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>mkdocs<span class="w"> </span>build
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>mkdocs<span class="w"> </span>serve
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[docs]&quot;</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>mkdocs<span class="w"> </span>build
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>mkdocs<span class="w"> </span>serve
 </span></code></pre></div>
 
 
