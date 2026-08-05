@@ -190,7 +190,12 @@ The MkDocs notebook examples are tracked under `docs/examples/`:
 
 The first two notebooks import canonical computation from
 `examples/original_workflow_parity.py`; `docs/examples/` owns only narrative,
-comparison checks, plots, and committed rendered results. The known-Rp Pyomo
+comparison checks, plots, and committed rendered results. They retain the
+original temperature, chamber-pressure/sublimation-flux, percent-dried, and
+product-resistance diagnostics while adding SciPy/Pyomo overlays. They also
+report single-run, environment-dependent wall times with shared preprocessing,
+model construction, and solver work separated; these diagnostics are not
+formal benchmarks. The known-Rp Pyomo
 path uses a 6.5 hr backward-Euler horizon and a 95% terminal target. The
 unknown-Rp Pyomo path is hybrid: the legacy calculator infers `(Lck, Rp)` from
 measured `Tbot(t)`, then Pyomo fits `R0`, `A1`, and `A2`. It is not a direct

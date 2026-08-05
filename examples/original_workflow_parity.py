@@ -167,14 +167,23 @@ def run_known_rp_pyomo(
     final_dried_fraction: float = 0.95,
 ) -> Any:
     """Solve the fixed-horizon Pyomo replay and return a ``TrajectoryResult``."""
-    from lyopronto.pyomo_models import solve_trajectory
-
     model = build_known_rp_pyomo_model(
         scipy_output,
         n_steps=n_steps,
         dt=dt,
         final_dried_fraction=final_dried_fraction,
     )
+    return solve_known_rp_pyomo_model(model, solver=solver)
+
+
+def solve_known_rp_pyomo_model(
+    model: Any,
+    *,
+    solver: Any = "ipopt",
+) -> Any:
+    """Solve a pre-built known-Rp replay for separately timed tutorials."""
+    from lyopronto.pyomo_models import solve_trajectory
+
     return solve_trajectory(model, solver=solver)
 
 
@@ -285,9 +294,18 @@ def fit_unknown_rp_pyomo(
     no fitted parameters or objective.  This prevents initialized model values
     from being mistaken for a scientific fit.
     """
+    model = build_unknown_rp_pyomo_model(product_resistance)
+    return solve_unknown_rp_pyomo_model(model, solver=solver)
+
+
+def solve_unknown_rp_pyomo_model(
+    model: Any,
+    *,
+    solver: Any = "ipopt",
+) -> ResistanceFit:
+    """Solve a pre-built hybrid Rp fit for separately timed tutorials."""
     from lyopronto.pyomo_models import solve_parameter_estimation
 
-    model = build_unknown_rp_pyomo_model(product_resistance)
     result = solve_parameter_estimation(model, solver=solver)
     if not result.success or result.objective is None:
         return ResistanceFit(
