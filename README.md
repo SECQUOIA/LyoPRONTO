@@ -69,6 +69,35 @@ python main.py
 That path uses `lyopronto.high_level` helpers to save inputs, CSV outputs, and
 plots from the selected simulation mode.
 
+Alternatively, describe a cycle in a YAML file (see the YAML files under
+`test_data/` for examples) and drive it from a script:
+
+```python
+import time
+
+import lyopronto as lp
+
+# Timestamp for recording simulation results.
+current_time = time.strftime("%y%m%d_%H%M", time.localtime())
+
+# Fill in with your filename and location.
+yaml_fname = "your_dir/cycle_setup.yaml"
+
+inputs = lp.read_inputs(yaml_fname)
+output = lp.execute_simulation(inputs)
+
+lp.save_inputs(inputs, current_time)
+lp.save_csv(output, inputs, current_time)
+lp.generate_visualizations(output, inputs, current_time)
+```
+
+That records inputs and outputs on every run, so the YAML can be edited and
+rerun without losing prior values. The rendered notebook walkthroughs are
+published under
+[`docs/examples/`](https://lyohub.github.io/LyoPRONTO/dev/examples/knownRp_PD/)
+for the known-Rp case and
+[the unknown-Rp case](https://lyohub.github.io/LyoPRONTO/dev/examples/unknownRp_PD/).
+
 ## Public APIs
 
 LyoPRONTO currently exposes four supported API layers:
@@ -157,8 +186,8 @@ Maintained and updated by Isaac S. Wheeler.
 
 ## Licensing
 
-Copyright (C) 2019, Gayathri Shivkumar, Petr S. Kazarin, and Alina A.
-Alexeenko.
+Copyright (C) 2019, Gayathri Shivkumar, Petr S. Kazarin, Alina A. Alexeenko,
+and Isaac S. Wheeler.
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
@@ -168,6 +197,9 @@ version.
 This program is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+this program. If not, see <https://www.gnu.org/licenses/>.
 
 By request, this software may also be distributed under the terms of the GNU
 Lesser General Public License (LGPL); for permission, contact the authors or
