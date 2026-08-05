@@ -13,6 +13,7 @@ import numpy as np
 import pytest
 
 from examples.original_workflow_parity import (
+    KNOWN_RP_ENDPOINT_TOLERANCE_PP,
     build_known_rp_pyomo_model,
     build_unknown_rp_pyomo_model,
     fit_unknown_rp_pyomo,
@@ -31,9 +32,9 @@ pytestmark = pytest.mark.pyomo
 class NonOptimalSolver:
     """Return an infeasible result without changing initialized model values."""
 
-    def solve(self, model):
+    def solve(self, model, tee=False):
         """Return non-optimal diagnostics for a dimensionless test double."""
-        del model
+        del model, tee
         return SimpleNamespace(
             solver=SimpleNamespace(
                 status=pyo.SolverStatus.warning,
@@ -67,7 +68,10 @@ def test_known_rp_pyomo_replay_matches_scipy_endpoint() -> None:
     pyomo_output = result.as_table()
     assert pyomo_output.shape == scipy_output.shape == (27, 7)
     np.testing.assert_allclose(pyomo_output[:, 4], scipy_output[:, 4], atol=1.0e-8)
-    assert pyomo_output[-1, 6] == pytest.approx(scipy_output[-1, 6], abs=1.5)
+    assert pyomo_output[-1, 6] == pytest.approx(
+        scipy_output[-1, 6],
+        abs=KNOWN_RP_ENDPOINT_TOLERANCE_PP,
+    )
     assert np.max(pyomo_output[:, 2]) <= -5.0 + 1.0e-6
     assert max(
         violation or 0.0 for violation in result.constraint_violations.values()

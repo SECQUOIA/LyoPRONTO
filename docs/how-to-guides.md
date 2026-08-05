@@ -115,7 +115,8 @@ Advanced Pyomo workflow builders are also available under
 `lyopronto.pyomo_models`:
 
 - `create_parameter_estimation_model` for optional Rp/Kv parameter-estimation
-  scenarios;
+  scenarios, paired with `solve_parameter_estimation` and its
+  `ParameterEstimationResult` diagnostics;
 - `create_design_space_feasibility_model` and `create_design_space_grid_models`
   for fixed-control feasibility checks;
 - `create_sensitivity_analysis_models` for local finite-difference

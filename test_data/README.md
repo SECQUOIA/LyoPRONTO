@@ -29,6 +29,7 @@ percent dried [0-100].
 | `reference_opt_Tsh.csv` | Web-interface shelf-temperature optimizer output, 2025-10-01 | `tests/test_opt_Tsh.py`, scientific-reference scenario |
 | `reference_opt_Pch.csv` | Web-interface pressure optimizer output | `tests/test_opt_Pch.py` |
 | `reference_freezing.csv` | Web-interface freezing output, 2025-10-01 | `tests/test_freezing.py`, scientific-reference scenario |
+
 `reference_opt_Tsh.csv` is the sole shelf-optimizer reference. The retired
 `reference_optimizer.csv` differed only in line endings and fed a redundant
 historical test file. The retired `reference_design_space.csv` mixed a stale

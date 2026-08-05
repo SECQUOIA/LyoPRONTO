@@ -24,11 +24,23 @@ from lyopronto import calc_knownRp, calc_unknownRp, constant, functions
 
 ROOT = Path(__file__).resolve().parents[1]
 TEMPERATURE_DATA = ROOT / "test_data" / "temperature.txt"
+KNOWN_RP_ENDPOINT_TOLERANCE_PP = 1.5  # [percentage points], first-order BE error
+KnownRpCase = Tuple[
+    Dict[str, float],
+    Dict[str, float],
+    Dict[str, float],
+    Dict[str, Any],
+    Dict[str, Any],
+]
 
 
 @dataclass(frozen=True)
 class ResistanceFit:
-    """Product-resistance fit in the legacy ``Rp(Lck)`` parameterization."""
+    """Product-resistance fit in the legacy ``Rp(Lck)`` parameterization.
+
+    ``parameter_stderr`` contains SciPy covariance-derived standard errors in
+    ``R0``, ``A1``, ``A2`` order. It is unavailable for the current Pyomo fit.
+    """
 
     success: bool
     solver_status: str
@@ -38,6 +50,7 @@ class ResistanceFit:
     A1: Optional[float]  # [cm hr Torr/g]
     A2: Optional[float]  # [1/cm]
     objective: Optional[float]  # sum of squared Rp residuals [(cm^2 hr Torr/g)^2]
+    parameter_stderr: Optional[Tuple[float, float, float]]
 
     def as_array(self) -> np.ndarray:
         """Return successful ``R0``, ``A1``, and ``A2`` in parameter order."""
@@ -51,7 +64,7 @@ class ResistanceFit:
         return np.array([self.R0, self.A1, self.A2], dtype=float)
 
 
-def known_rp_case() -> Tuple[Dict[str, float], ...]:
+def known_rp_case() -> KnownRpCase:
     """Return fresh dictionaries for the original known-Rp drying case."""
     vial = {"Av": 3.80, "Ap": 3.14, "Vfill": 2.0}
     product = {
@@ -72,7 +85,7 @@ def known_rp_case() -> Tuple[Dict[str, float], ...]:
     return vial, product, ht, pchamber, tshelf
 
 
-def unknown_rp_case() -> Tuple[Dict[str, float], ...]:
+def unknown_rp_case() -> KnownRpCase:
     """Return fresh dictionaries for the original unknown-Rp drying case."""
     vial, _known_product, ht, pchamber, tshelf = known_rp_case()
     product = {"cSolid": 0.05, "T_pr_crit": -5.0}
@@ -87,9 +100,16 @@ def load_temperature_data(path: Path | str = TEMPERATURE_DATA) -> Tuple[np.ndarr
     return data[:, 0], data[:, 1]
 
 
-def run_known_rp_scipy(dt: float = 0.25) -> np.ndarray:
-    """Run the original known-Rp case with the legacy SciPy calculator."""
-    vial, product, ht, pchamber, tshelf = known_rp_case()
+def run_known_rp_scipy(
+    dt: float = 0.25,
+    case: Optional[KnownRpCase] = None,
+) -> np.ndarray:
+    """Run a known-Rp case with the legacy SciPy calculator.
+
+    ``case`` defaults to :func:`known_rp_case`. Pass an edited case tuple when
+    reader-supplied dictionaries should drive the calculation.
+    """
+    vial, product, ht, pchamber, tshelf = case if case is not None else known_rp_case()
     return calc_knownRp.dry(vial, product, ht, pchamber, tshelf, dt)
 
 
@@ -184,13 +204,42 @@ def fit_unknown_rp_scipy(product_resistance: np.ndarray) -> ResistanceFit:
     """Fit ``Rp(Lck)`` observations with SciPy ``curve_fit``."""
     lck_cm = np.asarray(product_resistance[:, 1], dtype=float)
     rp_observed = np.asarray(product_resistance[:, 2], dtype=float)
-    params, _covariance = curve_fit(
+    params, covariance = curve_fit(
         lambda length, r0, a1, a2: r0 + length * a1 / (1.0 + length * a2),
         lck_cm,
         rp_observed,
         p0=[1.0, 0.0, 0.0],
     )
+    parameter_stderr = np.sqrt(np.diag(covariance))
+    if not np.all(np.isfinite(params)) or not np.all(np.isfinite(parameter_stderr)):
+        return ResistanceFit(
+            success=False,
+            solver_status="failure",
+            termination_condition="non_finite_covariance",
+            message=(
+                "SciPy curve_fit did not return finite parameters and standard errors; "
+                "the fit is not identifiable from these observations."
+            ),
+            R0=None,
+            A1=None,
+            A2=None,
+            objective=None,
+            parameter_stderr=None,
+        )
     residual = rp_observed - functions.Rp_FUN(lck_cm, *params)
+    objective = float(np.dot(residual, residual))
+    if not np.isfinite(objective):
+        return ResistanceFit(
+            success=False,
+            solver_status="failure",
+            termination_condition="non_finite_objective",
+            message="SciPy curve_fit returned a non-finite residual objective.",
+            R0=None,
+            A1=None,
+            A2=None,
+            objective=None,
+            parameter_stderr=None,
+        )
     return ResistanceFit(
         success=True,
         solver_status="success",
@@ -199,7 +248,8 @@ def fit_unknown_rp_scipy(product_resistance: np.ndarray) -> ResistanceFit:
         R0=float(params[0]),
         A1=float(params[1]),
         A2=float(params[2]),
-        objective=float(np.dot(residual, residual)),
+        objective=objective,
+        parameter_stderr=tuple(float(value) for value in parameter_stderr),
     )
 
 
@@ -235,57 +285,34 @@ def fit_unknown_rp_pyomo(
     no fitted parameters or objective.  This prevents initialized model values
     from being mistaken for a scientific fit.
     """
-    import pyomo.environ as pyo
-    from lyopronto.pyomo_models.single_step import _termination_success
+    from lyopronto.pyomo_models import solve_parameter_estimation
 
     model = build_unknown_rp_pyomo_model(product_resistance)
-    try:
-        results = (
-            solver.solve(model)
-            if not isinstance(solver, str)
-            else pyo.SolverFactory(solver).solve(model)
-        )
-    except Exception as exc:  # pragma: no cover - solver failures are environment specific
+    result = solve_parameter_estimation(model, solver=solver)
+    if not result.success or result.objective is None:
         return ResistanceFit(
             success=False,
-            solver_status="not_available",
-            termination_condition="not_available",
-            message=f"Pyomo resistance fit failed before returning results: {exc}",
+            solver_status=result.solver_status,
+            termination_condition=result.termination_condition,
+            message=result.message,
             R0=None,
             A1=None,
             A2=None,
             objective=None,
+            parameter_stderr=None,
         )
 
-    solver_info = results.solver
-    termination = solver_info.termination_condition
-    status = solver_info.status
-    success = _termination_success(termination)
-    if not success:
-        return ResistanceFit(
-            success=False,
-            solver_status=str(status),
-            termination_condition=str(termination),
-            message=(
-                "Pyomo resistance fit did not reach an optimal solution "
-                f"(status={status}, termination_condition={termination}); "
-                "fitted parameters and objective are unavailable."
-            ),
-            R0=None,
-            A1=None,
-            A2=None,
-            objective=None,
-        )
-
+    values = result.as_dict()
     return ResistanceFit(
         success=True,
-        solver_status=str(status),
-        termination_condition=str(termination),
-        message=f"Pyomo resistance fit reached {termination}.",
-        R0=float(pyo.value(model.R0)),
-        A1=float(pyo.value(model.A1)),
-        A2=float(pyo.value(model.A2)),
-        objective=float(pyo.value(model.obj)),
+        solver_status=result.solver_status,
+        termination_condition=result.termination_condition,
+        message=result.message,
+        R0=values["R0"],
+        A1=values["A1"],
+        A2=values["A2"],
+        objective=result.objective,
+        parameter_stderr=None,
     )
 
 

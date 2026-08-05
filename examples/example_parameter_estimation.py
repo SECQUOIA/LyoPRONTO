@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 
 if __package__:
     from .original_workflow_parity import (
+        ResistanceFit,
         TEMPERATURE_DATA,
         fit_unknown_rp_scipy,
         load_temperature_data,
@@ -27,6 +28,7 @@ if __package__:
     )
 else:
     from original_workflow_parity import (
+        ResistanceFit,
         TEMPERATURE_DATA,
         fit_unknown_rp_scipy,
         load_temperature_data,
@@ -37,18 +39,30 @@ else:
 OUTPUT_DIR = Path(__file__).parent / "outputs"
 
 
-def save_results(output, fit, output_dir: Path = OUTPUT_DIR) -> Path:
+def save_results(output, fit: ResistanceFit, output_dir: Path = OUTPUT_DIR) -> Path:
     """Write fitted parameters and the legacy trajectory to a CSV file."""
+    if not fit.success or fit.parameter_stderr is None:
+        raise RuntimeError(fit.message)
     output_dir.mkdir(exist_ok=True)
-    timestamp = time.strftime("%Y%m%d_%H%M%S", time.localtime())
+    generated_at = time.localtime()
+    timestamp = time.strftime("%Y%m%d_%H%M%S", generated_at)
     csv_path = output_dir / f"lyopronto_parameter_estimation_{timestamp}.csv"
     with csv_path.open("w", newline="") as stream:
         writer = csv.writer(stream)
         writer.writerow(["LyoPRONTO Parameter Estimation Results"])
+        generated_label = time.strftime("Generated: %Y-%m-%d %H:%M:%S", generated_at)
+        writer.writerow([generated_label])
+        writer.writerow([])
+        writer.writerow(["Estimated Parameters"])
         writer.writerow(["R0 [cm^2 hr Torr/g]", fit.R0])
         writer.writerow(["A1 [cm hr Torr/g]", fit.A1])
         writer.writerow(["A2 [1/cm]", fit.A2])
         writer.writerow(["Sum squared Rp residuals [(cm^2 hr Torr/g)^2]", fit.objective])
+        writer.writerow([])
+        writer.writerow(["Standard Errors"])
+        writer.writerow(["sigma(R0) [cm^2 hr Torr/g]", fit.parameter_stderr[0]])
+        writer.writerow(["sigma(A1) [cm hr Torr/g]", fit.parameter_stderr[1]])
+        writer.writerow(["sigma(A2) [1/cm]", fit.parameter_stderr[2]])
         writer.writerow([])
         writer.writerow(
             [
@@ -102,12 +116,18 @@ def main() -> None:
     time_exp, tbot_exp = load_temperature_data()
     output, product_resistance = preprocess_unknown_rp()
     fit = fit_unknown_rp_scipy(product_resistance)
+    if not fit.success or fit.parameter_stderr is None:
+        raise RuntimeError(fit.message)
 
     print(f"Measured input: {TEMPERATURE_DATA} ({len(time_exp)} points)")
     print("Estimated product-resistance parameters:")
     print(f"  R0 = {fit.R0:.8f} cm^2 hr Torr/g")
     print(f"  A1 = {fit.A1:.8f} cm hr Torr/g")
     print(f"  A2 = {fit.A2:.8f} 1/cm")
+    print("Parameter standard errors:")
+    print(f"  sigma(R0) = {fit.parameter_stderr[0]:.8f} cm^2 hr Torr/g")
+    print(f"  sigma(A1) = {fit.parameter_stderr[1]:.8f} cm hr Torr/g")
+    print(f"  sigma(A2) = {fit.parameter_stderr[2]:.8f} 1/cm")
     print(f"  sum squared Rp residuals = {fit.objective:.8f}")
 
     csv_path = save_results(output, fit)

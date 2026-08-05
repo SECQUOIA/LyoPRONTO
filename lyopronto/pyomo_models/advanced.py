@@ -7,6 +7,7 @@ Pyomo entry points and do not affect the legacy SciPy calculators.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any, Dict, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
@@ -14,6 +15,7 @@ import pyomo.environ as pyo  # type: ignore[import-untyped]
 
 from .. import constant, functions
 from .optimization import ModeInput, create_primary_drying_optimization_model
+from .single_step import _solver_from_arg, _termination_success
 from .trajectory import (
     ProfileInput,
     VariableBounds,
@@ -28,6 +30,33 @@ SensitivityModelKey = Tuple[str, float]
 SensitivityPerturbations = Mapping[str, Sequence[float]]
 ScenarioOverrides = Mapping[str, Mapping[str, float]]
 RobustScenarios = Mapping[str, ScenarioOverrides]
+
+
+@dataclass(frozen=True)
+class ParameterEstimationResult:
+    """Solver outcome for an optional Pyomo parameter-estimation model.
+
+    ``values`` contains estimated parameters only after an accepted optimal
+    termination. Failed solves retain diagnostics but withhold initialized or
+    otherwise unverified parameter values and objective data.
+    """
+
+    success: bool
+    solver_status: str
+    termination_condition: str
+    message: str
+    values: Mapping[str, Optional[float]]
+    objective: Optional[float]
+
+    def as_dict(self) -> Dict[str, float]:
+        """Return fitted parameter values after a successful solve."""
+        if not self.success or any(value is None for value in self.values.values()):
+            raise RuntimeError(self.message)
+        return {
+            name: float(value)
+            for name, value in self.values.items()
+            if value is not None
+        }
 
 _PRODUCT_PARAMETER_NAMES = ("R0", "A1", "A2")
 _HEAT_TRANSFER_PARAMETER_NAMES = ("KC", "KP", "KD")
@@ -365,6 +394,81 @@ def create_parameter_estimation_model(
     model.residual_targets = tuple(residual_labels)
     model.obj = pyo.Objective(expr=sum(residual_terms), sense=pyo.minimize)
     return model
+
+
+def solve_parameter_estimation(
+    model: pyo.ConcreteModel,
+    solver: Any = "ipopt",
+    tee: bool = False,
+) -> ParameterEstimationResult:
+    """Solve a parameter-estimation model and return fitted values safely.
+
+    Expected non-optimal solver outcomes are represented by ``success=False``
+    diagnostics. Estimated parameters and the objective are exposed only when
+    termination is accepted and every extracted value is finite.
+    """
+    parameter_names = tuple(model.estimated_parameters)
+    unavailable = {name: None for name in parameter_names}
+    try:
+        opt, _solver_name = _solver_from_arg(solver, tee)
+        results = opt.solve(model, tee=tee)
+    except Exception as exc:  # pragma: no cover - exact solver failures are environment specific
+        return ParameterEstimationResult(
+            success=False,
+            solver_status="not_available",
+            termination_condition="not_available",
+            message=f"Pyomo parameter-estimation solve failed before returning results: {exc}",
+            values=unavailable,
+            objective=None,
+        )
+
+    solver_info = results.solver
+    termination = solver_info.termination_condition
+    status = solver_info.status
+    if not _termination_success(termination):
+        return ParameterEstimationResult(
+            success=False,
+            solver_status=str(status),
+            termination_condition=str(termination),
+            message=(
+                "Pyomo parameter-estimation solve did not reach an optimal solution "
+                f"(status={status}, termination_condition={termination}); fitted "
+                "parameters and objective are unavailable."
+            ),
+            values=unavailable,
+            objective=None,
+        )
+
+    values: Dict[str, Optional[float]] = {}
+    for name in parameter_names:
+        raw_value = pyo.value(getattr(model, name), exception=False)
+        value = None if raw_value is None else float(raw_value)
+        values[name] = value if value is not None and np.isfinite(value) else None
+    raw_objective = pyo.value(model.obj, exception=False)
+    objective = None if raw_objective is None else float(raw_objective)
+    if objective is None or not np.isfinite(objective) or any(
+        value is None for value in values.values()
+    ):
+        return ParameterEstimationResult(
+            success=False,
+            solver_status=str(status),
+            termination_condition=str(termination),
+            message=(
+                "Pyomo parameter-estimation solve reported an optimal termination, "
+                "but fitted parameters or the objective were unavailable or non-finite."
+            ),
+            values=unavailable,
+            objective=None,
+        )
+
+    return ParameterEstimationResult(
+        success=True,
+        solver_status=str(status),
+        termination_condition=str(termination),
+        message=f"Pyomo parameter-estimation solve reached {termination}.",
+        values=values,
+        objective=objective,
+    )
 
 
 def create_design_space_feasibility_model(
@@ -723,10 +827,12 @@ def create_robust_optimization_model(
 
 
 __all__ = [
+    "ParameterEstimationResult",
     "create_design_space_feasibility_model",
     "create_design_space_grid_models",
     "create_multivial_optimization_model",
     "create_parameter_estimation_model",
     "create_robust_optimization_model",
     "create_sensitivity_analysis_models",
+    "solve_parameter_estimation",
 ]

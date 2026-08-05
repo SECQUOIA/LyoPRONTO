@@ -100,7 +100,10 @@ def run_primary_drying_simulation():
     print("\n🔄 Running simulation...")
     print(f"  Time step: {dt} hr")
     
-    output = run_known_rp_scipy(dt=dt)
+    output = run_known_rp_scipy(
+        dt=dt,
+        case=(vial, product, ht, Pchamber, Tshelf),
+    )
     
     # Extract final results
     drying_time = output[-1, 0]
