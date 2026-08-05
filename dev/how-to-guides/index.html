@@ -444,7 +444,7 @@
   <span class="md-ellipsis">
     
   
-    Simulate primary drying with known Kv and Rp
+    Original known-\(R_p\) workflow: SciPy and Pyomo
   
 
     
@@ -472,7 +472,7 @@
   <span class="md-ellipsis">
     
   
-    Fitting Unknown Rp to Process Data
+    Original unknown-\(R_p\) workflow: hybrid SciPy and Pyomo fitting
   
 
     
@@ -946,7 +946,9 @@ details, use <code>dev.md</code>.</p>
 </span></code></pre></div>
 <p>Outputs are written to <code>examples/outputs/</code>.</p>
 <p>Legacy scripts are tracked under <code>examples/legacy/</code>, but new work should prefer
-the maintained examples above.</p>
+the maintained examples above. They are archival provenance rather than CI
+execution targets; the original known/unknown-Rp workflows are maintained as
+the tested notebooks below.</p>
 <h2 id="run-the-file-oriented-compatibility-path">Run The File-Oriented Compatibility Path</h2>
 <p>Edit <code>main.py</code> from the repository root, then run:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>python<span class="w"> </span>main.py
@@ -990,7 +992,8 @@ without solving them:</p>
 <code>lyopronto.pyomo_models</code>:</p>
 <ul>
 <li><code>create_parameter_estimation_model</code> for optional Rp/Kv parameter-estimation
-  scenarios;</li>
+  scenarios, paired with <code>solve_parameter_estimation</code> and its
+  <code>ParameterEstimationResult</code> diagnostics;</li>
 <li><code>create_design_space_feasibility_model</code> and <code>create_design_space_grid_models</code>
   for fixed-control feasibility checks;</li>
 <li><code>create_sensitivity_analysis_models</code> for local finite-difference
@@ -1045,13 +1048,28 @@ it does not independently validate the shared physical equations.</p>
 <h2 id="run-notebook-examples">Run Notebook Examples</h2>
 <p>The MkDocs notebook examples are tracked under <code>docs/examples/</code>:</p>
 <ul>
-<li><a href="../examples/knownRp_PD/">known Rp</a></li>
-<li><a href="../examples/unknownRp_PD/">unknown Rp</a></li>
+<li><a href="../examples/knownRp_PD/">known Rp: original SciPy calculation and fixed-horizon Pyomo replay</a></li>
+<li><a href="../examples/unknownRp_PD/">unknown Rp: shared legacy preprocessing with SciPy/Pyomo fitting</a></li>
 <li><a href="../examples/current_main_joint_optimizer_comparison/">SciPy and Pyomo on the LyoPRONTO paper optimizer cases</a></li>
 <li><a href="../examples/paper_optimal_control_replication/">Replicating the Srisuma and Braatz optimal-control cases</a></li>
 <li><a href="../examples/dae_optimizer_walkthrough/">How the DAE optimizer is built and checked</a></li>
 </ul>
-<p>Notebook execution is validated through the explicit notebook CI lane.
+<p>The first two notebooks import canonical computation from
+<code>examples/original_workflow_parity.py</code>; <code>docs/examples/</code> owns only narrative,
+comparison checks, plots, and committed rendered results. They retain the
+original temperature, chamber-pressure/sublimation-flux, percent-dried, and
+product-resistance diagnostics while adding SciPy/Pyomo overlays. They also
+report single-run, environment-dependent wall times with shared preprocessing,
+model construction, and solver work separated; these diagnostics are not
+formal benchmarks. The known-Rp Pyomo
+path uses a 6.5 hr backward-Euler horizon and a 95% terminal target. The
+unknown-Rp Pyomo path is hybrid: the legacy calculator infers <code>(Lck, Rp)</code> from
+measured <code>Tbot(t)</code>, then Pyomo fits <code>R0</code>, <code>A1</code>, and <code>A2</code>. It is not a direct
+Pyomo inverse-temperature model.</p>
+<p>Notebook execution is validated through the explicit notebook CI lane. When
+Pyomo or IPOPT is absent, the original-workflow notebooks still execute the
+SciPy path and print the installation command for the optional comparison.
+Their full parity checks also run in the optional Pyomo solver lane.
 The optimizer-comparison, optimal-control replication, and DAE walkthrough
 notebooks require <code>.[dev,pyomo]</code> and IPOPT, so their solver-backed smoke
 executions also run in the optional Pyomo comparison lane.

@@ -272,7 +272,7 @@
   <span class="md-ellipsis">
     
   
-    Simulate primary drying with known Kv and Rp
+    Original known-\(R_p\) workflow: SciPy and Pyomo
   
 
     
@@ -300,7 +300,7 @@
   <span class="md-ellipsis">
     
   
-    Fitting Unknown Rp to Process Data
+    Original unknown-\(R_p\) workflow: hybrid SciPy and Pyomo fitting
   
 
     
@@ -988,7 +988,7 @@ is about accuracy per point rather than about mesh size.</p>
 </span><span id="__span-10-20"><a id="__codelineno-10-20" name="__codelineno-10-20" href="#__codelineno-10-20"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Radau clusters points inside each element and includes the right endpoint,&quot;</span><span class="p">)</span>
 </span><span id="__span-10-21"><a id="__codelineno-10-21" name="__codelineno-10-21" href="#__codelineno-10-21"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;so it resolves curvature the uniform backward-Euler grid has to average over.&quot;</span><span class="p">)</span>
 </span></code></pre></div>
-<p><img alt="img" src="../_data/aa1da2ba256e49669d146e3fe57d8cfc.png" /></p>
+<p><img alt="img" src="../_data/eb9350eb5a3a455ea2312ec545cf65e9.png" /></p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>Radau clusters points inside each element and includes the right endpoint,
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>so it resolves curvature the uniform backward-Euler grid has to average over.
 </span></code></pre></div>
@@ -1144,7 +1144,7 @@ claim is conditional, and the model can tell us which regime we are in.</p>
 </span><span id="__span-17-18"><a id="__codelineno-17-18" name="__codelineno-17-18" href="#__codelineno-17-18"></a>             <span class="n">fontweight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">)</span>
 </span><span id="__span-17-19"><a id="__codelineno-17-19" name="__codelineno-17-19" href="#__codelineno-17-19"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
-<p><img alt="img" src="../_data/6de351ef66f24bc3a655833b497fcc3b.png" /></p>
+<p><img alt="img" src="../_data/ead2bc9db40f4603bed968cf75ec4f1d.png" /></p>
 <p>Left, the shipped case: the shelf is already pinned at its ceiling, so a better
 vial heat-transfer coefficient genuinely does shorten the cycle, and the ceiling
 carries a non-zero price. Right, with the ceiling lifted out of the way: drying
@@ -1209,7 +1209,7 @@ by that knob.</p>
 </span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a><span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
 </span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
-<p><img alt="img" src="../_data/afb28affc1814f61a86176d3d9d68230.png" /></p>
+<p><img alt="img" src="../_data/5c096ba19f89495286234bc68a1c455f.png" /></p>
 <p>The measured points track the <span class="arithmatex">\(1/\mathtt{scipy\_dt}\)</span> reference line. That is why
 the tutorials treat objective gaps, not timings, as the portable result: a gap
 is a property of the transcription, whereas a speedup is a property of how

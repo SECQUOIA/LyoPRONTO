@@ -268,7 +268,7 @@
   <span class="md-ellipsis">
     
   
-    Simulate primary drying with known Kv and Rp
+    Original known-\(R_p\) workflow: SciPy and Pyomo
   
 
     
@@ -296,7 +296,7 @@
   <span class="md-ellipsis">
     
   
-    Fitting Unknown Rp to Process Data
+    Original unknown-\(R_p\) workflow: hybrid SciPy and Pyomo fitting
   
 
     
@@ -929,6 +929,13 @@ solver-backed test was silently skipped.</p>
 current-main SciPy/Pyomo shelf-temperature, chamber-pressure, and joint-control
 comparison notebooks. Their default 3x3 sweeps and repeated timings remain
 local tutorial experiments rather than CI timing gates.</p>
+<p>The same job executes the original known-Rp fixed-control replay and the
+unknown-Rp hybrid parameter-fit comparison, plus both reader-facing notebooks.
+The no-solver lane constructs both models; the solver lane checks the known-Rp
+seven-column endpoint against the shared
+<code>examples.original_workflow_parity.KNOWN_RP_ENDPOINT_TOLERANCE_PP</code>
+backward-Euler tolerance and checks the unknown-Rp parameters/objective against
+SciPy after shared legacy preprocessing.</p>
 <p>The same job executes the Srisuma and Braatz optimal-control replication
 notebook on a coarse spatial mesh. That notebook reports wall times against the
 timings published with the upstream paper, but those comparisons are narrative
