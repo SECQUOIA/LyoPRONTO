@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import types
+
 import numpy as np
 import pytest
 from lyopronto.pyomo_models.paper_gdp import (
@@ -12,6 +14,8 @@ from lyopronto.pyomo_models.paper_gdp import (
     create_paper_problem1_gdp_model,
     create_paper_problem2_gdp_model,
     extract_paper_gdp_solution,
+    indicator_policy_sequence,
+    solve_paper_gdp_model,
     solve_paper_problem1_gdp,
     solve_paper_problem2_gdp,
 )
@@ -222,6 +226,70 @@ def test_duration_initialization_rejects_invalid_weights(weights, message) -> No
             discretization=_coarse_discretization(),
             phase_duration_weights=weights,
         )
+
+
+def test_policy_sequence_reports_unset_indicators_instead_of_pyomo_internals() -> None:
+    """An unsolved model names the missing incumbent, not a Pyomo value error."""
+    model = create_paper_problem2_gdp_model(discretization=_coarse_discretization())
+
+    with pytest.raises(ValueError, match="has no indicator value"):
+        indicator_policy_sequence(model)
+
+
+def test_failed_gdp_solve_reports_the_solver_outcome_and_the_mesh(monkeypatch) -> None:
+    """A GDPopt run without an incumbent fails with an actionable message."""
+
+    class _StubSolver:
+        def available(self, exception_flag: bool = True) -> bool:
+            return True
+
+        def solve(self, model, **kwargs):
+            return _StubResults()
+
+    class _StubResults:
+        def __init__(self) -> None:
+            self.solver = types.SimpleNamespace(
+                status="ok", termination_condition="infeasible"
+            )
+
+    monkeypatch.setattr(pyo, "SolverFactory", lambda name: _StubSolver())
+    model = create_paper_problem2_gdp_model(
+        discretization=PaperGDPDiscretization(n_z=20, nfe_per_phase=12, ncp=2)
+    )
+
+    with pytest.raises(RuntimeError) as failure:
+        solve_paper_gdp_model(model, time_limit_s=600.0)
+
+    message = str(failure.value)
+    assert "Paper Problem 2 GDP solve did not converge" in message
+    assert "termination_condition=infeasible" in message
+    assert "n_z=20, nfe_per_phase=12, ncp=2" in message
+    assert "init_algorithm='set_covering'" in message
+    assert "time_limit=600 s" in message
+    assert "coarser mesh" in message
+
+
+def test_failed_gdp_solve_can_be_extracted_when_success_is_not_required(
+    monkeypatch,
+) -> None:
+    """``require_success=False`` reaches extraction and still explains itself."""
+
+    class _StubSolver:
+        def available(self, exception_flag: bool = True) -> bool:
+            return True
+
+        def solve(self, model, **kwargs):
+            return types.SimpleNamespace(
+                solver=types.SimpleNamespace(
+                    status="ok", termination_condition="infeasible"
+                )
+            )
+
+    monkeypatch.setattr(pyo, "SolverFactory", lambda name: _StubSolver())
+    model = create_paper_problem1_gdp_model(discretization=_coarse_discretization())
+
+    with pytest.raises(ValueError, match="has no indicator value"):
+        solve_paper_gdp_model(model, require_success=False)
 
 
 @pytest.mark.slow
