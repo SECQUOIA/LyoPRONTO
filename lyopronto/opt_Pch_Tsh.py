@@ -67,8 +67,8 @@ def dry(vial,product,ht,Pchamber,Tshelf,dt,eq_cap,nVial):
         # Inequality constraints: equipment capability and maximum product temperature
         def ineq_sys(x):
             return np.array(functions.Ineq_Constraints(x[0],x[1],product['T_pr_crit'],x[2],eq_cap['a'],eq_cap['b'],nVial))
-        cons = ({'type':'eq','fun':functions.memoize_by_x(eq_sys)},
-            {'type':'ineq','fun':functions.memoize_by_x(ineq_sys)})
+        cons = ({'type':'eq','fun':eq_sys},
+            {'type':'ineq','fun':ineq_sys})
         # Bounds for the unknowns
         bnds = ((Pchamber['min'],Pchamber.get('max', None)),(None,None),(None,None),(Tshelf['min'],Tshelf['max']),(None,None),(None,None),(None,None))
         # Minimize the objective function i.e. maximize the sublimation rate

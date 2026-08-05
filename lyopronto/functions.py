@@ -249,28 +249,6 @@ def Eq_Constraints(Pch,dmdt,Tbot,Tsh,Psub,Tsub,Kv,Lpr0,Lck,Av,Ap,Rp):
 
 ##
 
-def memoize_by_x(fn):
-    """
-    Wraps a function of a single optimization vector x so repeated calls with the
-    same x reuse the previously computed result. SLSQP evaluates each constraint
-    dict entry independently, including during finite-difference gradient sweeps,
-    so exposing the components of Eq_Constraints/Ineq_Constraints through one
-    cached call avoids solving the full constraint system once per component.
-    """
-
-    cache = {}
-
-    def wrapped(x):
-        key = np.asarray(x).tobytes()
-        hit = cache.get(key)
-        if hit is None:
-            hit = cache[key] = fn(x)
-        return hit
-
-    return wrapped
-
-##
-
 def lumped_cap_Tpr_abstract(t,Tpr0,V,h,Av,Tsh,Tsh0,Tsh_ramp,rho,Cpi):
     """
     Calculates the product temperature [degC]. Inputs are time [hr], initial product temperature [degC], product density [g/mL], constant pressure specific heat of the product [J/kg/K], product volume [mL], heat transfer coefficient [W/m^2/K], vial area [cm^2], current shelf temperature [degC], initial shelf temperature [degC], shelf temperature ramping rate [degC/min]
