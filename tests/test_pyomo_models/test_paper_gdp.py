@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import types
+
 import numpy as np
 import pytest
 from lyopronto.pyomo_models.paper_gdp import (
@@ -12,6 +14,8 @@ from lyopronto.pyomo_models.paper_gdp import (
     create_paper_problem1_gdp_model,
     create_paper_problem2_gdp_model,
     extract_paper_gdp_solution,
+    indicator_policy_sequence,
+    solve_paper_gdp_model,
     solve_paper_problem1_gdp,
     solve_paper_problem2_gdp,
 )
@@ -222,6 +226,141 @@ def test_duration_initialization_rejects_invalid_weights(weights, message) -> No
             discretization=_coarse_discretization(),
             phase_duration_weights=weights,
         )
+
+
+def test_policy_sequence_reports_unset_indicators_instead_of_pyomo_internals() -> None:
+    """An unsolved model names the missing incumbent, not a Pyomo value error."""
+    model = create_paper_problem2_gdp_model(discretization=_coarse_discretization())
+
+    with pytest.raises(ValueError, match="has no indicator value"):
+        indicator_policy_sequence(model)
+
+
+def test_failed_gdp_solve_reports_the_solver_outcome_and_the_mesh(monkeypatch) -> None:
+    """A GDPopt run without an incumbent fails with an actionable message."""
+
+    class _StubSolver:
+        def available(self, exception_flag: bool = True) -> bool:
+            return True
+
+        def solve(self, model, **kwargs):
+            return _StubResults()
+
+    class _StubResults:
+        def __init__(self) -> None:
+            self.solver = types.SimpleNamespace(
+                status="ok", termination_condition="infeasible"
+            )
+
+    monkeypatch.setattr(pyo, "SolverFactory", lambda name: _StubSolver())
+    model = create_paper_problem2_gdp_model(
+        discretization=PaperGDPDiscretization(n_z=20, nfe_per_phase=12, ncp=2)
+    )
+
+    with pytest.raises(RuntimeError) as failure:
+        solve_paper_gdp_model(model, time_limit_s=600.0)
+
+    message = str(failure.value)
+    assert "Paper Problem 2 GDP solve did not converge" in message
+    assert "termination_condition=infeasible" in message
+    assert "n_z=20, nfe_per_phase=12, ncp=2" in message
+    assert "init_algorithm='set_covering'" in message
+    assert "time_limit=600 s" in message
+    assert "coarser mesh" in message
+    assert "No incumbent was loaded" in message
+    # The remedy is scoped to the reported termination: a run that returned
+    # infeasible well inside its limit is not waiting on more time.
+    assert "time_limit_s" not in message
+
+
+def _stub_limit_solver(selected_by_phase: dict[int, str], termination: str):
+    """Return a solver stub that loads an incumbent, then reports ``termination``.
+
+    GDPopt transfers its incumbent for every termination except ``infeasible``
+    and ``unbounded``, so this is the shape of a real limit-terminated run.
+    """
+
+    class _LimitSolver:
+        def available(self, exception_flag: bool = True) -> bool:
+            return True
+
+        def solve(self, model, **kwargs):
+            for phase_index, selected_policy in selected_by_phase.items():
+                for policy_name in model.policy_names:
+                    model.policy[phase_index, policy_name].indicator_var.set_value(
+                        policy_name == selected_policy
+                    )
+            return types.SimpleNamespace(
+                solver=types.SimpleNamespace(
+                    status="ok", termination_condition=termination
+                )
+            )
+
+    return _LimitSolver
+
+
+def test_limit_terminated_solve_reports_the_incumbent_it_actually_loaded(
+    monkeypatch,
+) -> None:
+    """A loaded incumbent must not be described as absent."""
+    solver = _stub_limit_solver(
+        {1: POLICY_MAX_HEAT, 2: POLICY_TEMPERATURE}, "maxTimeLimit"
+    )
+    monkeypatch.setattr(pyo, "SolverFactory", lambda name: solver())
+    model = create_paper_problem1_gdp_model(discretization=_coarse_discretization())
+
+    with pytest.raises(RuntimeError) as failure:
+        solve_paper_gdp_model(model, time_limit_s=600.0)
+
+    message = str(failure.value)
+    assert "termination_condition=maxTimeLimit" in message
+    assert "An incumbent was loaded" in message
+    assert "require_success=False" in message
+    assert "Raise time_limit_s" in message
+    assert "No incumbent was loaded" not in message
+
+
+def test_limit_terminated_solve_extracts_its_incumbent_when_success_is_waived(
+    monkeypatch,
+) -> None:
+    """``require_success=False`` returns the unconverged incumbent."""
+    solver = _stub_limit_solver(
+        {1: POLICY_MAX_HEAT, 2: POLICY_TEMPERATURE}, "maxTimeLimit"
+    )
+    monkeypatch.setattr(pyo, "SolverFactory", lambda name: solver())
+    model = create_paper_problem1_gdp_model(discretization=_coarse_discretization())
+
+    result = solve_paper_gdp_model(model, require_success=False)
+
+    assert result["policies"]["indicator_sequence"] == (
+        POLICY_MAX_HEAT,
+        POLICY_TEMPERATURE,
+    )
+    assert result["metadata"]["termination_condition"] == "maxTimeLimit"
+    assert result["metadata"]["global_optimality_certified"] is False
+
+
+def test_failed_gdp_solve_can_be_extracted_when_success_is_not_required(
+    monkeypatch,
+) -> None:
+    """``require_success=False`` reaches extraction and still explains itself."""
+
+    class _StubSolver:
+        def available(self, exception_flag: bool = True) -> bool:
+            return True
+
+        def solve(self, model, **kwargs):
+            return types.SimpleNamespace(
+                solver=types.SimpleNamespace(
+                    status="ok", termination_condition="infeasible"
+                )
+            )
+
+    monkeypatch.setattr(pyo, "SolverFactory", lambda name: _StubSolver())
+    model = create_paper_problem1_gdp_model(discretization=_coarse_discretization())
+
+    with pytest.raises(ValueError, match="has no indicator value"):
+        solve_paper_gdp_model(model, require_success=False)
 
 
 @pytest.mark.slow

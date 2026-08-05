@@ -30,6 +30,7 @@ import numpy as np
 
 from .paper_ocp import (
     PaperPrimaryDryingConfig,
+    _is_successful_termination,
     _paper_problem_settings,
     classify_paper_policies,
     derive_primary_drying_parameters,
@@ -479,11 +480,17 @@ def indicator_policy_sequence(model: Any) -> tuple[str, ...]:
 
     sequence: list[str] = []
     for phase_index in model.phases:
-        selected = [
-            str(policy_name)
-            for policy_name in model.policy_names
-            if pyo.value(model.policy[phase_index, policy_name].indicator_var)
-        ]
+        selected: list[str] = []
+        for policy_name in model.policy_names:
+            indicator = model.policy[phase_index, policy_name].indicator_var
+            if indicator.value is None:
+                raise ValueError(
+                    f"phase {phase_index} policy {policy_name!r} has no indicator "
+                    "value, so no policy sequence exists to extract; solve the "
+                    "model to an incumbent first"
+                )
+            if pyo.value(indicator):
+                selected.append(str(policy_name))
         if len(selected) != 1:
             raise ValueError(
                 f"phase {phase_index} has {len(selected)} selected policies"
@@ -506,6 +513,76 @@ def _solver_missing_message(solver_name: str) -> str:
     )
 
 
+def _has_assigned_policy_indicators(model: Any) -> bool:
+    """Return whether every phase carries a valued policy indicator.
+
+    GDPopt transfers its incumbent to the model for every termination
+    condition except ``infeasible`` and ``unbounded``, so a run stopped at its
+    iteration or time limit can leave a complete, extractable policy
+    assignment behind.
+    """
+    return all(
+        model.policy[phase_index, policy_name].indicator_var.value is not None
+        for phase_index in model.phases
+        for policy_name in model.policy_names
+    )
+
+
+def _gdp_remedy_sentence(termination_condition: str) -> str:
+    """Suggest next steps for the termination condition actually reported."""
+    condition = termination_condition.lower()
+    if condition == "infeasible":
+        return "Try a coarser mesh or a different init_algorithm."
+    if condition == "maxtimelimit":
+        return "Raise time_limit_s, or try a coarser mesh."
+    if condition == "maxiterations":
+        return "Raise the GDPopt iteration limit, or try a coarser mesh."
+    return (
+        "Try a coarser mesh, a longer time_limit_s, or a different "
+        "init_algorithm."
+    )
+
+
+def _gdp_failure_message(
+    model: Any,
+    results: Any,
+    *,
+    init_algorithm: str,
+    time_limit_s: float | None,
+) -> str:
+    """Describe a GDP solve whose termination is not a converged result.
+
+    The incumbent sentence is derived from the model's own indicator values
+    rather than assumed from the termination condition, because the two do not
+    imply each other.
+    """
+    settings = model._paper_problem_settings
+    discretization = model._paper_gdp_discretization
+    solver = getattr(results, "solver", None)
+    termination_condition = str(getattr(solver, "termination_condition", None))
+    limit = "none" if time_limit_s is None else f"{time_limit_s:g} s"
+    if _has_assigned_policy_indicators(model):
+        incumbent = (
+            "An incumbent was loaded and every policy indicator is assigned, "
+            "but this termination is not a converged result. Pass "
+            "require_success=False to extract it as an unconverged solution."
+        )
+    else:
+        incumbent = (
+            "No incumbent was loaded, so no policy indicators were assigned "
+            "and no policy sequence can be reported."
+        )
+    return (
+        f"{settings.name.replace('_', ' ').title()} GDP solve did not converge "
+        f"(status={getattr(solver, 'status', None)}, "
+        f"termination_condition={termination_condition}) "
+        f"at n_z={discretization.n_z}, "
+        f"nfe_per_phase={discretization.nfe_per_phase}, ncp={discretization.ncp} "
+        f"with init_algorithm={init_algorithm!r} and time_limit={limit}. "
+        f"{incumbent} {_gdp_remedy_sentence(termination_condition)}"
+    )
+
+
 def solve_paper_gdp_model(
     model: Any,
     *,
@@ -516,6 +593,7 @@ def solve_paper_gdp_model(
     discrete_problem_transformation: str = "gdp.bigm",
     nlp_solver_options: Mapping[str, Any] | None = None,
     time_limit_s: float | None = 600.0,
+    require_success: bool = True,
     tee: bool = False,
 ) -> dict[str, Any]:
     """Solve a paper GDP model and return an indicator-derived trajectory.
@@ -523,6 +601,11 @@ def solve_paper_gdp_model(
     GDPopt RIC uses local IPOPT subproblem solves by default.  Therefore an
     ``optimal`` termination is a locally solved nonconvex GDP result, not a
     global certificate.
+
+    A GDPopt run that terminates infeasible, or that stops at its iteration or
+    time limit without an incumbent, leaves every policy indicator unset.
+    ``require_success`` reports that outcome as a solver failure instead of
+    letting extraction fail on an uninitialized indicator.
     """
     import pyomo.environ as pyo  # type: ignore[import-untyped]
 
@@ -550,6 +633,15 @@ def solve_paper_gdp_model(
         time_limit=time_limit_s,
         tee=tee,
     )
+    if require_success and not _is_successful_termination(results):
+        raise RuntimeError(
+            _gdp_failure_message(
+                model,
+                results,
+                init_algorithm=init_algorithm,
+                time_limit_s=time_limit_s,
+            )
+        )
     return extract_paper_gdp_solution(
         model,
         results,
