@@ -44,6 +44,38 @@ historical test file. The retired `reference_design_space.csv` mixed a stale
 shelf-temperature row with otherwise current sections and had no regression
 consumer, so it and the example's silently skipped comparison were removed.
 
+## Self-generated regression baselines
+
+These share the schema above but are **not** independent references: they are
+this repository's own output, recorded to detect unintended drift. They
+demonstrate stability, not correctness, and can never confirm that a
+trajectory is physically right — only that it has not changed. Keep the
+`regression_` prefix so the distinction from `reference_` stays visible at the
+call site.
+
+| File | Provenance and purpose | Consumers |
+| --- | --- | --- |
+| `regression_opt_Pch_Tsh.csv` | Joint-optimizer trajectory generated from `dfdb53d` using the `standard_opt_pch_tsh_inputs` fixture, under Python 3.13.5, SciPy 1.17.1, NumPy 2.5.0; pins the trajectory against solver and formulation drift | `tests/test_opt_Pch_Tsh.py` |
+
+The generating environment is recorded because the baseline pins SLSQP's
+numerical behavior, and `pyproject.toml` declares `scipy>=1.10.0` with no upper
+bound. A SciPy release that changes `scipy.optimize` internals can therefore
+move these values without any change to this repository. If the comparison
+starts failing across unrelated pull requests at once, compare the installed
+SciPy against the version above before looking for a regression in the
+optimizer.
+
+The joint optimizer has no independent web-interface reference, and the two
+that do exist are weak comparators for element-wise checks — `test_opt_Pch.py`
+documents that comparing against `reference_opt_Pch.csv` directly is "brittle
+and not meaningful" for that case. A recorded baseline is what actually guards
+this module, so it is kept deliberately rather than as a stand-in for a
+reference that does not exist.
+
+When a change to the optimizer is intended, regenerate the baseline and update
+the generating commit in the table above; do not widen the test's tolerance to
+absorb a real behavioral change.
+
 ## File-interface YAML cases
 
 The ten YAML files below are external input fixtures consumed by

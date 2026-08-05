@@ -135,6 +135,71 @@ def opt_both_consistency(output, setup):
 
 
 @pytest.mark.slow
+class TestOptPchTshRegressionBaseline:
+    """Pin the joint-optimizer trajectory against a committed baseline.
+
+    Unlike ``reference_opt_Tsh.csv`` and ``reference_opt_Pch.csv``, which hold
+    independent web-interface output, this baseline is generated from this
+    repository's own code. It therefore demonstrates stability, not
+    correctness: it catches unintended trajectory drift from solver or
+    formulation changes, and says nothing about whether the trajectory is
+    physically right. The physical claims are covered by the other tests in
+    this module.
+    """
+
+    #: Relative tolerance for the trajectory comparison.
+    #:
+    #: The baseline is produced by the same code on the same fixture, so
+    #: repeated runs in one process agree bitwise. Across platforms and SciPy
+    #: micro-versions SLSQP can differ in the last bits, which is why this is
+    #: not an exact comparison. 1e-6 is far tighter than the independent
+    #: reference tests (5% percent-dried, 1% final time, 0.5 degC maximum
+    #: temperature) while still leaving room for that noise: any real change of
+    #: solver path or physics moves these values by orders of magnitude more.
+    TRAJECTORY_RTOL = 1.0e-6
+
+    #: Absolute floor, for the columns that legitimately start at exactly zero
+    #: (time and percent dried), where a relative tolerance has no meaning.
+    TRAJECTORY_ATOL = 1.0e-9
+
+    def test_joint_trajectory_matches_committed_baseline(
+        self, standard_opt_pch_tsh_inputs, reference_data_path
+    ):
+        """The solved trajectory must still match the recorded baseline."""
+        baseline_path = reference_data_path / "regression_opt_Pch_Tsh.csv"
+        assert baseline_path.exists(), (
+            f"Regression baseline missing: {baseline_path}. It is tracked, so a "
+            "missing file means the working tree is incomplete rather than that "
+            "the check should be skipped."
+        )
+        baseline = np.loadtxt(baseline_path, delimiter=";", skiprows=1)
+
+        output = opt_Pch_Tsh.dry(*standard_opt_pch_tsh_inputs)
+
+        # A trajectory that needs a different number of steps has changed
+        # behavior regardless of how close the individual values are.
+        assert output.shape == baseline.shape, (
+            f"Trajectory shape {output.shape} does not match baseline "
+            f"{baseline.shape}; the solver took a different number of steps."
+        )
+        np.testing.assert_allclose(
+            output,
+            baseline,
+            rtol=self.TRAJECTORY_RTOL,
+            atol=self.TRAJECTORY_ATOL,
+            err_msg=(
+                "Joint-optimizer trajectory drifted from "
+                "test_data/regression_opt_Pch_Tsh.csv. Check the installed "
+                "SciPy against the version recorded in test_data/README.md "
+                "first: the baseline pins SLSQP behavior and scipy is not "
+                "upper-bounded, so a dependency upgrade moves these values "
+                "without any change here. If the change is intended, "
+                "regenerate the baseline and record the new generating commit "
+                "and environment in test_data/README.md."
+            ),
+        )
+
+
 class TestOptPchTshBasic:
     """Basic functionality tests for opt_Pch_Tsh module."""
 
