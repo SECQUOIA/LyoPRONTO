@@ -55,7 +55,15 @@ call site.
 
 | File | Provenance and purpose | Consumers |
 | --- | --- | --- |
-| `regression_opt_Pch_Tsh.csv` | Joint-optimizer trajectory generated from `dfdb53d` using the `standard_opt_pch_tsh_inputs` fixture; pins the trajectory against solver and formulation drift | `tests/test_opt_Pch_Tsh.py` |
+| `regression_opt_Pch_Tsh.csv` | Joint-optimizer trajectory generated from `dfdb53d` using the `standard_opt_pch_tsh_inputs` fixture, under Python 3.13.5, SciPy 1.17.1, NumPy 2.5.0; pins the trajectory against solver and formulation drift | `tests/test_opt_Pch_Tsh.py` |
+
+The generating environment is recorded because the baseline pins SLSQP's
+numerical behavior, and `pyproject.toml` declares `scipy>=1.10.0` with no upper
+bound. A SciPy release that changes `scipy.optimize` internals can therefore
+move these values without any change to this repository. If the comparison
+starts failing across unrelated pull requests at once, compare the installed
+SciPy against the version above before looking for a regression in the
+optimizer.
 
 The joint optimizer has no independent web-interface reference, and the two
 that do exist are weak comparators for element-wise checks — `test_opt_Pch.py`

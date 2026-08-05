@@ -63,8 +63,11 @@ ownership map is now explicit:
 
 External YAML inputs, measured data, and independent reference outputs remain
 under top-level `test_data/` because examples and the file-oriented interface
-consume them as well as tests. See `test_data/README.md` for the path decision
-and per-artifact ownership.
+consume them as well as tests. Self-generated regression baselines live there
+too, under a `regression_` prefix that distinguishes them from the `reference_`
+outputs: a baseline produced by running this code can show only that behavior
+has not changed, never that it is correct. See `test_data/README.md` for the
+path decision and per-artifact ownership.
 
 ## Scientific Reference Scenarios
 

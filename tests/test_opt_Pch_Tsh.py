@@ -189,9 +189,13 @@ class TestOptPchTshRegressionBaseline:
             atol=self.TRAJECTORY_ATOL,
             err_msg=(
                 "Joint-optimizer trajectory drifted from "
-                "test_data/regression_opt_Pch_Tsh.csv. If the change is "
-                "intended, regenerate the baseline and record the new "
-                "generating commit in test_data/README.md."
+                "test_data/regression_opt_Pch_Tsh.csv. Check the installed "
+                "SciPy against the version recorded in test_data/README.md "
+                "first: the baseline pins SLSQP behavior and scipy is not "
+                "upper-bounded, so a dependency upgrade moves these values "
+                "without any change here. If the change is intended, "
+                "regenerate the baseline and record the new generating commit "
+                "and environment in test_data/README.md."
             ),
         )
 
