@@ -7,6 +7,7 @@ Tests the design space generation functionality for primary drying optimization.
 import pytest
 import numpy as np
 import lyopronto.design_space as design_space
+from .utils import assert_warning_messages
 
 
 @pytest.fixture
@@ -314,6 +315,27 @@ class TestDesignSpaceEdgeCases:
                 output = design_space.dry(
                     vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial
                 )
+        check_shape(output, Pchamber, Tshelf)
+
+    def test_single_timestep_completion_in_both_isotherm_sections(
+        self, design_space_1T1P
+    ):
+        """Preserve both single-step warning paths in one physical scenario."""
+        vial, product, ht, Pchamber, Tshelf, _, eq_cap, nVial = design_space_1T1P
+        vial["Vfill"] = 0.5
+        product["cSolid"] = 0.005
+        Tshelf["init"] = -10.0
+        Tshelf["setpt"] = [-5.0]
+        Pchamber["setpt"] = [0.150]
+        dt = 1.0
+
+        with pytest.warns(Warning) as warning_record:
+            output = design_space.dry(
+                vial, product, ht, Pchamber, Tshelf, dt, eq_cap, nVial
+            )
+        assert_warning_messages(
+            warning_record, ["drying completed in single timestep"]
+        )
         check_shape(output, Pchamber, Tshelf)
 
     def test_design_space_subzero_eqcap(self, design_space_1T1P):

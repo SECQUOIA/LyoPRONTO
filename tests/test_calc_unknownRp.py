@@ -10,11 +10,16 @@ These tests are based on the working example in ex_unknownRp_PD.py.
 import pytest
 import numpy as np
 import scipy.optimize as sp
+from pathlib import Path
 
 from lyopronto import calc_unknownRp
 from lyopronto.high_level import execute_simulation
 from lyopronto.functions import Lpr0_FUN, Rp_FUN
-from .utils import assert_physically_reasonable_output, assert_incomplete_drying
+from .utils import (
+    assert_physically_reasonable_output,
+    assert_incomplete_drying,
+    assert_warning_messages,
+)
 
 
 # Test constants for dried percent validation (column 6 is percentage 0-100)
@@ -51,6 +56,105 @@ def temperature_data(reference_data_path):
         Tbot_exp = dat[:, 2]
 
     return time, Tbot_exp
+
+
+def _ramped_unknown_rp_setup(vial=None, ht=None):
+    """Inputs for the transient schedule regression scenario."""
+    time, Tbot_exp = np.loadtxt(
+        Path(__file__).parents[1] / "test_data" / "temperature.txt", unpack=True
+    )
+    return {
+        "vial": vial or {"Av": 3.80, "Ap": 3.14, "Vfill": 2.0},
+        "product": {"cSolid": 0.05, "T_pr_crit": -30.0},
+        "ht": ht or {"KC": 2.75e-4, "KP": 8.93e-4, "KD": 0.46},
+        "Pchamber": {
+            "setpt": [0.060, 0.080, 0.100],
+            "dt_setpt": [60.0, 120.0, 120.0],
+            "ramp_rate": 0.5,
+        },
+        "Tshelf": {
+            "init": -40.0,
+            "setpt": [-20.0, -10.0],
+            "dt_setpt": [120.0, 120.0],
+            "ramp_rate": 0.1,
+        },
+        "time": time,
+        "Tbot_exp": Tbot_exp,
+    }
+
+
+def _minimal_unknown_rp_setup(vial=None, ht=None):
+    """Inputs for short-series schedule and high-solids edge cases."""
+    return {
+        "vial": vial or {"Av": 3.80, "Ap": 3.14, "Vfill": 2.0},
+        "product": {"cSolid": 0.05, "T_pr_crit": -30.0},
+        "ht": ht or {"KC": 2.75e-4, "KP": 8.93e-4, "KD": 0.46},
+        "Pchamber": {"setpt": [0.080], "dt_setpt": [60.0], "ramp_rate": 0.5},
+        "Tshelf": {
+            "init": -40.0,
+            "setpt": [-30.0],
+            "dt_setpt": [60.0],
+            "ramp_rate": 0.1,
+        },
+        "time": np.array([0.0, 0.5, 1.0, 1.5, 2.0]),
+        "Tbot_exp": np.array([-40.0, -38.0, -35.0, -32.0, -30.0]),
+    }
+
+
+def _assert_unknown_rp_transient_output(output):
+    """Assert the valid transient contract before Tsub settles below Tsh."""
+    assert output.shape[1] == 7
+    assert np.all(output[:, 0] >= 0)
+    assert np.all(output[:, 1] < 0)
+    assert np.all(output[:, 1] > -80)
+    assert np.all(output[:, 4] > 0)
+    assert np.all(output[:, 5] >= 0)
+    assert np.all(output[:, 6] >= 0)
+    assert np.all(output[:, 6] <= 101.0)
+
+
+def _dry_unknown_rp_with_expected_warnings(
+    setup, *, pchamber=None, allow_singular_resistance=False
+):
+    """Run an edge scenario and reject warnings outside its known contract."""
+    allowed_warnings = [
+        "No sublimation.",
+        "Total shelf temperature setpoint time exceeded",
+        "Total chamber pressure setpoint time exceeded",
+    ]
+    if allow_singular_resistance:
+        allowed_warnings.append("divide by zero encountered in scalar divide")
+
+    with pytest.warns(Warning) as warning_record:
+        result = calc_unknownRp.dry(
+            setup["vial"],
+            setup["product"],
+            setup["ht"],
+            pchamber or setup["Pchamber"],
+            setup["Tshelf"],
+            setup["time"],
+            setup["Tbot_exp"],
+        )
+    assert_warning_messages(warning_record, allowed_warnings)
+    return result
+
+
+@pytest.fixture(scope="class")
+def ramped_unknown_rp_case():
+    """Share the expensive transient-schedule calculation across its assertions."""
+    setup = _ramped_unknown_rp_setup()
+    output, product_res = _dry_unknown_rp_with_expected_warnings(setup)
+    return {"setup": setup, "output": output, "product_res": product_res}
+
+
+@pytest.fixture(scope="class")
+def minimal_unknown_rp_case():
+    """Share the identical minimal-series calculation across its assertions."""
+    setup = _minimal_unknown_rp_setup()
+    output, product_res = _dry_unknown_rp_with_expected_warnings(
+        setup, allow_singular_resistance=True
+    )
+    return {"setup": setup, "output": output, "product_res": product_res}
 
 
 class TestCalcUnknownRpBasic:
@@ -364,3 +468,66 @@ class TestCalcUnknownRpValidation:
         assert 0 < R0 < 10, f"R0 = {R0} outside expected range (0, 10)"
         assert 0 <= A1 < 50, f"A1 = {A1} outside expected range [0, 50)"
         assert 0 <= A2 < 5, f"A2 = {A2} outside expected range [0, 5)"
+
+
+class TestCalcUnknownRpRampedSchedule:
+    """Regression properties for the transient multi-setpoint scenario."""
+
+    @pytest.fixture
+    def ramped_setup(self, standard_vial, standard_ht):
+        return _ramped_unknown_rp_setup(standard_vial, standard_ht)
+
+    def test_ramped_schedule_regression_properties(self, ramped_unknown_rp_case):
+        output = ramped_unknown_rp_case["output"]
+        setup = ramped_unknown_rp_case["setup"]
+
+        assert isinstance(output, np.ndarray)
+        assert output.shape[0] > 0
+        assert output.shape[1] == 7
+        assert np.all(np.isfinite(output))
+        assert np.all(np.diff(output[:, 0]) >= 0)
+        assert output[0, 0] >= 0
+
+        shelf_temperature = output[:, 3]
+        assert abs(shelf_temperature[0] - setup["Tshelf"]["init"]) < 1.0
+        assert np.ptp(shelf_temperature) > 5.0
+
+        pressure_torr = output[:, 4] / 1000
+        assert np.min(pressure_torr) >= min(setup["Pchamber"]["setpt"]) * 0.9
+        assert np.max(pressure_torr) <= max(setup["Pchamber"]["setpt"]) * 1.1
+
+        _assert_unknown_rp_transient_output(output)
+        assert 0.0 < output[-1, 6] <= 100.0
+        assert np.all(np.diff(output[:, 6]) >= -1e-6)
+
+    def test_different_initial_pressure(self, ramped_setup):
+        pchamber = ramped_setup["Pchamber"].copy()
+        pchamber["setpt"] = [0.050, 0.070, 0.090]
+        output, _ = _dry_unknown_rp_with_expected_warnings(
+            ramped_setup, pchamber=pchamber
+        )
+        assert output.shape[0] > 0
+        _assert_unknown_rp_transient_output(output)
+
+
+class TestCalcUnknownRpShortSeriesScenarios:
+    """Regression properties for the minimal experimental series."""
+
+    @pytest.fixture
+    def minimal_setup(self, standard_vial, standard_ht):
+        return _minimal_unknown_rp_setup(standard_vial, standard_ht)
+
+    def test_minimal_time_series_properties(self, minimal_unknown_rp_case):
+        output = minimal_unknown_rp_case["output"]
+        assert output.shape[0] > 0
+        assert output.shape[1] == 7
+        pressure_torr = output[:, 4] / 1000
+        assert np.std(pressure_torr) < 0.01
+
+    def test_high_solids_concentration(self, minimal_setup):
+        minimal_setup["product"]["cSolid"] = 0.15
+        output, _ = _dry_unknown_rp_with_expected_warnings(
+            minimal_setup, allow_singular_resistance=True
+        )
+        assert output.shape[0] > 0
+        _assert_unknown_rp_transient_output(output)

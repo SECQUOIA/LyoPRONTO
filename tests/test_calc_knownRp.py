@@ -25,6 +25,25 @@ def knownRp_standard_setup(standard_setup):
     )
 
 
+@pytest.fixture(scope="module")
+def known_rp_reference_case():
+    """Run the web-interface reference case once for independent contracts."""
+    setup = (
+        {"Av": 3.80, "Ap": 3.14, "Vfill": 2.0},
+        {"cSolid": 0.05, "R0": 1.4, "A1": 16.0, "A2": 0.0},
+        {"KC": 2.75e-4, "KP": 8.93e-4, "KD": 0.46},
+        {"setpt": [0.15], "dt_setpt": [1800.0], "ramp_rate": 0.5},
+        {
+            "init": -35.0,
+            "setpt": [20.0],
+            "dt_setpt": [1800.0],
+            "ramp_rate": 1.0,
+        },
+        0.01,
+    )
+    return setup, calc_knownRp.dry(*setup)
+
+
 class TestCalcKnownRp:
     """Tests for the calc_knownRp.dry calculator."""
 
@@ -305,24 +324,7 @@ class TestRegression:
     Further examples could be added with different conditions.
     """
 
-    @pytest.fixture
-    def reference_case(self):
-        """Standard reference case parameters."""
-        vial = {"Av": 3.80, "Ap": 3.14, "Vfill": 2.0}
-        product = {"cSolid": 0.05, "R0": 1.4, "A1": 16.0, "A2": 0.0}
-        ht = {"KC": 2.75e-4, "KP": 8.93e-4, "KD": 0.46}
-        Pchamber = {"setpt": [0.15], "dt_setpt": [1800.0], "ramp_rate": 0.5}
-        Tshelf = {
-            "init": -35.0,
-            "setpt": [20.0],
-            "dt_setpt": [1800.0],
-            "ramp_rate": 1.0,
-        }
-        dt = 0.01
-
-        return vial, product, ht, Pchamber, Tshelf, dt
-
-    def test_reference_drying_time(self, reference_case):
+    def test_reference_drying_time(self, known_rp_reference_case):
         """
         Test that drying time matches reference value.
 
@@ -331,7 +333,7 @@ class TestRegression:
         Test initial conditions match expected values.
         Test final state matches expected values.
         """
-        output = calc_knownRp.dry(*reference_case)
+        _, output = known_rp_reference_case
 
         # Expected drying time based on current model behavior
         # Standard case: 2 mL fill, 5% solids, Pch=0.15 Torr, Tsh ramp to 20°C
@@ -360,6 +362,18 @@ class TestRegression:
         )  # Chamber pressure [mTorr]
         assert initial_percent == 0.0  # Starting at 0 percent dried
 
+        # The legacy trajectory contract uses strictly increasing time, chamber
+        # pressure in mTorr, and percent dried on a 0-100 scale.
+        assert np.all(np.diff(output[:, 0]) > 0)
+        assert np.all(output[:, 4] == pytest.approx(150.0, abs=0.1))
+        assert np.all(output[:, 6] >= 0.0)
+        assert np.all(output[:, 6] <= 100.0)
+
+        # Preserve the independently recorded standard-case temperature range.
+        assert np.all(output[:, 1] > -40.0)
+        assert np.all(output[:, 1] < -10.0)
+        assert_physically_reasonable_output(output)
+
         # Check final values (last row)
         final_Tsub = output[-1, 1]
         final_Tbot = output[-1, 2]
@@ -376,7 +390,7 @@ class TestRegression:
         )  # Flux should still be significant
         assert_complete_drying(output)
 
-    def test_match_web_output(self, reference_data_path):
+    def test_match_web_output(self, reference_data_path, known_rp_reference_case):
         """Test for exact match with reference web output."""
         # This test uses the actual reference CSV
         ref_csv = reference_data_path / "reference_primary_drying.csv"
@@ -385,21 +399,7 @@ class TestRegression:
 
         output_ref = np.loadtxt(ref_csv, delimiter=";", skiprows=1)
 
-        # Set up exact inputs from web interface
-        vial = {"Av": 3.8, "Ap": 3.14, "Vfill": 2.0}
-        product = {"R0": 1.4, "A1": 16.0, "A2": 0.0, "cSolid": 0.05}
-        ht = {"KC": 0.000275, "KP": 0.000893, "KD": 0.46}
-        Pchamber = {"setpt": [0.15], "dt_setpt": [1800.0], "ramp_rate": 0.5}
-        Tshelf = {
-            "init": -35.0,
-            "setpt": [20.0],
-            "dt_setpt": [1800.0],
-            "ramp_rate": 1.0,
-        }
-        dt = 0.01
-
-        # Run simulation
-        output = calc_knownRp.dry(vial, product, ht, Pchamber, Tshelf, dt)
+        _, output = known_rp_reference_case
         outputlen = output.shape[0]
         reflen = output_ref.shape[0]
         if abs(outputlen - reflen) > 1:
@@ -415,9 +415,9 @@ class TestRegression:
         assert np.isclose(output[:, 6], output_ref[:, 6], atol=0.5).all()
 
     # This is partially redundant with above, but is one more sanity check
-    def test_flux_profile_non_monotonic(self, reference_case):
+    def test_flux_profile_non_monotonic(self, known_rp_reference_case):
         """Test that flux profile shows expected non-monotonic behavior."""
-        output = calc_knownRp.dry(*reference_case)
+        _, output = known_rp_reference_case
 
         flux = output[:, 5]
 

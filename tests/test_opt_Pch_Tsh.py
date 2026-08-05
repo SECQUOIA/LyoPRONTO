@@ -362,3 +362,199 @@ class TestOptPchTshValidation:
         assert output[-1, 0] < MAX_AGGRESSIVE_OPTIMIZATION_TIME, (
             f"Aggressive optimization should complete in < {MAX_AGGRESSIVE_OPTIMIZATION_TIME} hr"
         )
+
+
+def _joint_regression_setup(vial=None, ht=None):
+    """Inputs for the bounded joint-optimizer regression scenario."""
+    return {
+        "vial": vial or {"Av": 3.80, "Ap": 3.14, "Vfill": 2.0},
+        "product": {
+            "cSolid": 0.05,
+            "R0": 1.4,
+            "A1": 16.0,
+            "A2": 0.0,
+            "T_pr_crit": -30.0,
+        },
+        "ht": ht or {"KC": 2.75e-4, "KP": 8.93e-4, "KD": 0.46},
+        "Pchamber": {"min": 0.040, "max": 0.200},
+        "Tshelf": {"min": -45.0, "max": -5.0},
+        "dt": 0.01,
+        "eq_cap": {"a": 5.0, "b": 10.0},
+        "nVial": 398,
+    }
+
+
+def _joint_comparison_setup(vial=None, ht=None):
+    """Inputs comparing the joint optimizer with pressure-only control."""
+    setup = _joint_regression_setup(vial, ht)
+    return {
+        "vial": setup["vial"],
+        "product": setup["product"],
+        "ht": setup["ht"],
+        "Pchamber_bounds": setup["Pchamber"],
+        "Tshelf_both": setup["Tshelf"],
+        "Tshelf_pch_only": {
+            "init": -40.0,
+            "setpt": [-25.0, -15.0],
+            "dt_setpt": [120.0, 120.0],
+            "ramp_rate": 1.0,
+        },
+        "dt": setup["dt"],
+        "eq_cap": setup["eq_cap"],
+        "nVial": setup["nVial"],
+    }
+
+
+def _conservative_joint_setup(vial=None, ht=None):
+    """Inputs for the expensive conservative joint-optimizer scenarios."""
+    setup = _joint_regression_setup(vial, ht)
+    setup["product"]["T_pr_crit"] = -40.0
+    setup["Pchamber"] = {"min": 0.040, "max": 0.100}
+    setup["Tshelf"] = {"min": -50.0, "max": -20.0}
+    # These scenarios assert coarse constraint behavior, so the established
+    # 0.05 hr step preserves their paths without pathological runtime.
+    setup["dt"] = 0.05
+    return setup
+
+
+def _dry_joint_setup(setup):
+    return opt_Pch_Tsh.dry(
+        setup["vial"],
+        setup["product"],
+        setup["ht"],
+        setup["Pchamber"],
+        setup["Tshelf"],
+        setup["dt"],
+        setup["eq_cap"],
+        setup["nVial"],
+    )
+
+
+@pytest.fixture(scope="class")
+def joint_regression_case():
+    """Share the identical bounded joint run across its assertions."""
+    setup = _joint_regression_setup()
+    return {"setup": setup, "output": _dry_joint_setup(setup)}
+
+
+@pytest.fixture(scope="class")
+def alternative_joint_comparison_case():
+    """Share the joint half of the alternative comparison scenario."""
+    setup = _joint_comparison_setup()
+    output = opt_Pch_Tsh.dry(
+        setup["vial"],
+        setup["product"],
+        setup["ht"],
+        setup["Pchamber_bounds"],
+        setup["Tshelf_both"],
+        setup["dt"],
+        setup["eq_cap"],
+        setup["nVial"],
+    )
+    return {"setup": setup, "output": output}
+
+
+class TestOptPchTshBoundedRegression:
+    """Properties of the distinct bounded joint-optimization scenario."""
+
+    @pytest.mark.slow
+    def test_joint_regression_properties(self, joint_regression_case):
+        output = joint_regression_case["output"]
+        setup = joint_regression_case["setup"]
+
+        assert isinstance(output, np.ndarray)
+        assert output.shape[0] > 0
+        assert output.shape[1] == 7
+        assert np.all(np.isfinite(output))
+
+        bottom_temperature = output[:, 2]
+        assert np.max(bottom_temperature - setup["product"]["T_pr_crit"]) <= 0.5
+
+        pressure_torr = output[:, 4] / 1000
+        assert np.all(pressure_torr >= setup["Pchamber"]["min"] * 0.95)
+        assert np.all(pressure_torr <= setup["Pchamber"]["max"] * 1.05)
+
+        shelf_temperature = output[:, 3]
+        assert np.all(shelf_temperature >= setup["Tshelf"]["min"] - 1.0)
+        assert np.all(shelf_temperature <= setup["Tshelf"]["max"] + 1.0)
+
+        rate_per_vial = output[:, 5] * (setup["vial"]["Ap"] / 100**2)
+        equipment_rate_per_vial = (
+            setup["eq_cap"]["a"] + setup["eq_cap"]["b"] * pressure_torr
+        ) / setup["nVial"]
+        assert np.max(rate_per_vial - equipment_rate_per_vial) <= 0.01
+
+        assert_physically_reasonable_output(output)
+        assert output[-1, 6] >= 99.0
+        assert 1.0 <= output[-1, 0] <= 50.0
+        assert np.ptp(pressure_torr) > 0.001
+        assert np.ptp(shelf_temperature) > 0.5
+
+
+class TestOptPchTshAlternativeComparison:
+    """Alternative bounded comparison retained as a separate scientific scenario."""
+
+    @pytest.mark.slow
+    def test_joint_and_pressure_only_progress(self, alternative_joint_comparison_case):
+        setup = alternative_joint_comparison_case["setup"]
+        output_joint = alternative_joint_comparison_case["output"]
+        with pytest.warns(Warning) as warning_record:
+            output_pressure = opt_Pch.dry(
+                setup["vial"],
+                setup["product"],
+                setup["ht"],
+                setup["Pchamber_bounds"],
+                setup["Tshelf_pch_only"],
+                setup["dt"],
+                setup["eq_cap"],
+                setup["nVial"],
+            )
+        assert_warning_messages(
+            warning_record, ["Total time exceeded. Drying incomplete"]
+        )
+        assert output_joint is not None and output_joint.size > 0
+        assert output_pressure is not None and output_pressure.size > 0
+        assert output_joint[-1, 6] > 0.0
+        assert output_pressure[-1, 6] > 0.0
+        assert output_joint[-1, 0] < 30.0
+
+
+class TestOptPchTshConservativeScenarios:
+    """Expensive conservative scenarios retained from the old coverage suite."""
+
+    @pytest.fixture
+    def conservative_setup(self, standard_vial, standard_ht):
+        return _conservative_joint_setup(standard_vial, standard_ht)
+
+    @pytest.mark.slow
+    def test_conservative_critical_temp(self, conservative_setup):
+        output = _dry_joint_setup(conservative_setup)
+        assert np.max(output[:, 2]) <= conservative_setup["product"]["T_pr_crit"] + 0.5
+
+    @pytest.mark.slow
+    def test_high_product_resistance(self, conservative_setup):
+        conservative_setup["product"]["R0"] = 3.0
+        conservative_setup["product"]["A1"] = 30.0
+        output = _dry_joint_setup(conservative_setup)
+        assert output.shape[0] > 0
+        assert_physically_reasonable_output(output)
+
+    @pytest.mark.slow
+    def test_narrow_optimization_ranges(self, conservative_setup):
+        conservative_setup["Pchamber"] = {"min": 0.070, "max": 0.090}
+        conservative_setup["Tshelf"] = {"min": -35.0, "max": -25.0}
+        output = _dry_joint_setup(conservative_setup)
+        assert output[-1, 6] >= 95.0
+
+    @pytest.mark.slow
+    def test_tight_equipment_constraint(self, conservative_setup):
+        conservative_setup["eq_cap"] = {"a": 2.0, "b": 5.0}
+        output = _dry_joint_setup(conservative_setup)
+        assert output[-1, 6] >= 95.0
+
+    @pytest.mark.slow
+    def test_concentrated_product(self, conservative_setup):
+        conservative_setup["product"]["cSolid"] = 0.15
+        output = _dry_joint_setup(conservative_setup)
+        assert output.shape[0] > 0
+        assert_physically_reasonable_output(output)

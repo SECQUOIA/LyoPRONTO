@@ -376,3 +376,143 @@ class TestOptPchReference:
         #     + "be odd, so (with maintainer approval) the reference data may be updated."
         #     + f"Not matching at positions:\n {np.where(~array_compare)}"
         # )
+
+
+def _incomplete_pressure_setup(vial=None, ht=None):
+    """Inputs for the bounded, incomplete pressure-optimization regression."""
+    return {
+        "vial": vial or {"Av": 3.80, "Ap": 3.14, "Vfill": 2.0},
+        "product": {
+            "cSolid": 0.05,
+            "R0": 1.4,
+            "A1": 16.0,
+            "A2": 0.0,
+            "T_pr_crit": -30.0,
+        },
+        "ht": ht or {"KC": 2.75e-4, "KP": 8.93e-4, "KD": 0.46},
+        "Pchamber": {"min": 0.040, "max": 0.200},
+        "Tshelf": {
+            "init": -40.0,
+            "setpt": [-20.0, -10.0],
+            "dt_setpt": [120.0, 120.0],
+            "ramp_rate": 1.0,
+        },
+        "dt": 0.01,
+        "eq_cap": {"a": 5.0, "b": 10.0},
+        "nVial": 398,
+    }
+
+
+def _conservative_pressure_setup(vial=None, ht=None):
+    """Inputs for conservative pressure-optimization constraint scenarios."""
+    setup = _incomplete_pressure_setup(vial, ht)
+    setup["product"]["T_pr_crit"] = -40.0
+    setup["Pchamber"] = {"min": 0.040, "max": 0.100}
+    setup["Tshelf"] = {
+        "init": -45.0,
+        "setpt": [-35.0],
+        "dt_setpt": [120.0],
+        "ramp_rate": 1.0,
+    }
+    return setup
+
+
+def _dry_pressure_with_expected_warnings(setup, *, allowed_warnings=None):
+    """Run a pressure edge case and reject warnings outside its contract."""
+    if allowed_warnings is None:
+        allowed_warnings = ["Total time exceeded. Drying incomplete"]
+    with pytest.warns(Warning) as warning_record:
+        output = opt_Pch.dry(
+            setup["vial"],
+            setup["product"],
+            setup["ht"],
+            setup["Pchamber"],
+            setup["Tshelf"],
+            setup["dt"],
+            setup["eq_cap"],
+            setup["nVial"],
+        )
+    assert_warning_messages(warning_record, allowed_warnings)
+    return output
+
+
+@pytest.fixture(scope="class")
+def incomplete_pressure_case():
+    """Share the identical incomplete pressure run across its assertions."""
+    setup = _incomplete_pressure_setup()
+    return {"setup": setup, "output": _dry_pressure_with_expected_warnings(setup)}
+
+
+class TestOptPchIncompleteRegression:
+    """Properties of the bounded pressure run that intentionally stays incomplete."""
+
+    def test_incomplete_pressure_regression_properties(self, incomplete_pressure_case):
+        output = incomplete_pressure_case["output"]
+        setup = incomplete_pressure_case["setup"]
+
+        assert isinstance(output, np.ndarray)
+        assert output.shape[0] > 0
+        assert output.shape[1] == 7
+        assert np.all(np.isfinite(output))
+
+        bottom_temperature = output[:, 2]
+        critical_temperature = setup["product"]["T_pr_crit"]
+        max_temperature_violation = np.max(
+            bottom_temperature - critical_temperature
+        )
+        assert max_temperature_violation <= 0.5
+
+        pressure_torr = output[:, 4] / 1000
+        assert np.all(pressure_torr >= setup["Pchamber"]["min"] * 0.95)
+        assert np.all(pressure_torr <= setup["Pchamber"]["max"] * 1.05)
+
+        flux = output[:, 5]
+        product_area_m2 = setup["vial"]["Ap"] / 100**2
+        rate_per_vial = flux * product_area_m2
+        equipment_rate_per_vial = (
+            setup["eq_cap"]["a"] + setup["eq_cap"]["b"] * pressure_torr
+        ) / setup["nVial"]
+        assert np.max(rate_per_vial - equipment_rate_per_vial) <= 0.01
+
+        assert_physically_reasonable_output(output)
+        assert 0.0 < output[-1, 6] <= 100.0
+        assert 1.0 <= output[-1, 0] <= 50.0
+        assert np.ptp(pressure_torr) > 0.001
+
+
+class TestOptPchConservativeScenarios:
+    """Distinct conservative constraint scenarios retained from the old suite."""
+
+    @pytest.fixture
+    def conservative_setup(self, standard_vial, standard_ht):
+        return _conservative_pressure_setup(standard_vial, standard_ht)
+
+    def test_conservative_critical_temp(self, conservative_setup):
+        output = _dry_pressure_with_expected_warnings(conservative_setup)
+        assert np.max(output[:, 2]) <= conservative_setup["product"]["T_pr_crit"] + 0.5
+
+    def test_high_product_resistance(self, conservative_setup):
+        conservative_setup["product"]["R0"] = 3.0
+        conservative_setup["product"]["A1"] = 30.0
+        output = _dry_pressure_with_expected_warnings(conservative_setup)
+        assert output.shape[0] > 0
+        assert_physically_reasonable_output(output)
+
+    def test_narrow_pressure_range(self, conservative_setup):
+        conservative_setup["Pchamber"] = {"min": 0.070, "max": 0.090}
+        output = _dry_pressure_with_expected_warnings(
+            conservative_setup,
+            allowed_warnings=[
+                "Optimization failed",
+                "Total time exceeded. Drying incomplete",
+            ],
+        )
+        pressure_torr = output[:, 4] / 1000
+        assert np.all((pressure_torr >= 0.065) & (pressure_torr <= 0.095))
+
+    def test_tight_equipment_constraint(self, conservative_setup):
+        conservative_setup["eq_cap"] = {"a": 2.0, "b": 5.0}
+        output = _dry_pressure_with_expected_warnings(conservative_setup)
+        assert output is not None
+        assert output.size > 0
+        assert 0.0 <= output[-1, 6] <= 100.0
