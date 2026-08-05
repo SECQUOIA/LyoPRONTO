@@ -513,6 +513,36 @@ def _solver_missing_message(solver_name: str) -> str:
     )
 
 
+def _has_assigned_policy_indicators(model: Any) -> bool:
+    """Return whether every phase carries a valued policy indicator.
+
+    GDPopt transfers its incumbent to the model for every termination
+    condition except ``infeasible`` and ``unbounded``, so a run stopped at its
+    iteration or time limit can leave a complete, extractable policy
+    assignment behind.
+    """
+    return all(
+        model.policy[phase_index, policy_name].indicator_var.value is not None
+        for phase_index in model.phases
+        for policy_name in model.policy_names
+    )
+
+
+def _gdp_remedy_sentence(termination_condition: str) -> str:
+    """Suggest next steps for the termination condition actually reported."""
+    condition = termination_condition.lower()
+    if condition == "infeasible":
+        return "Try a coarser mesh or a different init_algorithm."
+    if condition == "maxtimelimit":
+        return "Raise time_limit_s, or try a coarser mesh."
+    if condition == "maxiterations":
+        return "Raise the GDPopt iteration limit, or try a coarser mesh."
+    return (
+        "Try a coarser mesh, a longer time_limit_s, or a different "
+        "init_algorithm."
+    )
+
+
 def _gdp_failure_message(
     model: Any,
     results: Any,
@@ -520,21 +550,36 @@ def _gdp_failure_message(
     init_algorithm: str,
     time_limit_s: float | None,
 ) -> str:
-    """Describe a GDP solve that produced no usable incumbent."""
+    """Describe a GDP solve whose termination is not a converged result.
+
+    The incumbent sentence is derived from the model's own indicator values
+    rather than assumed from the termination condition, because the two do not
+    imply each other.
+    """
     settings = model._paper_problem_settings
     discretization = model._paper_gdp_discretization
     solver = getattr(results, "solver", None)
+    termination_condition = str(getattr(solver, "termination_condition", None))
     limit = "none" if time_limit_s is None else f"{time_limit_s:g} s"
+    if _has_assigned_policy_indicators(model):
+        incumbent = (
+            "An incumbent was loaded and every policy indicator is assigned, "
+            "but this termination is not a converged result. Pass "
+            "require_success=False to extract it as an unconverged solution."
+        )
+    else:
+        incumbent = (
+            "No incumbent was loaded, so no policy indicators were assigned "
+            "and no policy sequence can be reported."
+        )
     return (
         f"{settings.name.replace('_', ' ').title()} GDP solve did not converge "
         f"(status={getattr(solver, 'status', None)}, "
-        f"termination_condition={getattr(solver, 'termination_condition', None)}) "
+        f"termination_condition={termination_condition}) "
         f"at n_z={discretization.n_z}, "
         f"nfe_per_phase={discretization.nfe_per_phase}, ncp={discretization.ncp} "
         f"with init_algorithm={init_algorithm!r} and time_limit={limit}. "
-        "No incumbent was loaded, so no policy indicators were assigned and no "
-        "policy sequence can be reported. Try a coarser mesh, a longer "
-        "time_limit_s, or a different init_algorithm."
+        f"{incumbent} {_gdp_remedy_sentence(termination_condition)}"
     )
 
 

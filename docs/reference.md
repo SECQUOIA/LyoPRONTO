@@ -162,9 +162,13 @@ Implemented modules:
   but not the physical equations shared by the two models. The discrete search
   is the scaling limit, not the transcription: Problem 2 has been run at
   `n_z=5, nfe_per_phase=6`, but at `n_z=20, nfe_per_phase=12` GDPopt returns
-  `infeasible` under both `set_covering` and `no_init` initialization, which
-  `solve_paper_gdp_model` reports as a solver failure rather than extracting an
-  unassigned policy sequence.
+  `infeasible` under both `set_covering` and `no_init` initialization. That
+  boundary is a measurement, not a property of the formulation; it was taken
+  with Pyomo 6.9.5, IPOPT 3.14.16, and GLPK 5.0, and can move with those
+  versions. `solve_paper_gdp_model` reports such a termination as a solver
+  failure rather than extracting an unassigned policy sequence, and states
+  whether an incumbent was loaded, since GDPopt does load one for every
+  termination except `infeasible` and `unbounded`.
 
 Pyomo tests are marked `pyomo` and are skip-safe when Pyomo or a required
 solver such as IPOPT or GLPK is not installed. See `dev.md` for optional solver
