@@ -5,6 +5,14 @@ test logic belongs in `tests/`; reusable example computation belongs in
 `examples/`. These files stay separate because they exercise file-oriented
 compatibility and provide reference evidence independent of the implementation.
 
+Keeping this directory at the repository root is deliberate. The fixtures are
+consumed by maintained examples, the file-oriented `main.py` compatibility
+path, and tests; moving them under `tests/data/` would incorrectly imply
+test-only ownership while forcing churn in YAML inputs, examples, workflows,
+and documentation. Reconsider the path only if those non-test consumers are
+retired. This decision concerns location, not ownership: every artifact below
+still has one canonical tracked copy and named consumers.
+
 ## Measured input
 
 | File | Format and units | Provenance | Consumers |
@@ -25,7 +33,7 @@ percent dried [0-100].
 
 | File | Provenance and purpose | Consumers |
 | --- | --- | --- |
-| `reference_primary_drying.csv` | Web-interface known-Rp output, 2025-10-01 | `tests/test_web_interface.py`, scientific-reference scenario |
+| `reference_primary_drying.csv` | Web-interface known-Rp output, 2025-10-01 | `tests/test_calc_knownRp.py`, scientific-reference scenario |
 | `reference_opt_Tsh.csv` | Web-interface shelf-temperature optimizer output, 2025-10-01 | `tests/test_opt_Tsh.py`, scientific-reference scenario |
 | `reference_opt_Pch.csv` | Web-interface pressure optimizer output | `tests/test_opt_Pch.py` |
 | `reference_freezing.csv` | Web-interface freezing output, 2025-10-01 | `tests/test_freezing.py`, scientific-reference scenario |

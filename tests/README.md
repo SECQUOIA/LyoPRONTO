@@ -47,8 +47,24 @@ in `tests/test_pyomo_models/test_original_workflow_parity.py`.
 Tests are organized by behavior rather than by how coverage was added. The
 shelf-temperature optimizer contract and its sole independent reference are
 owned by `tests/test_opt_Tsh.py` and `test_data/reference_opt_Tsh.csv`; the
-redundant historical `test_optimizer.py` suite has been retired. Broader
-coverage-named-suite consolidation remains tracked separately in issue #132.
+redundant historical `test_optimizer.py` suite has been retired. The remaining
+ownership map is now explicit:
+
+- `test_calc_knownRp.py` owns known-Rp behavior, web-interface parity, and the
+  independent primary-drying reference; the former calculator, generic
+  regression, and web-interface suites were weaker repetitions of those
+  contracts.
+- `test_calc_unknownRp.py`, `test_opt_Pch.py`, and `test_opt_Pch_Tsh.py` own
+  their distinct regression and edge scenarios, including the expensive
+  shared-result cases formerly isolated in coverage-named files.
+- `test_functions.py` and `test_design_space.py` own their branch and
+  single-timestep contracts; exact or weaker coverage-chasing duplicates have
+  been removed.
+
+External YAML inputs, measured data, and independent reference outputs remain
+under top-level `test_data/` because examples and the file-oriented interface
+consume them as well as tests. See `test_data/README.md` for the path decision
+and per-artifact ownership.
 
 ## Scientific Reference Scenarios
 
