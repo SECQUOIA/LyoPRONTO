@@ -44,6 +44,30 @@ historical test file. The retired `reference_design_space.csv` mixed a stale
 shelf-temperature row with otherwise current sections and had no regression
 consumer, so it and the example's silently skipped comparison were removed.
 
+## Self-generated regression baselines
+
+These share the schema above but are **not** independent references: they are
+this repository's own output, recorded to detect unintended drift. They
+demonstrate stability, not correctness, and can never confirm that a
+trajectory is physically right — only that it has not changed. Keep the
+`regression_` prefix so the distinction from `reference_` stays visible at the
+call site.
+
+| File | Provenance and purpose | Consumers |
+| --- | --- | --- |
+| `regression_opt_Pch_Tsh.csv` | Joint-optimizer trajectory generated from `dfdb53d` using the `standard_opt_pch_tsh_inputs` fixture; pins the trajectory against solver and formulation drift | `tests/test_opt_Pch_Tsh.py` |
+
+The joint optimizer has no independent web-interface reference, and the two
+that do exist are weak comparators for element-wise checks — `test_opt_Pch.py`
+documents that comparing against `reference_opt_Pch.csv` directly is "brittle
+and not meaningful" for that case. A recorded baseline is what actually guards
+this module, so it is kept deliberately rather than as a stand-in for a
+reference that does not exist.
+
+When a change to the optimizer is intended, regenerate the baseline and update
+the generating commit in the table above; do not widen the test's tolerance to
+absorb a real behavioral change.
+
 ## File-interface YAML cases
 
 The ten YAML files below are external input fixtures consumed by
