@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
 from typing import Dict
 
 import numpy as np
@@ -11,12 +12,14 @@ from tests.pyomo_solver import require_pyomo_solver
 pyo = pytest.importorskip("pyomo.environ")
 
 from lyopronto.pyomo_models.advanced import (
+    ParameterEstimationResult,
     create_design_space_feasibility_model,
     create_design_space_grid_models,
     create_multivial_optimization_model,
     create_parameter_estimation_model,
     create_robust_optimization_model,
     create_sensitivity_analysis_models,
+    solve_parameter_estimation,
 )
 from lyopronto.pyomo_models.trajectory import solve_trajectory
 
@@ -105,6 +108,40 @@ def test_parameter_estimation_model_uses_synthetic_resistance_and_kv_targets(adv
         "dmdt[2]",
     }
     assert pyo.value(model.obj.expr) == pytest.approx(0.0, abs=1.0e-14)
+
+
+def test_parameter_estimation_solver_withholds_nonoptimal_values(advanced_case):
+    """The public solver adapter never exposes initialized values as a fit."""
+
+    class NonOptimalSolver:
+        """Return an infeasible result without changing initialized values."""
+
+        def solve(self, model, tee=False):
+            del model, tee
+            return SimpleNamespace(
+                solver=SimpleNamespace(
+                    status=pyo.SolverStatus.warning,
+                    termination_condition=pyo.TerminationCondition.infeasible,
+                )
+            )
+
+    model = create_parameter_estimation_model(
+        advanced_case["vial"],
+        advanced_case["product"],
+        advanced_case["ht"],
+        [{"Lck": 0.1, "Pch": 0.15, "Rp": 2.0}],
+        estimate_heat_transfer=False,
+    )
+    result = solve_parameter_estimation(model, solver=NonOptimalSolver())
+
+    assert isinstance(result, ParameterEstimationResult)
+    assert not result.success
+    assert result.solver_status == "warning"
+    assert result.termination_condition == "infeasible"
+    assert result.values == {"R0": None, "A1": None, "A2": None}
+    assert result.objective is None
+    with pytest.raises(RuntimeError, match="did not reach an optimal solution"):
+        result.as_dict()
 
 
 def test_design_space_feasibility_model_fixes_controls_and_capacity(advanced_case):

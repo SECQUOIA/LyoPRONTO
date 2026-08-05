@@ -49,7 +49,9 @@ python examples/example_parameter_estimation.py
 Outputs are written to `examples/outputs/`.
 
 Legacy scripts are tracked under `examples/legacy/`, but new work should prefer
-the maintained examples above.
+the maintained examples above. They are archival provenance rather than CI
+execution targets; the original known/unknown-Rp workflows are maintained as
+the tested notebooks below.
 
 ## Run The File-Oriented Compatibility Path
 
@@ -113,7 +115,8 @@ Advanced Pyomo workflow builders are also available under
 `lyopronto.pyomo_models`:
 
 - `create_parameter_estimation_model` for optional Rp/Kv parameter-estimation
-  scenarios;
+  scenarios, paired with `solve_parameter_estimation` and its
+  `ParameterEstimationResult` diagnostics;
 - `create_design_space_feasibility_model` and `create_design_space_grid_models`
   for fixed-control feasibility checks;
 - `create_sensitivity_analysis_models` for local finite-difference
@@ -179,13 +182,29 @@ it does not independently validate the shared physical equations.
 
 The MkDocs notebook examples are tracked under `docs/examples/`:
 
-- [known Rp](examples/knownRp_PD.ipynb)
-- [unknown Rp](examples/unknownRp_PD.ipynb)
+- [known Rp: original SciPy calculation and fixed-horizon Pyomo replay](examples/knownRp_PD.ipynb)
+- [unknown Rp: shared legacy preprocessing with SciPy/Pyomo fitting](examples/unknownRp_PD.ipynb)
 - [SciPy and Pyomo on the LyoPRONTO paper optimizer cases](examples/current_main_joint_optimizer_comparison.ipynb)
 - [Replicating the Srisuma and Braatz optimal-control cases](examples/paper_optimal_control_replication.ipynb)
 - [How the DAE optimizer is built and checked](examples/dae_optimizer_walkthrough.ipynb)
 
-Notebook execution is validated through the explicit notebook CI lane.
+The first two notebooks import canonical computation from
+`examples/original_workflow_parity.py`; `docs/examples/` owns only narrative,
+comparison checks, plots, and committed rendered results. They retain the
+original temperature, chamber-pressure/sublimation-flux, percent-dried, and
+product-resistance diagnostics while adding SciPy/Pyomo overlays. They also
+report single-run, environment-dependent wall times with shared preprocessing,
+model construction, and solver work separated; these diagnostics are not
+formal benchmarks. The known-Rp Pyomo
+path uses a 6.5 hr backward-Euler horizon and a 95% terminal target. The
+unknown-Rp Pyomo path is hybrid: the legacy calculator infers `(Lck, Rp)` from
+measured `Tbot(t)`, then Pyomo fits `R0`, `A1`, and `A2`. It is not a direct
+Pyomo inverse-temperature model.
+
+Notebook execution is validated through the explicit notebook CI lane. When
+Pyomo or IPOPT is absent, the original-workflow notebooks still execute the
+SciPy path and print the installation command for the optional comparison.
+Their full parity checks also run in the optional Pyomo solver lane.
 The optimizer-comparison, optimal-control replication, and DAE walkthrough
 notebooks require `.[dev,pyomo]` and IPOPT, so their solver-backed smoke
 executions also run in the optional Pyomo comparison lane.

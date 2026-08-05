@@ -1,99 +1,62 @@
-# LyoPRONTO Test Data
+# LyoPRONTO external fixtures
 
-This directory contains reference data and input files used for validation and testing.
+`test_data/` owns immutable inputs and independent reference outputs. Python
+test logic belongs in `tests/`; reusable example computation belongs in
+`examples/`. These files stay separate because they exercise file-oriented
+compatibility and provide reference evidence independent of the implementation.
 
-## Reference Files (from Web Interface)
+## Measured input
 
-These files contain reference outputs from the LyoPRONTO web interface for validation. They use the `reference_` prefix to distinguish them from locally generated outputs.
+| File | Format and units | Provenance | Consumers |
+| --- | --- | --- | --- |
+| `temperature.txt` | 452 measured rows: time [hr], vial-bottom temperature [degC] | Original web-interface unknown-Rp input | `examples/original_workflow_parity.py`, `examples/example_parameter_estimation.py`, unknown-Rp and scientific-reference tests |
 
-### `reference_primary_drying.csv`
-Reference output from web interface primary drying calculator.
+This is the one canonical copy of the measured series. Documentation notebooks
+load it through `examples.original_workflow_parity`; the former notebook and
+legacy-script copies were byte- or normalization-equivalent duplicates.
 
-- **Source**: Web interface output (Oct 1, 2025)
-- **Original name**: `lyopronto_primary_drying_Oct_01_2025_18_48_08.csv`
-- **Format**: Seven columns (time, Tsub, Tbot, Tsh, Pch, flux, frac_dried)
-- **Points**: 668 data points
-- **Usage**: Validation for `test_web_interface.py`
-- **Key Results**: 6.66 hr drying time, -14.77°C max temperature
+## Independent reference outputs
 
-### `reference_optimizer.csv`
-Reference output from web interface optimizer.
+All CSVs use semicolon delimiters and preserve the legacy web-interface output
+units. Primary-drying and optimizer trajectories have seven columns: time [hr],
+sublimation-front temperature [degC], vial-bottom temperature [degC], shelf
+temperature [degC], chamber pressure [mTorr], sublimation flux [kg/hr/m^2], and
+percent dried [0-100].
 
-- **Source**: Web interface optimizer (Oct 1, 2025)
-- **Original name**: `lyopronto_optimizer_Oct_01_2025_20_03_23.csv`
-- **Format**: Seven columns (time, Tsub, Tbot, Tsh, Pch, flux, frac_dried)
-- **Points**: 216 data points
-- **Usage**: Validation for `test_opt_Tsh.py`
-- **Key Results**: 2.123 hr optimal drying time, -5.00°C product temperature
+| File | Provenance and purpose | Consumers |
+| --- | --- | --- |
+| `reference_primary_drying.csv` | Web-interface known-Rp output, 2025-10-01 | `tests/test_web_interface.py`, scientific-reference scenario |
+| `reference_opt_Tsh.csv` | Web-interface shelf-temperature optimizer output, 2025-10-01 | `tests/test_opt_Tsh.py`, scientific-reference scenario |
+| `reference_opt_Pch.csv` | Web-interface pressure optimizer output | `tests/test_opt_Pch.py` |
+| `reference_freezing.csv` | Web-interface freezing output, 2025-10-01 | `tests/test_freezing.py`, scientific-reference scenario |
 
-### `reference_freezing.csv`
-Reference output from web interface freezing calculator.
+`reference_opt_Tsh.csv` is the sole shelf-optimizer reference. The retired
+`reference_optimizer.csv` differed only in line endings and fed a redundant
+historical test file. The retired `reference_design_space.csv` mixed a stale
+shelf-temperature row with otherwise current sections and had no regression
+consumer, so it and the example's silently skipped comparison were removed.
 
-- **Source**: Web interface freezing calculator (Oct 1, 2025)
-- **Original name**: `lyopronto_freezing_Oct_01_2025_20_28_12.csv`
-- **Format**: Three columns (time, Tshelf, Tproduct)
-- **Points**: 3003 data points
-- **Usage**: Validation for `test_freezing.py`
-- **Key Results**: ~30 hr total freezing time, all phases simulated
+## File-interface YAML cases
 
-### `reference_design_space.csv`
-Reference output from web interface design space generator.
+The ten YAML files below are external input fixtures consumed by
+`tests/test_main.py` through the `lyopronto.high_level`/`main.py` compatibility
+path:
 
-- **Source**: Web interface design space (Oct 2, 2025)
-- **Original name**: `lyopronto_design_space_Oct_02_2025_12_13_08.csv`
-- **Format**: Semicolon-separated values with sections
-- **Sections**: Shelf temperature, Product temperature, Equipment capability
-- **Usage**: Validation for `test_design_space.py`
+- `example_freezing.yaml`
+- `example_knownrp.yaml`
+- `example_unknownkv.yaml`
+- `example_unknownrp.yaml`
+- `example_design_space.yaml`
+- `example_opt_tsh.yaml`
+- `example_opt_pch.yaml`
+- `example_opt_pch_tsh.yaml`
+- `badexample_unknownkvrp.yaml`
+- `badexample_optimizer_noopt.yaml`
 
-## Input Files
+## Adding data
 
-### `temperature.txt`
-Temperature profile used as input for the primary drying calculator example.
-
-- **Source**: Web interface input
-- **Format**: Two columns (time in hr, shelf temperature in °C)
-- **Points**: 453 data points
-- **Usage**: Input for `example_web_interface.py`
-
----
-
-## File Naming Convention
-
-- **Reference data** (from web interface): `reference_<mode>.csv`
-- **Generated output** (from local runs): `lyopronto_<mode>_<timestamp>.csv` (in `examples/outputs/`)
-- **Input data**: Descriptive names (e.g., `temperature.txt`)
-
-This naming scheme makes it clear which files are ground truth references vs. locally generated outputs.
-
----
-
-## Adding New Test Data
-
-When adding new test data files:
-
-1. **Place files here**: `test_data/`
-2. **Use descriptive names**: Include date or case description
-3. **Document in this README**: Add section describing the file
-4. **Reference in tests**: Update test files to use the data
-5. **Commit to repo**: Test data should be version controlled
-
-## Data Format Guidelines
-
-- **CSV files**: Use semicolon (`;`) delimiter to match web interface
-- **Text files**: Use tab-separated or space-separated values
-- **Units**: Always specify units in column headers
-- **Documentation**: Include source and purpose in README
-
-## Do Not Include
-
-- ❌ Temporary output files
-- ❌ Large binary files (>10 MB)
-- ❌ Sensitive or proprietary data
-- ❌ Generated files that can be reproduced
-
-## Size Limits
-
-Keep test data files small (<1 MB each) to avoid bloating the repository. If larger files are needed, consider:
-- Hosting externally and downloading during tests
-- Using compressed formats
-- Generating synthetic data in test fixtures
+For every new fixture, document its provenance, delimiter/schema, physical
+units, and real consumer here. Use `reference_<mode>.csv` for independent
+expected outputs and descriptive names for measured inputs. Do not commit local
+run output, sensitive/proprietary data, or an artifact that can be generated
+deterministically from repository inputs without a stated regression purpose.

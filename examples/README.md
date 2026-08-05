@@ -13,6 +13,7 @@ optimization prototypes.
 | `example_freezing.py` | Freezing-phase simulation. | CSV under `examples/outputs/`. |
 | `example_design_space.py` | Design-space sections for shelf temperature, product temperature, and equipment capability. | CSV under `examples/outputs/`. |
 | `example_parameter_estimation.py` | Product-resistance estimation from temperature data. | CSV and `parameter_estimation_results.png` under `examples/outputs/`. |
+| `original_workflow_parity.py` | Reusable original-case setup, SciPy calculations, fixed-horizon Pyomo replay, and hybrid Pyomo resistance fitting used by the known/unknown-Rp notebooks. | In-memory trajectories, fitted parameters, and solver metadata. |
 | `typed_api_examples.py` | Typed Pint API examples for simulation, fitting, RF, vial utilities, ECCURT, and Pirani endpoint detection. | Console smoke output. |
 | `example_pyomo_optimization.py` | Optional Pyomo construction example for pressure-only, shelf-temperature-only, and joint optimization modes. | Console model summaries. |
 | `current_main_comparison.py` | Shared result, timing, matched-point-budget, and discretization-sensitivity orchestration for the three current-main comparisons. | In-memory normalized trajectories and metrics. |
@@ -34,9 +35,10 @@ python examples/example_parameter_estimation.py
 python -m examples.typed_api_examples
 ```
 
-The maintained examples use reference-style inputs from `test_data/` where
-needed and write local outputs to `examples/outputs/`. Generated outputs are
-ignored by git.
+The maintained examples use immutable inputs from `test_data/` where needed
+and write local outputs to `examples/outputs/`. `test_data/temperature.txt` is
+the canonical measured input for the unknown-Rp workflow; notebooks import the
+loader rather than carrying copies. Generated outputs are ignored by git.
 
 Run the optional Pyomo example only after installing the Pyomo extra:
 
@@ -67,14 +69,18 @@ optimizer calls, and diagnostics explicit.
 
 ## Legacy Scripts
 
-`examples/legacy/` contains the original standalone scripts:
+`examples/legacy/` contains archival snapshots of the original standalone
+scripts:
 
 - `ex_knownRp_PD.py`
 - `ex_unknownRp_PD.py`
 
-They are retained for backward compatibility and smoke-tested by
-`tests/test_example_scripts.py`. New examples should follow the maintained
-scripts in this directory instead.
+They document provenance but are not maintained execution targets; their old
+working-directory data copy was removed during fixture canonicalization. The
+reader-facing replacements are `docs/examples/knownRp_PD.ipynb` and
+`docs/examples/unknownRp_PD.ipynb`, which are fresh-kernel tested through
+`tests/test_original_workflow_notebooks.py`. New examples should follow the
+maintained scripts in this directory instead.
 
 ## Adding Examples
 

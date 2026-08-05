@@ -3,12 +3,8 @@
 Example: Replicating LyoPRONTO Web Interface Calculation
 
 This example replicates the primary drying calculation from the LyoPRONTO web interface.
-It demonstrates how to:
-1. Load vial bottom temperature from a file
-2. Set up vial and product parameters matching the web interface
-3. Run primary drying simulation with known product resistance
-4. Save results to CSV format
-5. Compare with web interface output
+It demonstrates how to present, save, and compare the canonical known-product-
+resistance calculation shared with the original-workflow notebook.
 
 Based on the web interface inputs from the screenshot:
 - Vial Area: 3.8 cm²
@@ -25,51 +21,24 @@ Based on the web interface inputs from the screenshot:
 - Number of Vials: 398
 """
 
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from lyopronto import calc_knownRp
+if __package__:
+    from .original_workflow_parity import known_rp_case, run_known_rp_scipy
+else:
+    from original_workflow_parity import known_rp_case, run_known_rp_scipy
 
 # ============================================================================
 # INPUTS (matching web interface screenshot)
 # ============================================================================
 
-# Vial and fill properties
-vial = {
-    'Av': 3.8,      # Vial area [cm**2]
-    'Ap': 3.14,     # Product area [cm**2]
-    'Vfill': 2.0,   # Fill volume [mL]
-}
-
-# Product properties
-product = {
-    'R0': 1.4,           # Base resistance [cm**2*hr*Torr/g]
-    'A1': 16.0,          # Resistance parameter A1 [cm*hr*Torr/g]
-    'A2': 0.0,           # Resistance parameter A2 [1/cm]
-    'cSolid': 0.05,      # Solid content [g/mL] - note: API uses 'cSolid' not 'rho_solid'
-}
-
-# Critical product temperature
-T_pr_crit = -5.0  # [degC] (at least 2-3°C below collapse/Tg)
-
-# Vial heat transfer parameters
-ht = {
-    'KC': 0.000275,  # Base heat transfer coefficient
-    'KP': 0.000893,  # Pressure-dependent term
-    'KD': 0.46,      # Distance-dependent term
-}
-
-# Process conditions
-Pch = 0.15  # Chamber pressure [Torr]
-Tsh = 20.0  # Final shelf temperature [degC]
-
-# Initial conditions
-T_init = -35.0  # Initial shelf temperature [degC]
-
-# Ramp rates
-shelf_ramp_rate = 1.0  # [degC/min]
-pressure_ramp_rate = 0.5  # [Torr/min]
+vial, product, ht, Pchamber, Tshelf = known_rp_case()
+T_pr_crit = product["T_pr_crit"]  # [degC]
+Pch = Pchamber["setpt"][0]  # [Torr]
+Tsh = Tshelf["setpt"][0]  # [degC]
+T_init = Tshelf["init"]  # [degC]
+shelf_ramp_rate = Tshelf["ramp_rate"]  # [degC/min]
 
 # Equipment capability
 equipment_capability = {
@@ -82,35 +51,6 @@ n_vials = 398
 
 # Time parameters
 dt = 0.01  # Time step [hr]
-
-# ============================================================================
-# LOAD VIAL BOTTOM TEMPERATURE PROFILE (if available)
-# ============================================================================
-
-def load_temperature_profile(filepath='test_data/temperature.txt'):
-    """
-    Load vial bottom temperature profile from file.
-    
-    Expected format: tab-separated values
-    Column 1: Time (hr)
-    Column 2: Temperature [degC]
-    
-    Args:
-        filepath (str): Path to temperature file (relative to repo root)
-        
-    Returns:
-        np.ndarray: Array with columns [time, temperature]
-    """
-    try:
-        data = np.loadtxt(filepath)
-        print(f"✓ Loaded temperature profile from {filepath}")
-        print(f"  Time range: {data[0, 0]:.2f} to {data[-1, 0]:.2f} hr")
-        print(f"  Temperature range: {data[:, 1].min():.2f} to {data[:, 1].max():.2f} °C")
-        return data
-    except FileNotFoundError:
-        print(f"✗ Temperature file not found: {filepath}")
-        print("  Proceeding with standard simulation (no temperature constraint)")
-        return None
 
 # ============================================================================
 # RUN SIMULATION
@@ -156,29 +96,14 @@ def run_primary_drying_simulation():
     print(f"  Number of Vials:   {n_vials}")
     print(f"  Capability:        dm/dt = {equipment_capability['a']:.3f} + {equipment_capability['b']:.1f}*Pch")
     
-    # Load temperature profile if available
-    load_temperature_profile()
-    
-    # Prepare Pchamber dictionary
-    Pchamber = {
-        'setpt': [Pch],
-        'dt_setpt': [1800.0],  # 1800 [min] hold time
-        'ramp_rate': pressure_ramp_rate
-    }
-    
-    # Prepare Tshelf dictionary
-    Tshelf = {
-        'init': T_init,
-        'setpt': [Tsh],
-        'dt_setpt': [1800.0],  # 1800 [min] hold time
-        'ramp_rate': shelf_ramp_rate
-    }
-    
     # Run simulation
     print("\n🔄 Running simulation...")
     print(f"  Time step: {dt} hr")
     
-    output = calc_knownRp.dry(vial, product, ht, Pchamber, Tshelf, dt)
+    output = run_known_rp_scipy(
+        dt=dt,
+        case=(vial, product, ht, Pchamber, Tshelf),
+    )
     
     # Extract final results
     drying_time = output[-1, 0]

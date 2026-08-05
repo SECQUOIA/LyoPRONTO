@@ -169,6 +169,19 @@ The maintained construction example lives in
 in `examples/paper_gdp_validation.py`. Both are covered by the optional Pyomo
 test lane.
 
+`examples/original_workflow_parity.py` provides the original-case tutorial
+boundary. Its known-Rp path compares the legacy SciPy trajectory with a
+fixed-control, fixed-horizon backward-Euler Pyomo replay and returns the same
+seven-column presentation shape. Its unknown-Rp path is hybrid: legacy
+inverse-temperature preprocessing supplies cake-length/product-resistance
+observations, and `create_parameter_estimation_model` builds the fit model.
+`solve_parameter_estimation` returns a `ParameterEstimationResult` with solver
+diagnostics and exposes fitted values/objective only after an accepted optimal
+termination.
+
+The current Pyomo package does not implement an end-to-end inverse trajectory
+from measured vial-bottom temperature.
+
 The trajectory model uses backward Euler for dried cake length:
 
 ```text
@@ -362,6 +375,9 @@ Advanced workflow builders remain explicit optional Pyomo prototypes:
   Observation units follow the legacy primary-drying conventions: pressure in
   Torr, dried cake length in cm, sublimation rate in kg/hr/vial, and
   heat-transfer coefficient in cal/s/K/cm^2.
+  `solve_parameter_estimation` solves that model and returns a
+  `ParameterEstimationResult`; non-optimal outcomes retain diagnostics while
+  withholding initialized parameters and the objective.
 - `create_design_space_feasibility_model` fixes chamber-pressure and
   shelf-temperature profiles and turns the trajectory model into a pure
   feasibility replay with product-temperature and optional equipment-capacity
