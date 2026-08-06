@@ -7,6 +7,7 @@ the fast lane. The scaling-relation tests build models but do not solve them.
 from __future__ import annotations
 
 import dataclasses
+import os
 
 import numpy as np
 import pytest
@@ -315,3 +316,126 @@ def test_rung_dataclass_is_frozen() -> None:
     rung = _rung(1.0, 6.1865)
     with pytest.raises(dataclasses.FrozenInstanceError):
         rung.factor = 2.0  # type: ignore[misc]
+
+
+# --------------------------------------------------------------------------
+# run_ladder against solver outcomes
+# --------------------------------------------------------------------------
+
+
+def _stub_solution(termination: str, status: str, message: str) -> dict:
+    """A solve return shaped like paper_ocp's, carrying a chosen termination."""
+    model = paper_ocp.create_paper_problem1_model(
+        None, paper_ocp.PaperDiscretization(n_z=5, nfe=2, ncp=2)
+    )
+    for t in model.t:
+        for i in model.z:
+            model.T[i, t].set_value(230.0)
+            model.dT_dtau[i, t].set_value(0.0)
+        model.S[t].set_value(0.0)
+        model.dSdt[t].set_value(0.0)
+        model.Tb[t].set_value(250.0)
+    model.t_final.set_value(3600.0)
+    return {
+        "states": {"time_hr": [0.0, 1.0], "temperature_K": [[230.0], [230.0]]},
+        "metrics": {"max_product_temperature_K": 243.0},
+        "metadata": {
+            "termination_condition": termination,
+            "status": status,
+            "message": message,
+        },
+        "model": model,
+    }
+
+
+def test_run_ladder_records_a_non_success_result_and_stops(monkeypatch) -> None:
+    """A genuine non-success return must be recorded, not raised past or dropped.
+
+    Issue #140 requires per-rung termination and message on the rung that ends
+    the ladder. Restoring require_success=True would raise here instead.
+    """
+    calls: list[dict] = []
+
+    def fake_solve(**kwargs):
+        calls.append(kwargs)
+        if len(calls) == 1:
+            return _stub_solution("optimal", "ok", "Ipopt: Optimal Solution Found.")
+        return _stub_solution(
+            "maxIterations", "warning", "Ipopt: Maximum Number of Iterations Exceeded."
+        )
+
+    monkeypatch.setattr(paper_ocp, "solve_paper_problem1", fake_solve)
+
+    results = run_ladder("problem1", ladder=(1.0, 0.5, 0.2))
+
+    # Stopped at the failure rather than continuing down the ladder.
+    assert len(results) == 2
+    assert [r.converged for r in results] == [True, False]
+
+    failed = results[-1]
+    assert failed.termination_condition == "maxIterations"
+    assert failed.solver_status == "warning"
+    assert "Maximum Number of Iterations" in failed.solver_message
+    assert failed.max_constraint_violation is not None
+
+    # The solve must have been asked not to raise, or this rung never returns.
+    assert calls[0]["require_success"] is False
+
+
+def test_run_ladder_propagates_an_invalid_executable() -> None:
+    """A configuration error must abort the study rather than become a datum.
+
+    Recording it as a non-converged rung would publish a benchmark artifact
+    describing a solver that never ran.
+    """
+    with pytest.raises(Exception) as failure:
+        run_ladder(
+            "problem1",
+            ladder=(1.0,),
+            discretization=paper_ocp.PaperDiscretization(n_z=5, nfe=2, ncp=2),
+            solver_executable="/nonexistent/definitely-not-a-solver",
+        )
+
+    # Not the study's own ValueError guard: this must come from solver resolution.
+    assert not isinstance(failure.value, ValueError) or "unsupported" not in str(
+        failure.value
+    )
+
+
+# --------------------------------------------------------------------------
+# Provenance against the real solver
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.pyomo
+def test_provenance_reports_the_real_installed_solver_version() -> None:
+    """Assert the actual identity and version, so a corrupted record fails.
+
+    A provenance test that only checks the keys exist would pass with the name
+    and version replaced by anything at all.
+    """
+    opt = pyo.SolverFactory("ipopt")
+    if not opt.available(exception_flag=False):
+        pytest.skip("IPOPT is not installed in this environment")
+
+    expected_version = ".".join(str(part) for part in opt.version())
+    record = solver_provenance("ipopt", None)
+
+    assert record["solver_version"] == expected_version
+    assert record["solver_name"] == "ipopt"
+    assert record["pyomo_interface"] == "ipopt"
+
+
+@pytest.mark.pyomo
+def test_provenance_names_the_executable_not_the_interface() -> None:
+    """A solver driven through the ipopt interface must report its own identity."""
+    opt = pyo.SolverFactory("ipopt")
+    if not opt.available(exception_flag=False):
+        pytest.skip("IPOPT is not installed in this environment")
+    executable = opt.executable()
+
+    record = solver_provenance("ipopt", executable)
+
+    assert record["solver_name"] == os.path.basename(executable)
+    assert record["solver_version"] == ".".join(str(p) for p in opt.version())
+    assert record["solver_executable_basename"] == os.path.basename(executable)
