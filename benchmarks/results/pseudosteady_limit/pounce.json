@@ -1,0 +1,105 @@
+{
+  "solver": "ipopt",
+  "solver_executable": "/home/bernalde/miniconda3/bin/pounce",
+  "discretization": {
+    "n_z": 20,
+    "nfe": 36,
+    "ncp": 3
+  },
+  "results": {
+    "problem1": [
+      {
+        "problem": "problem1",
+        "factor": 1.0,
+        "conduction_time_s": 46.93070345835797,
+        "converged": true,
+        "endpoint_hr": 6.1865331889167665,
+        "max_product_temperature_K": 243.0000009999997,
+        "termination_condition": "optimal",
+        "solver_status": "warning",
+        "max_constraint_violation": 0.0002475925783317623,
+        "max_landau_cleared_violation": 4.67902472563734e-13,
+        "solver_message": null,
+        "failure": null,
+        "feasible": true
+      },
+      {
+        "problem": "problem1",
+        "factor": 0.5,
+        "conduction_time_s": 23.465351729178984,
+        "converged": true,
+        "endpoint_hr": 6.166889061256875,
+        "max_product_temperature_K": 243.00000097968584,
+        "termination_condition": "optimal",
+        "solver_status": "warning",
+        "max_constraint_violation": 0.00038162891416793077,
+        "max_landau_cleared_violation": 9.325020656343338e-13,
+        "solver_message": null,
+        "failure": null,
+        "feasible": true
+      },
+      {
+        "problem": "problem1",
+        "factor": 0.2,
+        "conduction_time_s": 9.386140691671592,
+        "converged": false,
+        "endpoint_hr": null,
+        "max_product_temperature_K": null,
+        "termination_condition": null,
+        "solver_status": null,
+        "max_constraint_violation": null,
+        "max_landau_cleared_violation": null,
+        "solver_message": null,
+        "failure": "RuntimeError: Paper Problem 1 solve did not converge (status=warning, termination_condition=infeasible)",
+        "feasible": null
+      }
+    ],
+    "problem2": [
+      {
+        "problem": "problem2",
+        "factor": 1.0,
+        "conduction_time_s": 46.93070345835797,
+        "converged": true,
+        "endpoint_hr": 8.835313908012834,
+        "max_product_temperature_K": 240.00000099999983,
+        "termination_condition": "optimal",
+        "solver_status": "warning",
+        "max_constraint_violation": 0.00025712159372182075,
+        "max_landau_cleared_violation": 6.912735693358779e-13,
+        "solver_message": null,
+        "failure": null,
+        "feasible": true
+      },
+      {
+        "problem": "problem2",
+        "factor": 0.5,
+        "conduction_time_s": 23.465351729178984,
+        "converged": true,
+        "endpoint_hr": 8.831520333391419,
+        "max_product_temperature_K": 240.0000009867751,
+        "termination_condition": "optimal",
+        "solver_status": "warning",
+        "max_constraint_violation": 0.0007653577075588114,
+        "max_landau_cleared_violation": 1.3629400508793228e-12,
+        "solver_message": null,
+        "failure": null,
+        "feasible": true
+      },
+      {
+        "problem": "problem2",
+        "factor": 0.2,
+        "conduction_time_s": 9.386140691671592,
+        "converged": false,
+        "endpoint_hr": null,
+        "max_product_temperature_K": null,
+        "termination_condition": null,
+        "solver_status": null,
+        "max_constraint_violation": null,
+        "max_landau_cleared_violation": null,
+        "solver_message": null,
+        "failure": "RuntimeError: Paper Problem 2 solve did not converge (status=warning, termination_condition=infeasible)",
+        "feasible": null
+      }
+    ]
+  }
+}

@@ -22,6 +22,7 @@ optimization prototypes.
 | `current_main_joint_optimizer_comparison.py` | Joint-control SciPy/Pyomo.DAE comparison and optional rate-limited extension for the paper's mannitol case. | In-memory normalized trajectories and metrics. |
 | `paper_optimal_control_replication.py` | Replication of the two optimal-control case studies in Srisuma and Braatz, arXiv:2509.10826v1, plus the same three-policy classification applied to the vial-scale model. | In-memory solutions, policy segments, and metrics. |
 | `paper_gdp_validation.py` | Validation-only paper benchmark with free multiphase GDP policy selection, compared with the published and continuous-NLP results. | In-memory comparison rows, indicator-derived policies, trajectories, and solver metadata. |
+| `pseudosteady_limit_study.py` | Continuation from the paper's transient frozen-region PDE toward the pseudosteady formulation, by scaling the frozen heat capacity. Doubles as a solver-comparison instance set through `--solver-executable`. | Per-rung endpoint, maximum product temperature, termination condition, and solver status; optional JSON. |
 
 Run examples from the repository root:
 
@@ -58,6 +59,25 @@ idaes get-extensions --extra petsc
 sudo apt-get install glpk-utils
 python -m examples.paper_gdp_validation
 ```
+
+The pseudosteady-limit study requires IPOPT and takes several minutes, because
+the lower rungs are deliberately hard:
+
+```bash
+python -m examples.pseudosteady_limit_study
+python -m examples.pseudosteady_limit_study --output benchmarks/results/<run>/ipopt.json
+```
+
+`--solver-executable` runs the same models under a different NLP binary without
+changing model code. Any solver following the AMPL `<solver> <stub> -AMPL`
+convention works:
+
+```bash
+python -m examples.pseudosteady_limit_study --solver-executable /path/to/pounce
+```
+
+Recorded baselines live in `benchmarks/results/pseudosteady_limit/`; see
+`benchmarks/README.md` for what they are and when to regenerate them.
 
 The current-main
 [paper optimizer comparison](../docs/examples/current_main_joint_optimizer_comparison.ipynb)

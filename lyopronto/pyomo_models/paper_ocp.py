@@ -10,6 +10,31 @@ The equations and defaults in this file use the paper/upstream SI convention:
 temperatures in K, pressure in Pa, length in m, and time in s.  Do not mix these
 helpers with the existing LyoPRONTO cm/Torr/degC/cal APIs without an explicit
 adapter.
+
+Expect ``Solved To Acceptable Level`` from IPOPT, not ``Optimal Solution
+Found``.  This is a property of the transcription rather than a defect in the
+solution, and it is worth understanding before trying to tune it away.  The
+frozen region is solved on the Landau coordinate ``psi = (z - S)/(H - S)``, so
+its conduction term carries ``1/(H - S)^2``.  As the front approaches the vial
+bottom that factor grows by roughly four orders of magnitude, reaching about
+7.7e8 at the default terminal cutoff.  IPOPT's convergence test is absolute, so
+a residual of about 2.5e-4 there stalls the reported NLP error even though the
+same residual is near 1e-13 once the ``1/(H - S)^2`` factor is cleared.
+
+Measured attempts to reach ``Optimal Solution Found``, all on Paper Problem 1 at
+``n_z=20, nfe=36, ncp=3``, none of which changed the solution:
+
+* scaling suffixes, including a time-varying ``(H - S)^2`` factor -- no effect,
+  because IPOPT checks the tolerance against the *unscaled* violation;
+* ``bound_relax_factor=0``, and loosening ``constr_viol_tol`` or ``tol`` --
+  still acceptable-level, so the tolerance was never the binding criterion;
+* multiplying the temperature ODE through by ``(H - S)^2`` -- reports ``Optimal
+  Solution Found``, but on a solution identical to 4.7e-9 K whose residual on
+  the *original* equation is no better (3.0e-4 against 2.5e-4).  That changes
+  the label, not the answer, so it is deliberately not done here.
+
+``examples/pseudosteady_limit_study.py`` reports both the absolute violation and
+the Landau-cleared one for this reason.
 """
 
 from __future__ import annotations
@@ -1706,6 +1731,7 @@ def solve_paper_problem1(
     discretization: PaperDiscretization | None = None,
     solver: str = "ipopt",
     solver_options: Mapping[str, Any] | None = None,
+    solver_executable: str | None = None,
     initialization: str | Mapping[str, Any] | None = "policy",
     tee: bool = False,
     require_success: bool = True,
@@ -1718,6 +1744,7 @@ def solve_paper_problem1(
         discretization=discretization,
         solver=solver,
         solver_options=solver_options,
+        solver_executable=solver_executable,
         initialization=initialization,
         tee=tee,
         require_success=require_success,
@@ -1730,6 +1757,7 @@ def solve_paper_problem2(
     discretization: PaperDiscretization | None = None,
     solver: str = "ipopt",
     solver_options: Mapping[str, Any] | None = None,
+    solver_executable: str | None = None,
     initialization: str | Mapping[str, Any] | None = "policy",
     tee: bool = False,
     require_success: bool = True,
@@ -1742,6 +1770,7 @@ def solve_paper_problem2(
         discretization=discretization,
         solver=solver,
         solver_options=solver_options,
+        solver_executable=solver_executable,
         initialization=initialization,
         tee=tee,
         require_success=require_success,
@@ -1755,12 +1784,20 @@ def _solve_paper_problem(
     discretization: PaperDiscretization | None = None,
     solver: str = "ipopt",
     solver_options: Mapping[str, Any] | None = None,
+    solver_executable: str | None = None,
     initialization: str | Mapping[str, Any] | None = "policy",
     tee: bool = False,
     require_success: bool = True,
     return_model: bool = False,
 ) -> dict[str, Any]:
-    """Build and solve a paper-reference problem with Pyomo/IPOPT."""
+    """Build and solve a paper-reference problem with Pyomo and an NLP solver.
+
+    ``solver_executable`` names the binary to run instead of resolving one from
+    ``PATH``. Any solver following the AMPL ``<solver> <stub> -AMPL`` convention
+    can be driven through the ``ipopt`` interface with it, which is how the
+    solver-comparison study in ``examples/pseudosteady_limit_study.py`` runs the
+    same models under a different NLP solver without touching model code.
+    """
     import pyomo.environ as pyo  # type: ignore[import-untyped]
 
     if problem == "problem1":
@@ -1784,12 +1821,19 @@ def _solve_paper_problem(
             "initialization must be 'policy', a trajectory mapping, or None"
         )
 
-    try:
-        from idaes.core.solvers import get_solver  # type: ignore[import-not-found]
+    if solver_executable is not None:
+        # An explicit binary bypasses the IDAES resolver: the point of naming it
+        # is to run that binary rather than whichever one is on PATH. Any
+        # ASL/AMPL solver that follows the `<solver> <stub> -AMPL` convention can
+        # be driven through the `ipopt` interface this way.
+        opt = pyo.SolverFactory(solver, executable=str(solver_executable))
+    else:
+        try:
+            from idaes.core.solvers import get_solver  # type: ignore[import-not-found]
 
-        opt = get_solver(solver)
-    except Exception:
-        opt = pyo.SolverFactory(solver)
+            opt = get_solver(solver)
+        except Exception:
+            opt = pyo.SolverFactory(solver)
 
     if solver == "ipopt" and hasattr(opt, "options"):
         # Keep to options the AMPL/ASL interface accepts across supported IPOPT
@@ -1802,7 +1846,23 @@ def _solve_paper_problem(
         opt.options.setdefault("constr_viol_tol", 1.0e-6)
         opt.options.setdefault("mu_strategy", "adaptive")
         opt.options.setdefault("bound_relax_factor", 1.0e-8)
-        opt.options.setdefault("nlp_scaling_method", "user-scaling")
+        # Ask for user scaling only when the model carries the suffix, and say
+        # `none` explicitly otherwise. Models built with the default
+        # ``apply_scaling=False`` have no suffix, and requesting `user-scaling`
+        # there advertises scaling data that does not exist: IPOPT quietly
+        # treats every factor as 1, but POUNCE 0.7.0 reports
+        # InfeasibleProblemDetected on a model it otherwise solves.
+        #
+        # Leaving the option unset is worse than either, because each solver
+        # then applies its own default scaling and the comparison stops being
+        # like for like: IPOPT reaches f=0.02 on the pseudosteady ladder while
+        # POUNCE fails at the first rung. `none` states the truth and keeps both
+        # solvers on the same footing.
+        scaling_suffix = getattr(model, "scaling_factor", None)
+        if scaling_suffix is not None and len(scaling_suffix) > 0:
+            opt.options.setdefault("nlp_scaling_method", "user-scaling")
+        else:
+            opt.options.setdefault("nlp_scaling_method", "none")
         opt.options.setdefault("print_level", 5 if tee else 0)
 
     if solver_options:

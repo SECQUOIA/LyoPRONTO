@@ -178,6 +178,36 @@ nonlinear subproblems locally, the result is not a global optimality
 certificate. Agreement checks the GDP switching formulation independently;
 it does not independently validate the shared physical equations.
 
+### Compare the transient and pseudosteady frozen-region models
+
+`examples/pseudosteady_limit_study.py` walks the paper-reference models from
+their transient frozen-region PDE toward the pseudosteady formulation that the
+production LyoPRONTO path uses. The frozen heat capacity enters `paper_ocp`
+only through the transient term, so scaling it by `f` is equivalent to solving
+`f * dT/dt = RHS`, and `f -> 0` is the pseudosteady limit.
+
+```bash
+python -m examples.pseudosteady_limit_study
+```
+
+Each rung warm starts from the previous solution because cold starts fail below
+`f = 1`. A rung that does not converge is recorded and ends that problem's
+ladder, since where the ladder stops is part of the result.
+
+The same ladder serves as a solver-comparison instance set. `--solver-executable`
+selects the NLP binary without changing model code, for any solver following the
+AMPL `<solver> <stub> -AMPL` convention:
+
+```bash
+python -m examples.pseudosteady_limit_study --solver-executable /path/to/pounce
+```
+
+The study reports the termination condition and solver status for every rung
+rather than only success or failure, because solvers differ in what they call
+success: a result accepted at an acceptable-level tolerance and one converged to
+full tolerance both arrive as `optimal` through Pyomo. Recorded baselines and
+regeneration instructions are in `benchmarks/README.md`.
+
 ## Run Notebook Examples
 
 The MkDocs notebook examples are tracked under `docs/examples/`:
