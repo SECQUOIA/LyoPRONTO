@@ -1870,23 +1870,32 @@ def _solve_paper_problem(
         opt.options.setdefault("constr_viol_tol", 1.0e-6)
         opt.options.setdefault("mu_strategy", "adaptive")
         opt.options.setdefault("bound_relax_factor", 1.0e-8)
-        # Ask for user scaling only when the model carries the suffix, and say
-        # `none` explicitly otherwise. Models built with the default
-        # ``apply_scaling=False`` have no suffix, and requesting `user-scaling`
-        # there advertises scaling data that does not exist: IPOPT quietly
-        # treats every factor as 1, but POUNCE 0.7.0 reports
-        # InfeasibleProblemDetected on a model it otherwise solves.
+        # Ask for user scaling only when the model carries the suffix.
+        # ``apply_scaling`` defaults to False, so requesting `user-scaling`
+        # unconditionally advertises scaling data that does not exist.
         #
-        # Leaving the option unset is worse than either, because each solver
-        # then applies its own default scaling and the comparison stops being
-        # like for like: IPOPT reaches f=0.02 on the pseudosteady ladder while
-        # POUNCE fails at the first rung. `none` states the truth and keeps both
-        # solvers on the same footing.
+        # Otherwise state `gradient-based` explicitly rather than `none`. This
+        # transcription's residual is about 1e-13 relative but 1e-3 absolute,
+        # because the Landau conduction term carries 1/(H-S)^2. Gradient-based
+        # scaling is what makes the reported NLP error track the relative
+        # residual; turning it off forces every tolerance onto the absolute one,
+        # which this model can never meet. Measured on the f=0.2 rung of the
+        # pseudosteady ladder (jkitchin/pounce#505): unscaled, POUNCE 0.9.0
+        # stalls and exits local-infeasibility at a residual of 1.6e-3, while
+        # scaled it reaches IPOPT's point in 33 iterations against IPOPT's 37.
+        # IPOPT survives unscaled here only because its residual happens to
+        # settle just under `acceptable_tol`, and its own log shows that value
+        # oscillating across the bar between iterates.
+        #
+        # Naming it explicitly rather than omitting the option keeps both
+        # solvers on identical footing: it is the default for IPOPT and for
+        # POUNCE, and setting it produces bit-identical results to omitting it
+        # on both.
         scaling_suffix = getattr(model, "scaling_factor", None)
         if scaling_suffix is not None and len(scaling_suffix) > 0:
             opt.options.setdefault("nlp_scaling_method", "user-scaling")
         else:
-            opt.options.setdefault("nlp_scaling_method", "none")
+            opt.options.setdefault("nlp_scaling_method", "gradient-based")
         opt.options.setdefault("print_level", 5 if tee else 0)
 
     if solver_options:

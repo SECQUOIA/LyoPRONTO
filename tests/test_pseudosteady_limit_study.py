@@ -439,3 +439,69 @@ def test_provenance_names_the_executable_not_the_interface() -> None:
     assert record["solver_name"] == os.path.basename(executable)
     assert record["solver_version"] == ".".join(str(p) for p in opt.version())
     assert record["solver_executable_basename"] == os.path.basename(executable)
+
+
+def test_unloadable_solver_result_is_recorded_not_raised(monkeypatch) -> None:
+    """A solver that runs and returns garbage is an endpoint, not a crash.
+
+    Pyomo raises `bad status` when the solver produced a result it refuses to
+    load. That is how the IPOPT ladder actually ends at the paper mesh, so it
+    must be recorded rather than discarding every rung solved before it.
+    """
+    calls: list[int] = []
+
+    def fake_solve(**kwargs):
+        calls.append(1)
+        if len(calls) == 1:
+            return _stub_solution("optimal", "ok", "Ipopt: Optimal Solution Found.")
+        raise ValueError("Cannot load a SolverResults object with bad status: error")
+
+    monkeypatch.setattr(paper_ocp, "solve_paper_problem1", fake_solve)
+
+    results = run_ladder("problem1", ladder=(1.0, 0.5, 0.2))
+
+    assert len(results) == 2
+    terminal = results[-1]
+    assert terminal.converged is False
+    assert terminal.termination_condition == "error"
+    assert terminal.solver_status == "error"
+    assert "bad status" in terminal.solver_message
+    # The rung that solved is preserved, which is the point.
+    assert results[0].converged is True
+
+
+def test_other_value_errors_still_propagate(monkeypatch) -> None:
+    """Only the solver-returned-garbage case is absorbed; bugs must surface."""
+
+    def fake_solve(**kwargs):
+        raise ValueError("some programming error in the model builder")
+
+    monkeypatch.setattr(paper_ocp, "solve_paper_problem1", fake_solve)
+
+    with pytest.raises(ValueError, match="programming error"):
+        run_ladder("problem1", ladder=(1.0,))
+
+
+def test_format_handles_a_rung_with_no_solution_values() -> None:
+    """An `error` rung carries no endpoint, temperature, or residuals.
+
+    Formatting it must not raise: that would discard the whole ladder at the
+    point the study is trying to report where it stopped.
+    """
+    error_rung = RungResult(
+        problem="problem1",
+        factor=0.01,
+        conduction_time_s=0.469,
+        converged=False,
+        termination_condition="error",
+        solver_status="error",
+        solver_message="Cannot load a SolverResults object with bad status: error",
+    )
+
+    text = format_results({"problem1": [_rung(1.0, 6.1865), error_rung]})
+
+    assert "endpoint=n/a" in text
+    assert "maxT=n/a" in text
+    assert "viol=n/a" in text
+    assert "error/error" in text
+    assert "bad status" in text

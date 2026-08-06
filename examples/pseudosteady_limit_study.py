@@ -48,9 +48,12 @@ includes POUNCE.
 Cold starts fail below ``f = 1``, so every rung warm starts from the previous
 solution. A rung that returns a non-success termination is recorded with its
 solver status, termination condition, and message, and ends that problem's
-ladder, because where the ladder stops is itself the result. Configuration and
-execution failures (a missing or invalid solver binary, a solver that produces
-no loadable result) are *not* caught: they propagate so that a broken run
+ladder, because where the ladder stops is itself the result. A solver that
+runs and returns a result Pyomo refuses to load is recorded the same way, with
+`error` as its termination: that is a solver outcome, and on the paper mesh it
+is how the IPOPT ladder actually ends. Configuration failures -- a missing or
+invalid binary, a rejected option, a programming error -- happen before or
+instead of a solve and are *not* caught: they propagate so a broken run
 produces no baseline artifact at all.
 
 Run from the repository root::
@@ -267,12 +270,18 @@ def run_ladder(
     solver: str = "ipopt",
     solver_executable: str | None = None,
     solver_options: Mapping[str, Any] | None = None,
+    nlp_scaling_method: str | None = None,
+    on_rung: Any = None,
 ) -> list[RungResult]:
     """Walk one problem down the ladder, warm starting each rung from the last.
 
     Solves with ``require_success=False`` so a non-success termination is
     recorded with its solver metadata rather than raised past it. Configuration
     and execution failures are not caught and will abort the study.
+
+    ``on_rung`` is called with each :class:`RungResult` as it completes. An
+    aborting rung discards the in-memory list, so without it the rungs already
+    solved are lost and the operator cannot see how far the ladder got.
     """
     if problem not in PROBLEMS:
         raise ValueError(f"unsupported paper problem: {problem!r}")
@@ -280,6 +289,8 @@ def run_ladder(
         n_z=20, nfe=36, ncp=3
     )
     options = dict(DEFAULT_SOLVER_OPTIONS)
+    if nlp_scaling_method is not None:
+        options["nlp_scaling_method"] = nlp_scaling_method
     if solver_options:
         options.update(solver_options)
     solve = getattr(paper_ocp, f"solve_paper_{problem}")
@@ -289,16 +300,40 @@ def run_ladder(
     for factor in ladder:
         config = scaled_config(factor)
         tau = conduction_time_s(config, discretization.n_z)
-        solution = solve(
-            config=config,
-            discretization=discretization,
-            initialization=warm_start,
-            solver=solver,
-            solver_executable=solver_executable,
-            solver_options=options,
-            require_success=False,
-            return_model=True,
-        )
+        try:
+            solution = solve(
+                config=config,
+                discretization=discretization,
+                initialization=warm_start,
+                solver=solver,
+                solver_executable=solver_executable,
+                solver_options=options,
+                require_success=False,
+                return_model=True,
+            )
+        except ValueError as exc:
+            # Narrow on purpose. Pyomo raises this when the solver *ran* and
+            # returned a result it refuses to load, which is a solver outcome
+            # and the kind of endpoint this ladder exists to record. Anything
+            # else -- a missing binary, a rejected option, a programming error
+            # -- happens before or instead of a solve and must still propagate
+            # so a broken run emits no baseline.
+            if "bad status" not in str(exc):
+                raise
+            results.append(
+                RungResult(
+                    problem=problem,
+                    factor=factor,
+                    conduction_time_s=tau,
+                    converged=False,
+                    termination_condition="error",
+                    solver_status="error",
+                    solver_message=str(exc),
+                )
+            )
+            if on_rung is not None:
+                on_rung(results[-1])
+            break
         termination, status, message = _solver_report(solution)
         converged = _is_success(termination)
         record = RungResult(
@@ -319,6 +354,8 @@ def run_ladder(
             ),
         )
         results.append(record)
+        if on_rung is not None:
+            on_rung(record)
         if not converged:
             break
         warm_start = solution
@@ -341,6 +378,8 @@ def run_study(
     solver: str = "ipopt",
     solver_executable: str | None = None,
     discretization: paper_ocp.PaperDiscretization | None = None,
+    nlp_scaling_method: str | None = None,
+    on_rung: Any = None,
 ) -> dict[str, list[RungResult]]:
     """Run the ladder for each problem and return the per-problem results."""
     return {
@@ -350,6 +389,8 @@ def run_study(
             ladder=ladder,
             solver=solver,
             solver_executable=solver_executable,
+            nlp_scaling_method=nlp_scaling_method,
+            on_rung=on_rung,
         )
         for problem in problems
     }
@@ -362,22 +403,18 @@ def format_results(results: Mapping[str, Sequence[RungResult]]) -> str:
         lines.append(problem)
         for rung in rungs:
             state = "ok " if rung.converged else "NOT CONVERGED"
-            violation = (
-                f"{rung.max_constraint_violation:.2e}"
-                if rung.max_constraint_violation is not None
-                else "n/a"
-            )
-            cleared = (
-                f"{rung.ode_residual_times_thickness_squared_K_m2:.2e}"
-                if rung.ode_residual_times_thickness_squared_K_m2 is not None
-                else "n/a"
-            )
+
+            def _fmt(value: float | None, spec: str) -> str:
+                return "n/a" if value is None else format(value, spec)
+
             lines.append(
                 f"  f={rung.factor:<6g} tau={rung.conduction_time_s:8.3f} s  "
-                f"endpoint={rung.endpoint_hr:.4f} hr  "
-                f"maxT={rung.max_product_temperature_K:.4f} K  "
+                f"endpoint={_fmt(rung.endpoint_hr, '.4f')} hr  "
+                f"maxT={_fmt(rung.max_product_temperature_K, '.4f')} K  "
                 f"{rung.termination_condition}/{rung.solver_status} {state} "
-                f"viol={violation} odeK_m2={cleared}"
+                f"viol={_fmt(rung.max_constraint_violation, '.2e')} "
+                f"odeK_m2="
+                f"{_fmt(rung.ode_residual_times_thickness_squared_K_m2, '.2e')}"
             )
             if not rung.converged and rung.solver_message:
                 lines.append(f"      message: {rung.solver_message}")
@@ -405,6 +442,14 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--n-z", type=int, default=20)
     parser.add_argument("--nfe", type=int, default=36)
     parser.add_argument("--ncp", type=int, default=3)
+    parser.add_argument(
+        "--nlp-scaling",
+        default=None,
+        help=(
+            "nlp_scaling_method to pass to the solver. The best choice is "
+            "instance-dependent here; see benchmarks/README.md"
+        ),
+    )
     parser.add_argument("--output", type=Path, default=None, help="write JSON here")
     return parser.parse_args(argv)
 
@@ -412,22 +457,45 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 def main(argv: Sequence[str] | None = None) -> None:
     args = _parse_args(argv)
     provenance = solver_provenance(args.solver, args.solver_executable)
-    results = run_study(
-        problems=args.problems or PROBLEMS,
-        solver=args.solver,
-        solver_executable=args.solver_executable,
-        discretization=paper_ocp.PaperDiscretization(
-            n_z=args.n_z, nfe=args.nfe, ncp=args.ncp
-        ),
-    )
     print(
         f"solver: {provenance['solver_name']} {provenance['solver_version']} "
-        f"(via the {provenance['pyomo_interface']} interface)"
+        f"(via the {provenance['pyomo_interface']} interface)",
+        flush=True,
     )
+
+    def report(rung: RungResult) -> None:
+        state = "ok" if rung.converged else "NOT CONVERGED"
+        endpoint = (
+            "n/a" if rung.endpoint_hr is None else f"{rung.endpoint_hr:.4f} hr"
+        )
+        print(
+            f"  [{rung.problem} f={rung.factor:g}] "
+            f"{rung.termination_condition}/{rung.solver_status} {state} "
+            f"endpoint={endpoint}",
+            flush=True,
+        )
+
+    try:
+        results = run_study(
+            problems=args.problems or PROBLEMS,
+            solver=args.solver,
+            solver_executable=args.solver_executable,
+            discretization=paper_ocp.PaperDiscretization(
+                n_z=args.n_z, nfe=args.nfe, ncp=args.ncp
+            ),
+            nlp_scaling_method=args.nlp_scaling,
+            on_rung=report,
+        )
+    except Exception:
+        # A broken run writes no artifact, but the rungs streamed above stay on
+        # screen so the failure can be located without rerunning the ladder.
+        print("\nstudy aborted after the rungs above; no baseline written", flush=True)
+        raise
     print(format_results(results))
     if args.output is not None:
         payload = {
             "solver": provenance,
+            "nlp_scaling_method": args.nlp_scaling or "solver default (gradient-based)",
             "discretization": {"n_z": args.n_z, "nfe": args.nfe, "ncp": args.ncp},
             "results": {
                 problem: [rung.as_dict() for rung in rungs]

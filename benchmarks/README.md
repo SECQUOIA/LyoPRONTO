@@ -42,10 +42,39 @@ changes, or when adding a solver:
 ```bash
 python -m examples.pseudosteady_limit_study \
     --output benchmarks/results/pseudosteady_limit/ipopt.json
-python -m examples.pseudosteady_limit_study \
-    --solver-executable /path/to/pounce \
-    --output benchmarks/results/pseudosteady_limit/pounce.json
 ```
+
+To compare another solver without committing its baseline:
+
+```bash
+python -m examples.pseudosteady_limit_study --solver-executable /path/to/pounce
+```
+
+### The scaling method is a parameter, not a constant
+
+`nlp_scaling_method` materially changes these results, and no single value is
+best for every solver and instance. Measured at `n_z=20, nfe=36, ncp=3`:
+
+| | IPOPT 3.14.16, Problem 1 ladder | POUNCE 0.9.0, `f=1` cold start | POUNCE 0.9.0, `f=0.2` warm started |
+| --- | --- | --- | --- |
+| `none` | 3 converged rungs | solves | local infeasibility |
+| `gradient-based` (default) | **6 converged rungs** | local infeasibility | **solves, 33 iters** |
+
+The default is the solver default for both binaries and is what the recorded
+baseline uses, because it is much better for the reference solver and matches
+what upstream recommends for this residual regime (jkitchin/pounce#505). It is
+not uniformly better: it costs POUNCE the first rung of the cold-started ladder
+while winning it the warm-started instance.
+
+Use `--nlp-scaling` to vary it, and read `nlp_scaling_method` in each recorded
+file to see which value produced it. Do not treat a solver's ladder length as a
+property of the solver alone without checking that field.
+
+Only the IPOPT baseline is committed. The study runs against any
+AMPL-convention solver through `--solver-executable`, but a recorded
+non-IPOPT baseline needs the trade-off above stated beside it to be read
+correctly, and the POUNCE results are still moving upstream. Those belong with
+the wider solver-comparison work rather than here.
 
 Each file records the solver provenance itself: the Pyomo interface used, the
 solver identity, and the solver version from `opt.version()`. The interface and
