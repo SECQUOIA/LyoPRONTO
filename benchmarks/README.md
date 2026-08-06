@@ -47,10 +47,16 @@ python -m examples.pseudosteady_limit_study \
     --output benchmarks/results/pseudosteady_limit/pounce.json
 ```
 
-Record the solver version alongside any regenerated file, since the ladder's
-stopping point is a property of the solver as much as of the model. Do not widen
-the ladder or relax the iteration budget to make a rung converge: where it stops
-is the measurement.
+Each file records the solver provenance itself: the Pyomo interface used, the
+solver identity, and the solver version from `opt.version()`. The interface and
+the identity are different things, because a POUNCE run is driven through the
+`ipopt` ASL interface and would otherwise be indistinguishable from an IPOPT
+run. Executable paths are reduced to a basename so committed artifacts carry no
+host-specific paths.
+
+Do not widen the ladder or relax the iteration budget to make a rung converge:
+where it stops is the measurement, and it is a property of the solver version as
+much as of the model.
 
 Do not add new benchmark reference data by dropping files into an ignored local
 run directory. If a new benchmark artifact needs to become a repository

@@ -1,6 +1,10 @@
 {
-  "solver": "ipopt",
-  "solver_executable": null,
+  "solver": {
+    "pyomo_interface": "ipopt",
+    "solver_name": "ipopt",
+    "solver_version": "3.14.16.0",
+    "solver_executable_basename": null
+  },
   "discretization": {
     "n_z": 20,
     "nfe": 36,
@@ -17,11 +21,9 @@
         "max_product_temperature_K": 243.0000009999997,
         "termination_condition": "optimal",
         "solver_status": "ok",
+        "solver_message": "Ipopt 3.14.16\\x3a Solved To Acceptable Level.",
         "max_constraint_violation": 0.000247592578323963,
-        "max_landau_cleared_violation": 4.945277224325855e-13,
-        "solver_message": null,
-        "failure": null,
-        "feasible": true
+        "ode_residual_times_thickness_squared_K_m2": 4.945277224325855e-13
       },
       {
         "problem": "problem1",
@@ -32,11 +34,9 @@
         "max_product_temperature_K": 243.0000009999997,
         "termination_condition": "optimal",
         "solver_status": "ok",
+        "solver_message": "Ipopt 3.14.16\\x3a Solved To Acceptable Level.",
         "max_constraint_violation": 0.00043435746849920234,
-        "max_landau_cleared_violation": 9.304866485431965e-13,
-        "solver_message": null,
-        "failure": null,
-        "feasible": true
+        "ode_residual_times_thickness_squared_K_m2": 9.304866485431965e-13
       },
       {
         "problem": "problem1",
@@ -47,26 +47,22 @@
         "max_product_temperature_K": 243.0000009999997,
         "termination_condition": "optimal",
         "solver_status": "ok",
+        "solver_message": "Ipopt 3.14.16\\x3a Solved To Acceptable Level.",
         "max_constraint_violation": 0.0009025342818635984,
-        "max_landau_cleared_violation": 2.401702247714937e-12,
-        "solver_message": null,
-        "failure": null,
-        "feasible": true
+        "ode_residual_times_thickness_squared_K_m2": 2.401702247714937e-12
       },
       {
         "problem": "problem1",
         "factor": 0.1,
         "conduction_time_s": 4.693070345835796,
         "converged": false,
-        "endpoint_hr": null,
-        "max_product_temperature_K": null,
-        "termination_condition": null,
-        "solver_status": null,
-        "max_constraint_violation": null,
-        "max_landau_cleared_violation": null,
-        "solver_message": null,
-        "failure": "RuntimeError: Paper Problem 1 solve did not converge (status=warning, termination_condition=maxIterations)",
-        "feasible": null
+        "endpoint_hr": 6.480749211538843,
+        "max_product_temperature_K": 242.5109149463243,
+        "termination_condition": "maxIterations",
+        "solver_status": "warning",
+        "solver_message": "Ipopt 3.14.16\\x3a Maximum Number of Iterations Exceeded.",
+        "max_constraint_violation": 0.7110104813980922,
+        "ode_residual_times_thickness_squared_K_m2": 1.8019508348702993e-07
       }
     ],
     "problem2": [
@@ -79,11 +75,9 @@
         "max_product_temperature_K": 240.00000099999983,
         "termination_condition": "optimal",
         "solver_status": "ok",
+        "solver_message": "Ipopt 3.14.16\\x3a Solved To Acceptable Level.",
         "max_constraint_violation": 0.0002571215937271498,
-        "max_landau_cleared_violation": 6.752060145002707e-13,
-        "solver_message": null,
-        "failure": null,
-        "feasible": true
+        "ode_residual_times_thickness_squared_K_m2": 6.752060145002707e-13
       },
       {
         "problem": "problem2",
@@ -94,11 +88,9 @@
         "max_product_temperature_K": 240.0000009999998,
         "termination_condition": "optimal",
         "solver_status": "ok",
+        "solver_message": "Ipopt 3.14.16\\x3a Solved To Acceptable Level.",
         "max_constraint_violation": 0.0007144316859521369,
-        "max_landau_cleared_violation": 1.3775579410505385e-12,
-        "solver_message": null,
-        "failure": null,
-        "feasible": true
+        "ode_residual_times_thickness_squared_K_m2": 1.3775579410505385e-12
       },
       {
         "problem": "problem2",
@@ -109,26 +101,22 @@
         "max_product_temperature_K": 240.00000070508588,
         "termination_condition": "optimal",
         "solver_status": "ok",
+        "solver_message": "Ipopt 3.14.16\\x3a Solved To Acceptable Level.",
         "max_constraint_violation": 0.0009589043551464504,
-        "max_landau_cleared_violation": 1.8544799873042745e-10,
-        "solver_message": null,
-        "failure": null,
-        "feasible": true
+        "ode_residual_times_thickness_squared_K_m2": 1.8544799873042745e-10
       },
       {
         "problem": "problem2",
         "factor": 0.1,
         "conduction_time_s": 4.693070345835796,
         "converged": false,
-        "endpoint_hr": null,
-        "max_product_temperature_K": null,
-        "termination_condition": null,
-        "solver_status": null,
-        "max_constraint_violation": null,
-        "max_landau_cleared_violation": null,
-        "solver_message": null,
-        "failure": "RuntimeError: Paper Problem 2 solve did not converge (status=warning, termination_condition=maxIterations)",
-        "feasible": null
+        "endpoint_hr": 9.274545367489917,
+        "max_product_temperature_K": 239.56519070138916,
+        "termination_condition": "maxIterations",
+        "solver_status": "warning",
+        "solver_message": "Ipopt 3.14.16\\x3a Maximum Number of Iterations Exceeded.",
+        "max_constraint_violation": 0.003033629028649565,
+        "ode_residual_times_thickness_squared_K_m2": 7.343983181100998e-12
       }
     ]
   }

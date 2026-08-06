@@ -6,18 +6,36 @@ treats that region as pseudosteady, balancing shelf conduction against interface
 conduction algebraically with no time derivative of the temperature field. This
 study measures how much that formulation choice is worth for the paper's vial.
 
-The frozen heat capacity ``Cp_f`` enters ``paper_ocp`` only through the
-transient term: it sits in the denominators of the radiation and source terms
-and inside the diffusivity ``alpha = k / (rho Cp)``. Scaling it by ``f``
-therefore scales the whole temperature right-hand side by ``1/f``, which is
-equivalent to solving
+Scaling the frozen heat capacity ``Cp_f`` by ``f`` scales the thermal inertia of
+the frozen layer relative to conduction and the surface fluxes. In fixed
+(physical) coordinates the energy balance
 
-    f * dT/dt = RHS(T, S)
+    rho_f Cp_f dT/dt|_z = k_f d2T/dz2 + Q
 
-so ``f = 1`` is the paper's model and ``f -> 0`` approaches the pseudosteady
-formulation. The interface mass balance, vapour-pressure correlation, cake
-resistance, and shelf boundary condition are all independent of ``Cp_f``, so the
-ladder varies the formulation and nothing else.
+becomes ``f rho_f Cp_f dT/dt|_z = k_f d2T/dz2 + Q``, so ``f = 1`` is the paper's
+model and ``f -> 0`` recovers the pseudosteady balance ``0 = k_f d2T/dz2 + Q``.
+That limit is what the ladder walks toward.
+
+The transformed right-hand side does **not** scale uniformly, and it is worth
+being precise about why. ``paper_ocp`` solves on the Landau coordinate
+``psi = (z - S)/(H - S)``, so ``temperature_rhs`` is
+
+    diffusion + convection - side_loss + source
+
+where ``diffusion``, ``side_loss`` and ``source`` carry ``1/(rho_f Cp_f)`` and
+therefore scale by ``1/f``, while ``convection``, the moving-coordinate term
+``-((psi - 1) dS/dt / (H - S)) dT/dpsi``, is kinematic and independent of
+``Cp_f``. So
+
+    f * rhs(scaled) = rhs(base) + (f - 1) * convection
+
+rather than ``f * rhs(scaled) = rhs(base)``. Setting ``dS/dt = 0`` makes the
+relation exact, which is what
+``tests/test_pseudosteady_limit_study.py`` pins. For this vial the moving-front
+term is small: with ``f = 0.25`` and a nonuniform profile the residual mismatch
+is about 2.4e-4 against right-hand sides of order 40, so roughly 1e-5 relative.
+The ``f -> 0`` limit is unaffected, because the ``1/f`` terms dominate and force
+the pseudosteady balance regardless of the kinematic term.
 
 Two things make this useful beyond the physics question. Each rung is a
 progressively stiffer NLP built from one physical parameter, and the lower rungs
@@ -28,8 +46,12 @@ any solver following the AMPL ``<solver> <stub> -AMPL`` convention works, which
 includes POUNCE.
 
 Cold starts fail below ``f = 1``, so every rung warm starts from the previous
-converged solution. A failure is recorded and ends that problem's ladder rather
-than aborting the study, because where the ladder stops is itself the result.
+solution. A rung that returns a non-success termination is recorded with its
+solver status, termination condition, and message, and ends that problem's
+ladder, because where the ladder stops is itself the result. Configuration and
+execution failures (a missing or invalid solver binary, a solver that produces
+no loadable result) are *not* caught: they propagate so that a broken run
+produces no baseline artifact at all.
 
 Run from the repository root::
 
@@ -42,6 +64,7 @@ from __future__ import annotations
 import argparse
 import dataclasses
 import json
+import os
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -57,18 +80,29 @@ PROBLEMS: tuple[str, ...] = ("problem1", "problem2")
 #: fail because the solver cannot make progress, not because it ran out of room.
 DEFAULT_SOLVER_OPTIONS: dict[str, Any] = {"max_iter": 10000}
 
-
-#: Constraint violation above which a rung is reported as accepted rather than
-#: converged. IPOPT's ``acceptable_tol`` defaults to 1e-3 here, and a solve that
-#: stops at that level exits ``Solved To Acceptable Level`` while Pyomo still
-#: reports ``termination_condition: optimal``. Termination alone therefore
-#: cannot distinguish the two, so the study records the violation itself.
-FEASIBILITY_TOL = 1.0e-6
+#: Terminations that count as a usable result for this study.
+SUCCESS_TERMINATIONS = frozenset({"optimal", "locallyoptimal", "feasible"})
 
 
 @dataclasses.dataclass(frozen=True)
 class RungResult:
-    """One solve at one heat-capacity scale."""
+    """One solve at one heat-capacity scale.
+
+    ``max_constraint_violation`` is the largest violation over *every* active
+    constraint, in each constraint's own units.
+
+    ``ode_residual_times_thickness_squared_K_m2`` is a narrower diagnostic: the
+    largest ``temperature_ode`` residual multiplied by ``(H - S)^2``, in K m^2.
+    It exists because the Landau coordinate makes that equation's conduction
+    term carry ``1/(H - S)^2``, so its absolute residual is dominated by the
+    transform rather than by solution quality. It is deliberately *not* a
+    feasibility verdict: it covers one constraint family, it is dimensionful, and
+    the ``(H - S)^2`` factor falls to about 1.3e-9 at the default terminal
+    cutoff, so comparing it against a fixed threshold would accept arbitrarily
+    large residuals late in the horizon. Judge feasibility from
+    ``max_constraint_violation``, and read this only as evidence about how much
+    of that number is the coordinate transform.
+    """
 
     problem: str
     factor: float
@@ -78,27 +112,12 @@ class RungResult:
     max_product_temperature_K: float | None = None
     termination_condition: str | None = None
     solver_status: str | None = None
-    max_constraint_violation: float | None = None
-    max_landau_cleared_violation: float | None = None
     solver_message: str | None = None
-    failure: str | None = None
-
-    @property
-    def feasible(self) -> bool | None:
-        """Whether the returned point satisfies the constraints to tolerance.
-
-        ``None`` when no solution was returned. A rung can report a successful
-        termination and still be infeasible at this tolerance; that gap is the
-        reason this field exists.
-        """
-        if self.max_landau_cleared_violation is None:
-            return None
-        return self.max_landau_cleared_violation <= FEASIBILITY_TOL
+    max_constraint_violation: float | None = None
+    ode_residual_times_thickness_squared_K_m2: float | None = None
 
     def as_dict(self) -> dict[str, Any]:
-        record = dataclasses.asdict(self)
-        record["feasible"] = self.feasible
-        return record
+        return dataclasses.asdict(self)
 
 
 def scaled_config(factor: float) -> paper_ocp.PaperPrimaryDryingConfig:
@@ -123,17 +142,17 @@ def conduction_time_s(config: paper_ocp.PaperPrimaryDryingConfig, n_z: int) -> f
     return derived.product_height**2 / derived.frozen_diffusivity
 
 
-def _solver_report(solution: Mapping[str, Any]) -> tuple[str | None, str | None]:
-    metadata = solution.get("metadata", {})
-    return metadata.get("termination_condition"), metadata.get("status")
-
-
 def max_constraint_violation(model: Any) -> float:
-    """Return the largest constraint violation of the loaded solution.
+    """Return the largest violation over every active constraint *and* bound.
 
-    Measured on the model itself rather than taken from the solver, so the
-    number does not depend on what the solver chose to call success. Matches
-    IPOPT's own reported ``Constraint violation`` where both are available.
+    Measured on the model rather than taken from the solver, so the number does
+    not depend on what the solver chose to call success. Matches IPOPT's own
+    reported ``Constraint violation`` where both are available.
+
+    Variable bounds are included deliberately. An interface position driven past
+    the product height, or a shelf temperature outside its window, is a
+    feasibility failure that no ``Constraint`` object reports, so a
+    constraints-only measure would pass it silently.
     """
     import pyomo.environ as pyo  # imported here so the module stays import-light
 
@@ -150,28 +169,24 @@ def max_constraint_violation(model: Any) -> float:
         if constraint.upper is not None:
             violation = max(violation, body - pyo.value(constraint.upper))
         worst = max(worst, violation)
+
+    for variable in model.component_data_objects(pyo.Var, active=True):
+        value = variable.value
+        if value is None:
+            continue
+        if variable.lb is not None:
+            worst = max(worst, variable.lb - value)
+        if variable.ub is not None:
+            worst = max(worst, value - variable.ub)
     return worst
 
 
-def max_landau_cleared_violation(model: Any) -> float:
-    """Return the largest ``temperature_ode`` residual with the Landau factor cleared.
+def ode_residual_times_thickness_squared(model: Any) -> float:
+    """Return ``max |temperature_ode residual| * (H - S)^2``, in K m^2.
 
-    The frozen-region equations live on ``psi = (z - S)/(H - S)``, so their
-    conduction term carries ``1/(H - S)^2``. As the front approaches the vial
-    bottom that factor grows by four orders of magnitude, reaching about
-    7.7e8 at the terminal cutoff, and an absolute residual of 1e-4 there is a
-    relative residual near 1e-13.
-
-    IPOPT's convergence test is absolute, so it reports these solves as
-    ``Solved To Acceptable Level`` however well converged they are. Multiplying
-    each residual by ``(H - S)^2`` measures it in the units where the conduction
-    term is order one, which is the number that actually says whether the
-    equation is satisfied.
-
-    Note this is a reporting measure only. Multiplying the *constraints*
-    through by the same factor makes IPOPT report ``Optimal Solution Found`` on
-    a bit-identical solution whose residual on the original equation is no
-    better, so it changes the label rather than the answer.
+    See :class:`RungResult` for what this can and cannot be used for. It is a
+    diagnostic for how much of the absolute residual is the Landau transform,
+    not a feasibility test.
     """
     import pyomo.environ as pyo  # type: ignore[import-untyped]
 
@@ -192,6 +207,58 @@ def max_landau_cleared_violation(model: Any) -> float:
     return worst
 
 
+def _solver_report(solution: Mapping[str, Any]) -> tuple[str | None, str | None, str | None]:
+    metadata = solution.get("metadata", {})
+    return (
+        metadata.get("termination_condition"),
+        metadata.get("status"),
+        metadata.get("message"),
+    )
+
+
+def _is_success(termination: str | None) -> bool:
+    return str(termination).strip().lower() in SUCCESS_TERMINATIONS
+
+
+def solver_provenance(
+    solver: str, solver_executable: str | None
+) -> dict[str, Any]:
+    """Record which binary actually ran, and its version.
+
+    The Pyomo interface name and the solver identity are different things: a
+    POUNCE run is driven through the ``ipopt`` ASL interface, so the interface
+    name alone would label both baselines as IPOPT. The executable path is
+    reduced to its basename because the absolute path is host-specific.
+    """
+    import pyomo.environ as pyo  # type: ignore[import-untyped]
+
+    opt = (
+        pyo.SolverFactory(solver, executable=str(solver_executable))
+        if solver_executable is not None
+        else pyo.SolverFactory(solver)
+    )
+    resolved = None
+    try:
+        resolved = opt.executable()
+    except Exception:  # noqa: BLE001 - provenance must not break the run
+        resolved = solver_executable
+    version = None
+    try:
+        raw = opt.version()
+        if raw is not None:
+            version = ".".join(str(part) for part in raw)
+    except Exception:  # noqa: BLE001
+        version = None
+    return {
+        "pyomo_interface": solver,
+        "solver_name": os.path.basename(str(resolved)) if resolved else solver,
+        "solver_version": version,
+        "solver_executable_basename": (
+            os.path.basename(str(solver_executable)) if solver_executable else None
+        ),
+    }
+
+
 def run_ladder(
     problem: str,
     *,
@@ -201,7 +268,12 @@ def run_ladder(
     solver_executable: str | None = None,
     solver_options: Mapping[str, Any] | None = None,
 ) -> list[RungResult]:
-    """Walk one problem down the ladder, warm starting each rung from the last."""
+    """Walk one problem down the ladder, warm starting each rung from the last.
+
+    Solves with ``require_success=False`` so a non-success termination is
+    recorded with its solver metadata rather than raised past it. Configuration
+    and execution failures are not caught and will abort the study.
+    """
     if problem not in PROBLEMS:
         raise ValueError(f"unsupported paper problem: {problem!r}")
     discretization = discretization or paper_ocp.PaperDiscretization(
@@ -217,52 +289,44 @@ def run_ladder(
     for factor in ladder:
         config = scaled_config(factor)
         tau = conduction_time_s(config, discretization.n_z)
-        try:
-            solution = solve(
-                config=config,
-                discretization=discretization,
-                initialization=warm_start,
-                solver=solver,
-                solver_executable=solver_executable,
-                solver_options=options,
-                return_model=True,
-            )
-        except Exception as exc:  # noqa: BLE001 - a failed rung is a recorded result
-            results.append(
-                RungResult(
-                    problem=problem,
-                    factor=factor,
-                    conduction_time_s=tau,
-                    converged=False,
-                    failure=f"{type(exc).__name__}: {exc}",
-                )
-            )
+        solution = solve(
+            config=config,
+            discretization=discretization,
+            initialization=warm_start,
+            solver=solver,
+            solver_executable=solver_executable,
+            solver_options=options,
+            require_success=False,
+            return_model=True,
+        )
+        termination, status, message = _solver_report(solution)
+        converged = _is_success(termination)
+        record = RungResult(
+            problem=problem,
+            factor=factor,
+            conduction_time_s=tau,
+            converged=converged,
+            endpoint_hr=float(solution["states"]["time_hr"][-1]),
+            max_product_temperature_K=float(
+                solution["metrics"]["max_product_temperature_K"]
+            ),
+            termination_condition=termination,
+            solver_status=status,
+            solver_message=message,
+            max_constraint_violation=max_constraint_violation(solution["model"]),
+            ode_residual_times_thickness_squared_K_m2=(
+                ode_residual_times_thickness_squared(solution["model"])
+            ),
+        )
+        results.append(record)
+        if not converged:
             break
         warm_start = solution
-        termination, status = _solver_report(solution)
-        results.append(
-            RungResult(
-                problem=problem,
-                factor=factor,
-                conduction_time_s=tau,
-                converged=True,
-                endpoint_hr=float(solution["states"]["time_hr"][-1]),
-                max_product_temperature_K=float(
-                    solution["metrics"]["max_product_temperature_K"]
-                ),
-                termination_condition=termination,
-                solver_status=status,
-                max_constraint_violation=max_constraint_violation(solution["model"]),
-                max_landau_cleared_violation=max_landau_cleared_violation(
-                    solution["model"]
-                ),
-            )
-        )
     return results
 
 
 def endpoint_shift_percent(results: Sequence[RungResult]) -> float | None:
-    """Return the percentage change in endpoint from the first rung to the last."""
+    """Return the percentage change in endpoint across the converged rungs."""
     converged = [r for r in results if r.converged and r.endpoint_hr is not None]
     if len(converged) < 2:
         return None
@@ -297,28 +361,26 @@ def format_results(results: Mapping[str, Sequence[RungResult]]) -> str:
     for problem, rungs in results.items():
         lines.append(problem)
         for rung in rungs:
-            if rung.converged:
-                if rung.feasible is None:
-                    # No residual recorded: say so rather than implying a verdict.
-                    residuals = "viol=n/a cleared=n/a (not measured)"
-                else:
-                    verdict = "feasible" if rung.feasible else "ACCEPTED ONLY"
-                    residuals = (
-                        f"viol={rung.max_constraint_violation:.2e} "
-                        f"cleared={rung.max_landau_cleared_violation:.2e} ({verdict})"
-                    )
-                lines.append(
-                    f"  f={rung.factor:<6g} tau={rung.conduction_time_s:8.3f} s  "
-                    f"endpoint={rung.endpoint_hr:.4f} hr  "
-                    f"maxT={rung.max_product_temperature_K:.4f} K  "
-                    f"{rung.termination_condition}/{rung.solver_status}  "
-                    f"{residuals}"
-                )
-            else:
-                lines.append(
-                    f"  f={rung.factor:<6g} tau={rung.conduction_time_s:8.3f} s  "
-                    f"DID NOT CONVERGE: {rung.failure}"
-                )
+            state = "ok " if rung.converged else "NOT CONVERGED"
+            violation = (
+                f"{rung.max_constraint_violation:.2e}"
+                if rung.max_constraint_violation is not None
+                else "n/a"
+            )
+            cleared = (
+                f"{rung.ode_residual_times_thickness_squared_K_m2:.2e}"
+                if rung.ode_residual_times_thickness_squared_K_m2 is not None
+                else "n/a"
+            )
+            lines.append(
+                f"  f={rung.factor:<6g} tau={rung.conduction_time_s:8.3f} s  "
+                f"endpoint={rung.endpoint_hr:.4f} hr  "
+                f"maxT={rung.max_product_temperature_K:.4f} K  "
+                f"{rung.termination_condition}/{rung.solver_status} {state} "
+                f"viol={violation} odeK_m2={cleared}"
+            )
+            if not rung.converged and rung.solver_message:
+                lines.append(f"      message: {rung.solver_message}")
         shift = endpoint_shift_percent(rungs)
         if shift is not None:
             converged = [r for r in rungs if r.converged]
@@ -331,7 +393,7 @@ def format_results(results: Mapping[str, Sequence[RungResult]]) -> str:
 
 def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--solver", default="ipopt", help="Pyomo solver name")
+    parser.add_argument("--solver", default="ipopt", help="Pyomo solver interface")
     parser.add_argument(
         "--solver-executable",
         default=None,
@@ -349,6 +411,7 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
 def main(argv: Sequence[str] | None = None) -> None:
     args = _parse_args(argv)
+    provenance = solver_provenance(args.solver, args.solver_executable)
     results = run_study(
         problems=args.problems or PROBLEMS,
         solver=args.solver,
@@ -357,11 +420,14 @@ def main(argv: Sequence[str] | None = None) -> None:
             n_z=args.n_z, nfe=args.nfe, ncp=args.ncp
         ),
     )
+    print(
+        f"solver: {provenance['solver_name']} {provenance['solver_version']} "
+        f"(via the {provenance['pyomo_interface']} interface)"
+    )
     print(format_results(results))
     if args.output is not None:
         payload = {
-            "solver": args.solver,
-            "solver_executable": args.solver_executable,
+            "solver": provenance,
             "discretization": {"n_z": args.n_z, "nfe": args.nfe, "ncp": args.ncp},
             "results": {
                 problem: [rung.as_dict() for rung in rungs]

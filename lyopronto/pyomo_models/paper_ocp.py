@@ -1737,7 +1737,19 @@ def solve_paper_problem1(
     require_success: bool = True,
     return_model: bool = False,
 ) -> dict[str, Any]:
-    """Build and solve Paper Problem 1 with Pyomo/IPOPT."""
+    """Build and solve Paper Problem 1 with Pyomo and an NLP solver.
+
+    ``solver`` names the Pyomo solver interface and ``solver_executable`` names
+    the binary to run instead of resolving one from ``PATH``. Any solver
+    following the AMPL ``<solver> <stub> -AMPL`` convention can be driven
+    through the ``ipopt`` interface that way, so the interface name and the
+    solver identity are not the same thing; record both when reporting results.
+
+    ``require_success=False`` returns the solution with its solver metadata
+    (``status``, ``termination_condition``, ``message``) instead of raising on a
+    non-success termination, which is what a caller wants when the termination
+    itself is the measurement.
+    """
     return _solve_paper_problem(
         "problem1",
         config=config,
@@ -1763,7 +1775,19 @@ def solve_paper_problem2(
     require_success: bool = True,
     return_model: bool = False,
 ) -> dict[str, Any]:
-    """Build and solve Paper Problem 2 with Pyomo/IPOPT."""
+    """Build and solve Paper Problem 2 with Pyomo and an NLP solver.
+
+    ``solver`` names the Pyomo solver interface and ``solver_executable`` names
+    the binary to run instead of resolving one from ``PATH``. Any solver
+    following the AMPL ``<solver> <stub> -AMPL`` convention can be driven
+    through the ``ipopt`` interface that way, so the interface name and the
+    solver identity are not the same thing; record both when reporting results.
+
+    ``require_success=False`` returns the solution with its solver metadata
+    (``status``, ``termination_condition``, ``message``) instead of raising on a
+    non-success termination, which is what a caller wants when the termination
+    itself is the measurement.
+    """
     return _solve_paper_problem(
         "problem2",
         config=config,
@@ -1956,10 +1980,16 @@ def extract_paper_solution(model: Any, results: Any | None = None) -> dict[str, 
 
     status = None
     termination_condition = None
+    message = None
     if results is not None:
         solver_info = getattr(results, "solver", None)
         status = str(getattr(solver_info, "status", None))
         termination_condition = str(getattr(solver_info, "termination_condition", None))
+        # The message is the only field that distinguishes a solve converged to
+        # `tol` from one accepted at `acceptable_tol`: Pyomo maps both to
+        # `termination_condition: optimal`. See issue #142.
+        raw_message = getattr(solver_info, "message", None)
+        message = None if raw_message is None else str(raw_message)
 
     return {
         "states": {
@@ -1981,6 +2011,7 @@ def extract_paper_solution(model: Any, results: Any | None = None) -> dict[str, 
         "metadata": {
             "status": status,
             "termination_condition": termination_condition,
+            "message": message,
             "n_z": discretization.n_z,
             "nfe": discretization.nfe,
             "ncp": discretization.ncp,

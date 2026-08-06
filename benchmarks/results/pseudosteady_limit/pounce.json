@@ -1,6 +1,10 @@
 {
-  "solver": "ipopt",
-  "solver_executable": "/home/bernalde/miniconda3/bin/pounce",
+  "solver": {
+    "pyomo_interface": "ipopt",
+    "solver_name": "pounce",
+    "solver_version": "0.7.0.0",
+    "solver_executable_basename": "pounce"
+  },
   "discretization": {
     "n_z": 20,
     "nfe": 36,
@@ -17,11 +21,9 @@
         "max_product_temperature_K": 243.0000009999997,
         "termination_condition": "optimal",
         "solver_status": "warning",
+        "solver_message": "POUNCE 0.7.0\\x3a SolvedToAcceptableLevel",
         "max_constraint_violation": 0.0002475925783317623,
-        "max_landau_cleared_violation": 4.67902472563734e-13,
-        "solver_message": null,
-        "failure": null,
-        "feasible": true
+        "ode_residual_times_thickness_squared_K_m2": 4.67902472563734e-13
       },
       {
         "problem": "problem1",
@@ -32,26 +34,22 @@
         "max_product_temperature_K": 243.00000097968584,
         "termination_condition": "optimal",
         "solver_status": "warning",
+        "solver_message": "POUNCE 0.7.0\\x3a SolvedToAcceptableLevel",
         "max_constraint_violation": 0.00038162891416793077,
-        "max_landau_cleared_violation": 9.325020656343338e-13,
-        "solver_message": null,
-        "failure": null,
-        "feasible": true
+        "ode_residual_times_thickness_squared_K_m2": 9.325020656343338e-13
       },
       {
         "problem": "problem1",
         "factor": 0.2,
         "conduction_time_s": 9.386140691671592,
         "converged": false,
-        "endpoint_hr": null,
-        "max_product_temperature_K": null,
-        "termination_condition": null,
-        "solver_status": null,
-        "max_constraint_violation": null,
-        "max_landau_cleared_violation": null,
-        "solver_message": null,
-        "failure": "RuntimeError: Paper Problem 1 solve did not converge (status=warning, termination_condition=infeasible)",
-        "feasible": null
+        "endpoint_hr": 6.155150447752694,
+        "max_product_temperature_K": 243.0000009999997,
+        "termination_condition": "infeasible",
+        "solver_status": "warning",
+        "solver_message": "POUNCE 0.7.0\\x3a InfeasibleProblemDetected",
+        "max_constraint_violation": 0.0009025342734907404,
+        "ode_residual_times_thickness_squared_K_m2": 2.470612500045513e-12
       }
     ],
     "problem2": [
@@ -64,11 +62,9 @@
         "max_product_temperature_K": 240.00000099999983,
         "termination_condition": "optimal",
         "solver_status": "warning",
+        "solver_message": "POUNCE 0.7.0\\x3a SolvedToAcceptableLevel",
         "max_constraint_violation": 0.00025712159372182075,
-        "max_landau_cleared_violation": 6.912735693358779e-13,
-        "solver_message": null,
-        "failure": null,
-        "feasible": true
+        "ode_residual_times_thickness_squared_K_m2": 6.912735693358779e-13
       },
       {
         "problem": "problem2",
@@ -79,26 +75,22 @@
         "max_product_temperature_K": 240.0000009867751,
         "termination_condition": "optimal",
         "solver_status": "warning",
+        "solver_message": "POUNCE 0.7.0\\x3a SolvedToAcceptableLevel",
         "max_constraint_violation": 0.0007653577075588114,
-        "max_landau_cleared_violation": 1.3629400508793228e-12,
-        "solver_message": null,
-        "failure": null,
-        "feasible": true
+        "ode_residual_times_thickness_squared_K_m2": 1.3629400508793228e-12
       },
       {
         "problem": "problem2",
         "factor": 0.2,
         "conduction_time_s": 9.386140691671592,
         "converged": false,
-        "endpoint_hr": null,
-        "max_product_temperature_K": null,
-        "termination_condition": null,
-        "solver_status": null,
-        "max_constraint_violation": null,
-        "max_landau_cleared_violation": null,
-        "solver_message": null,
-        "failure": "RuntimeError: Paper Problem 2 solve did not converge (status=warning, termination_condition=infeasible)",
-        "feasible": null
+        "endpoint_hr": 8.997748727159347,
+        "max_product_temperature_K": 239.83513195991694,
+        "termination_condition": "infeasible",
+        "solver_status": "warning",
+        "solver_message": "POUNCE 0.7.0\\x3a InfeasibleProblemDetected",
+        "max_constraint_violation": 0.0009896518619127992,
+        "ode_residual_times_thickness_squared_K_m2": 7.031727889721754e-11
       }
     ]
   }

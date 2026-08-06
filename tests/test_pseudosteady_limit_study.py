@@ -1,27 +1,32 @@
 """Tests for the pseudosteady-limit continuation study.
 
-These cover the study's own logic (scaling, reporting, argument handling) with
-no solver calls, so they run in the fast lane. The solves themselves are
-exercised by the recorded baselines under ``benchmarks/results/``.
+Most of these cover the study's own logic with no solver calls, so they run in
+the fast lane. The scaling-relation tests build models but do not solve them.
 """
 
 from __future__ import annotations
+
+import dataclasses
 
 import numpy as np
 import pytest
 
 from examples.pseudosteady_limit_study import (
     DEFAULT_LADDER,
-    FEASIBILITY_TOL,
     PROBLEMS,
+    SUCCESS_TERMINATIONS,
     RungResult,
     conduction_time_s,
     endpoint_shift_percent,
     format_results,
+    ode_residual_times_thickness_squared,
     run_ladder,
     scaled_config,
+    solver_provenance,
 )
 from lyopronto.pyomo_models import paper_ocp
+
+pyo = pytest.importorskip("pyomo.environ", reason="Pyomo not available")
 
 
 def test_ladder_descends_toward_the_pseudosteady_limit() -> None:
@@ -43,9 +48,9 @@ def test_scaling_touches_only_the_heat_capacity() -> None:
         scaled_derived.frozen_heat_capacity,
         0.25 * base_derived.frozen_heat_capacity,
     )
-    # Conductivity, densities, and geometry must not move with the scale factor,
-    # otherwise the ladder would vary more than the transient term.
-    assert np.isclose(scaled_derived.frozen_conductivity, base_derived.frozen_conductivity)
+    assert np.isclose(
+        scaled_derived.frozen_conductivity, base_derived.frozen_conductivity
+    )
     assert np.isclose(scaled_derived.frozen_density, base_derived.frozen_density)
     assert np.isclose(scaled_derived.product_height, base_derived.product_height)
     # alpha = k / (rho Cp), so it scales inversely.
@@ -74,31 +79,156 @@ def test_run_ladder_rejects_an_unknown_problem_before_solving() -> None:
         run_ladder("problem3")
 
 
-def _rung(
-    factor: float,
-    endpoint: float | None,
-    converged: bool = True,
-    violation: float | None = 1.0e-9,
-    cleared: float | None = 1.0e-13,
-) -> RungResult:
+# --------------------------------------------------------------------------
+# The scaling relation the study rests on
+# --------------------------------------------------------------------------
+
+_SCALE = 0.25
+
+
+def _rhs_at_shared_state(config, *, dsdt: float) -> dict:
+    """Evaluate temperature_rhs on one fixed nonuniform state.
+
+    ``temperature_ode`` is ``dT_dtau - t_final * rhs``, so pinning
+    ``dT_dtau = 0`` and ``t_final = 1`` makes the constraint body ``-rhs``.
+    """
+    discretization = paper_ocp.PaperDiscretization(n_z=8, nfe=4, ncp=2)
+    model = paper_ocp.create_paper_problem1_model(config, discretization)
+    height = model._paper_derived.product_height
+    for t in model.t:
+        for i in model.z:
+            model.T[i, t].set_value(230.0 + 8.0 * np.sin(3.0 * i + 2.0 * float(t)))
+        model.S[t].set_value(0.4 * height * (0.2 + float(t)))
+        model.Tb[t].set_value(250.0)
+        model.dSdt[t].set_value(dsdt)
+        for i in model.z:
+            model.dT_dtau[i, t].set_value(0.0)
+    model.t_final.set_value(1.0)
+    return {key: -pyo.value(model.temperature_ode[key].body) for key in model.temperature_ode}
+
+
+def test_scaling_is_exact_only_when_the_front_is_stationary() -> None:
+    """With dS/dt = 0 the transformed RHS scales exactly by 1/f.
+
+    This is the precise form of the study's premise. The moving-coordinate term
+    is the only part of temperature_rhs that does not carry 1/(rho Cp).
+    """
+    base = _rhs_at_shared_state(paper_ocp.PaperPrimaryDryingConfig(), dsdt=0.0)
+    scaled = _rhs_at_shared_state(scaled_config(_SCALE), dsdt=0.0)
+
+    mismatch = max(abs(_SCALE * scaled[k] - base[k]) for k in base)
+
+    assert mismatch == 0.0
+
+
+def test_a_moving_front_breaks_the_naive_scaling_claim() -> None:
+    """With dS/dt != 0 the relation is f*rhs_scaled = rhs_base + (f-1)*convection.
+
+    Pinned so nobody restores the simpler but false claim that scaling Cp is
+    equivalent to solving f*dT/dt = RHS.
+    """
+    base = _rhs_at_shared_state(paper_ocp.PaperPrimaryDryingConfig(), dsdt=3.0e-7)
+    scaled = _rhs_at_shared_state(scaled_config(_SCALE), dsdt=3.0e-7)
+
+    mismatch = max(abs(_SCALE * scaled[k] - base[k]) for k in base)
+
+    assert mismatch > 1.0e-6, "the moving-front term must show up as a real mismatch"
+    typical = np.median([abs(v) for v in base.values()])
+    assert mismatch / typical < 1.0e-3, (
+        "the deviation should stay small relative to the RHS for this vial"
+    )
+
+
+# --------------------------------------------------------------------------
+# The ODE diagnostic is not a feasibility test
+# --------------------------------------------------------------------------
+
+
+def test_ode_diagnostic_would_accept_a_huge_residual_near_the_cutoff() -> None:
+    """Document why this quantity carries no feasibility verdict.
+
+    At the default terminal thickness the (H - S)^2 factor is about 1.3e-9, so
+    even a 100 K residual maps below any small threshold. This is the
+    over-acceptance the metric must never be used to decide.
+    """
+    discretization = paper_ocp.PaperDiscretization(n_z=5, nfe=2, ncp=2)
+    model = paper_ocp.create_paper_problem1_model(None, discretization)
+    height = model._paper_derived.product_height
+    terminal_thickness = height * (1.0 - discretization.terminal_drying_fraction)
+
+    scaled_residual = 100.0 * terminal_thickness**2
+
+    assert terminal_thickness < 1.0e-4
+    assert scaled_residual < 1.0e-6, (
+        "a 100 K residual maps under 1e-6, which is why there is no verdict here"
+    )
+
+
+def test_constraint_violation_covers_bounds_not_just_constraints() -> None:
+    """A bound violation is a feasibility failure no Constraint object reports.
+
+    The reviewer's point on #141: an interface position driven past the product
+    height must not pass a feasibility measure. Pyomo records that as a variable
+    bound, so a constraints-only scan would miss it entirely. Checked on a
+    minimal model so the assertion isolates bound handling rather than competing
+    with residuals from an arbitrary state of the paper model.
+    """
+    from examples.pseudosteady_limit_study import max_constraint_violation
+
+    model = pyo.ConcreteModel()
+    model.x = pyo.Var(bounds=(0.0, 1.0), initialize=0.5)
+    model.y = pyo.Var(initialize=0.5)
+    model.balance = pyo.Constraint(expr=model.x == model.y)
+
+    assert max_constraint_violation(model) == pytest.approx(0.0)
+
+    # Constraint still satisfied; only the upper bound is broken.
+    model.x.set_value(4.0)
+    model.y.set_value(4.0)
+
+    assert max_constraint_violation(model) == pytest.approx(3.0)
+
+
+def test_ode_diagnostic_returns_nan_without_the_constraint() -> None:
+    """A model lacking temperature_ode must not silently report zero."""
+
+    class _Bare:
+        pass
+
+    assert np.isnan(ode_residual_times_thickness_squared(_Bare()))
+
+
+# --------------------------------------------------------------------------
+# Result records and reporting
+# --------------------------------------------------------------------------
+
+
+def _rung(factor: float, endpoint: float | None, converged: bool = True) -> RungResult:
     return RungResult(
         problem="problem1",
         factor=factor,
         conduction_time_s=46.9 * factor,
         converged=converged,
         endpoint_hr=endpoint,
-        max_product_temperature_K=243.0 if converged else None,
-        termination_condition="optimal" if converged else None,
-        solver_status="ok" if converged else None,
-        max_constraint_violation=violation if converged else None,
-        max_landau_cleared_violation=cleared if converged else None,
-        failure=None if converged else "RuntimeError: did not converge",
+        max_product_temperature_K=243.0,
+        termination_condition="optimal" if converged else "maxIterations",
+        solver_status="ok" if converged else "warning",
+        solver_message="Ipopt 3.14.16: Solved To Acceptable Level."
+        if converged
+        else "Ipopt 3.14.16: Maximum Number of Iterations Exceeded.",
+        max_constraint_violation=2.48e-4,
+        ode_residual_times_thickness_squared_K_m2=4.95e-13,
     )
 
 
+def test_success_terminations_exclude_failure_states() -> None:
+    assert "optimal" in SUCCESS_TERMINATIONS
+    for bad in ("infeasible", "maxiterations", "maxtimelimit", "error", "unbounded"):
+        assert bad not in SUCCESS_TERMINATIONS
+
+
 def test_endpoint_shift_uses_the_converged_rungs_only() -> None:
-    """A failed tail rung must not be read as an endpoint."""
-    rungs = [_rung(1.0, 6.1865), _rung(0.5, 6.1669), _rung(0.2, None, converged=False)]
+    rungs = [_rung(1.0, 6.1865), _rung(0.5, 6.1669), _rung(0.2, 6.10, converged=False)]
 
     shift = endpoint_shift_percent(rungs)
 
@@ -110,64 +240,78 @@ def test_endpoint_shift_is_undefined_with_fewer_than_two_solves() -> None:
     assert endpoint_shift_percent([]) is None
 
 
-def test_format_reports_a_failed_rung_rather_than_hiding_it() -> None:
-    """Where the ladder stops is a result, so it must appear in the output."""
-    rungs = [_rung(1.0, 6.1865), _rung(0.5, None, converged=False)]
+def test_a_non_success_rung_keeps_its_solver_metadata() -> None:
+    """Issue #140 requires per-rung termination and message, including failures."""
+    rung = _rung(0.2, 6.10, converged=False)
+    record = rung.as_dict()
+
+    assert record["converged"] is False
+    assert record["termination_condition"] == "maxIterations"
+    assert record["solver_status"] == "warning"
+    assert "Maximum Number of Iterations" in record["solver_message"]
+    assert record["max_constraint_violation"] is not None
+
+
+def test_format_reports_a_failed_rung_and_its_message() -> None:
+    rungs = [_rung(1.0, 6.1865), _rung(0.5, 6.10, converged=False)]
 
     text = format_results({"problem1": rungs})
 
-    assert "DID NOT CONVERGE" in text
-    assert "did not converge" in text
-    assert "f=1" in text
+    assert "NOT CONVERGED" in text
+    assert "Maximum Number of Iterations" in text
 
 
-def test_format_reports_termination_and_status_per_rung() -> None:
-    """Acceptable-level terminations must stay visible, not collapse to success."""
-    rung = RungResult(
-        problem="problem1",
-        factor=1.0,
-        conduction_time_s=46.9,
-        converged=True,
-        endpoint_hr=6.1865,
-        max_product_temperature_K=243.0,
-        termination_condition="optimal",
-        solver_status="warning",
-    )
+def test_format_labels_the_ode_diagnostic_with_its_units() -> None:
+    """The column must not read as a dimensionless feasibility measure."""
+    text = format_results({"problem1": [_rung(1.0, 6.1865)]})
 
-    text = format_results({"problem1": [rung]})
+    assert "odeK_m2=" in text
+    assert "feasible" not in text
 
-    assert "optimal/warning" in text
+
+def test_rung_record_has_no_feasibility_verdict() -> None:
+    """Removed deliberately: see RungResult's docstring."""
+    record = _rung(1.0, 6.1865).as_dict()
+
+    assert "feasible" not in record
+    assert "ode_residual_times_thickness_squared_K_m2" in record
 
 
 def test_problems_cover_both_paper_cases() -> None:
     assert set(PROBLEMS) == {"problem1", "problem2"}
 
 
-def test_feasibility_verdict_uses_the_scale_corrected_residual() -> None:
-    """The absolute violation cannot decide feasibility for this transcription.
-
-    The Landau coordinate makes the conduction term carry ``1/(H - S)^2``, so a
-    well-converged solve still shows an absolute violation around 1e-4. Judging
-    on that number would mark every rung infeasible; judging on the cleared one
-    reflects what the solver actually achieved.
-    """
-    rung = _rung(1.0, 6.1865, violation=2.48e-4, cleared=4.95e-13)
-
-    assert rung.max_constraint_violation > FEASIBILITY_TOL
-    assert rung.feasible is True
+# --------------------------------------------------------------------------
+# Provenance
+# --------------------------------------------------------------------------
 
 
-def test_a_genuinely_bad_solve_is_reported_infeasible() -> None:
-    """A large cleared residual must still fail the verdict."""
-    rung = _rung(1.0, 6.1865, violation=2.48e-4, cleared=1.0e-2)
+def test_provenance_separates_interface_from_solver_identity() -> None:
+    """A POUNCE run driven through the ipopt interface must not report as IPOPT."""
+    record = solver_provenance("ipopt", "/somewhere/else/pounce")
 
-    assert rung.feasible is False
+    assert record["pyomo_interface"] == "ipopt"
+    assert record["solver_executable_basename"] == "pounce"
+    assert "/somewhere/else" not in json_safe(record)
 
 
-def test_rung_dict_carries_both_residual_measures() -> None:
-    """Recorded baselines must keep both numbers, not just the verdict."""
-    record = _rung(1.0, 6.1865, violation=2.48e-4, cleared=4.95e-13).as_dict()
+def test_provenance_records_no_absolute_host_paths() -> None:
+    """Baselines are committed, so host-specific paths must not leak into them."""
+    record = solver_provenance("ipopt", None)
 
-    assert record["max_constraint_violation"] == pytest.approx(2.48e-4)
-    assert record["max_landau_cleared_violation"] == pytest.approx(4.95e-13)
-    assert record["feasible"] is True
+    text = json_safe(record)
+    assert "/home/" not in text
+    assert "/tmp/" not in text
+
+
+def json_safe(record: dict) -> str:
+    import json
+
+    return json.dumps(record)
+
+
+def test_rung_dataclass_is_frozen() -> None:
+    """Recorded results must not be mutated after the fact."""
+    rung = _rung(1.0, 6.1865)
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        rung.factor = 2.0  # type: ignore[misc]
