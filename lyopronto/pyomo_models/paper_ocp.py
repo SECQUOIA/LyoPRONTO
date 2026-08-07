@@ -1749,6 +1749,16 @@ def solve_paper_problem1(
     (``status``, ``termination_condition``, ``message``) instead of raising on a
     non-success termination, which is what a caller wants when the termination
     itself is the measurement.
+
+    Scaling is chosen from the model, not fixed: ``user-scaling`` when the model
+    carries a ``scaling_factor`` suffix (``apply_scaling=True``), otherwise
+    ``gradient-based``. Because ``apply_scaling`` defaults to ``False`` this
+    method defaults to ``gradient-based``, which is a change from earlier
+    releases that requested ``user-scaling`` unconditionally -- and did so even
+    with no suffix present, where IPOPT scales every entry by 1.0 and the solve
+    is effectively unscaled. Pass ``nlp_scaling_method`` in ``solver_options``
+    to override. The choice moves the reported residual and can move reported
+    bound violations within the ``bound_relax_factor`` allowance.
     """
     return _solve_paper_problem(
         "problem1",
@@ -1787,6 +1797,16 @@ def solve_paper_problem2(
     (``status``, ``termination_condition``, ``message``) instead of raising on a
     non-success termination, which is what a caller wants when the termination
     itself is the measurement.
+
+    Scaling is chosen from the model, not fixed: ``user-scaling`` when the model
+    carries a ``scaling_factor`` suffix (``apply_scaling=True``), otherwise
+    ``gradient-based``. Because ``apply_scaling`` defaults to ``False`` this
+    method defaults to ``gradient-based``, which is a change from earlier
+    releases that requested ``user-scaling`` unconditionally -- and did so even
+    with no suffix present, where IPOPT scales every entry by 1.0 and the solve
+    is effectively unscaled. Pass ``nlp_scaling_method`` in ``solver_options``
+    to override. The choice moves the reported residual and can move reported
+    bound violations within the ``bound_relax_factor`` allowance.
     """
     return _solve_paper_problem(
         "problem2",
