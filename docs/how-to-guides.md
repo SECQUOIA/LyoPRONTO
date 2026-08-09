@@ -178,6 +178,54 @@ nonlinear subproblems locally, the result is not a global optimality
 certificate. Agreement checks the GDP switching formulation independently;
 it does not independently validate the shared physical equations.
 
+### Compare the transient and pseudosteady frozen-region models
+
+`examples/pseudosteady_limit_study.py` walks the paper-reference models from
+their transient frozen-region PDE toward the pseudosteady formulation that the
+production LyoPRONTO path uses. Scaling the frozen heat capacity by `f` scales
+the layer's thermal inertia relative to conduction and the surface fluxes, so in
+fixed coordinates `f rho Cp dT/dt|_z = k d2T/dz2 + Q` and `f -> 0` recovers the
+pseudosteady balance.
+
+The transformed right-hand side does not scale uniformly: the Landau
+moving-coordinate term is kinematic and independent of the heat capacity, so
+`f * rhs(scaled) = rhs(base) + (f - 1) * convection`. Setting `dS/dt = 0` makes
+the relation exact, which the tests pin. For this vial the moving-front term is
+about 1e-5 of the right-hand side, and the `f -> 0` limit is unaffected.
+
+```bash
+python -m examples.pseudosteady_limit_study
+```
+
+Each rung warm starts from the previous solution because cold starts fail below
+`f = 1`. A rung that does not converge is recorded and ends that problem's
+ladder, since where the ladder stops is part of the result.
+
+The same ladder serves as a solver-comparison instance set. `--solver-executable`
+selects the NLP binary without changing model code, for any solver following the
+AMPL `<solver> <stub> -AMPL` convention:
+
+```bash
+python -m examples.pseudosteady_limit_study --solver-executable /path/to/pounce
+```
+
+The study records the termination condition, solver status, and solver message
+for every rung including the one that stops the ladder, because solvers differ
+in what they call success: a result accepted at an acceptable-level tolerance
+and one converged to full tolerance both arrive as `optimal` through Pyomo, and
+only the message separates them (see issue #142).
+
+Feasibility is judged from `max_constraint_violation`, which covers every active
+constraint and every variable bound. The companion
+`ode_residual_times_thickness_squared_K_m2` is a diagnostic for how much of that
+number is the Landau transform rather than solution quality; it is dimensionful
+and covers one constraint family, so it carries no verdict of its own.
+
+Configuration and execution failures, such as a missing solver binary, propagate
+rather than being recorded as a non-converged rung, so a broken run produces no
+baseline. Recorded baselines and regeneration instructions are in
+`benchmarks/README.md`.
+
 ## Run Notebook Examples
 
 The MkDocs notebook examples are tracked under `docs/examples/`:
