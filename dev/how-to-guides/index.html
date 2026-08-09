@@ -326,6 +326,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#compare-the-transient-and-pseudosteady-frozen-region-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compare the transient and pseudosteady frozen-region models
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -846,6 +857,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#compare-the-transient-and-pseudosteady-frozen-region-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compare the transient and pseudosteady frozen-region models
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1045,6 +1067,42 @@ and an extrapolation to the paper's <code>S = H</code> endpoint. Because IPOPT s
 nonlinear subproblems locally, the result is not a global optimality
 certificate. Agreement checks the GDP switching formulation independently;
 it does not independently validate the shared physical equations.</p>
+<h3 id="compare-the-transient-and-pseudosteady-frozen-region-models">Compare the transient and pseudosteady frozen-region models</h3>
+<p><code>examples/pseudosteady_limit_study.py</code> walks the paper-reference models from
+their transient frozen-region PDE toward the pseudosteady formulation that the
+production LyoPRONTO path uses. Scaling the frozen heat capacity by <code>f</code> scales
+the layer's thermal inertia relative to conduction and the surface fluxes, so in
+fixed coordinates <code>f rho Cp dT/dt|_z = k d2T/dz2 + Q</code> and <code>f -&gt; 0</code> recovers the
+pseudosteady balance.</p>
+<p>The transformed right-hand side does not scale uniformly: the Landau
+moving-coordinate term is kinematic and independent of the heat capacity, so
+<code>f * rhs(scaled) = rhs(base) + (f - 1) * convection</code>. Setting <code>dS/dt = 0</code> makes
+the relation exact, which the tests pin. For this vial the moving-front term is
+about 1e-5 of the right-hand side, and the <code>f -&gt; 0</code> limit is unaffected.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>python<span class="w"> </span>-m<span class="w"> </span>examples.pseudosteady_limit_study
+</span></code></pre></div>
+<p>Each rung warm starts from the previous solution because cold starts fail below
+<code>f = 1</code>. A rung that does not converge is recorded and ends that problem's
+ladder, since where the ladder stops is part of the result.</p>
+<p>The same ladder serves as a solver-comparison instance set. <code>--solver-executable</code>
+selects the NLP binary without changing model code, for any solver following the
+AMPL <code>&lt;solver&gt; &lt;stub&gt; -AMPL</code> convention:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>python<span class="w"> </span>-m<span class="w"> </span>examples.pseudosteady_limit_study<span class="w"> </span>--solver-executable<span class="w"> </span>/path/to/pounce
+</span></code></pre></div>
+<p>The study records the termination condition, solver status, and solver message
+for every rung including the one that stops the ladder, because solvers differ
+in what they call success: a result accepted at an acceptable-level tolerance
+and one converged to full tolerance both arrive as <code>optimal</code> through Pyomo, and
+only the message separates them (see issue #142).</p>
+<p>Feasibility is judged from <code>max_constraint_violation</code>, which covers every active
+constraint and every variable bound. The companion
+<code>ode_residual_times_thickness_squared_K_m2</code> is a diagnostic for how much of that
+number is the Landau transform rather than solution quality; it is dimensionful
+and covers one constraint family, so it carries no verdict of its own.</p>
+<p>Configuration and execution failures, such as a missing solver binary, propagate
+rather than being recorded as a non-converged rung, so a broken run produces no
+baseline. Recorded baselines and regeneration instructions are in
+<code>benchmarks/README.md</code>.</p>
 <h2 id="run-notebook-examples">Run Notebook Examples</h2>
 <p>The MkDocs notebook examples are tracked under <code>docs/examples/</code>:</p>
 <ul>
@@ -1076,8 +1134,8 @@ executions also run in the Pyomo solver lane.
 The former shelf-only and pressure-only comparisons remain solver-backed
 regression fixtures under <code>tests/</code>, rather than separate reader-facing tutorials.</p>
 <h2 id="run-local-validation">Run Local Validation</h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>python<span class="w"> </span>-m<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>lyopronto<span class="w"> </span>tests<span class="w"> </span>examples<span class="w"> </span>main.py
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not slow and not notebook and not pyomo&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>python<span class="w"> </span>-m<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>lyopronto<span class="w"> </span>tests<span class="w"> </span>examples<span class="w"> </span>main.py
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not slow and not notebook and not pyomo&quot;</span>
 </span></code></pre></div>
 <p>Use <code>./run_local_ci.sh fast</code>, <code>full</code>, <code>slow</code>, <code>notebook</code>, <code>pyomo-light</code>, or
 <code>pyomo</code> to run the CI-equivalent wrappers. See <code>dev.md</code> for lane commands and
@@ -1087,9 +1145,9 @@ regression fixtures under <code>tests/</code>, rather than separate reader-facin
 the <code>dt_setpt</code> key include ramp time. This applies to <code>Tshelf</code> and <code>Pchamber</code>
 dictionaries.</p>
 <h2 id="build-documentation">Build Documentation</h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[docs]&quot;</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>mkdocs<span class="w"> </span>build
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>mkdocs<span class="w"> </span>serve
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[docs]&quot;</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>mkdocs<span class="w"> </span>build
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>mkdocs<span class="w"> </span>serve
 </span></code></pre></div>
 
 
