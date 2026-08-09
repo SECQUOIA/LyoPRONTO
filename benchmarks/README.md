@@ -62,9 +62,25 @@ best for every solver and instance. Measured at `n_z=20, nfe=36, ncp=3`:
 
 The default is the solver default for both binaries and is what the recorded
 baseline uses, because it is much better for the reference solver and matches
-what upstream recommends for this residual regime (jkitchin/pounce#505). It is
-not uniformly better: it costs POUNCE the first rung of the cold-started ladder
-while winning it the warm-started instance.
+what upstream recommends for this residual regime (jkitchin/pounce#505). Against
+POUNCE 0.9.0 it is not uniformly better: it costs the first rung of the
+cold-started ladder while winning the warm-started instance.
+
+That POUNCE column is a property of the 0.9.0 *release*, not of the solver.
+The `f=1` failure was a defect, reported as jkitchin/pounce#505 and fixed
+upstream by jkitchin/pounce#519: a rapid-infeasibility detector with no IPOPT
+counterpart armed at `infeas_viol_kappa * constr_viol_tol`, so the
+`constr_viol_tol=1e-6` that `paper_ocp` sets dragged its floor inside the
+acceptable band and a tighter feasibility tolerance produced an infeasibility
+verdict. Built from `main` at `880b360`, POUNCE walks the whole ladder and
+matches the IPOPT baseline rung for rung -- every shared endpoint agreeing to
+better than 1e-4 h, and the same -0.622% / -0.080% shifts -- where 0.9.0 stops
+at the first rung.
+
+We keep `constr_viol_tol=1e-6`, because it is the right tolerance for this model
+and the coupling was the defect. The table above therefore stays as measured on
+the installable release, and doubles as the regression check for when #519
+ships.
 
 Use `--nlp-scaling` to vary it, and read `nlp_scaling_method` in each recorded
 file to see which value produced it. Do not treat a solver's ladder length as a
@@ -73,8 +89,9 @@ property of the solver alone without checking that field.
 Only the IPOPT baseline is committed. The study runs against any
 AMPL-convention solver through `--solver-executable`, but a recorded
 non-IPOPT baseline needs the trade-off above stated beside it to be read
-correctly, and the POUNCE results are still moving upstream. Those belong with
-the wider solver-comparison work rather than here.
+correctly. A POUNCE baseline also needs a tagged release to pin rather than a
+local build of `main`, which is what currently carries the fix. Those belong
+with the wider solver-comparison work rather than here.
 
 Each file records the solver provenance itself: the Pyomo interface used, the
 solver identity, and the solver version from `opt.version()`. The interface and
