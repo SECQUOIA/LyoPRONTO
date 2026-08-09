@@ -204,10 +204,10 @@ Pyomo inverse-temperature model.
 Notebook execution is validated through the explicit notebook CI lane. When
 Pyomo or IPOPT is absent, the original-workflow notebooks still execute the
 SciPy path and print the installation command for the optional comparison.
-Their full parity checks also run in the optional Pyomo solver lane.
+Their full parity checks also run in the Pyomo solver lane.
 The optimizer-comparison, optimal-control replication, and DAE walkthrough
 notebooks require `.[dev,pyomo]` and IPOPT, so their solver-backed smoke
-executions also run in the optional Pyomo comparison lane.
+executions also run in the Pyomo solver lane.
 The former shelf-only and pressure-only comparisons remain solver-backed
 regression fixtures under `tests/`, rather than separate reader-facing tutorials.
 

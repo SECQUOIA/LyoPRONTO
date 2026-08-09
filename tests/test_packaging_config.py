@@ -434,7 +434,15 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert (
         "Alternative local install: conda install -c conda-forge ipopt" in pyomo_tests
     )
-    assert "continue-on-error: true" in pyomo_tests
+    # The solver lane is a merge gate, so two things must hold together: it has
+    # to be able to fail, and it has to report on every PR, because a required
+    # check that never reports leaves the PR pending forever. That is why the
+    # run/skip decision lives in the steps instead of a job-level `if:`.
+    assert "continue-on-error: true" not in pyomo_tests
+    assert "name: Pyomo solver lane" in pyomo_tests
+    assert "RUN_SOLVER:" in pyomo_tests
+    assert "env.RUN_SOLVER == 'true'" in pyomo_tests
+    assert "env.RUN_SOLVER != 'true'" in pyomo_tests
     assert (
         "tests/test_pyomo_models/test_single_step.py::test_single_step_solves_and_matches_scipy_reference"
         in pyomo_tests
