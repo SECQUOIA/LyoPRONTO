@@ -39,6 +39,19 @@ def _requirements(path: Path) -> list[str]:
     return requirements
 
 
+def _workflow_job(workflow_text: str, job_id: str) -> str:
+    """Return just one job's block from a workflow.
+
+    Scoped on purpose. Asserting against the whole file makes a contract about
+    one job forbid or require text anywhere in it, so an unrelated later job
+    can turn a real policy check into a spurious failure.
+    """
+    start = workflow_text.index(f"  {job_id}:")
+    rest = workflow_text[start + 1 :]
+    nxt = re.search(r"\n  [A-Za-z0-9_-]+:\n", rest)
+    return rest[: nxt.start()] if nxt else rest
+
+
 def _text(path: str) -> str:
     return (ROOT / path).read_text(encoding="utf-8")
 
@@ -438,11 +451,12 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     # to be able to fail, and it has to report on every PR, because a required
     # check that never reports leaves the PR pending forever. That is why the
     # run/skip decision lives in the steps instead of a job-level `if:`.
-    assert "continue-on-error: true" not in pyomo_tests
-    assert "name: Pyomo solver lane" in pyomo_tests
-    assert "RUN_SOLVER:" in pyomo_tests
-    assert "env.RUN_SOLVER == 'true'" in pyomo_tests
-    assert "env.RUN_SOLVER != 'true'" in pyomo_tests
+    solver_lane = _workflow_job(pyomo_tests, "pyomo-solver-comparison")
+    assert "continue-on-error: true" not in solver_lane
+    assert "name: Pyomo solver lane" in solver_lane
+    assert "RUN_SOLVER:" in solver_lane
+    assert "env.RUN_SOLVER == 'true'" in solver_lane
+    assert "env.RUN_SOLVER != 'true'" in solver_lane
     assert (
         "tests/test_pyomo_models/test_single_step.py::test_single_step_solves_and_matches_scipy_reference"
         in pyomo_tests
