@@ -39,6 +39,19 @@ def _requirements(path: Path) -> list[str]:
     return requirements
 
 
+def _workflow_job(workflow_text: str, job_id: str) -> str:
+    """Return just one job's block from a workflow.
+
+    Scoped on purpose. Asserting against the whole file makes a contract about
+    one job forbid or require text anywhere in it, so an unrelated later job
+    can turn a real policy check into a spurious failure.
+    """
+    start = workflow_text.index(f"  {job_id}:")
+    rest = workflow_text[start + 1 :]
+    nxt = re.search(r"\n  [A-Za-z0-9_-]+:\n", rest)
+    return rest[: nxt.start()] if nxt else rest
+
+
 def _text(path: str) -> str:
     return (ROOT / path).read_text(encoding="utf-8")
 
@@ -434,7 +447,26 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert (
         "Alternative local install: conda install -c conda-forge ipopt" in pyomo_tests
     )
-    assert "continue-on-error: true" in pyomo_tests
+    # The solver lane must report on every PR so that it can be made a merge
+    # gate. Two things have to hold together: it must be able to fail, and it
+    # must report even when there is nothing to run, because a required check
+    # that never reports leaves the PR pending forever. That is why the
+    # run/skip decision lives in the steps instead of a job-level `if:`.
+    solver_lane = _workflow_job(pyomo_tests, "pyomo-solver-comparison")
+    assert "continue-on-error: true" not in solver_lane
+    assert "name: Pyomo solver lane" in solver_lane
+    assert "RUN_SOLVER:" in solver_lane
+    assert "env.RUN_SOLVER == 'true'" in solver_lane
+    assert "env.RUN_SOLVER != 'true'" in solver_lane
+    # The step-level gates above do not imply the absence of a job-level one:
+    # a job-level `if:` can be added while every step gate stays intact, and
+    # the lane then silently stops reporting on the very PRs it must report on.
+    # Job keys sit at four spaces, step keys at six, so this rejects only the
+    # job-level form.
+    assert re.search(r"^ {4}if:", solver_lane, re.MULTILINE) is None, (
+        "pyomo-solver-comparison must not carry a job-level `if:`; gate the "
+        "individual steps on env.RUN_SOLVER instead so the lane still reports"
+    )
     assert (
         "tests/test_pyomo_models/test_single_step.py::test_single_step_solves_and_matches_scipy_reference"
         in pyomo_tests
