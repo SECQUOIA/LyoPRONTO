@@ -126,7 +126,7 @@ timings published with the upstream paper, but those comparisons are narrative
 only: they are measured on whatever runner the job lands on and are never
 asserted.
 
-The optional lane also runs the coarse multiphase GDP paper benchmark. GDPopt
+The solver lane also runs the coarse multiphase GDP paper benchmark. GDPopt
 RIC uses GLPK for the discrete master and the lane's IPOPT 3.13.2 build for
 local nonlinear subproblems. Structural tests remain skip-safe in the
 no-solver lane; solver tests require both executables and provide separate
@@ -164,6 +164,39 @@ helper skips with installation hints when Pyomo or IPOPT is missing.
 Keep automatic Pyomo validation isolated behind the Pyomo scope check so
 default non-Pyomo PRs do not install optional dependencies while the required
 branch-protection check still reports on every PR.
+
+`Pyomo import and construction lane` runs without a solver, so solver-backed
+tests skip there. `Pyomo solver lane` installs IPOPT and GLPK and is the only
+lane that executes a real solve. Keep that second lane able to fail: it was
+previously `continue-on-error: true`, and a red solver test reported the job as
+success, so a solver regression could reach `main` with every check green.
+
+The first is a required check today. **The solver lane is not yet** -- it is
+able to gate but is not in branch protection, so a solver regression can still
+reach `main`. Two steps close that, in order:
+
+1. Confirm the skipped path on a PR that touches no Pyomo-sensitive file: the
+   lane must report success rather than stay pending. Nothing verifies this from
+   inside a PR that changes `pyomo-tests.yml`, because such a PR is itself
+   Pyomo-sensitive and always takes the running path.
+2. Then add the context:
+
+   ```bash
+   gh api repos/SECQUOIA/LyoPRONTO/branches/main/protection/required_status_checks/contexts \
+     --method POST -f 'contexts[]=Pyomo solver lane'
+   ```
+
+Update this paragraph once that lands, so it stops describing an intention.
+
+Because it gates, it must report on every PR. A required check that never
+reports leaves the PR pending forever, so the run/skip decision lives in the
+steps via `RUN_SOLVER` rather than a job-level `if:`. Adding a new scope-gated
+required lane should follow that pattern.
+
+The lane's IPOPT is whatever `idaes get-extensions` ships (3.13.2), which is
+usually not the build contributors run locally. That is the practical reason
+for the tolerance rule above: an assertion pinned to a number one build
+produces can pass in CI and fail on a developer machine, or the reverse.
 
 ## Documentation
 

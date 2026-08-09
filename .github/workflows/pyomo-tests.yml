@@ -126,22 +126,38 @@ jobs:
         pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v
 
   pyomo-solver-comparison:
-    name: Pyomo solver comparison lane (optional)
-    if: ${{ needs.pyomo-scope.outputs.run_pyomo == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.draft == false) }}
+    name: Pyomo solver lane
+    # No job-level `if:`. This lane must report on every PR so that it can be
+    # made a required status check, because a required check that never reports
+    # leaves every PR pending forever. It therefore always runs and decides
+    # internally whether there is anything to do, the same way
+    # `pyomo-no-solver` does. Adding a job-level `if:` here re-breaks that and
+    # is rejected by
+    # tests/test_packaging_config.py::test_ci_workflows_use_documented_test_lane_expressions.
     needs: [pyomo-scope, pyomo-no-solver]
-    continue-on-error: true
     runs-on: ubuntu-latest
+    env:
+      RUN_SOLVER: ${{ needs.pyomo-scope.outputs.run_pyomo == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.draft == false) }}
 
     steps:
+    - name: Report skipped solver validation
+      if: ${{ env.RUN_SOLVER != 'true' }}
+      run: |
+        echo "Pyomo solver validation skipped: ${{ needs.pyomo-scope.outputs.reason }}"
+        echo "(draft PRs and non-Pyomo changes do not need a solver run)"
+
     - uses: actions/checkout@v4
+      if: ${{ env.RUN_SOLVER == 'true' }}
 
     - name: Read CI version config
+      if: ${{ env.RUN_SOLVER == 'true' }}
       id: versions
       uses: mikefarah/yq@v4.44.1
       with:
         cmd: yq eval '.python-version' .github/ci-config/ci-versions.yml
 
     - name: Set up Python
+      if: ${{ env.RUN_SOLVER == 'true' }}
       uses: actions/setup-python@v5
       with:
         python-version: ${{ steps.versions.outputs.result }}
@@ -149,16 +165,26 @@ jobs:
         cache-dependency-path: pyproject.toml
 
     - name: Install Pyomo test dependencies
+      if: ${{ env.RUN_SOLVER == 'true' }}
       run: |
         python -m pip install --upgrade pip setuptools wheel
         pip install -e ".[dev,pyomo]"
 
     - name: Install solver runtime libraries
+      if: ${{ env.RUN_SOLVER == 'true' }}
       run: |
         sudo apt-get update
         sudo apt-get install --yes glpk-utils liblapack3
 
-    - name: Install optional Pyomo solver extensions
+    # The version installed here is whatever IDAES currently ships (3.13.2 at
+    # time of writing), which is not the version most contributors have
+    # locally. A solve can land on a different iterate between IPOPT builds, so
+    # assertions on solver output must be derived from a documented contract
+    # (for example `bound_relax_factor * |bound|`) rather than pinned to a
+    # number one build happens to produce. `ipopt -v` below records the version
+    # in the log so a build-sensitive failure is diagnosable from the run alone.
+    - name: Install Pyomo solver extensions
+      if: ${{ env.RUN_SOLVER == 'true' }}
       run: |
         idaes get-extensions --extra petsc || {
           rc=$?
@@ -169,19 +195,23 @@ jobs:
         }
 
     - name: Add IDAES solver binaries to PATH
+      if: ${{ env.RUN_SOLVER == 'true' }}
       run: echo "$HOME/.idaes/bin" >> "$GITHUB_PATH"
 
     - name: Verify IPOPT is available
+      if: ${{ env.RUN_SOLVER == 'true' }}
       run: |
         python -c "from pyomo.environ import SolverFactory; assert SolverFactory('ipopt').available(exception_flag=False), 'ipopt not on PATH'"
         ipopt -v
 
     - name: Verify GLPK is available
+      if: ${{ env.RUN_SOLVER == 'true' }}
       run: |
         python -c "from pyomo.environ import SolverFactory; assert SolverFactory('glpk').available(exception_flag=False), 'glpsol not on PATH; install glpk-utils'"
         glpsol --version
 
     - name: Run Pyomo SciPy comparison tests
+      if: ${{ env.RUN_SOLVER == 'true' }}
       run: |
         pytest -n 0 -v \
           tests/test_pyomo_models/test_single_step.py::test_single_step_solves_and_matches_scipy_reference \
