@@ -1069,7 +1069,7 @@
 </span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Shelf-temperature trajectory&quot;</span><span class="p">)</span>
 </span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></code></pre></div>
-<p><img alt="img" src="../_data/3ada47c56e7c4edf99754d62d81fe1a8.png" /></p>
+<p><img alt="img" src="../_data/c315a732b9ca49ff8648c12122eec5b7.png" /></p>
 <h2 id="how-much-does-the-transcription-mesh-matter">How much does the transcription mesh matter?</h2>
 <p>Refining the mesh separates two error sources. Backward Euler's gap shrinks as points
 are added, which is ordinary first-order discretization error. Collocation's gap does
@@ -1193,7 +1193,7 @@ step halves — which is what the runs below check.</p>
 </span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>Joint                 49      0.940      0.086       0.184       0.093
 </span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>Joint                 73      0.689      0.119       0.184       0.111
 </span></code></pre></div>
-<p><img alt="img" src="../_data/252a8563f2964514b4bf5441aa4bedfc.png" /></p>
+<p><img alt="img" src="../_data/0f4c231a9e0c410894845b46d7b8b533.png" /></p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>case             SciPy dt=0.02 [h] SciPy dt=0.01 [h]SciPy dt=0.005 [h]   collocation [h]  ref steps at min dt
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>Pressure only             2.999454          3.001013          3.001792          3.002570                  602
 </span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>Shelf only                2.120914          2.122961          2.123988          2.125040                  426
@@ -1373,7 +1373,7 @@ much cycle time does a faster controller actually return?</p>
 </span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>                    30       0.50     2.8284        42.69
 </span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>                    60       1.00     2.5319        27.73
 </span></code></pre></div>
-<p><img alt="img" src="../_data/21a1d5a8434248ccbd5d01fd5ce7c280.png" /></p>
+<p><img alt="img" src="../_data/5f0e5993e5cc415e9f614ecbd072e491.png" /></p>
 <h2 id="do-the-exported-controls-actually-respect-the-limits">Do the exported controls actually respect the limits?</h2>
 <p>The headline cycle is only credible if its trajectory honors the slew limits it
 was solved under. This section verifies the exported controls of that same solve
@@ -1427,7 +1427,7 @@ against both bounds and plots them beside the idealized policy.</p>
 </span><span id="__span-16-26"><a id="__codelineno-16-26" name="__codelineno-16-26" href="#__codelineno-16-26"></a>    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">shadow_units</span><span class="p">:</span>
 </span><span id="__span-16-27"><a id="__codelineno-16-27" name="__codelineno-16-27" href="#__codelineno-16-27"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">:</span><span class="s2">&lt;36</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">value</span><span class="si">:</span><span class="s2">14.6g</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">shadow_units</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="si">:</span><span class="s2">&gt;12</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </span></code></pre></div>
-<p><img alt="img" src="../_data/d4f89790f4c74c11a5f3bd3948cf9648.png" /></p>
+<p><img alt="img" src="../_data/f517ad7b5c374c2fb91277069bd83ceb.png" /></p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>limit                                  shadow price        units
 </span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>product_temperature_limit                  -0.12354         h/°C
 </span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>equipment_capability                   -1.78511e-09     h/(kg/h)

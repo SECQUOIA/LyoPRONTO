@@ -941,7 +941,7 @@ notebook on a coarse spatial mesh. That notebook reports wall times against the
 timings published with the upstream paper, but those comparisons are narrative
 only: they are measured on whatever runner the job lands on and are never
 asserted.</p>
-<p>The optional lane also runs the coarse multiphase GDP paper benchmark. GDPopt
+<p>The solver lane also runs the coarse multiphase GDP paper benchmark. GDPopt
 RIC uses GLPK for the discrete master and the lane's IPOPT 3.13.2 build for
 local nonlinear subproblems. Structural tests remain skip-safe in the
 no-solver lane; solver tests require both executables and provide separate
@@ -971,25 +971,52 @@ helper skips with installation hints when Pyomo or IPOPT is missing.</p>
 <p>Keep automatic Pyomo validation isolated behind the Pyomo scope check so
 default non-Pyomo PRs do not install optional dependencies while the required
 branch-protection check still reports on every PR.</p>
+<p><code>Pyomo import and construction lane</code> runs without a solver, so solver-backed
+tests skip there. <code>Pyomo solver lane</code> installs IPOPT and GLPK and is the only
+lane that executes a real solve. Keep that second lane able to fail: it was
+previously <code>continue-on-error: true</code>, and a red solver test reported the job as
+success, so a solver regression could reach <code>main</code> with every check green.</p>
+<p>The first is a required check today. <strong>The solver lane is not yet</strong> -- it is
+able to gate but is not in branch protection, so a solver regression can still
+reach <code>main</code>. Two steps close that, in order:</p>
+<ol>
+<li>Confirm the skipped path on a PR that touches no Pyomo-sensitive file: the
+   lane must report success rather than stay pending. Nothing verifies this from
+   inside a PR that changes <code>pyomo-tests.yml</code>, because such a PR is itself
+   Pyomo-sensitive and always takes the running path.</li>
+<li>Then add the context:</li>
+</ol>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>gh<span class="w"> </span>api<span class="w"> </span>repos/SECQUOIA/LyoPRONTO/branches/main/protection/required_status_checks/contexts<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span>--method<span class="w"> </span>POST<span class="w"> </span>-f<span class="w"> </span><span class="s1">&#39;contexts[]=Pyomo solver lane&#39;</span>
+</span></code></pre></div>
+<p>Update this paragraph once that lands, so it stops describing an intention.</p>
+<p>Because it gates, it must report on every PR. A required check that never
+reports leaves the PR pending forever, so the run/skip decision lives in the
+steps via <code>RUN_SOLVER</code> rather than a job-level <code>if:</code>. Adding a new scope-gated
+required lane should follow that pattern.</p>
+<p>The lane's IPOPT is whatever <code>idaes get-extensions</code> ships (3.13.2), which is
+usually not the build contributors run locally. That is the practical reason
+for the tolerance rule above: an assertion pinned to a number one build
+produces can pass in CI and fail on a developer machine, or the reverse.</p>
 <h2 id="documentation">Documentation</h2>
 <p>Install documentation dependencies:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[docs]&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[docs]&quot;</span>
 </span></code></pre></div>
 <p>Build and preview locally:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>mkdocs<span class="w"> </span>build
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>mkdocs<span class="w"> </span>serve
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>mkdocs<span class="w"> </span>build
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>mkdocs<span class="w"> </span>serve
 </span></code></pre></div>
 <p>Docs publishing uses <code>mike</code> in <code>.github/workflows/docs.yml</code>. Pull requests
 build a <code>pr-&lt;number&gt;</code> docs version, pushes to <code>main</code> deploy <code>dev</code>, and
 published releases deploy the release version plus <code>latest</code>.</p>
 <p>If a published documentation version needs to be replaced, update it from the
 branch with the desired docs:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>git<span class="w"> </span>fetch
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>git<span class="w"> </span>switch<span class="w"> </span><span class="o">[</span>branch<span class="w"> </span>with<span class="w"> </span>desired<span class="w"> </span>docs<span class="o">]</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>mike<span class="w"> </span>delete<span class="w"> </span><span class="o">[</span>broken<span class="w"> </span>docs<span class="w"> </span>version<span class="o">]</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>mike<span class="w"> </span>deploy<span class="w"> </span><span class="o">[</span>new<span class="w"> </span>docs<span class="w"> </span>version<span class="o">]</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>git<span class="w"> </span>switch<span class="w"> </span>gh-pages
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>gh-pages
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>git<span class="w"> </span>fetch
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>git<span class="w"> </span>switch<span class="w"> </span><span class="o">[</span>branch<span class="w"> </span>with<span class="w"> </span>desired<span class="w"> </span>docs<span class="o">]</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>mike<span class="w"> </span>delete<span class="w"> </span><span class="o">[</span>broken<span class="w"> </span>docs<span class="w"> </span>version<span class="o">]</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>mike<span class="w"> </span>deploy<span class="w"> </span><span class="o">[</span>new<span class="w"> </span>docs<span class="w"> </span>version<span class="o">]</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>git<span class="w"> </span>switch<span class="w"> </span>gh-pages
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>gh-pages
 </span></code></pre></div>
 <h2 id="maintenance-notes">Maintenance Notes</h2>
 <ul>
