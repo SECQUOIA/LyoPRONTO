@@ -127,10 +127,13 @@ jobs:
 
   pyomo-solver-comparison:
     name: Pyomo solver lane
-    # No job-level `if:`. This lane is a required status check, and a required
-    # check that never reports leaves every PR pending forever. It therefore
-    # always runs and decides internally whether there is anything to do, the
-    # same way `pyomo-no-solver` does.
+    # No job-level `if:`. This lane must report on every PR so that it can be
+    # made a required status check, because a required check that never reports
+    # leaves every PR pending forever. It therefore always runs and decides
+    # internally whether there is anything to do, the same way
+    # `pyomo-no-solver` does. Adding a job-level `if:` here re-breaks that and
+    # is rejected by
+    # tests/test_packaging_config.py::test_ci_workflows_use_documented_test_lane_expressions.
     needs: [pyomo-scope, pyomo-no-solver]
     runs-on: ubuntu-latest
     env:

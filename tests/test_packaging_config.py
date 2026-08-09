@@ -447,9 +447,10 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert (
         "Alternative local install: conda install -c conda-forge ipopt" in pyomo_tests
     )
-    # The solver lane is a merge gate, so two things must hold together: it has
-    # to be able to fail, and it has to report on every PR, because a required
-    # check that never reports leaves the PR pending forever. That is why the
+    # The solver lane must report on every PR so that it can be made a merge
+    # gate. Two things have to hold together: it must be able to fail, and it
+    # must report even when there is nothing to run, because a required check
+    # that never reports leaves the PR pending forever. That is why the
     # run/skip decision lives in the steps instead of a job-level `if:`.
     solver_lane = _workflow_job(pyomo_tests, "pyomo-solver-comparison")
     assert "continue-on-error: true" not in solver_lane
@@ -457,6 +458,15 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert "RUN_SOLVER:" in solver_lane
     assert "env.RUN_SOLVER == 'true'" in solver_lane
     assert "env.RUN_SOLVER != 'true'" in solver_lane
+    # The step-level gates above do not imply the absence of a job-level one:
+    # a job-level `if:` can be added while every step gate stays intact, and
+    # the lane then silently stops reporting on the very PRs it must report on.
+    # Job keys sit at four spaces, step keys at six, so this rejects only the
+    # job-level form.
+    assert re.search(r"^ {4}if:", solver_lane, re.MULTILINE) is None, (
+        "pyomo-solver-comparison must not carry a job-level `if:`; gate the "
+        "individual steps on env.RUN_SOLVER instead so the lane still reports"
+    )
     assert (
         "tests/test_pyomo_models/test_single_step.py::test_single_step_solves_and_matches_scipy_reference"
         in pyomo_tests
