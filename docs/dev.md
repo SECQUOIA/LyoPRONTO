@@ -121,7 +121,8 @@ backward-Euler tolerance and checks the unknown-Rp parameters/objective against
 SciPy after shared legacy preprocessing.
 
 The same job executes the Srisuma and Braatz optimal-control replication
-notebook on a coarse spatial mesh. That notebook reports wall times against the
+notebook on a coarse spatial mesh, and the pseudosteady frozen-layer tutorial
+notebook with a coarse three-rung continuation ladder. That notebook reports wall times against the
 timings published with the upstream paper, but those comparisons are narrative
 only: they are measured on whatever runner the job lands on and are never
 asserted.
