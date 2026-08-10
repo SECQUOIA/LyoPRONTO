@@ -170,6 +170,35 @@ Implemented modules:
   whether an incumbent was loaded, since GDPopt does load one for every
   termination except `infeasible` and `unbounded`.
 
+### Convergence quality on the paper benchmarks
+
+IPOPT reports two different outcomes as the same Pyomo termination. A solve
+that reaches `tol` and one accepted at the looser `acceptable_tol` both arrive
+as `termination_condition: optimal, status: ok`, so those two fields alone
+cannot tell a well-converged solve from a marginal one. `paper_ocp` therefore
+records `metadata["convergence_quality"]` next to the raw solver message, with
+the values `converged_to_tolerance`, `accepted_at_acceptable_tol`, and
+`unknown`. Callers that care — solver comparisons, or a check that must notice
+a solve degrading — branch on that field instead of matching solver text.
+
+The success gate itself is unchanged and still accepts both. On this
+transcription an acceptable-level exit is the expected outcome rather than a
+degraded one: the Landau conduction term carries `1/(H - S)^2`, so an absolute
+residual IPOPT cannot certify is a relative residual near 1e-13. Rejecting
+those solves would discard correct answers, including the paper's own model at
+the paper's own mesh. `paper_ocp._is_successful_termination` documents the
+mechanism and the remedies that were measured and rejected.
+
+The scope is deliberate. `paper_gdp` imports the same predicate, so it shares
+the gate, but it does not record `convergence_quality`: GDPopt leaves
+`solver.message` undefined, so the field would read `unknown` on every solve.
+The production models — `advanced`, `dae_optimization`, `single_step`, and
+`trajectory` — share neither. Each carries its own termination handling on a
+frozen result dataclass whose public shape the project preserves, none calls
+that predicate, and none solves on a Landau coordinate, so acceptable-level is
+not an expected outcome there. Extending the field to any of them should be
+motivated by an actual conflated solve rather than done for symmetry.
+
 Pyomo tests are marked `pyomo` and are skip-safe when Pyomo or a required
 solver such as IPOPT or GLPK is not installed. See `dev.md` for optional solver
 setup and CI lane policy.

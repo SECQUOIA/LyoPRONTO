@@ -35,6 +35,12 @@ Measured attempts to reach ``Optimal Solution Found``, all on Paper Problem 1 at
 
 ``examples/pseudosteady_limit_study.py`` reports both the absolute violation and
 the Landau-cleared one for this reason.
+
+Because both IPOPT outcomes arrive as ``termination_condition: optimal``, the
+extracted metadata carries ``convergence_quality`` alongside the raw solver
+message so a caller can tell the two apart without matching solver text.  The
+success gate accepts both; see ``_is_successful_termination`` for that policy
+and for why the production models do not share it.
 """
 
 from __future__ import annotations
@@ -44,6 +50,22 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping
 
 import numpy as np
+
+#: ``metadata["convergence_quality"]`` when the solver reported reaching its
+#: primary convergence tolerance -- IPOPT's ``Optimal Solution Found``.
+CONVERGED_TO_TOLERANCE = "converged_to_tolerance"
+
+#: ``metadata["convergence_quality"]`` when the solver stopped at its relaxed
+#: acceptable tolerance -- IPOPT's ``Solved To Acceptable Level``.  For this
+#: transcription that is the expected outcome rather than a degraded one; see
+#: the module docstring and :func:`_is_successful_termination`.
+ACCEPTED_AT_ACCEPTABLE_TOL = "accepted_at_acceptable_tol"
+
+#: ``metadata["convergence_quality"]`` when the solver reported no message, or
+#: one that names neither convergence level.  A non-success termination lands
+#: here too, because such a message states why the solve stopped rather than
+#: which tolerance it met.
+CONVERGENCE_QUALITY_UNKNOWN = "unknown"
 
 
 @dataclass(frozen=True)
@@ -1746,9 +1768,10 @@ def solve_paper_problem1(
     solver identity are not the same thing; record both when reporting results.
 
     ``require_success=False`` returns the solution with its solver metadata
-    (``status``, ``termination_condition``, ``message``) instead of raising on a
-    non-success termination, which is what a caller wants when the termination
-    itself is the measurement.
+    (``status``, ``termination_condition``, ``message``, and the derived
+    ``convergence_quality``) instead of raising on a non-success termination,
+    which is what a caller wants when the termination itself is the
+    measurement.
 
     Scaling is chosen from the model, not fixed: ``user-scaling`` when the model
     carries a ``scaling_factor`` suffix (``apply_scaling=True``), otherwise
@@ -1794,9 +1817,10 @@ def solve_paper_problem2(
     solver identity are not the same thing; record both when reporting results.
 
     ``require_success=False`` returns the solution with its solver metadata
-    (``status``, ``termination_condition``, ``message``) instead of raising on a
-    non-success termination, which is what a caller wants when the termination
-    itself is the measurement.
+    (``status``, ``termination_condition``, ``message``, and the derived
+    ``convergence_quality``) instead of raising on a non-success termination,
+    which is what a caller wants when the termination itself is the
+    measurement.
 
     Scaling is chosen from the model, not fixed: ``user-scaling`` when the model
     carries a ``scaling_factor`` suffix (``apply_scaling=True``), otherwise
@@ -2010,6 +2034,7 @@ def extract_paper_solution(model: Any, results: Any | None = None) -> dict[str, 
     status = None
     termination_condition = None
     message = None
+    convergence_quality = CONVERGENCE_QUALITY_UNKNOWN
     if results is not None:
         solver_info = getattr(results, "solver", None)
         status = str(getattr(solver_info, "status", None))
@@ -2017,8 +2042,8 @@ def extract_paper_solution(model: Any, results: Any | None = None) -> dict[str, 
         # The message is the only field that distinguishes a solve converged to
         # `tol` from one accepted at `acceptable_tol`: Pyomo maps both to
         # `termination_condition: optimal`. See issue #142.
-        raw_message = getattr(solver_info, "message", None)
-        message = None if raw_message is None else str(raw_message)
+        message = _normalize_solver_message(getattr(solver_info, "message", None))
+        convergence_quality = classify_convergence_quality(message)
 
     return {
         "states": {
@@ -2041,6 +2066,7 @@ def extract_paper_solution(model: Any, results: Any | None = None) -> dict[str, 
             "status": status,
             "termination_condition": termination_condition,
             "message": message,
+            "convergence_quality": convergence_quality,
             "n_z": discretization.n_z,
             "nfe": discretization.nfe,
             "ncp": discretization.ncp,
@@ -2158,8 +2184,85 @@ def _compress_policy_labels(
     return segments
 
 
+def _normalize_solver_message(raw: Any) -> str | None:
+    """Return a solver message as text, or ``None`` when the solver set none.
+
+    Pyomo represents an unset results field with an ``UndefinedData`` instance
+    rather than ``None``, and ``str`` renders it as ``"<undefined>"``.  GDPopt
+    leaves ``solver.message`` in exactly that state.  Passing it through
+    unchanged would record a placeholder where callers expect either a solver
+    statement or nothing, so collapse it -- and a blank message -- to ``None``.
+    """
+    if raw is None:
+        return None
+
+    from pyomo.opt import UndefinedData  # type: ignore[import-untyped]
+
+    if isinstance(raw, UndefinedData):
+        return None
+    return str(raw).strip() or None
+
+
+def classify_convergence_quality(message: str | None) -> str:
+    """Classify how tightly a solver converged, from its message.
+
+    Returns :data:`CONVERGED_TO_TOLERANCE`, :data:`ACCEPTED_AT_ACCEPTABLE_TOL`,
+    or :data:`CONVERGENCE_QUALITY_UNKNOWN`.
+
+    The message is the only field carrying this distinction.  Pyomo maps both
+    IPOPT outcomes to ``termination_condition: optimal, status: ok``, so a
+    caller reading only those two fields cannot tell a solve that met ``tol``
+    from one accepted at ``acceptable_tol`` (issue #142).
+
+    This reports convergence quality; it does not decide success.  Callers that
+    need the distinction -- solver comparisons, or a regression check that must
+    notice a solve becoming marginal -- branch on the returned label instead of
+    matching solver text themselves.  See :func:`_is_successful_termination`
+    for the separate question of which terminations are accepted at all.
+
+    Acceptable-level is tested first so that a message naming both levels can
+    never be reported as the tighter one.
+    """
+    if message is None:
+        return CONVERGENCE_QUALITY_UNKNOWN
+
+    text = str(message).lower()
+    if "solved to acceptable level" in text:
+        return ACCEPTED_AT_ACCEPTABLE_TOL
+    if "optimal solution found" in text:
+        return CONVERGED_TO_TOLERANCE
+    return CONVERGENCE_QUALITY_UNKNOWN
+
+
 def _is_successful_termination(results: Any) -> bool:
-    """Return whether a Pyomo solve status is acceptable for extraction."""
+    """Return whether a Pyomo solve status is acceptable for extraction.
+
+    This accepts ``optimal`` and ``locallyOptimal``, which means it accepts a
+    solve that stopped at IPOPT's ``acceptable_tol`` alongside one that reached
+    ``tol``: Pyomo reports both as ``optimal``.  That is deliberate.  For this
+    transcription an acceptable-level exit is the *expected* outcome, not a
+    degraded one -- the Landau conduction term carries ``1/(H - S)^2``, which
+    reaches about 7.7e8 near the terminal cutoff, so a residual of about 2.5e-4
+    there is a relative residual near 1e-13 that IPOPT's absolute test cannot
+    certify.  The module docstring records the six remedies that were measured
+    and rejected.  Tightening this gate would reject correct solutions,
+    including the paper's own model at the paper's own mesh.
+
+    Callers that must distinguish the two read
+    ``metadata["convergence_quality"]`` (see
+    :func:`classify_convergence_quality`) rather than this predicate.
+
+    Scope.  ``paper_gdp`` imports this predicate, so both paper modules share
+    the *gate*.  It does not record ``convergence_quality``: GDPopt leaves
+    ``solver.message`` undefined, so the field would read ``unknown`` on every
+    solve and carry no information.  The production models -- ``advanced``,
+    ``dae_optimization``, ``single_step``, and ``trajectory`` -- share neither.
+    They carry their own termination handling on frozen result dataclasses
+    whose public shape the project preserves, they never call this predicate,
+    and none of them solves on a Landau coordinate, so acceptable-level is not
+    an expected outcome there.  Extending the field to any of them should be
+    motivated by an actual conflated solve; see ``docs/reference.md``.
+    """
     import pyomo.environ as pyo  # type: ignore[import-untyped]
 
     solver = getattr(results, "solver", None)

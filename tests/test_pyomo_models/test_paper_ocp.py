@@ -3,8 +3,13 @@
 import numpy as np
 import pytest
 from lyopronto.pyomo_models.paper_ocp import (
+    ACCEPTED_AT_ACCEPTABLE_TOL,
+    CONVERGED_TO_TOLERANCE,
+    CONVERGENCE_QUALITY_UNKNOWN,
     PaperDiscretization,
     PaperPrimaryDryingConfig,
+    _is_successful_termination,
+    classify_convergence_quality,
     classify_paper_policies,
     compare_paper_problem1_trajectories,
     create_paper_problem1_model,
@@ -677,3 +682,107 @@ def test_problem2_nz20_solve_keeps_velocity_feasible_and_classifies_policy():
     assert np.all(
         states["interface_velocity_m_per_s"][max_heat_segment] < velocity_limit - 2.0e-9
     )
+
+
+# --------------------------------------------------------------------------
+# Convergence quality (issue #142)
+# --------------------------------------------------------------------------
+
+#: Real ``results.solver.message`` values, not reformatted log lines. Pyomo's
+#: ASL interface escapes the colon, so the literal ``\x3a`` is part of the
+#: string a caller actually receives. The acceptable-level message was captured
+#: from ``solve_paper_problem1`` at ``n_z=5, nfe=6, ncp=3`` (which reaches that
+#: state on its own defaults); the optimal one from a trivial NLP, because this
+#: transcription does not reach ``Optimal Solution Found`` at any tolerance.
+ACCEPTABLE_LEVEL_MESSAGE = r"Ipopt 3.13.2\x3a Solved To Acceptable Level."
+OPTIMAL_MESSAGE = r"Ipopt 3.14.16\x3a Optimal Solution Found"
+MAX_ITER_MESSAGE = r"Ipopt 3.13.2\x3a Maximum Number of Iterations Exceeded."
+
+
+class _StubSolverResults:
+    """A Pyomo-shaped results stub carrying one chosen solver message.
+
+    Both convergence levels reach the caller as ``optimal``/``ok``, so the
+    message is the only field that varies between the two stubs.
+    """
+
+    def __init__(self, message):
+        self.solver = type(
+            "_StubSolver",
+            (),
+            {
+                "status": "ok",
+                "termination_condition": pyo.TerminationCondition.optimal,
+                "message": message,
+            },
+        )()
+
+
+def _small_problem1_metadata(results=None):
+    model = create_paper_problem1_model(
+        discretization=PaperDiscretization(n_z=5, nfe=3, ncp=2)
+    )
+    return extract_paper_solution(model, results)["metadata"]
+
+
+def test_acceptable_level_and_converged_solves_are_distinguishable():
+    """Issue #142: the two fields callers had cannot tell these solves apart."""
+    acceptable = _small_problem1_metadata(_StubSolverResults(ACCEPTABLE_LEVEL_MESSAGE))
+    converged = _small_problem1_metadata(_StubSolverResults(OPTIMAL_MESSAGE))
+
+    assert acceptable["status"] == converged["status"] == "ok"
+    assert (
+        acceptable["termination_condition"]
+        == converged["termination_condition"]
+        == "optimal"
+    )
+
+    assert acceptable["convergence_quality"] == ACCEPTED_AT_ACCEPTABLE_TOL
+    assert converged["convergence_quality"] == CONVERGED_TO_TOLERANCE
+    assert acceptable["message"] == ACCEPTABLE_LEVEL_MESSAGE
+    assert converged["message"] == OPTIMAL_MESSAGE
+
+
+def test_the_success_gate_still_accepts_both_convergence_levels():
+    """The gate is deliberately unchanged; acceptable-level is expected here."""
+    assert _is_successful_termination(_StubSolverResults(ACCEPTABLE_LEVEL_MESSAGE))
+    assert _is_successful_termination(_StubSolverResults(OPTIMAL_MESSAGE))
+
+
+def test_an_unset_solver_message_is_reported_as_absent_not_as_placeholder_text():
+    """Pyomo renders an unset message as ``<undefined>``; GDPopt leaves it so."""
+    from pyomo.opt import UndefinedData
+
+    metadata = _small_problem1_metadata(_StubSolverResults(UndefinedData()))
+
+    assert metadata["message"] is None
+    assert metadata["convergence_quality"] == CONVERGENCE_QUALITY_UNKNOWN
+
+
+def test_an_extraction_without_a_solve_reports_unknown_convergence_quality():
+    metadata = _small_problem1_metadata()
+
+    assert metadata["message"] is None
+    assert metadata["convergence_quality"] == CONVERGENCE_QUALITY_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "message, expected",
+    [
+        (ACCEPTABLE_LEVEL_MESSAGE, ACCEPTED_AT_ACCEPTABLE_TOL),
+        (OPTIMAL_MESSAGE, CONVERGED_TO_TOLERANCE),
+        (MAX_ITER_MESSAGE, CONVERGENCE_QUALITY_UNKNOWN),
+        (None, CONVERGENCE_QUALITY_UNKNOWN),
+        ("", CONVERGENCE_QUALITY_UNKNOWN),
+        ("SOLVED TO ACCEPTABLE LEVEL", ACCEPTED_AT_ACCEPTABLE_TOL),
+    ],
+)
+def test_classify_convergence_quality_labels_solver_messages(message, expected):
+    assert classify_convergence_quality(message) == expected
+
+
+def test_a_message_naming_both_levels_is_reported_as_the_looser_one():
+    """Never report a solve as tighter than its message supports."""
+    both = "Optimal Solution Found after being Solved To Acceptable Level"
+
+    assert classify_convergence_quality(both) == ACCEPTED_AT_ACCEPTABLE_TOL
