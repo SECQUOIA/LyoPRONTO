@@ -226,6 +226,12 @@ rather than being recorded as a non-converged rung, so a broken run produces no
 baseline. Recorded baselines and regeneration instructions are in
 `benchmarks/README.md`.
 
+The tutorial notebook
+[Is the pseudosteady frozen-layer assumption safe for my vial?](examples/pseudosteady_frozen_layer.ipynb)
+teaches what the recorded baseline measured -- the sub-1% drying-time shifts,
+the conduction-time screening criterion, and where that criterion stops being
+quantitative.
+
 ## Run Notebook Examples
 
 The MkDocs notebook examples are tracked under `docs/examples/`:
@@ -235,6 +241,7 @@ The MkDocs notebook examples are tracked under `docs/examples/`:
 - [SciPy and Pyomo on the LyoPRONTO paper optimizer cases](examples/current_main_joint_optimizer_comparison.ipynb)
 - [Replicating the Srisuma and Braatz optimal-control cases](examples/paper_optimal_control_replication.ipynb)
 - [How the DAE optimizer is built and checked](examples/dae_optimizer_walkthrough.ipynb)
+- [Is the pseudosteady frozen-layer assumption safe for my vial?](examples/pseudosteady_frozen_layer.ipynb)
 
 The first two notebooks import canonical computation from
 `examples/original_workflow_parity.py`; `docs/examples/` owns only narrative,
