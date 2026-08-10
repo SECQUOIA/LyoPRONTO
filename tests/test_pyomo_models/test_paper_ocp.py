@@ -1,5 +1,7 @@
 """Tests for the paper-reference Pyomo OCP benchmark."""
 
+from types import SimpleNamespace
+
 import numpy as np
 import pytest
 from lyopronto.pyomo_models.paper_ocp import (
@@ -699,23 +701,19 @@ OPTIMAL_MESSAGE = r"Ipopt 3.14.16\x3a Optimal Solution Found"
 MAX_ITER_MESSAGE = r"Ipopt 3.13.2\x3a Maximum Number of Iterations Exceeded."
 
 
-class _StubSolverResults:
-    """A Pyomo-shaped results stub carrying one chosen solver message.
+def _stub_results(message):
+    """Return a Pyomo-shaped results stub carrying one chosen solver message.
 
     Both convergence levels reach the caller as ``optimal``/``ok``, so the
-    message is the only field that varies between the two stubs.
+    message is the only field that varies between the stubs.
     """
-
-    def __init__(self, message):
-        self.solver = type(
-            "_StubSolver",
-            (),
-            {
-                "status": "ok",
-                "termination_condition": pyo.TerminationCondition.optimal,
-                "message": message,
-            },
-        )()
+    return SimpleNamespace(
+        solver=SimpleNamespace(
+            status="ok",
+            termination_condition=pyo.TerminationCondition.optimal,
+            message=message,
+        )
+    )
 
 
 def _small_problem1_metadata(results=None):
@@ -727,8 +725,8 @@ def _small_problem1_metadata(results=None):
 
 def test_acceptable_level_and_converged_solves_are_distinguishable():
     """Issue #142: the two fields callers had cannot tell these solves apart."""
-    acceptable = _small_problem1_metadata(_StubSolverResults(ACCEPTABLE_LEVEL_MESSAGE))
-    converged = _small_problem1_metadata(_StubSolverResults(OPTIMAL_MESSAGE))
+    acceptable = _small_problem1_metadata(_stub_results(ACCEPTABLE_LEVEL_MESSAGE))
+    converged = _small_problem1_metadata(_stub_results(OPTIMAL_MESSAGE))
 
     assert acceptable["status"] == converged["status"] == "ok"
     assert (
@@ -745,15 +743,15 @@ def test_acceptable_level_and_converged_solves_are_distinguishable():
 
 def test_the_success_gate_still_accepts_both_convergence_levels():
     """The gate is deliberately unchanged; acceptable-level is expected here."""
-    assert _is_successful_termination(_StubSolverResults(ACCEPTABLE_LEVEL_MESSAGE))
-    assert _is_successful_termination(_StubSolverResults(OPTIMAL_MESSAGE))
+    assert _is_successful_termination(_stub_results(ACCEPTABLE_LEVEL_MESSAGE))
+    assert _is_successful_termination(_stub_results(OPTIMAL_MESSAGE))
 
 
 def test_an_unset_solver_message_is_reported_as_absent_not_as_placeholder_text():
     """Pyomo renders an unset message as ``<undefined>``; GDPopt leaves it so."""
     from pyomo.opt import UndefinedData
 
-    metadata = _small_problem1_metadata(_StubSolverResults(UndefinedData()))
+    metadata = _small_problem1_metadata(_stub_results(UndefinedData()))
 
     assert metadata["message"] is None
     assert metadata["convergence_quality"] == CONVERGENCE_QUALITY_UNKNOWN
