@@ -209,11 +209,22 @@ AMPL `<solver> <stub> -AMPL` convention:
 python -m examples.pseudosteady_limit_study --solver-executable /path/to/pounce
 ```
 
-The study records the termination condition, solver status, and solver message
-for every rung including the one that stops the ladder, because solvers differ
-in what they call success: a result accepted at an acceptable-level tolerance
-and one converged to full tolerance both arrive as `optimal` through Pyomo, and
-only the message separates them (see issue #142).
+The study records the termination condition, solver status, solver message, and
+convergence quality for every rung including the one that stops the ladder,
+because solvers differ in what they call success: a result accepted at an
+acceptable-level tolerance and one converged to full tolerance both arrive as
+`optimal` through Pyomo, and only the message separates them (see issue #142).
+
+`quality=` in each rung line reports which tolerance that rung met —
+`converged_to_tolerance`, `accepted_at_acceptable_tol`, or `unknown` — so the
+ladder states its own convergence level. Every converged rung of the recorded
+IPOPT baseline is `accepted_at_acceptable_tol`, which is the expected outcome
+on this Landau-coordinate transcription rather than a degraded one; the
+mechanism is in `paper_ocp`'s module docstring. The label is derived from
+IPOPT's `ApplicationReturnStatus` vocabulary rather than one binary's wording,
+so a solver that reuses those status names — POUNCE writes the enum spellings —
+classifies through the same path, and a solver outside that vocabulary reads
+`unknown`.
 
 Feasibility is judged from `max_constraint_violation`, which covers every active
 constraint and every variable bound. The companion

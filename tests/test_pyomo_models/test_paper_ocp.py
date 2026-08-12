@@ -700,6 +700,14 @@ ACCEPTABLE_LEVEL_MESSAGE = r"Ipopt 3.13.2\x3a Solved To Acceptable Level."
 OPTIMAL_MESSAGE = r"Ipopt 3.14.16\x3a Optimal Solution Found"
 MAX_ITER_MESSAGE = r"Ipopt 3.13.2\x3a Maximum Number of Iterations Exceeded."
 
+#: POUNCE reuses IPOPT's ``ApplicationReturnStatus`` vocabulary but writes the
+#: enum names where IPOPT writes prose. Captured from POUNCE 0.9.0 driven
+#: through the ``ipopt`` ASL interface on one small NLP, forcing each outcome
+#: with ``tol``/``acceptable_tol``/``acceptable_iter`` (issue #146).
+POUNCE_ACCEPTABLE_LEVEL_MESSAGE = r"POUNCE 0.9.0\x3a SolvedToAcceptableLevel"
+POUNCE_OPTIMAL_MESSAGE = r"POUNCE 0.9.0\x3a SolveSucceeded"
+POUNCE_NON_SUCCESS_MESSAGE = r"POUNCE 0.9.0\x3a SearchDirectionBecomesTooSmall"
+
 
 def _stub_results(message):
     """Return a Pyomo-shaped results stub carrying one chosen solver message.
@@ -773,6 +781,12 @@ def test_an_extraction_without_a_solve_reports_unknown_convergence_quality():
         (None, CONVERGENCE_QUALITY_UNKNOWN),
         ("", CONVERGENCE_QUALITY_UNKNOWN),
         ("SOLVED TO ACCEPTABLE LEVEL", ACCEPTED_AT_ACCEPTABLE_TOL),
+        (POUNCE_ACCEPTABLE_LEVEL_MESSAGE, ACCEPTED_AT_ACCEPTABLE_TOL),
+        (POUNCE_OPTIMAL_MESSAGE, CONVERGED_TO_TOLERANCE),
+        (POUNCE_NON_SUCCESS_MESSAGE, CONVERGENCE_QUALITY_UNKNOWN),
+        # Enum spellings of the same statuses, however punctuated.
+        ("Solve_Succeeded", CONVERGED_TO_TOLERANCE),
+        ("Solved_To_Acceptable_Level", ACCEPTED_AT_ACCEPTABLE_TOL),
     ],
 )
 def test_classify_convergence_quality_labels_solver_messages(message, expected):
@@ -784,3 +798,26 @@ def test_a_message_naming_both_levels_is_reported_as_the_looser_one():
     both = "Optimal Solution Found after being Solved To Acceptable Level"
 
     assert classify_convergence_quality(both) == ACCEPTED_AT_ACCEPTABLE_TOL
+
+
+def test_the_two_solvers_agree_on_convergence_without_a_per_solver_table():
+    """Issue #146: settle the cross-solver mapping the POUNCE comparison needs.
+
+    POUNCE is an IPOPT port and reuses its ``ApplicationReturnStatus`` names,
+    so the two binaries differ in spelling rather than in vocabulary. Matching
+    IPOPT's prose alone put every POUNCE solve in ``unknown`` -- including the
+    fully converged ones -- which is why matching the status rather than one
+    solver's wording is the answer here instead of ``unknown`` or a table keyed
+    on the solver name.
+    """
+    assert classify_convergence_quality(OPTIMAL_MESSAGE) == classify_convergence_quality(
+        POUNCE_OPTIMAL_MESSAGE
+    )
+    assert classify_convergence_quality(
+        ACCEPTABLE_LEVEL_MESSAGE
+    ) == classify_convergence_quality(POUNCE_ACCEPTABLE_LEVEL_MESSAGE)
+    # A solver outside the vocabulary is still `unknown`, not a guess.
+    assert (
+        classify_convergence_quality(r"SomeSolver 1.0\x3a ConvergedNicely")
+        == CONVERGENCE_QUALITY_UNKNOWN
+    )

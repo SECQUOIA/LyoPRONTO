@@ -2203,6 +2203,20 @@ def _normalize_solver_message(raw: Any) -> str | None:
     return str(raw).strip() or None
 
 
+def _status_vocabulary_key(message: str) -> str:
+    """Reduce a solver message to letters so one status matches either spelling.
+
+    IPOPT writes its ``ApplicationReturnStatus`` into the ``.sol`` file as
+    prose (``Solved To Acceptable Level.``); solvers that reuse the same
+    vocabulary may write the enum name instead (``SolvedToAcceptableLevel``).
+    Dropping everything that is not a letter maps both onto one key, so the
+    match is on the status rather than on one solver's punctuation.  It also
+    discards the ``Ipopt 3.14.16:`` style prefix, which is why the comparison
+    below stays a substring test.
+    """
+    return "".join(character for character in message.lower() if character.isalpha())
+
+
 def classify_convergence_quality(message: str | None) -> str:
     """Classify how tightly a solver converged, from its message.
 
@@ -2222,14 +2236,34 @@ def classify_convergence_quality(message: str | None) -> str:
 
     Acceptable-level is tested first so that a message naming both levels can
     never be reported as the tighter one.
+
+    Cross-solver scope (issue #146).  The match is over IPOPT's
+    ``ApplicationReturnStatus`` vocabulary, not over one binary's wording, so a
+    solver that reuses those status names classifies without a per-solver
+    table.  Measured on one NLP through the ``ipopt`` ASL interface, which is
+    how both binaries are driven:
+
+    * IPOPT 3.14.16 at ``tol`` -- ``Ipopt 3.14.16: Optimal Solution Found``;
+    * IPOPT 3.14.16 at ``acceptable_tol`` -- ``Ipopt 3.14.16: Solved To
+      Acceptable Level.``;
+    * POUNCE 0.9.0 at ``tol`` -- ``POUNCE 0.9.0: SolveSucceeded``;
+    * POUNCE 0.9.0 at ``acceptable_tol`` -- ``POUNCE 0.9.0:
+      SolvedToAcceptableLevel``.
+
+    POUNCE writes the enum names where IPOPT writes prose, so matching IPOPT's
+    prose alone put *every* POUNCE solve in ``unknown``, fully converged ones
+    included.  That would have left the field carrying no information in
+    exactly the solver comparison it was added for (issue #140).  A solver
+    outside this vocabulary still lands in ``unknown``, which is the honest
+    answer rather than a mapping guessed from unseen text.
     """
     if message is None:
         return CONVERGENCE_QUALITY_UNKNOWN
 
-    text = str(message).lower()
-    if "solved to acceptable level" in text:
+    text = _status_vocabulary_key(str(message))
+    if "solvedtoacceptablelevel" in text:
         return ACCEPTED_AT_ACCEPTABLE_TOL
-    if "optimal solution found" in text:
+    if "optimalsolutionfound" in text or "solvesucceeded" in text:
         return CONVERGED_TO_TOLERANCE
     return CONVERGENCE_QUALITY_UNKNOWN
 

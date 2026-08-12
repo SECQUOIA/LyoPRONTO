@@ -205,6 +205,11 @@ def test_ode_diagnostic_returns_nan_without_the_constraint() -> None:
 
 
 def _rung(factor: float, endpoint: float | None, converged: bool = True) -> RungResult:
+    message = (
+        "Ipopt 3.14.16: Solved To Acceptable Level."
+        if converged
+        else "Ipopt 3.14.16: Maximum Number of Iterations Exceeded."
+    )
     return RungResult(
         problem="problem1",
         factor=factor,
@@ -214,11 +219,12 @@ def _rung(factor: float, endpoint: float | None, converged: bool = True) -> Rung
         max_product_temperature_K=243.0,
         termination_condition="optimal" if converged else "maxIterations",
         solver_status="ok" if converged else "warning",
-        solver_message="Ipopt 3.14.16: Solved To Acceptable Level."
-        if converged
-        else "Ipopt 3.14.16: Maximum Number of Iterations Exceeded.",
+        solver_message=message,
         max_constraint_violation=2.48e-4,
         ode_residual_times_thickness_squared_K_m2=4.95e-13,
+        # Classified rather than hard-coded so the fixture cannot claim a
+        # quality its own message does not support.
+        convergence_quality=paper_ocp.classify_convergence_quality(message),
     )
 
 
@@ -268,6 +274,65 @@ def test_format_labels_the_ode_diagnostic_with_its_units() -> None:
 
     assert "odeK_m2=" in text
     assert "feasible" not in text
+
+
+def test_an_acceptable_level_rung_is_reported_as_such_not_only_as_converged() -> None:
+    """Issue #146: `converged` alone reads as convergence to `tol`.
+
+    Every converged rung of the recorded IPOPT baseline stopped at
+    `acceptable_tol` while reporting `optimal/ok`, so the record and the report
+    line must both name the level rather than leaving it to the raw message.
+    """
+    rung = _rung(1.0, 6.1865)
+    record = rung.as_dict()
+
+    assert record["converged"] is True
+    assert record["termination_condition"] == "optimal"
+    assert record["convergence_quality"] == paper_ocp.ACCEPTED_AT_ACCEPTABLE_TOL
+
+    text = format_results({"problem1": [rung]})
+    assert f"quality={paper_ocp.ACCEPTED_AT_ACCEPTABLE_TOL}" in text
+    # The distinction is worthless if the tighter label also appears.
+    assert paper_ocp.CONVERGED_TO_TOLERANCE not in text
+
+
+def test_the_report_separates_the_two_convergence_levels() -> None:
+    """A tolerance-converged rung and an acceptable-level one must not read alike."""
+    tight = dataclasses.replace(
+        _rung(1.0, 6.1865),
+        solver_message="Ipopt 3.14.16: Optimal Solution Found",
+        convergence_quality=paper_ocp.CONVERGED_TO_TOLERANCE,
+    )
+    loose = _rung(0.5, 6.1669)
+
+    text = format_results({"problem1": [tight, loose]})
+    # The trailing summary line also names both factors, so select the rung
+    # lines by the column under test rather than by the factor.
+    tight_line, loose_line = [line for line in text.splitlines() if "quality=" in line]
+
+    # Both are `optimal/ok ok`; only the quality tells them apart.
+    assert "optimal/ok ok" in tight_line and "optimal/ok ok" in loose_line
+    assert f"quality={paper_ocp.CONVERGED_TO_TOLERANCE}" in tight_line
+    assert f"quality={paper_ocp.ACCEPTED_AT_ACCEPTABLE_TOL}" in loose_line
+
+
+def test_a_rung_with_no_solve_reports_unknown_quality() -> None:
+    """An `error` rung met no tolerance at all, so it must claim none."""
+    error_rung = RungResult(
+        problem="problem1",
+        factor=0.01,
+        conduction_time_s=0.469,
+        converged=False,
+        termination_condition="error",
+        solver_status="error",
+        solver_message="Cannot load a SolverResults object with bad status: error",
+    )
+
+    assert error_rung.convergence_quality == paper_ocp.CONVERGENCE_QUALITY_UNKNOWN
+    assert (
+        f"quality={paper_ocp.CONVERGENCE_QUALITY_UNKNOWN}"
+        in format_results({"problem1": [error_rung]})
+    )
 
 
 def test_rung_record_has_no_feasibility_verdict() -> None:
@@ -343,6 +408,7 @@ def _stub_solution(termination: str, status: str, message: str) -> dict:
             "termination_condition": termination,
             "status": status,
             "message": message,
+            "convergence_quality": paper_ocp.classify_convergence_quality(message),
         },
         "model": model,
     }
@@ -380,6 +446,35 @@ def test_run_ladder_records_a_non_success_result_and_stops(monkeypatch) -> None:
 
     # The solve must have been asked not to raise, or this rung never returns.
     assert calls[0]["require_success"] is False
+
+
+def test_run_ladder_carries_the_quality_extraction_already_computed(
+    monkeypatch,
+) -> None:
+    """Issue #146: the study reads `paper_ocp`'s label, not the solver text.
+
+    Both rungs return `optimal/ok`, so the recorded quality is the only field
+    that separates the acceptable-level solve from the tolerance-converged one.
+    """
+    messages = iter(
+        [
+            "Ipopt 3.14.16: Optimal Solution Found",
+            "Ipopt 3.14.16: Solved To Acceptable Level.",
+        ]
+    )
+
+    def fake_solve(**kwargs):
+        return _stub_solution("optimal", "ok", next(messages))
+
+    monkeypatch.setattr(paper_ocp, "solve_paper_problem1", fake_solve)
+
+    results = run_ladder("problem1", ladder=(1.0, 0.5))
+
+    assert [r.converged for r in results] == [True, True]
+    assert [r.convergence_quality for r in results] == [
+        paper_ocp.CONVERGED_TO_TOLERANCE,
+        paper_ocp.ACCEPTED_AT_ACCEPTABLE_TOL,
+    ]
 
 
 def test_run_ladder_propagates_an_invalid_executable() -> None:
