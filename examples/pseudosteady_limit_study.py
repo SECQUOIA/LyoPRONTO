@@ -457,6 +457,24 @@ def format_results(results: Mapping[str, Sequence[RungResult]]) -> str:
     return "\n".join(lines)
 
 
+def format_rung_progress(rung: RungResult) -> str:
+    """Render one rung as the line streamed while the ladder is still running.
+
+    Shorter than the :func:`format_results` row -- it omits the residual
+    columns -- but it carries the same convergence level, because this is the
+    line an operator watches during a long run and ``optimal/ok`` alone reads
+    as convergence to ``tol``.
+    """
+    endpoint = "n/a" if rung.endpoint_hr is None else f"{rung.endpoint_hr:.4f} hr"
+    state = "ok" if rung.converged else "NOT CONVERGED"
+    return (
+        f"  [{rung.problem} f={rung.factor:g}] "
+        f"{rung.termination_condition}/{rung.solver_status} {state} "
+        f"quality={rung.convergence_quality} "
+        f"endpoint={endpoint}"
+    )
+
+
 def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--solver", default="ipopt", help="Pyomo solver interface")
@@ -493,17 +511,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     )
 
     def report(rung: RungResult) -> None:
-        state = "ok" if rung.converged else "NOT CONVERGED"
-        endpoint = (
-            "n/a" if rung.endpoint_hr is None else f"{rung.endpoint_hr:.4f} hr"
-        )
-        print(
-            f"  [{rung.problem} f={rung.factor:g}] "
-            f"{rung.termination_condition}/{rung.solver_status} {state} "
-            f"quality={rung.convergence_quality} "
-            f"endpoint={endpoint}",
-            flush=True,
-        )
+        print(format_rung_progress(rung), flush=True)
 
     try:
         results = run_study(

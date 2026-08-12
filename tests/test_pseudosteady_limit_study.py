@@ -20,6 +20,7 @@ from examples.pseudosteady_limit_study import (
     conduction_time_s,
     endpoint_shift_percent,
     format_results,
+    format_rung_progress,
     ode_residual_times_thickness_squared,
     run_ladder,
     scaled_config,
@@ -314,6 +315,37 @@ def test_the_report_separates_the_two_convergence_levels() -> None:
     assert "optimal/ok ok" in tight_line and "optimal/ok ok" in loose_line
     assert f"quality={paper_ocp.CONVERGED_TO_TOLERANCE}" in tight_line
     assert f"quality={paper_ocp.ACCEPTED_AT_ACCEPTABLE_TOL}" in loose_line
+
+
+def test_the_streamed_progress_line_states_the_convergence_level_too() -> None:
+    """The line watched during a long run must not read `optimal/ok` alone.
+
+    It is emitted per rung while the ladder is still solving, so it is where an
+    operator first reads the result of a rung.
+    """
+    line = format_rung_progress(_rung(0.5, 6.1669))
+
+    assert "optimal/ok ok" in line
+    assert f"quality={paper_ocp.ACCEPTED_AT_ACCEPTABLE_TOL}" in line
+    assert "endpoint=6.1669 hr" in line
+
+
+def test_the_streamed_progress_line_handles_a_rung_with_no_endpoint() -> None:
+    """An `error` rung streams before the ladder stops, so it must not raise."""
+    line = format_rung_progress(
+        RungResult(
+            problem="problem1",
+            factor=0.01,
+            conduction_time_s=0.469,
+            converged=False,
+            termination_condition="error",
+            solver_status="error",
+        )
+    )
+
+    assert "NOT CONVERGED" in line
+    assert "endpoint=n/a" in line
+    assert f"quality={paper_ocp.CONVERGENCE_QUALITY_UNKNOWN}" in line
 
 
 def test_a_rung_with_no_solve_reports_unknown_quality() -> None:
