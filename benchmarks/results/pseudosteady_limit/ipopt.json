@@ -24,7 +24,8 @@
         "solver_status": "ok",
         "solver_message": "Ipopt 3.14.16\\x3a Solved To Acceptable Level.",
         "max_constraint_violation": 0.0002475925783263777,
-        "ode_residual_times_thickness_squared_K_m2": 4.945277781773711e-13
+        "ode_residual_times_thickness_squared_K_m2": 4.945277781773711e-13,
+        "convergence_quality": "accepted_at_acceptable_tol"
       },
       {
         "problem": "problem1",
@@ -37,7 +38,8 @@
         "solver_status": "ok",
         "solver_message": "Ipopt 3.14.16\\x3a Solved To Acceptable Level.",
         "max_constraint_violation": 0.00043435746849920266,
-        "ode_residual_times_thickness_squared_K_m2": 9.921806812268504e-13
+        "ode_residual_times_thickness_squared_K_m2": 9.921806812268504e-13,
+        "convergence_quality": "accepted_at_acceptable_tol"
       },
       {
         "problem": "problem1",
@@ -50,7 +52,8 @@
         "solver_status": "ok",
         "solver_message": "Ipopt 3.14.16\\x3a Solved To Acceptable Level.",
         "max_constraint_violation": 0.0009025342735040631,
-        "ode_residual_times_thickness_squared_K_m2": 2.4029379802322767e-12
+        "ode_residual_times_thickness_squared_K_m2": 2.4029379802322767e-12,
+        "convergence_quality": "accepted_at_acceptable_tol"
       },
       {
         "problem": "problem1",
@@ -63,7 +66,8 @@
         "solver_status": "ok",
         "solver_message": "Ipopt 3.14.16\\x3a Solved To Acceptable Level.",
         "max_constraint_violation": 0.002487654141533402,
-        "ode_residual_times_thickness_squared_K_m2": 4.746458744049422e-12
+        "ode_residual_times_thickness_squared_K_m2": 4.746458744049422e-12,
+        "convergence_quality": "accepted_at_acceptable_tol"
       },
       {
         "problem": "problem1",
@@ -76,7 +80,8 @@
         "solver_status": "ok",
         "solver_message": "Ipopt 3.14.16\\x3a Solved To Acceptable Level.",
         "max_constraint_violation": 0.0044095318545429585,
-        "ode_residual_times_thickness_squared_K_m2": 9.908928253529576e-12
+        "ode_residual_times_thickness_squared_K_m2": 9.908928253529576e-12,
+        "convergence_quality": "accepted_at_acceptable_tol"
       },
       {
         "problem": "problem1",
@@ -89,7 +94,8 @@
         "solver_status": "ok",
         "solver_message": "Ipopt 3.14.16\\x3a Solved To Acceptable Level.",
         "max_constraint_violation": 0.00805983833698369,
-        "ode_residual_times_thickness_squared_K_m2": 2.4095754373933233e-11
+        "ode_residual_times_thickness_squared_K_m2": 2.4095754373933233e-11,
+        "convergence_quality": "accepted_at_acceptable_tol"
       },
       {
         "problem": "problem1",
@@ -102,7 +108,8 @@
         "solver_status": "error",
         "solver_message": "Cannot load a SolverResults object with bad status: error",
         "max_constraint_violation": null,
-        "ode_residual_times_thickness_squared_K_m2": null
+        "ode_residual_times_thickness_squared_K_m2": null,
+        "convergence_quality": "unknown"
       }
     ],
     "problem2": [
@@ -117,7 +124,8 @@
         "solver_status": "ok",
         "solver_message": "Ipopt 3.14.16\\x3a Solved To Acceptable Level.",
         "max_constraint_violation": 0.0002571215937271498,
-        "ode_residual_times_thickness_squared_K_m2": 6.905381045479902e-13
+        "ode_residual_times_thickness_squared_K_m2": 6.905381045479902e-13,
+        "convergence_quality": "accepted_at_acceptable_tol"
       },
       {
         "problem": "problem2",
@@ -130,7 +138,8 @@
         "solver_status": "ok",
         "solver_message": "Ipopt 3.14.16\\x3a Solved To Acceptable Level.",
         "max_constraint_violation": 0.0007144316859528585,
-        "ode_residual_times_thickness_squared_K_m2": 1.4000270481106994e-12
+        "ode_residual_times_thickness_squared_K_m2": 1.4000270481106994e-12,
+        "convergence_quality": "accepted_at_acceptable_tol"
       },
       {
         "problem": "problem2",
@@ -143,7 +152,8 @@
         "solver_status": "ok",
         "solver_message": "Ipopt 3.14.16\\x3a Solved To Acceptable Level.",
         "max_constraint_violation": 0.0024968081404209697,
-        "ode_residual_times_thickness_squared_K_m2": 3.3637576641982006e-12
+        "ode_residual_times_thickness_squared_K_m2": 3.3637576641982006e-12,
+        "convergence_quality": "accepted_at_acceptable_tol"
       },
       {
         "problem": "problem2",
@@ -156,7 +166,8 @@
         "solver_status": "ok",
         "solver_message": "Ipopt 3.14.16\\x3a Solved To Acceptable Level.",
         "max_constraint_violation": 0.0035609398952395344,
-        "ode_residual_times_thickness_squared_K_m2": 6.615994339502211e-12
+        "ode_residual_times_thickness_squared_K_m2": 6.615994339502211e-12,
+        "convergence_quality": "accepted_at_acceptable_tol"
       },
       {
         "problem": "problem2",
@@ -169,7 +180,8 @@
         "solver_status": "ok",
         "solver_message": "Ipopt 3.14.16\\x3a Solved To Acceptable Level.",
         "max_constraint_violation": 0.006978002969026051,
-        "ode_residual_times_thickness_squared_K_m2": 1.3398193033146336e-11
+        "ode_residual_times_thickness_squared_K_m2": 1.3398193033146336e-11,
+        "convergence_quality": "accepted_at_acceptable_tol"
       },
       {
         "problem": "problem2",
@@ -182,7 +194,8 @@
         "solver_status": "error",
         "solver_message": "Cannot load a SolverResults object with bad status: error",
         "max_constraint_violation": null,
-        "ode_residual_times_thickness_squared_K_m2": null
+        "ode_residual_times_thickness_squared_K_m2": null,
+        "convergence_quality": "unknown"
       }
     ]
   }
