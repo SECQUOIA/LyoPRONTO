@@ -299,10 +299,13 @@ def test_an_acceptable_level_rung_is_reported_as_such_not_only_as_converged() ->
 
 def test_the_report_separates_the_two_convergence_levels() -> None:
     """A tolerance-converged rung and an acceptable-level one must not read alike."""
+    tight_message = "Ipopt 3.14.16: Optimal Solution Found"
     tight = dataclasses.replace(
         _rung(1.0, 6.1865),
-        solver_message="Ipopt 3.14.16: Optimal Solution Found",
-        convergence_quality=paper_ocp.CONVERGED_TO_TOLERANCE,
+        solver_message=tight_message,
+        # Classified from the message, as `_rung` does, so neither side of the
+        # comparison can claim a quality its own message does not support.
+        convergence_quality=paper_ocp.classify_convergence_quality(tight_message),
     )
     loose = _rung(0.5, 6.1669)
 
