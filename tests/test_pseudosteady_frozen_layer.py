@@ -119,6 +119,60 @@ def test_baseline_still_supports_the_documented_headline(repo_root) -> None:
             assert ratio < 1.0, "problem2 no longer under-shoots the timescale ratio"
 
 
+def test_committed_outputs_render_the_convergence_level(repo_root) -> None:
+    """A source edit that is not re-executed must not ship the old rendering.
+
+    This notebook commits its rendered outputs and `mkdocs` publishes them, so
+    the outputs are a separate artifact from the sources that produced them.
+    Changing a cell to report the convergence level therefore does nothing for
+    a reader until the notebook is re-executed and the result committed: the
+    #147 review caught exactly that, with sources reporting the level while the
+    published outputs still showed a `termination` column of `optimal` and
+    `(converged)` per rung -- the conflation of issue #146, still on the page.
+
+    Regenerate with a no-parameter papermill run (which is what the committed
+    `metadata.papermill` records) and copy the result over the tracked file::
+
+        python -c "import papermill; papermill.execute_notebook(
+            'docs/examples/pseudosteady_frozen_layer.ipynb',
+            'docs/examples/pseudosteady_frozen_layer_output.ipynb')"
+        cp docs/examples/pseudosteady_frozen_layer_output.ipynb \\
+           docs/examples/pseudosteady_frozen_layer.ipynb
+    """
+    rendered_text = {}
+    for index, cell in enumerate(_notebook(repo_root)["cells"]):
+        if cell["cell_type"] != "code":
+            continue
+        rendered_text[index] = "".join(
+            "".join(output.get("text", [])) for output in cell.get("outputs", [])
+        )
+
+    #: The baseline table and the live-rerun listing. Both print one rung per
+    #: line, and both are what a reader of the published page sees.
+    reporting = {
+        index
+        for index, text in rendered_text.items()
+        if EXPECTED_CONVERGED_QUALITY in text
+    }
+    assert len(reporting) == 2, (
+        "expected the baseline table and the live rerun to render "
+        f"{EXPECTED_CONVERGED_QUALITY!r} in their committed output; found it in "
+        f"{sorted(reporting)}. Re-execute the notebook and commit the result."
+    )
+
+    stale = {
+        index: marker
+        for index, text in rendered_text.items()
+        for marker in ("(converged)", "termination")
+        if marker in text
+    }
+    assert not stale, (
+        f"committed output still renders the pre-#146 form {stale}. The cell "
+        "sources were changed without re-executing, so the published page "
+        "shows a convergence level the sources no longer report."
+    )
+
+
 def test_baseline_still_records_the_documented_convergence_level(repo_root) -> None:
     """The baseline keeps the convergence level several documents state in prose.
 
