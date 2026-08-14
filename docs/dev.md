@@ -83,7 +83,7 @@ non-Pyomo lane when practical:
 | Notebook | `pytest tests/ -n 0 -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing` | `.github/workflows/rundocs.yml` |
 | Pyomo light | `pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v` | `.github/workflows/pyomo-tests.yml`, `./run_local_ci.sh pyomo-light` |
 | Pyomo solver | `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=term-missing` | `.github/workflows/pyomo-tests.yml`, `.github/workflows/slow-tests.yml` |
-| POUNCE comparison | `pytest tests/ -n 0 -v -m "pyomo" --cov=lyopronto --cov-report=term-missing` via `./run_local_ci.sh pounce` | Manual `.github/workflows/slow-tests.yml`, local runner |
+| POUNCE comparison | `pytest tests/ -n 0 -v -m "pyomo" --cov=lyopronto --cov-report=term-missing` via `./run_local_ci.sh pounce` | Automatic `.github/workflows/pyomo-tests.yml`, manual `.github/workflows/slow-tests.yml`, local runner |
 
 All pytest lanes inherit `--durations=25`, `--timeout=600`,
 `--timeout-method=thread`, and `--dist=worksteal` from `pyproject.toml`. Non-Pyomo coverage lanes use
@@ -109,16 +109,17 @@ Notebook tests run serially in `.github/workflows/rundocs.yml` for ready PRs,
 pushes to `main`, nightly schedule, version tags, and manual dispatch.
 
 The Pyomo Tests workflow is reportable on every PR so repository maintainers
-can require the `Pyomo import and construction lane` job in branch protection.
-That job reports success quickly when the Pyomo scope check decides validation
-is not needed, and installs `.[dev,pyomo]` without IPOPT only for Pyomo model,
+can require its jobs in branch protection. The import-and-construction job
+reports success quickly when the Pyomo scope check decides validation is not
+needed, and installs `.[dev,pyomo]` without a solver only for Pyomo model,
 Pyomo test, maintained Pyomo example, Pyomo dependency, or Pyomo workflow
-changes. The solver comparison job is job-level non-blocking; inspect its logs
-when it runs because install failures and comparison failures leave the PR
-status green. Solver-backed lanes add IDAES's solver directory to `PATH` and
-install its LAPACK runtime dependency, then verify that IPOPT is both discoverable
-and executable before pytest starts. This prevents a green run in which every
-solver-backed test was silently skipped.
+changes. For non-draft changes in that scope, separate solver jobs exercise
+IPOPT and the pinned POUNCE release. Both report a clean skip outside the scope
+instead of disappearing from the PR. The IPOPT job adds IDAES's solver
+directory to `PATH`, installs its LAPACK runtime dependency, and verifies that
+IPOPT is both discoverable and executable before pytest starts. The POUNCE job
+installs its pinned extra and GLPK, then runs the complete application suite
+serially through the same AMPL/ASL interface.
 
 The solver comparison job also executes reduced one-case versions of the
 current-main SciPy/Pyomo shelf-temperature, chamber-pressure, and joint-control
@@ -187,32 +188,36 @@ branch-protection check still reports on every PR.
 
 `Pyomo import and construction lane` runs without a solver, so solver-backed
 tests skip there. The automatic `Pyomo solver lane` installs IPOPT and GLPK;
-the POUNCE comparison remains a local or manually dispatched lane. Keep the
-automatic solver lane able to fail: it was
+the automatic `POUNCE solver lane` installs POUNCE and GLPK. Keep both solver
+lanes able to fail: the IPOPT job was
 previously `continue-on-error: true`, and a red solver test reported the job as
 success, so a solver regression could reach `main` with every check green.
 
-The first is a required check today. **The solver lane is not yet** -- it is
-able to gate but is not in branch protection, so a solver regression can still
-reach `main`. Two steps close that, in order:
+The import-and-construction job is a required check today. **Neither solver
+lane is required yet** -- both are able to gate but are not in branch
+protection, so a solver regression can still reach `main`. Two steps close
+that for either lane, in order:
 
 1. Confirm the skipped path on a PR that touches no Pyomo-sensitive file: the
    lane must report success rather than stay pending. Nothing verifies this from
    inside a PR that changes `pyomo-tests.yml`, because such a PR is itself
    Pyomo-sensitive and always takes the running path.
-2. Then add the context:
+2. Then add the desired context:
 
    ```bash
    gh api repos/SECQUOIA/LyoPRONTO/branches/main/protection/required_status_checks/contexts \
      --method POST -f 'contexts[]=Pyomo solver lane'
    ```
 
+   Use `POUNCE solver lane` as the context after its installation and skipped
+   paths have demonstrated reliable reporting.
+
 Update this paragraph once that lands, so it stops describing an intention.
 
-Because it gates, it must report on every PR. A required check that never
-reports leaves the PR pending forever, so the run/skip decision lives in the
-steps via `RUN_SOLVER` rather than a job-level `if:`. Adding a new scope-gated
-required lane should follow that pattern.
+Because either job may become a gate, both report on every PR. A required check
+that never reports leaves the PR pending forever, so each run/skip decision
+lives in the steps via `RUN_SOLVER` or `RUN_POUNCE` rather than a job-level
+`if:`.
 
 The lane's IPOPT is whatever `idaes get-extensions` ships (3.13.2), which is
 usually not the build contributors run locally. That is the practical reason

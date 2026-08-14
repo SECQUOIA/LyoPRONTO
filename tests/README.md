@@ -14,7 +14,7 @@ CI workflow and lane command reference is `../docs/dev.md`.
 | Notebook | `notebook` | Explicit notebook workflow | Executes documentation notebooks serially and separately from ordinary fast tests. |
 | Pyomo light | `tests/test_pyomo_models tests/test_pyomo_solver.py` | Always-reporting automatic workflow and `./run_local_ci.sh pyomo-light` | Required import, model-construction, and missing-solver skip coverage without IPOPT. |
 | Pyomo solver | `pyomo` | Optional solver comparison workflow and manual validation workflow | Solver-backed SciPy comparison coverage when IPOPT is available. |
-| POUNCE comparison | `pyomo` | `./run_local_ci.sh pounce` and manual validation workflow | Runs the full Pyomo application suite through POUNCE 0.10.0 using the same AMPL interface as IPOPT. |
+| POUNCE comparison | `pyomo` | Automatic Pyomo workflow, `./run_local_ci.sh pounce`, and manual validation workflow | Runs the full Pyomo application suite through POUNCE 0.10.0 using the same AMPL interface as IPOPT. |
 
 ## Marker Policy
 
@@ -23,10 +23,10 @@ CI workflow and lane command reference is `../docs/dev.md`.
 - `notebook`: Papermill or Jupyter execution tests for documentation examples.
   Keep these in the explicit notebook lane and run that lane with `-n 0` so
   kernels do not start concurrently.
-- `pyomo`: Tests that require Pyomo, IPOPT, or the Pyomo optimization stack.
-  Model construction tests run automatically on Pyomo-sensitive changes while
-  the workflow reports on every PR for branch-protection compatibility. Tests
-  that need IPOPT should call
+- `pyomo`: Tests that require Pyomo, IPOPT, POUNCE, or the Pyomo optimization
+  stack. Model construction and both solver jobs run automatically on relevant
+  non-draft changes while the workflow reports on every PR for
+  branch-protection compatibility. Tests that need IPOPT should call
   `tests.pyomo_solver.require_pyomo_solver("ipopt")` so missing solver setup
   skips with an installation hint.
 - `main`: Tests covering behavior that was historically reachable through

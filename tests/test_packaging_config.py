@@ -445,11 +445,16 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert "tests/test_paper_gdp_validation.py" in pyomo_tests
     assert "tests/test_pyomo_models/test_original_workflow_parity.py" in pyomo_tests
     assert "tests/test_original_workflow_notebooks.py" in pyomo_tests
+    assert "tests/test_pounce_solver_comparison.py" in pyomo_tests
+    assert "tests/test_pseudosteady_limit_study.py" in pyomo_tests
     assert "tests/test_pyomo_solver.py" in pyomo_tests
     assert "tests/pyomo_solver.py" in pyomo_tests
+    assert "benchmarks/results/pseudosteady_limit/**" in pyomo_tests
+    assert "run_local_ci.sh" in pyomo_tests
     assert ".github/workflows/pyomo-tests.yml" in pyomo_tests
     assert "pyproject.toml" in pyomo_tests
     assert 'pip install -e ".[dev,pyomo]"' in pyomo_tests
+    assert 'pip install -e ".[dev,pyomo,pounce]"' in pyomo_tests
     assert "pytest -n 0 -v" in pyomo_tests
     assert "idaes get-extensions --extra petsc" in pyomo_tests
     assert "sudo apt-get install --yes glpk-utils liblapack3" in pyomo_tests
@@ -482,6 +487,17 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
         "pyomo-solver-comparison must not carry a job-level `if:`; gate the "
         "individual steps on env.RUN_SOLVER instead so the lane still reports"
     )
+    pounce_lane = _workflow_job(pyomo_tests, "pounce-solver-comparison")
+    assert "continue-on-error: true" not in pounce_lane
+    assert "name: POUNCE solver lane" in pounce_lane
+    assert "RUN_POUNCE:" in pounce_lane
+    assert "env.RUN_POUNCE == 'true'" in pounce_lane
+    assert "env.RUN_POUNCE != 'true'" in pounce_lane
+    assert re.search(r"^ {4}if:", pounce_lane, re.MULTILINE) is None, (
+        "pounce-solver-comparison must not carry a job-level `if:`; gate the "
+        "individual steps on env.RUN_POUNCE instead so the lane still reports"
+    )
+    assert "SKIP_INSTALL=1 ./run_local_ci.sh pounce" in pounce_lane
     assert (
         "tests/test_pyomo_models/test_single_step.py::test_single_step_solves_and_matches_scipy_reference"
         in pyomo_tests
@@ -654,7 +670,10 @@ def test_contributor_docs_include_ci_and_static_analysis_commands() -> None:
     assert "branch protection" in docs
     assert "reports on every PR" in docs
     assert "Pyomo scope check" in docs
-    assert "job-level non-blocking" in docs
+    assert "Neither solver\nlane is required yet" in docs
+    assert "POUNCE solver lane" in docs
+    assert "RUN_POUNCE" in docs
+    assert "job-level non-blocking" not in docs
 
 
 def test_docs_inventory_classifies_retained_markdown_files() -> None:

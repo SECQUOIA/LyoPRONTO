@@ -44,7 +44,8 @@ non-Pyomo lane when practical:
 
 Use `./run_local_ci.sh slow`, `notebook`, `pyomo-light`, or `pyomo` for focused
 manual validation. Use `./run_local_ci.sh pounce` for the pinned POUNCE 0.10.0
-comparison on Python 3.9 or newer. See `docs/dev.md` for the exact lane
+comparison on Python 3.9 or newer; CI runs that lane automatically for
+non-draft Pyomo-sensitive changes. See `docs/dev.md` for the exact lane
 commands, coverage policy, workflow triggers, and branch-protection notes.
 
 ## Contributor Policy

@@ -62,11 +62,16 @@ jobs:
               docs/examples/paper_optimal_control_replication.ipynb|\
               docs/examples/dae_optimizer_walkthrough.ipynb|\
               docs/examples/pseudosteady_frozen_layer.ipynb|\
+              benchmarks/results/pseudosteady_limit/**|\
               examples/pseudosteady_limit_study.py|\
+              run_local_ci.sh|\
               tests/test_pseudosteady_frozen_layer.py|\
+              tests/test_pseudosteady_limit_study.py|\
               tests/test_paper_optimal_control_replication.py|\
               tests/test_dae_optimizer_walkthrough.py|\
               tests/test_paper_gdp_validation.py|\
+              tests/test_original_workflow_notebooks.py|\
+              tests/test_pounce_solver_comparison.py|\
               tests/test_pyomo_models/**|\
               tests/test_current_main_optimizer_comparison.py|\
               tests/test_current_main_joint_optimizer_comparison.py|\
@@ -239,3 +244,54 @@ jobs:
           tests/test_pseudosteady_frozen_layer.py \
           tests/test_pyomo_models/test_paper_gdp.py \
           tests/test_paper_gdp_validation.py
+
+  pounce-solver-comparison:
+    name: POUNCE solver lane
+    # Keep this job reportable on every PR so it can become a required check
+    # after its runner reliability has been observed. Pyomo-sensitive,
+    # non-draft changes run the comparison; other PRs report a clean skip.
+    needs: [pyomo-scope, pyomo-no-solver]
+    runs-on: ubuntu-latest
+    env:
+      RUN_POUNCE: ${{ needs.pyomo-scope.outputs.run_pyomo == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.draft == false) }}
+
+    steps:
+    - name: Report skipped POUNCE validation
+      if: ${{ env.RUN_POUNCE != 'true' }}
+      run: |
+        echo "POUNCE validation skipped: ${{ needs.pyomo-scope.outputs.reason }}"
+        echo "(draft PRs and non-Pyomo changes do not need a solver run)"
+
+    - uses: actions/checkout@v4
+      if: ${{ env.RUN_POUNCE == 'true' }}
+
+    - name: Read CI version config
+      if: ${{ env.RUN_POUNCE == 'true' }}
+      id: pounce-versions
+      uses: mikefarah/yq@v4.44.1
+      with:
+        cmd: yq eval '.python-version' .github/ci-config/ci-versions.yml
+
+    - name: Set up Python
+      if: ${{ env.RUN_POUNCE == 'true' }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ steps.pounce-versions.outputs.result }}
+        cache: 'pip'
+        cache-dependency-path: pyproject.toml
+
+    - name: Install POUNCE test dependencies
+      if: ${{ env.RUN_POUNCE == 'true' }}
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        pip install -e ".[dev,pyomo,pounce]"
+
+    - name: Install POUNCE comparison runtime libraries
+      if: ${{ env.RUN_POUNCE == 'true' }}
+      run: |
+        sudo apt-get update
+        sudo apt-get install --yes glpk-utils
+
+    - name: Run POUNCE application comparison
+      if: ${{ env.RUN_POUNCE == 'true' }}
+      run: SKIP_INSTALL=1 ./run_local_ci.sh pounce

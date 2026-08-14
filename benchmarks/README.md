@@ -25,7 +25,8 @@ reference artifacts used for development, testing, or documentation:
 POUNCE 0.10.0 is exercised through the same Pyomo `ipopt` AMPL/ASL interface
 as IPOPT, with only the executable changed. This keeps model generation,
 solver options, result loading, and the scientific assertions identical. Run
-the complete comparison locally with:
+the complete comparison locally with the same command used by the automatic
+Pyomo-sensitive PR job:
 
 ```bash
 sudo apt-get install glpk-utils

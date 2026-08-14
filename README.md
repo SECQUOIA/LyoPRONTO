@@ -134,15 +134,16 @@ pytest tests/ -n auto -v -m "not pyomo" --cov=lyopronto --cov-config=.coveragerc
 
 `./run_local_ci.sh fast`, `./run_local_ci.sh full`,
 `./run_local_ci.sh slow`, `./run_local_ci.sh notebook`,
-`./run_local_ci.sh pyomo-light`, and `./run_local_ci.sh pyomo` mirror the
-documented GitHub Actions lanes. Pyomo remains optional: the path-filtered
-automatic Pyomo lane installs `.[dev,pyomo]` without IPOPT, while
-solver-backed Pyomo validation stays optional.
+`./run_local_ci.sh pyomo-light`, `./run_local_ci.sh pyomo`, and
+`./run_local_ci.sh pounce` mirror the documented GitHub Actions lanes. Pyomo
+and both NLP solvers remain optional package dependencies; CI installs them
+only in path-scoped solver jobs.
 
 POUNCE 0.10.0 can be checked against the same optional NLP applications with
 `python -m pip install -e ".[dev,pyomo,pounce]"` followed by
-`./run_local_ci.sh pounce` (Python 3.9+ and GLPK required). This comparison is
-local or manually dispatched rather than an automatic PR gate.
+`./run_local_ci.sh pounce` (Python 3.9+ and GLPK required). The same comparison
+runs automatically for non-draft PRs that touch Pyomo-sensitive paths and is
+also available by manual dispatch.
 
 Pull requests run static analysis and the fast SciPy lane by default. The Full
 Validation workflow runs the full non-Pyomo lane for validation-sensitive code
