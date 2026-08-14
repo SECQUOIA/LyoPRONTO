@@ -139,6 +139,11 @@ documented GitHub Actions lanes. Pyomo remains optional: the path-filtered
 automatic Pyomo lane installs `.[dev,pyomo]` without IPOPT, while
 solver-backed Pyomo validation stays optional.
 
+POUNCE 0.10.0 can be checked against the same optional NLP applications with
+`python -m pip install -e ".[dev,pyomo,pounce]"` followed by
+`./run_local_ci.sh pounce` (Python 3.9+ and GLPK required). This comparison is
+local or manually dispatched rather than an automatic PR gate.
+
 Pull requests run static analysis and the fast SciPy lane by default. The Full
 Validation workflow runs the full non-Pyomo lane for validation-sensitive code
 and test changes, PRs labeled `full-validation`, nightly scheduled validation,

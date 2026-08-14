@@ -14,6 +14,7 @@ CI workflow and lane command reference is `../docs/dev.md`.
 | Notebook | `notebook` | Explicit notebook workflow | Executes documentation notebooks serially and separately from ordinary fast tests. |
 | Pyomo light | `tests/test_pyomo_models tests/test_pyomo_solver.py` | Always-reporting automatic workflow and `./run_local_ci.sh pyomo-light` | Required import, model-construction, and missing-solver skip coverage without IPOPT. |
 | Pyomo solver | `pyomo` | Optional solver comparison workflow and manual validation workflow | Solver-backed SciPy comparison coverage when IPOPT is available. |
+| POUNCE comparison | `pyomo` | `./run_local_ci.sh pounce` and manual validation workflow | Runs the full Pyomo application suite through POUNCE 0.10.0 using the same AMPL interface as IPOPT. |
 
 ## Marker Policy
 
@@ -41,8 +42,10 @@ solver comparison job. Full-grid timing values are never CI assertions.
 `tests/test_original_workflow_notebooks.py` owns fresh-kernel execution of the
 known/unknown-Rp documentation notebooks. Their SciPy calculations always run;
 the notebook cells skip the optional comparison with an installation hint when
-Pyomo or IPOPT is absent. Construction and IPOPT-backed parity assertions live
-in `tests/test_pyomo_models/test_original_workflow_parity.py`.
+Pyomo or IPOPT is absent. They also carry the `pyomo` marker so the IPOPT and
+POUNCE solver lanes exercise those optional cells. Construction and IPOPT-
+backed parity assertions live in
+`tests/test_pyomo_models/test_original_workflow_parity.py`.
 
 Tests are organized by behavior rather than by how coverage was added. The
 shelf-temperature optimizer contract and its sole independent reference are
@@ -102,6 +105,7 @@ triggers:
 ./run_local_ci.sh notebook
 ./run_local_ci.sh pyomo-light
 ./run_local_ci.sh pyomo
+./run_local_ci.sh pounce
 ```
 
 The underlying pytest commands are:
@@ -135,6 +139,18 @@ python -m pip install -e ".[dev,pyomo]"
 idaes get-extensions --extra petsc
 sudo apt-get install glpk-utils
 ```
+
+To run the release-pinned POUNCE comparison on Python 3.9 or newer:
+
+```bash
+python -m pip install -e ".[dev,pyomo,pounce]"
+sudo apt-get install glpk-utils
+./run_local_ci.sh pounce
+```
+
+The runner exposes POUNCE through the same `ipopt` AMPL/ASL interface used by
+the recorded IPOPT baseline. This isolates the executable while leaving model
+generation, options, result loading, and scientific assertions unchanged.
 
 If your local environment manages solvers with conda, install IPOPT there and
 keep it on PATH:

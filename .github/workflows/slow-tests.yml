@@ -12,6 +12,7 @@ on:
           - slow-non-pyomo
           - full-non-pyomo
           - pyomo
+          - pounce
 
 permissions:
   contents: read
@@ -42,6 +43,8 @@ jobs:
         python -m pip install --upgrade pip setuptools wheel
         if [ "${{ inputs.lane }}" = "pyomo" ]; then
           pip install -e ".[dev,pyomo]"
+        elif [ "${{ inputs.lane }}" = "pounce" ]; then
+          pip install -e ".[dev,pyomo,pounce]"
         else
           pip install -e ".[dev]"
         fi
@@ -62,6 +65,12 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install --yes liblapack3
+
+    - name: Install POUNCE comparison runtime libraries
+      if: inputs.lane == 'pounce'
+      run: |
+        sudo apt-get update
+        sudo apt-get install --yes glpk-utils
 
     - name: Add IDAES solver binaries to PATH
       if: inputs.lane == 'pyomo'
@@ -95,6 +104,9 @@ jobs:
             ;;
           pyomo)
             run_pytest_allow_empty pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=term-missing
+            ;;
+          pounce)
+            SKIP_INSTALL=1 ./run_local_ci.sh pounce
             ;;
           *)
             echo "Unknown lane: ${{ inputs.lane }}"

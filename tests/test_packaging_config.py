@@ -227,6 +227,18 @@ def test_pyomo_extra_defines_optional_solver_stack_only() -> None:
     assert _requirements(ROOT / "requirements-dev.txt") == ["-e .[dev]"]
 
 
+def test_pounce_extra_pins_the_recorded_comparison_release() -> None:
+    project = _pyproject()["project"]
+    optional = project["optional-dependencies"]
+
+    assert optional["pounce"] == [
+        "pounce-solver==0.10.0",
+        "pyomo-pounce==0.10.0",
+    ]
+    assert "pounce-solver" not in project["dependencies"]
+    assert "pyomo-pounce" not in project["dependencies"]
+
+
 def test_dev_extra_includes_test_diagnostics_plugins() -> None:
     project = _pyproject()["project"]
     dev_dependencies = project["optional-dependencies"]["dev"]
@@ -393,8 +405,11 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert "manual-validation" not in manual_tests
     assert 'rc" -eq 5' in manual_tests
     assert 'pip install -e ".[dev,pyomo]"' in manual_tests
+    assert 'pip install -e ".[dev,pyomo,pounce]"' in manual_tests
     assert "idaes get-extensions --extra petsc" in manual_tests
     assert "sudo apt-get install --yes liblapack3" in manual_tests
+    assert "sudo apt-get install --yes glpk-utils" in manual_tests
+    assert "SKIP_INSTALL=1 ./run_local_ci.sh pounce" in manual_tests
     assert 'echo "$HOME/.idaes/bin" >> "$GITHUB_PATH"' in manual_tests
     assert "SolverFactory('ipopt').available(exception_flag=False)" in manual_tests
     assert "ipopt -v" in manual_tests
@@ -548,16 +563,25 @@ def test_local_ci_script_matches_documented_lane_expressions() -> None:
     _assert_marker_mentions(lane_expressions["pyomo"], "pyomo")
     _assert_pyomo_coverage(pyomo_command)
 
+    pounce_command = _single_command_with_marker(script, "$POUNCE_EXPR")
+    assert assignments["POUNCE_EXPR"] == "pyomo"
+    _assert_pyomo_coverage(pounce_command)
+    _assert_xdist_workers(pounce_command, "0")
+
     assert assignments["NON_PYOMO_COV_CONFIG"] == ".coveragerc.non-pyomo"
     assert "--cov-report=xml:coverage.xml" not in script
     assert "coverage.xml" not in script
     assert "--durations=25" not in script
     assert "pyomo-light" in script
     assert 'pip install -e ".[dev,pyomo]"' in script
+    assert 'pip install -e ".[dev,pyomo,pounce]"' in script
     assert "idaes get-extensions --extra petsc" in script
     assert 'export PATH="$HOME/.idaes/bin:$PATH"' in script
     assert "SolverFactory('ipopt').available(exception_flag=False)" in script
     assert "ipopt -v" in script
+    assert "LYOPRONTO_NLP_SOLVER_UNDER_TEST" in script
+    assert "pounce 0.10.0" in script
+    assert "glpsol --version" in script
     assert "pip install pyomo idaes-pse" not in script
     assert "run_pytest_allow_empty" in script
     assert "SKIP_INSTALL=1" in script

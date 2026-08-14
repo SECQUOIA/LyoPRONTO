@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import types
 
 import numpy as np
@@ -30,6 +31,8 @@ from lyopronto.pyomo_models.paper_ocp import (
 pyo = pytest.importorskip("pyomo.environ", reason="Pyomo not available")
 
 pytestmark = pytest.mark.pyomo
+
+POUNCE_COMPARISON = os.environ.get("LYOPRONTO_NLP_SOLVER_UNDER_TEST") == "pounce"
 
 
 def _coarse_discretization() -> PaperGDPDiscretization:
@@ -384,6 +387,14 @@ def test_problem1_gdp_selects_policy_1_then_2_without_indicator_seed() -> None:
 
 
 @pytest.mark.slow
+@pytest.mark.xfail(
+    POUNCE_COMPARISON,
+    reason=(
+        "POUNCE 0.10.0 reports SolveSucceeded before its Problem 2 fixed-policy "
+        "NLP is restart-stable (jkitchin/pounce#592)"
+    ),
+    strict=True,
+)
 def test_problem2_gdp_selects_policy_3_1_2_from_two_neutral_initializations() -> None:
     """Discrete and continuous initialization changes preserve the GDP result."""
     _require_gdp_solvers()

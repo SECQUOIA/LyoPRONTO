@@ -33,6 +33,18 @@ conda install -c conda-forge ipopt
 conda install -c conda-forge glpk
 ```
 
+The release-pinned POUNCE comparison uses its own extra and the same GLPK
+discrete master for the GDP cases:
+
+```bash
+python -m pip install -e ".[dev,pyomo,pounce]"
+sudo apt-get install glpk-utils
+./run_local_ci.sh pounce
+```
+
+POUNCE requires Python 3.9 or newer. It remains optional and is not installed
+by the default, `dev`, or `pyomo` extras.
+
 ## Local Validation
 
 Run static analysis and the fast PR lane before pushing:
@@ -71,6 +83,7 @@ non-Pyomo lane when practical:
 | Notebook | `pytest tests/ -n 0 -v -m "notebook" --cov=lyopronto --cov-config=.coveragerc.non-pyomo --cov-report=term-missing` | `.github/workflows/rundocs.yml` |
 | Pyomo light | `pytest tests/test_pyomo_models tests/test_pyomo_solver.py -n auto -v` | `.github/workflows/pyomo-tests.yml`, `./run_local_ci.sh pyomo-light` |
 | Pyomo solver | `pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=term-missing` | `.github/workflows/pyomo-tests.yml`, `.github/workflows/slow-tests.yml` |
+| POUNCE comparison | `pytest tests/ -n 0 -v -m "pyomo" --cov=lyopronto --cov-report=term-missing` via `./run_local_ci.sh pounce` | Manual `.github/workflows/slow-tests.yml`, local runner |
 
 All pytest lanes inherit `--durations=25`, `--timeout=600`,
 `--timeout-method=thread`, and `--dist=worksteal` from `pyproject.toml`. Non-Pyomo coverage lanes use
@@ -153,12 +166,18 @@ tolerances from the factor instead of hard-coding a number that happens to hold
 for one build.
 
 `.github/workflows/slow-tests.yml` is manual dispatch for focused slow
-non-Pyomo, full non-Pyomo, or optional Pyomo validation.
+non-Pyomo, full non-Pyomo, optional IPOPT-backed Pyomo validation, or the
+release-pinned POUNCE comparison. The POUNCE lane runs serially because it also
+executes notebook kernels, substitutes only the AMPL solver executable, and
+marks the known Problem 2 GDP premature-success result as a strict expected
+failure ([POUNCE #592](https://github.com/jkitchin/pounce/issues/592)). The
+pseudosteady continuation is a separate tracked benchmark because its lowest
+rung can take several minutes.
 
 ## Pyomo Test Policy
 
-Default installs and the `dev` extra intentionally exclude Pyomo, IDAES, and
-IPOPT. Pyomo-marked tests that need IPOPT should call
+Default installs and the `dev` extra intentionally exclude Pyomo, IDAES,
+IPOPT, and POUNCE. Pyomo-marked tests that need IPOPT should call
 `tests.pyomo_solver.require_pyomo_solver("ipopt")` before solving models. That
 helper skips with installation hints when Pyomo or IPOPT is missing.
 
@@ -167,8 +186,9 @@ default non-Pyomo PRs do not install optional dependencies while the required
 branch-protection check still reports on every PR.
 
 `Pyomo import and construction lane` runs without a solver, so solver-backed
-tests skip there. `Pyomo solver lane` installs IPOPT and GLPK and is the only
-lane that executes a real solve. Keep that second lane able to fail: it was
+tests skip there. The automatic `Pyomo solver lane` installs IPOPT and GLPK;
+the POUNCE comparison remains a local or manually dispatched lane. Keep the
+automatic solver lane able to fail: it was
 previously `continue-on-error: true`, and a red solver test reported the job as
 success, so a solver regression could reach `main` with every check green.
 

@@ -66,7 +66,7 @@ def _kv(ht: Dict[str, float], pch: float) -> float:
     return float(functions.Kv_FUN(ht["KC"], ht["KP"], ht["KD"], pch))
 
 
-def test_parameter_estimation_model_uses_synthetic_resistance_and_kv_targets(advanced_case):
+def _synthetic_parameter_observations(advanced_case):
     vial = advanced_case["vial"]
     product = advanced_case["product"]
     ht = advanced_case["ht"]
@@ -85,13 +85,20 @@ def test_parameter_estimation_model_uses_synthetic_resistance_and_kv_targets(adv
                 "dmdt": vial["Ap"] / rp / constant.kg_To_g * (psub - pch),
             }
         )
+    return observations
+
+
+def test_parameter_estimation_model_uses_synthetic_resistance_and_kv_targets(advanced_case):
+    vial = advanced_case["vial"]
+    product = advanced_case["product"]
+    ht = advanced_case["ht"]
 
     model = create_parameter_estimation_model(
         vial,
         product,
         ht,
-        observations,
-        residual_weights={"dmdt": 1.0e6},
+        _synthetic_parameter_observations(advanced_case),
+        residual_weights={"dmdt": 1.0e6, "Kv": 1.0e10},
     )
 
     assert model.advanced_workflow == "parameter_estimation"
@@ -108,6 +115,32 @@ def test_parameter_estimation_model_uses_synthetic_resistance_and_kv_targets(adv
         "dmdt[2]",
     }
     assert pyo.value(model.obj.expr) == pytest.approx(0.0, abs=1.0e-14)
+
+
+def test_parameter_estimation_application_solves_synthetic_case(advanced_case):
+    solver = require_pyomo_solver("ipopt")
+    model = create_parameter_estimation_model(
+        advanced_case["vial"],
+        advanced_case["product"],
+        advanced_case["ht"],
+        _synthetic_parameter_observations(advanced_case),
+        residual_weights={"dmdt": 1.0e6, "Kv": 1.0e10},
+    )
+
+    result = solve_parameter_estimation(model, solver=solver)
+
+    assert result.success, result.message
+    assert result.objective < 1.0e-8
+    assert result.as_dict() == pytest.approx(
+        {
+            name: advanced_case[group][name]
+            for group, names in (
+                ("product", ("R0", "A1", "A2")),
+                ("ht", ("KC", "KP", "KD")),
+            )
+            for name in names
+        }
+    )
 
 
 def test_parameter_estimation_solver_withholds_nonoptimal_values(advanced_case):
@@ -168,6 +201,30 @@ def test_design_space_feasibility_model_fixes_controls_and_capacity(advanced_cas
     assert hasattr(model, "equipment_capability")
     assert pyo.value(model.fixed_Pch[0]) == pytest.approx(0.12)
     assert pyo.value(model.fixed_Tsh[2]) == pytest.approx(-25.0)
+
+
+def test_design_space_feasibility_application_solves(advanced_case):
+    solver = require_pyomo_solver("ipopt")
+    product = dict(advanced_case["product"])
+    product["T_pr_crit"] = -5.0
+    model = create_design_space_feasibility_model(
+        advanced_case["vial"],
+        product,
+        advanced_case["ht"],
+        pch_profile=[0.05, 0.05, 0.05, 0.05, 0.05],
+        tsh_profile=[-20.0, -15.0, -10.0, -5.0, -5.0],
+        n_steps=4,
+        dt=0.25,
+        final_dried_fraction=0.01,
+        eq_cap=advanced_case["eq_cap"],
+        nvial=advanced_case["nvial"],
+    )
+
+    result = solve_trajectory(model, solver=solver)
+
+    assert result.success, result.message
+    assert pyo.value(model.Lck[4]) >= 0.01 * pyo.value(model.Lpr0)
+    assert max(violation or 0.0 for violation in result.constraint_violations.values()) < 1.0e-5
 
 
 def test_design_space_grid_models_tag_each_candidate_point(advanced_case):
@@ -280,6 +337,29 @@ def test_multivial_optimization_model_exposes_batch_capacity_margin(advanced_cas
     assert pyo.value(model.capacity_margin[0]) == pytest.approx(
         expected_capacity - expected_total_rate
     )
+
+
+def test_multivial_optimization_application_solves(advanced_case):
+    solver = require_pyomo_solver("ipopt")
+    model = create_multivial_optimization_model(
+        advanced_case["vial"],
+        advanced_case["product"],
+        advanced_case["ht"],
+        advanced_case["pchamber"],
+        advanced_case["tshelf"],
+        n_steps=2,
+        dt=0.5,
+        mode="joint",
+        final_dried_fraction=0.10,
+        eq_cap=advanced_case["eq_cap"],
+        nvial=advanced_case["nvial"],
+    )
+
+    results = solver.solve(model)
+
+    assert pyo.check_optimal_termination(results)
+    assert pyo.value(model.Lck[2]) >= 0.10 * pyo.value(model.Lpr0)
+    assert min(pyo.value(model.capacity_margin[t]) for t in model.TIME) >= -1.0e-6
 
 
 def test_multivial_optimization_requires_positive_vial_count(advanced_case):

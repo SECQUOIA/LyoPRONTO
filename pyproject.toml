@@ -64,6 +64,10 @@ pyomo = [
     "pyomo>=6.7",
     "idaes-pse>=2.2",
 ]
+pounce = [
+    "pounce-solver==0.10.0",
+    "pyomo-pounce==0.10.0",
+]
 
 
 [project.urls]
@@ -128,7 +132,7 @@ markers = [
     "parametric: Parametric tests across multiple scenarios",
     "fast: Quick tests that run in under 1 second",
     "serial: Tests that must run without xdist parallelism; run with 'pytest -m serial -n 0'",
-    "pyomo: Implemented optional Pyomo model and IPOPT solver tests; deselect with '-m not pyomo'",
+    "pyomo: Implemented optional Pyomo model and NLP solver tests; deselect with '-m not pyomo'",
     "notebook: Papermill/Jupyter notebook execution tests run in the notebook lane",
     "main: Legacy main.py and high-level API behavior tests",
 ]
