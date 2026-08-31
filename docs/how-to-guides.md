@@ -156,92 +156,14 @@ initial value. They are disabled by default so the exact rate-unlimited legacy
 comparison remains available. This extension constrains control movement but
 does not introduce thermal-capacitance dynamics.
 
-### Validate paper policy selection with GDP
+### Paper OCP/GDP validation benchmarks (migrated)
 
-`examples/paper_gdp_validation.py` compares the published Srisuma--Braatz
-results with two switching routes over the same SI-unit physical equations:
-the continuous `paper_ocp` NLP classifies active constraints after the solve,
-while `paper_gdp` selects each phase's policy from free GDP indicators. Install
-GLPK in addition to the Pyomo/IPOPT setup above:
-
-```bash
-sudo apt-get install glpk-utils
-python -m examples.paper_gdp_validation
-```
-
-Conda environments may use `conda install -c conda-forge glpk` instead. The
-example records GDPopt RIC, GLPK, IPOPT, tolerances, and initialization in its
-result metadata. It reports indicator-derived sequences, free switch times and
-collocation intervals, trajectories, path feasibility, the solver endpoint,
-and an extrapolation to the paper's `S = H` endpoint. Because IPOPT solves the
-nonlinear subproblems locally, the result is not a global optimality
-certificate. Agreement checks the GDP switching formulation independently;
-it does not independently validate the shared physical equations.
-
-### Compare the transient and pseudosteady frozen-region models
-
-`examples/pseudosteady_limit_study.py` walks the paper-reference models from
-their transient frozen-region PDE toward the pseudosteady formulation that the
-production LyoPRONTO path uses. Scaling the frozen heat capacity by `f` scales
-the layer's thermal inertia relative to conduction and the surface fluxes, so in
-fixed coordinates `f rho Cp dT/dt|_z = k d2T/dz2 + Q` and `f -> 0` recovers the
-pseudosteady balance.
-
-The transformed right-hand side does not scale uniformly: the Landau
-moving-coordinate term is kinematic and independent of the heat capacity, so
-`f * rhs(scaled) = rhs(base) + (f - 1) * convection`. Setting `dS/dt = 0` makes
-the relation exact, which the tests pin. For this vial the moving-front term is
-about 1e-5 of the right-hand side, and the `f -> 0` limit is unaffected.
-
-```bash
-python -m examples.pseudosteady_limit_study
-```
-
-Each rung warm starts from the previous solution because cold starts fail below
-`f = 1`. A rung that does not converge is recorded and ends that problem's
-ladder, since where the ladder stops is part of the result.
-
-The same ladder serves as a solver-comparison instance set. `--solver-executable`
-selects the NLP binary without changing model code, for any solver following the
-AMPL `<solver> <stub> -AMPL` convention:
-
-```bash
-python -m examples.pseudosteady_limit_study --solver-executable /path/to/pounce
-```
-
-The study records the termination condition, solver status, solver message, and
-convergence quality for every rung including the one that stops the ladder,
-because solvers differ in what they call success: a result accepted at an
-acceptable-level tolerance and one converged to full tolerance both arrive as
-`optimal` through Pyomo, and only the message separates them (see issue #142).
-
-`quality=` in each rung line reports which tolerance that rung met —
-`converged_to_tolerance`, `accepted_at_acceptable_tol`, or `unknown` — so the
-ladder states its own convergence level. Every converged rung of the recorded
-IPOPT baseline is `accepted_at_acceptable_tol`, which is the expected outcome
-on this Landau-coordinate transcription rather than a degraded one; the
-mechanism is in `paper_ocp`'s module docstring. The label is derived from
-IPOPT's `ApplicationReturnStatus` vocabulary rather than one binary's wording,
-so a solver that reuses those status names — POUNCE writes the enum spellings —
-classifies through the same path, and a solver outside that vocabulary reads
-`unknown`.
-
-Feasibility is judged from `max_constraint_violation`, which covers every active
-constraint and every variable bound. The companion
-`ode_residual_times_thickness_squared_K_m2` is a diagnostic for how much of that
-number is the Landau transform rather than solution quality; it is dimensionful
-and covers one constraint family, so it carries no verdict of its own.
-
-Configuration and execution failures, such as a missing solver binary, propagate
-rather than being recorded as a non-converged rung, so a broken run produces no
-baseline. Recorded baselines and regeneration instructions are in
-`benchmarks/README.md`.
-
-The tutorial notebook
-[Is the pseudosteady frozen-layer assumption safe for my vial?](examples/pseudosteady_frozen_layer.ipynb)
-teaches what the recorded baseline measured -- the sub-1% drying-time shifts,
-the conduction-time screening criterion, and where that criterion stops being
-quantitative.
+The Srisuma--Braatz optimal-control replication, the GDP policy-selection
+validation, the pseudosteady-limit continuation study, its recorded
+IPOPT/POUNCE baselines, and the frozen-layer tutorial notebook now live in
+[SECQUOIA/LyoGDP-Benchmarks](https://github.com/SECQUOIA/LyoGDP-Benchmarks)
+(issue #150). Follow that repository's own guides to run them; they are no
+longer part of this package's examples or CI.
 
 ## Run Notebook Examples
 
@@ -250,9 +172,7 @@ The MkDocs notebook examples are tracked under `docs/examples/`:
 - [known Rp: original SciPy calculation and fixed-horizon Pyomo replay](examples/knownRp_PD.ipynb)
 - [unknown Rp: shared legacy preprocessing with SciPy/Pyomo fitting](examples/unknownRp_PD.ipynb)
 - [SciPy and Pyomo on the LyoPRONTO paper optimizer cases](examples/current_main_joint_optimizer_comparison.ipynb)
-- [Replicating the Srisuma and Braatz optimal-control cases](examples/paper_optimal_control_replication.ipynb)
 - [How the DAE optimizer is built and checked](examples/dae_optimizer_walkthrough.ipynb)
-- [Is the pseudosteady frozen-layer assumption safe for my vial?](examples/pseudosteady_frozen_layer.ipynb)
 
 The first two notebooks import canonical computation from
 `examples/original_workflow_parity.py`; `docs/examples/` owns only narrative,

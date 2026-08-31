@@ -49,9 +49,7 @@ nav:
         - examples/knownRp_PD.ipynb
         - examples/unknownRp_PD.ipynb
         - SciPy and Pyomo on the paper optimizer cases: examples/current_main_joint_optimizer_comparison.ipynb
-        - Replicating Srisuma and Braatz optimal control: examples/paper_optimal_control_replication.ipynb
         - How the DAE optimizer is built and checked: examples/dae_optimizer_walkthrough.ipynb
-        - Is the pseudosteady frozen-layer assumption safe: examples/pseudosteady_frozen_layer.ipynb
     - Reference:
         - API and Package: reference.md
         - Physics: technical/physics-reference.md
