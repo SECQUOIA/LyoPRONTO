@@ -189,6 +189,18 @@ those solves would discard correct answers, including the paper's own model at
 the paper's own mesh. `paper_ocp._is_successful_termination` documents the
 mechanism and the remedies that were measured and rejected.
 
+The label is matched against IPOPT's `ApplicationReturnStatus` vocabulary
+rather than against one binary's wording, because a solver comparison needs the
+two sides to classify through the same path. IPOPT writes those statuses as
+prose (`Solved To Acceptable Level.`); POUNCE, an IPOPT port driven through the
+same `ipopt` ASL interface, writes the enum names (`SolvedToAcceptableLevel`,
+`SolveSucceeded`). Matching IPOPT's prose alone therefore labelled *every*
+POUNCE solve `unknown`, fully converged ones included, which is why the match
+ignores punctuation instead of keying on a per-solver table. A solver outside
+that vocabulary still reads `unknown`, which is the honest answer rather than a
+mapping guessed from unseen text. `examples/pseudosteady_limit_study.py`
+reports the label per rung, so its ladder states which tolerance each rung met.
+
 The scope is deliberate. `paper_gdp` imports the same predicate, so it shares
 the gate, but it does not record `convergence_quality`: GDPopt leaves
 `solver.message` undefined, so the field would read `unknown` on every solve.

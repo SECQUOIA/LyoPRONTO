@@ -56,6 +56,16 @@ invalid binary, a rejected option, a programming error -- happen before or
 instead of a solve and are *not* caught: they propagate so a broken run
 produces no baseline artifact at all.
 
+A converged rung also reports *which* tolerance it met. The success gate
+accepts a solve stopped at IPOPT's ``acceptable_tol`` alongside one that
+reached ``tol``, and Pyomo labels both ``optimal``, so ``converged`` alone
+cannot separate them. Every converged rung of the recorded IPOPT baseline is
+acceptable-level, which is expected on this Landau-coordinate transcription
+(see ``paper_ocp``) but is the opposite of what a bare ``optimal/ok converged``
+line reads as. Each rung therefore carries ``convergence_quality`` and prints
+it, so the ladder states its own convergence level instead of implying a
+tighter one.
+
 Run from the repository root::
 
     python -m examples.pseudosteady_limit_study
@@ -105,6 +115,14 @@ class RungResult:
     large residuals late in the horizon. Judge feasibility from
     ``max_constraint_violation``, and read this only as evidence about how much
     of that number is the coordinate transform.
+
+    ``convergence_quality`` says *which* tolerance a converged rung met, which
+    ``converged`` cannot: the success gate accepts a solve stopped at
+    ``acceptable_tol`` alongside one that reached ``tol``, and Pyomo reports
+    both as ``termination_condition: optimal``. Every converged rung of the
+    recorded IPOPT baseline is acceptable-level, so a report carrying only
+    ``converged`` states the opposite of what the ladder measured. Values come
+    from :func:`lyopronto.pyomo_models.paper_ocp.classify_convergence_quality`.
     """
 
     problem: str
@@ -118,6 +136,7 @@ class RungResult:
     solver_message: str | None = None
     max_constraint_violation: float | None = None
     ode_residual_times_thickness_squared_K_m2: float | None = None
+    convergence_quality: str = paper_ocp.CONVERGENCE_QUALITY_UNKNOWN
 
     def as_dict(self) -> dict[str, Any]:
         return dataclasses.asdict(self)
@@ -210,12 +229,20 @@ def ode_residual_times_thickness_squared(model: Any) -> float:
     return worst
 
 
-def _solver_report(solution: Mapping[str, Any]) -> tuple[str | None, str | None, str | None]:
+def _solver_report(
+    solution: Mapping[str, Any],
+) -> tuple[str | None, str | None, str | None, str]:
+    """Return the rung's termination, status, message, and convergence quality.
+
+    ``paper_ocp`` classifies the quality during extraction, so this reads its
+    label rather than re-matching the solver text here.
+    """
     metadata = solution.get("metadata", {})
     return (
         metadata.get("termination_condition"),
         metadata.get("status"),
         metadata.get("message"),
+        metadata.get("convergence_quality", paper_ocp.CONVERGENCE_QUALITY_UNKNOWN),
     )
 
 
@@ -334,7 +361,7 @@ def run_ladder(
             if on_rung is not None:
                 on_rung(results[-1])
             break
-        termination, status, message = _solver_report(solution)
+        termination, status, message, quality = _solver_report(solution)
         converged = _is_success(termination)
         record = RungResult(
             problem=problem,
@@ -352,6 +379,7 @@ def run_ladder(
             ode_residual_times_thickness_squared_K_m2=(
                 ode_residual_times_thickness_squared(solution["model"])
             ),
+            convergence_quality=quality,
         )
         results.append(record)
         if on_rung is not None:
@@ -412,6 +440,7 @@ def format_results(results: Mapping[str, Sequence[RungResult]]) -> str:
                 f"endpoint={_fmt(rung.endpoint_hr, '.4f')} hr  "
                 f"maxT={_fmt(rung.max_product_temperature_K, '.4f')} K  "
                 f"{rung.termination_condition}/{rung.solver_status} {state} "
+                f"quality={rung.convergence_quality} "
                 f"viol={_fmt(rung.max_constraint_violation, '.2e')} "
                 f"odeK_m2="
                 f"{_fmt(rung.ode_residual_times_thickness_squared_K_m2, '.2e')}"
@@ -426,6 +455,24 @@ def format_results(results: Mapping[str, Sequence[RungResult]]) -> str:
                 f"to f={converged[-1].factor:g}"
             )
     return "\n".join(lines)
+
+
+def format_rung_progress(rung: RungResult) -> str:
+    """Render one rung as the line streamed while the ladder is still running.
+
+    Shorter than the :func:`format_results` row -- it omits the residual
+    columns -- but it carries the same convergence level, because this is the
+    line an operator watches during a long run and ``optimal/ok`` alone reads
+    as convergence to ``tol``.
+    """
+    endpoint = "n/a" if rung.endpoint_hr is None else f"{rung.endpoint_hr:.4f} hr"
+    state = "ok" if rung.converged else "NOT CONVERGED"
+    return (
+        f"  [{rung.problem} f={rung.factor:g}] "
+        f"{rung.termination_condition}/{rung.solver_status} {state} "
+        f"quality={rung.convergence_quality} "
+        f"endpoint={endpoint}"
+    )
 
 
 def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -464,16 +511,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     )
 
     def report(rung: RungResult) -> None:
-        state = "ok" if rung.converged else "NOT CONVERGED"
-        endpoint = (
-            "n/a" if rung.endpoint_hr is None else f"{rung.endpoint_hr:.4f} hr"
-        )
-        print(
-            f"  [{rung.problem} f={rung.factor:g}] "
-            f"{rung.termination_condition}/{rung.solver_status} {state} "
-            f"endpoint={endpoint}",
-            flush=True,
-        )
+        print(format_rung_progress(rung), flush=True)
 
     try:
         results = run_study(

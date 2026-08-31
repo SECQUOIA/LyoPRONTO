@@ -25,8 +25,20 @@ reference artifacts used for development, testing, or documentation:
 `benchmarks/results/pseudosteady_limit/` holds one JSON file per NLP solver for
 the continuation in `examples/pseudosteady_limit_study.py`. Each file records,
 for every rung of the heat-capacity ladder, the drying-time endpoint, the
-maximum product temperature, the termination condition, and the solver status,
-plus the rung where the ladder stopped.
+maximum product temperature, the termination condition, the solver status, and
+the convergence quality, plus the rung where the ladder stopped.
+
+`convergence_quality` is what separates a rung that met `tol` from one accepted
+at `acceptable_tol`; Pyomo reports both as `optimal`, so the termination
+condition cannot. Every converged rung of the IPOPT baseline reads
+`accepted_at_acceptable_tol`. That is the expected outcome for this
+Landau-coordinate transcription rather than a degraded solve — see
+`paper_ocp`'s module docstring for the mechanism and for the remedies that were
+measured and rejected — but it is not something a reader should have to infer
+from the raw solver message. Comparing solvers on this field is why it is
+matched against IPOPT's status vocabulary rather than one binary's wording:
+POUNCE writes the same statuses as enum names, so both sides classify through
+one path (issue #146).
 
 These are tracked rather than ignored because the failing rungs are the point.
 The study walks from the paper's transient frozen-region model toward the

@@ -6,6 +6,10 @@ frozen-layer assumption from the committed continuation baseline in
 specific numbers from that artifact, so the agreement between the two is
 pinned here in the fast lane: regenerating the baseline without updating the
 notebook text must fail loudly rather than ship stale teaching numbers.
+
+The same contract covers the convergence level the baseline records, which
+several documents outside this notebook also state; see
+:data:`DOCUMENTS_STATING_THE_CONVERGENCE_LEVEL`.
 """
 
 from __future__ import annotations
@@ -25,6 +29,26 @@ BASELINE = "benchmarks/results/pseudosteady_limit/ipopt.json"
 #: solver-build tolerance is involved.
 DOCUMENTED_SHIFT_PERCENT = {"problem1": -0.622, "problem2": -0.080}
 SHIFT_ROUNDING_TOLERANCE = 0.0005
+
+#: Every document that states the convergence level of the committed baseline
+#: in prose. They are true only as long as the artifact keeps that level, and
+#: `benchmarks/README.md` instructs regenerating it whenever the models or the
+#: solver version change, so the claim needs a guard rather than a proofread.
+DOCUMENTS_STATING_THE_CONVERGENCE_LEVEL = (
+    "examples/pseudosteady_limit_study.py (module and RungResult docstrings)",
+    "benchmarks/README.md",
+    "docs/how-to-guides.md",
+    f"{NOTEBOOK} (section 2)",
+)
+
+#: What every converged rung of the committed baseline records. Named here
+#: rather than imported from ``paper_ocp`` so the guard states the expected
+#: string independently of the classifier that produces it.
+EXPECTED_CONVERGED_QUALITY = "accepted_at_acceptable_tol"
+
+#: What a rung that never produced a solution records: it met no tolerance, so
+#: it must not claim one.
+EXPECTED_UNSOLVED_QUALITY = "unknown"
 
 
 def _notebook(repo_root):
@@ -93,6 +117,94 @@ def test_baseline_still_supports_the_documented_headline(repo_root) -> None:
             assert ratio > 1.0, "problem1 no longer over-shoots the timescale ratio"
         else:
             assert ratio < 1.0, "problem2 no longer under-shoots the timescale ratio"
+
+
+def test_committed_outputs_render_the_convergence_level(repo_root) -> None:
+    """A source edit that is not re-executed must not ship the old rendering.
+
+    This notebook commits its rendered outputs and `mkdocs` publishes them, so
+    the outputs are a separate artifact from the sources that produced them.
+    Changing a cell to report the convergence level therefore does nothing for
+    a reader until the notebook is re-executed and the result committed: the
+    #147 review caught exactly that, with sources reporting the level while the
+    published outputs still showed a `termination` column of `optimal` and
+    `(converged)` per rung -- the conflation of issue #146, still on the page.
+
+    Regenerate with a no-parameter papermill run (which is what the committed
+    `metadata.papermill` records) and copy the result over the tracked file::
+
+        python -c "import papermill; papermill.execute_notebook(
+            'docs/examples/pseudosteady_frozen_layer.ipynb',
+            'docs/examples/pseudosteady_frozen_layer_output.ipynb')"
+        cp docs/examples/pseudosteady_frozen_layer_output.ipynb \\
+           docs/examples/pseudosteady_frozen_layer.ipynb
+    """
+    rendered_text = {}
+    for index, cell in enumerate(_notebook(repo_root)["cells"]):
+        if cell["cell_type"] != "code":
+            continue
+        rendered_text[index] = "".join(
+            "".join(output.get("text", [])) for output in cell.get("outputs", [])
+        )
+
+    #: The baseline table and the live-rerun listing. Both print one rung per
+    #: line, and both are what a reader of the published page sees.
+    reporting = {
+        index
+        for index, text in rendered_text.items()
+        if EXPECTED_CONVERGED_QUALITY in text
+    }
+    assert len(reporting) == 2, (
+        "expected the baseline table and the live rerun to render "
+        f"{EXPECTED_CONVERGED_QUALITY!r} in their committed output; found it in "
+        f"{sorted(reporting)}. Re-execute the notebook and commit the result."
+    )
+
+    stale = {
+        index: marker
+        for index, text in rendered_text.items()
+        for marker in ("(converged)", "termination")
+        if marker in text
+    }
+    assert not stale, (
+        f"committed output still renders the pre-#146 form {stale}. The cell "
+        "sources were changed without re-executing, so the published page "
+        "shows a convergence level the sources no longer report."
+    )
+
+
+def test_baseline_still_records_the_documented_convergence_level(repo_root) -> None:
+    """The baseline keeps the convergence level several documents state in prose.
+
+    Issue #146 is a report that described this artifact as something it was
+    not. The fix states the level everywhere, which is only true while the
+    artifact keeps it -- and `benchmarks/README.md` instructs regenerating it
+    whenever the models or the solver version change. Without this guard a
+    regeneration that converged to `tol` would leave every document in
+    `DOCUMENTS_STATING_THE_CONVERGENCE_LEVEL` quietly wrong.
+
+    No solver runs here; this is a read of a committed file.
+    """
+    baseline = json.loads((repo_root / BASELINE).read_text())["results"]
+    stale = "\n  ".join(DOCUMENTS_STATING_THE_CONVERGENCE_LEVEL)
+
+    checked = 0
+    for name, rungs in baseline.items():
+        for rung in rungs:
+            expected = (
+                EXPECTED_CONVERGED_QUALITY
+                if rung["converged"]
+                else EXPECTED_UNSOLVED_QUALITY
+            )
+            assert rung["convergence_quality"] == expected, (
+                f"{name} f={rung['factor']:g}: baseline records "
+                f"{rung['convergence_quality']!r}, not {expected!r}. If the "
+                f"regeneration is intended, update the prose in:\n  {stale}"
+            )
+            checked += 1
+
+    # Guards against a truncated or empty artifact satisfying the loop.
+    assert checked == 13, f"expected 13 recorded rungs, read {checked}"
 
 
 @pytest.mark.serial
