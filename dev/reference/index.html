@@ -6956,6 +6956,17 @@ residual IPOPT cannot certify is a relative residual near 1e-13. Rejecting
 those solves would discard correct answers, including the paper's own model at
 the paper's own mesh. <code>paper_ocp._is_successful_termination</code> documents the
 mechanism and the remedies that were measured and rejected.</p>
+<p>The label is matched against IPOPT's <code>ApplicationReturnStatus</code> vocabulary
+rather than against one binary's wording, because a solver comparison needs the
+two sides to classify through the same path. IPOPT writes those statuses as
+prose (<code>Solved To Acceptable Level.</code>); POUNCE, an IPOPT port driven through the
+same <code>ipopt</code> ASL interface, writes the enum names (<code>SolvedToAcceptableLevel</code>,
+<code>SolveSucceeded</code>). Matching IPOPT's prose alone therefore labelled <em>every</em>
+POUNCE solve <code>unknown</code>, fully converged ones included, which is why the match
+ignores punctuation instead of keying on a per-solver table. A solver outside
+that vocabulary still reads <code>unknown</code>, which is the honest answer rather than a
+mapping guessed from unseen text. <code>examples/pseudosteady_limit_study.py</code>
+reports the label per rung, so its ladder states which tolerance each rung met.</p>
 <p>The scope is deliberate. <code>paper_gdp</code> imports the same predicate, so it shares
 the gate, but it does not record <code>convergence_quality</code>: GDPopt leaves
 <code>solver.message</code> undefined, so the field would read <code>unknown</code> on every solve.
@@ -21200,25 +21211,30 @@ matching solver text themselves.  See :func:<code>_is_successful_termination</co
 for the separate question of which terminations are accepted at all.</p>
 <p>Acceptable-level is tested first so that a message naming both levels can
 never be reported as the tighter one.</p>
+<p>Cross-solver scope (issue #146).  The match is over IPOPT's
+<code>ApplicationReturnStatus</code> vocabulary, not over one binary's wording, so a
+solver that reuses those status names classifies without a per-solver
+table.  Measured on one NLP through the <code>ipopt</code> ASL interface, which is
+how both binaries are driven:</p>
+<ul>
+<li>IPOPT 3.14.16 at <code>tol</code> -- <code>Ipopt 3.14.16: Optimal Solution Found</code>;</li>
+<li>IPOPT 3.14.16 at <code>acceptable_tol</code> -- <code>Ipopt 3.14.16: Solved To
+  Acceptable Level.</code>;</li>
+<li>POUNCE 0.9.0 at <code>tol</code> -- <code>POUNCE 0.9.0: SolveSucceeded</code>;</li>
+<li>POUNCE 0.9.0 at <code>acceptable_tol</code> -- <code>POUNCE 0.9.0:
+  SolvedToAcceptableLevel</code>.</li>
+</ul>
+<p>POUNCE writes the enum names where IPOPT writes prose, so matching IPOPT's
+prose alone put <em>every</em> POUNCE solve in <code>unknown</code>, fully converged ones
+included.  That would have left the field carrying no information in
+exactly the solver comparison it was added for (issue #140).  A solver
+outside this vocabulary still lands in <code>unknown</code>, which is the honest
+answer rather than a mapping guessed from unseen text.</p>
 
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lyopronto/pyomo_models/paper_ocp.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-2206">2206</a></span>
-<span class="normal"><a href="#__codelineno-0-2207">2207</a></span>
-<span class="normal"><a href="#__codelineno-0-2208">2208</a></span>
-<span class="normal"><a href="#__codelineno-0-2209">2209</a></span>
-<span class="normal"><a href="#__codelineno-0-2210">2210</a></span>
-<span class="normal"><a href="#__codelineno-0-2211">2211</a></span>
-<span class="normal"><a href="#__codelineno-0-2212">2212</a></span>
-<span class="normal"><a href="#__codelineno-0-2213">2213</a></span>
-<span class="normal"><a href="#__codelineno-0-2214">2214</a></span>
-<span class="normal"><a href="#__codelineno-0-2215">2215</a></span>
-<span class="normal"><a href="#__codelineno-0-2216">2216</a></span>
-<span class="normal"><a href="#__codelineno-0-2217">2217</a></span>
-<span class="normal"><a href="#__codelineno-0-2218">2218</a></span>
-<span class="normal"><a href="#__codelineno-0-2219">2219</a></span>
-<span class="normal"><a href="#__codelineno-0-2220">2220</a></span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-2220">2220</a></span>
 <span class="normal"><a href="#__codelineno-0-2221">2221</a></span>
 <span class="normal"><a href="#__codelineno-0-2222">2222</a></span>
 <span class="normal"><a href="#__codelineno-0-2223">2223</a></span>
@@ -21232,35 +21248,89 @@ never be reported as the tighter one.</p>
 <span class="normal"><a href="#__codelineno-0-2231">2231</a></span>
 <span class="normal"><a href="#__codelineno-0-2232">2232</a></span>
 <span class="normal"><a href="#__codelineno-0-2233">2233</a></span>
-<span class="normal"><a href="#__codelineno-0-2234">2234</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-2206"><a id="__codelineno-0-2206" name="__codelineno-0-2206"></a><span class="k">def</span> <span class="nf">classify_convergence_quality</span><span class="p">(</span><span class="n">message</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="__span-0-2207"><a id="__codelineno-0-2207" name="__codelineno-0-2207"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Classify how tightly a solver converged, from its message.</span>
-</span><span id="__span-0-2208"><a id="__codelineno-0-2208" name="__codelineno-0-2208"></a>
-</span><span id="__span-0-2209"><a id="__codelineno-0-2209" name="__codelineno-0-2209"></a><span class="sd">    Returns :data:`CONVERGED_TO_TOLERANCE`, :data:`ACCEPTED_AT_ACCEPTABLE_TOL`,</span>
-</span><span id="__span-0-2210"><a id="__codelineno-0-2210" name="__codelineno-0-2210"></a><span class="sd">    or :data:`CONVERGENCE_QUALITY_UNKNOWN`.</span>
-</span><span id="__span-0-2211"><a id="__codelineno-0-2211" name="__codelineno-0-2211"></a>
-</span><span id="__span-0-2212"><a id="__codelineno-0-2212" name="__codelineno-0-2212"></a><span class="sd">    The message is the only field carrying this distinction.  Pyomo maps both</span>
-</span><span id="__span-0-2213"><a id="__codelineno-0-2213" name="__codelineno-0-2213"></a><span class="sd">    IPOPT outcomes to ``termination_condition: optimal, status: ok``, so a</span>
-</span><span id="__span-0-2214"><a id="__codelineno-0-2214" name="__codelineno-0-2214"></a><span class="sd">    caller reading only those two fields cannot tell a solve that met ``tol``</span>
-</span><span id="__span-0-2215"><a id="__codelineno-0-2215" name="__codelineno-0-2215"></a><span class="sd">    from one accepted at ``acceptable_tol`` (issue #142).</span>
-</span><span id="__span-0-2216"><a id="__codelineno-0-2216" name="__codelineno-0-2216"></a>
-</span><span id="__span-0-2217"><a id="__codelineno-0-2217" name="__codelineno-0-2217"></a><span class="sd">    This reports convergence quality; it does not decide success.  Callers that</span>
-</span><span id="__span-0-2218"><a id="__codelineno-0-2218" name="__codelineno-0-2218"></a><span class="sd">    need the distinction -- solver comparisons, or a regression check that must</span>
-</span><span id="__span-0-2219"><a id="__codelineno-0-2219" name="__codelineno-0-2219"></a><span class="sd">    notice a solve becoming marginal -- branch on the returned label instead of</span>
-</span><span id="__span-0-2220"><a id="__codelineno-0-2220" name="__codelineno-0-2220"></a><span class="sd">    matching solver text themselves.  See :func:`_is_successful_termination`</span>
-</span><span id="__span-0-2221"><a id="__codelineno-0-2221" name="__codelineno-0-2221"></a><span class="sd">    for the separate question of which terminations are accepted at all.</span>
+<span class="normal"><a href="#__codelineno-0-2234">2234</a></span>
+<span class="normal"><a href="#__codelineno-0-2235">2235</a></span>
+<span class="normal"><a href="#__codelineno-0-2236">2236</a></span>
+<span class="normal"><a href="#__codelineno-0-2237">2237</a></span>
+<span class="normal"><a href="#__codelineno-0-2238">2238</a></span>
+<span class="normal"><a href="#__codelineno-0-2239">2239</a></span>
+<span class="normal"><a href="#__codelineno-0-2240">2240</a></span>
+<span class="normal"><a href="#__codelineno-0-2241">2241</a></span>
+<span class="normal"><a href="#__codelineno-0-2242">2242</a></span>
+<span class="normal"><a href="#__codelineno-0-2243">2243</a></span>
+<span class="normal"><a href="#__codelineno-0-2244">2244</a></span>
+<span class="normal"><a href="#__codelineno-0-2245">2245</a></span>
+<span class="normal"><a href="#__codelineno-0-2246">2246</a></span>
+<span class="normal"><a href="#__codelineno-0-2247">2247</a></span>
+<span class="normal"><a href="#__codelineno-0-2248">2248</a></span>
+<span class="normal"><a href="#__codelineno-0-2249">2249</a></span>
+<span class="normal"><a href="#__codelineno-0-2250">2250</a></span>
+<span class="normal"><a href="#__codelineno-0-2251">2251</a></span>
+<span class="normal"><a href="#__codelineno-0-2252">2252</a></span>
+<span class="normal"><a href="#__codelineno-0-2253">2253</a></span>
+<span class="normal"><a href="#__codelineno-0-2254">2254</a></span>
+<span class="normal"><a href="#__codelineno-0-2255">2255</a></span>
+<span class="normal"><a href="#__codelineno-0-2256">2256</a></span>
+<span class="normal"><a href="#__codelineno-0-2257">2257</a></span>
+<span class="normal"><a href="#__codelineno-0-2258">2258</a></span>
+<span class="normal"><a href="#__codelineno-0-2259">2259</a></span>
+<span class="normal"><a href="#__codelineno-0-2260">2260</a></span>
+<span class="normal"><a href="#__codelineno-0-2261">2261</a></span>
+<span class="normal"><a href="#__codelineno-0-2262">2262</a></span>
+<span class="normal"><a href="#__codelineno-0-2263">2263</a></span>
+<span class="normal"><a href="#__codelineno-0-2264">2264</a></span>
+<span class="normal"><a href="#__codelineno-0-2265">2265</a></span>
+<span class="normal"><a href="#__codelineno-0-2266">2266</a></span>
+<span class="normal"><a href="#__codelineno-0-2267">2267</a></span>
+<span class="normal"><a href="#__codelineno-0-2268">2268</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-2220"><a id="__codelineno-0-2220" name="__codelineno-0-2220"></a><span class="k">def</span> <span class="nf">classify_convergence_quality</span><span class="p">(</span><span class="n">message</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="__span-0-2221"><a id="__codelineno-0-2221" name="__codelineno-0-2221"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Classify how tightly a solver converged, from its message.</span>
 </span><span id="__span-0-2222"><a id="__codelineno-0-2222" name="__codelineno-0-2222"></a>
-</span><span id="__span-0-2223"><a id="__codelineno-0-2223" name="__codelineno-0-2223"></a><span class="sd">    Acceptable-level is tested first so that a message naming both levels can</span>
-</span><span id="__span-0-2224"><a id="__codelineno-0-2224" name="__codelineno-0-2224"></a><span class="sd">    never be reported as the tighter one.</span>
-</span><span id="__span-0-2225"><a id="__codelineno-0-2225" name="__codelineno-0-2225"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-2226"><a id="__codelineno-0-2226" name="__codelineno-0-2226"></a>    <span class="k">if</span> <span class="n">message</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-2227"><a id="__codelineno-0-2227" name="__codelineno-0-2227"></a>        <span class="k">return</span> <span class="n">CONVERGENCE_QUALITY_UNKNOWN</span>
-</span><span id="__span-0-2228"><a id="__codelineno-0-2228" name="__codelineno-0-2228"></a>
-</span><span id="__span-0-2229"><a id="__codelineno-0-2229" name="__codelineno-0-2229"></a>    <span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">message</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-</span><span id="__span-0-2230"><a id="__codelineno-0-2230" name="__codelineno-0-2230"></a>    <span class="k">if</span> <span class="s2">&quot;solved to acceptable level&quot;</span> <span class="ow">in</span> <span class="n">text</span><span class="p">:</span>
-</span><span id="__span-0-2231"><a id="__codelineno-0-2231" name="__codelineno-0-2231"></a>        <span class="k">return</span> <span class="n">ACCEPTED_AT_ACCEPTABLE_TOL</span>
-</span><span id="__span-0-2232"><a id="__codelineno-0-2232" name="__codelineno-0-2232"></a>    <span class="k">if</span> <span class="s2">&quot;optimal solution found&quot;</span> <span class="ow">in</span> <span class="n">text</span><span class="p">:</span>
-</span><span id="__span-0-2233"><a id="__codelineno-0-2233" name="__codelineno-0-2233"></a>        <span class="k">return</span> <span class="n">CONVERGED_TO_TOLERANCE</span>
-</span><span id="__span-0-2234"><a id="__codelineno-0-2234" name="__codelineno-0-2234"></a>    <span class="k">return</span> <span class="n">CONVERGENCE_QUALITY_UNKNOWN</span>
+</span><span id="__span-0-2223"><a id="__codelineno-0-2223" name="__codelineno-0-2223"></a><span class="sd">    Returns :data:`CONVERGED_TO_TOLERANCE`, :data:`ACCEPTED_AT_ACCEPTABLE_TOL`,</span>
+</span><span id="__span-0-2224"><a id="__codelineno-0-2224" name="__codelineno-0-2224"></a><span class="sd">    or :data:`CONVERGENCE_QUALITY_UNKNOWN`.</span>
+</span><span id="__span-0-2225"><a id="__codelineno-0-2225" name="__codelineno-0-2225"></a>
+</span><span id="__span-0-2226"><a id="__codelineno-0-2226" name="__codelineno-0-2226"></a><span class="sd">    The message is the only field carrying this distinction.  Pyomo maps both</span>
+</span><span id="__span-0-2227"><a id="__codelineno-0-2227" name="__codelineno-0-2227"></a><span class="sd">    IPOPT outcomes to ``termination_condition: optimal, status: ok``, so a</span>
+</span><span id="__span-0-2228"><a id="__codelineno-0-2228" name="__codelineno-0-2228"></a><span class="sd">    caller reading only those two fields cannot tell a solve that met ``tol``</span>
+</span><span id="__span-0-2229"><a id="__codelineno-0-2229" name="__codelineno-0-2229"></a><span class="sd">    from one accepted at ``acceptable_tol`` (issue #142).</span>
+</span><span id="__span-0-2230"><a id="__codelineno-0-2230" name="__codelineno-0-2230"></a>
+</span><span id="__span-0-2231"><a id="__codelineno-0-2231" name="__codelineno-0-2231"></a><span class="sd">    This reports convergence quality; it does not decide success.  Callers that</span>
+</span><span id="__span-0-2232"><a id="__codelineno-0-2232" name="__codelineno-0-2232"></a><span class="sd">    need the distinction -- solver comparisons, or a regression check that must</span>
+</span><span id="__span-0-2233"><a id="__codelineno-0-2233" name="__codelineno-0-2233"></a><span class="sd">    notice a solve becoming marginal -- branch on the returned label instead of</span>
+</span><span id="__span-0-2234"><a id="__codelineno-0-2234" name="__codelineno-0-2234"></a><span class="sd">    matching solver text themselves.  See :func:`_is_successful_termination`</span>
+</span><span id="__span-0-2235"><a id="__codelineno-0-2235" name="__codelineno-0-2235"></a><span class="sd">    for the separate question of which terminations are accepted at all.</span>
+</span><span id="__span-0-2236"><a id="__codelineno-0-2236" name="__codelineno-0-2236"></a>
+</span><span id="__span-0-2237"><a id="__codelineno-0-2237" name="__codelineno-0-2237"></a><span class="sd">    Acceptable-level is tested first so that a message naming both levels can</span>
+</span><span id="__span-0-2238"><a id="__codelineno-0-2238" name="__codelineno-0-2238"></a><span class="sd">    never be reported as the tighter one.</span>
+</span><span id="__span-0-2239"><a id="__codelineno-0-2239" name="__codelineno-0-2239"></a>
+</span><span id="__span-0-2240"><a id="__codelineno-0-2240" name="__codelineno-0-2240"></a><span class="sd">    Cross-solver scope (issue #146).  The match is over IPOPT&#39;s</span>
+</span><span id="__span-0-2241"><a id="__codelineno-0-2241" name="__codelineno-0-2241"></a><span class="sd">    ``ApplicationReturnStatus`` vocabulary, not over one binary&#39;s wording, so a</span>
+</span><span id="__span-0-2242"><a id="__codelineno-0-2242" name="__codelineno-0-2242"></a><span class="sd">    solver that reuses those status names classifies without a per-solver</span>
+</span><span id="__span-0-2243"><a id="__codelineno-0-2243" name="__codelineno-0-2243"></a><span class="sd">    table.  Measured on one NLP through the ``ipopt`` ASL interface, which is</span>
+</span><span id="__span-0-2244"><a id="__codelineno-0-2244" name="__codelineno-0-2244"></a><span class="sd">    how both binaries are driven:</span>
+</span><span id="__span-0-2245"><a id="__codelineno-0-2245" name="__codelineno-0-2245"></a>
+</span><span id="__span-0-2246"><a id="__codelineno-0-2246" name="__codelineno-0-2246"></a><span class="sd">    * IPOPT 3.14.16 at ``tol`` -- ``Ipopt 3.14.16: Optimal Solution Found``;</span>
+</span><span id="__span-0-2247"><a id="__codelineno-0-2247" name="__codelineno-0-2247"></a><span class="sd">    * IPOPT 3.14.16 at ``acceptable_tol`` -- ``Ipopt 3.14.16: Solved To</span>
+</span><span id="__span-0-2248"><a id="__codelineno-0-2248" name="__codelineno-0-2248"></a><span class="sd">      Acceptable Level.``;</span>
+</span><span id="__span-0-2249"><a id="__codelineno-0-2249" name="__codelineno-0-2249"></a><span class="sd">    * POUNCE 0.9.0 at ``tol`` -- ``POUNCE 0.9.0: SolveSucceeded``;</span>
+</span><span id="__span-0-2250"><a id="__codelineno-0-2250" name="__codelineno-0-2250"></a><span class="sd">    * POUNCE 0.9.0 at ``acceptable_tol`` -- ``POUNCE 0.9.0:</span>
+</span><span id="__span-0-2251"><a id="__codelineno-0-2251" name="__codelineno-0-2251"></a><span class="sd">      SolvedToAcceptableLevel``.</span>
+</span><span id="__span-0-2252"><a id="__codelineno-0-2252" name="__codelineno-0-2252"></a>
+</span><span id="__span-0-2253"><a id="__codelineno-0-2253" name="__codelineno-0-2253"></a><span class="sd">    POUNCE writes the enum names where IPOPT writes prose, so matching IPOPT&#39;s</span>
+</span><span id="__span-0-2254"><a id="__codelineno-0-2254" name="__codelineno-0-2254"></a><span class="sd">    prose alone put *every* POUNCE solve in ``unknown``, fully converged ones</span>
+</span><span id="__span-0-2255"><a id="__codelineno-0-2255" name="__codelineno-0-2255"></a><span class="sd">    included.  That would have left the field carrying no information in</span>
+</span><span id="__span-0-2256"><a id="__codelineno-0-2256" name="__codelineno-0-2256"></a><span class="sd">    exactly the solver comparison it was added for (issue #140).  A solver</span>
+</span><span id="__span-0-2257"><a id="__codelineno-0-2257" name="__codelineno-0-2257"></a><span class="sd">    outside this vocabulary still lands in ``unknown``, which is the honest</span>
+</span><span id="__span-0-2258"><a id="__codelineno-0-2258" name="__codelineno-0-2258"></a><span class="sd">    answer rather than a mapping guessed from unseen text.</span>
+</span><span id="__span-0-2259"><a id="__codelineno-0-2259" name="__codelineno-0-2259"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-2260"><a id="__codelineno-0-2260" name="__codelineno-0-2260"></a>    <span class="k">if</span> <span class="n">message</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-2261"><a id="__codelineno-0-2261" name="__codelineno-0-2261"></a>        <span class="k">return</span> <span class="n">CONVERGENCE_QUALITY_UNKNOWN</span>
+</span><span id="__span-0-2262"><a id="__codelineno-0-2262" name="__codelineno-0-2262"></a>
+</span><span id="__span-0-2263"><a id="__codelineno-0-2263" name="__codelineno-0-2263"></a>    <span class="n">text</span> <span class="o">=</span> <span class="n">_status_vocabulary_key</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">message</span><span class="p">))</span>
+</span><span id="__span-0-2264"><a id="__codelineno-0-2264" name="__codelineno-0-2264"></a>    <span class="k">if</span> <span class="s2">&quot;solvedtoacceptablelevel&quot;</span> <span class="ow">in</span> <span class="n">text</span><span class="p">:</span>
+</span><span id="__span-0-2265"><a id="__codelineno-0-2265" name="__codelineno-0-2265"></a>        <span class="k">return</span> <span class="n">ACCEPTED_AT_ACCEPTABLE_TOL</span>
+</span><span id="__span-0-2266"><a id="__codelineno-0-2266" name="__codelineno-0-2266"></a>    <span class="k">if</span> <span class="s2">&quot;optimalsolutionfound&quot;</span> <span class="ow">in</span> <span class="n">text</span> <span class="ow">or</span> <span class="s2">&quot;solvesucceeded&quot;</span> <span class="ow">in</span> <span class="n">text</span><span class="p">:</span>
+</span><span id="__span-0-2267"><a id="__codelineno-0-2267" name="__codelineno-0-2267"></a>        <span class="k">return</span> <span class="n">CONVERGED_TO_TOLERANCE</span>
+</span><span id="__span-0-2268"><a id="__codelineno-0-2268" name="__codelineno-0-2268"></a>    <span class="k">return</span> <span class="n">CONVERGENCE_QUALITY_UNKNOWN</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>

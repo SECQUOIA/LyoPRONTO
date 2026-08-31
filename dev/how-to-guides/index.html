@@ -1117,11 +1117,21 @@ selects the NLP binary without changing model code, for any solver following the
 AMPL <code>&lt;solver&gt; &lt;stub&gt; -AMPL</code> convention:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>python<span class="w"> </span>-m<span class="w"> </span>examples.pseudosteady_limit_study<span class="w"> </span>--solver-executable<span class="w"> </span>/path/to/pounce
 </span></code></pre></div>
-<p>The study records the termination condition, solver status, and solver message
-for every rung including the one that stops the ladder, because solvers differ
-in what they call success: a result accepted at an acceptable-level tolerance
-and one converged to full tolerance both arrive as <code>optimal</code> through Pyomo, and
-only the message separates them (see issue #142).</p>
+<p>The study records the termination condition, solver status, solver message, and
+convergence quality for every rung including the one that stops the ladder,
+because solvers differ in what they call success: a result accepted at an
+acceptable-level tolerance and one converged to full tolerance both arrive as
+<code>optimal</code> through Pyomo, and only the message separates them (see issue #142).</p>
+<p><code>quality=</code> in each rung line reports which tolerance that rung met —
+<code>converged_to_tolerance</code>, <code>accepted_at_acceptable_tol</code>, or <code>unknown</code> — so the
+ladder states its own convergence level. Every converged rung of the recorded
+IPOPT baseline is <code>accepted_at_acceptable_tol</code>, which is the expected outcome
+on this Landau-coordinate transcription rather than a degraded one; the
+mechanism is in <code>paper_ocp</code>'s module docstring. The label is derived from
+IPOPT's <code>ApplicationReturnStatus</code> vocabulary rather than one binary's wording,
+so a solver that reuses those status names — POUNCE writes the enum spellings —
+classifies through the same path, and a solver outside that vocabulary reads
+<code>unknown</code>.</p>
 <p>Feasibility is judged from <code>max_constraint_violation</code>, which covers every active
 constraint and every variable bound. The companion
 <code>ode_residual_times_thickness_squared_K_m2</code> is a diagnostic for how much of that
