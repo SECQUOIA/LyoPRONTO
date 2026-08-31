@@ -860,21 +860,29 @@ stay non-Pyomo:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>ipopt
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>glpk
 </span></code></pre></div>
+<p>The release-pinned POUNCE comparison uses its own extra and the same GLPK
+discrete master for the GDP cases:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev,pyomo,pounce]&quot;</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>glpk-utils
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>./run_local_ci.sh<span class="w"> </span>pounce
+</span></code></pre></div>
+<p>POUNCE requires Python 3.9 or newer. It remains optional and is not installed
+by the default, <code>dev</code>, or <code>pyomo</code> extras.</p>
 <h2 id="local-validation">Local Validation</h2>
 <p>Run static analysis and the fast PR lane before pushing:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python<span class="w"> </span>-m<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>lyopronto<span class="w"> </span>tests<span class="w"> </span>examples<span class="w"> </span>main.py
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>python<span class="w"> </span>-m<span class="w"> </span>mypy<span class="w"> </span>lyopronto
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>./run_local_ci.sh<span class="w"> </span>fast
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>python<span class="w"> </span>-m<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>lyopronto<span class="w"> </span>tests<span class="w"> </span>examples<span class="w"> </span>main.py
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>python<span class="w"> </span>-m<span class="w"> </span>mypy<span class="w"> </span>lyopronto
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>./run_local_ci.sh<span class="w"> </span>fast
 </span></code></pre></div>
 <p>Ruff linting is enforced in CI with the scoped Pyflakes rule set in
 <code>pyproject.toml</code>. mypy is advisory in CI while remaining project type issues
 are handled in follow-up work.</p>
 <p>Use <code>SKIP_INSTALL=1</code> to reuse an existing environment:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nv">SKIP_INSTALL</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>./run_local_ci.sh<span class="w"> </span>fast
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nv">SKIP_INSTALL</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>./run_local_ci.sh<span class="w"> </span>fast
 </span></code></pre></div>
 <p>Before marking a validation-sensitive PR ready for review, run the full
 non-Pyomo lane when practical:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>./run_local_ci.sh<span class="w"> </span>full
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>./run_local_ci.sh<span class="w"> </span>full
 </span></code></pre></div>
 <h2 id="ci-lane-reference">CI Lane Reference</h2>
 <table>
@@ -921,6 +929,11 @@ non-Pyomo lane when practical:</p>
 <td><code>pytest tests/ -n auto -v -m "pyomo" --cov=lyopronto --cov-report=term-missing</code></td>
 <td><code>.github/workflows/pyomo-tests.yml</code>, <code>.github/workflows/slow-tests.yml</code></td>
 </tr>
+<tr>
+<td>POUNCE comparison</td>
+<td><code>pytest tests/ -n 0 -v -m "pyomo" --cov=lyopronto --cov-report=term-missing</code> via <code>./run_local_ci.sh pounce</code></td>
+<td>Automatic <code>.github/workflows/pyomo-tests.yml</code>, manual <code>.github/workflows/slow-tests.yml</code>, local runner</td>
+</tr>
 </tbody>
 </table>
 <p>All pytest lanes inherit <code>--durations=25</code>, <code>--timeout=600</code>,
@@ -943,16 +956,17 @@ nightly scheduled validation, manual dispatch, version tags, and pushes to
 <p>Notebook tests run serially in <code>.github/workflows/rundocs.yml</code> for ready PRs,
 pushes to <code>main</code>, nightly schedule, version tags, and manual dispatch.</p>
 <p>The Pyomo Tests workflow is reportable on every PR so repository maintainers
-can require the <code>Pyomo import and construction lane</code> job in branch protection.
-That job reports success quickly when the Pyomo scope check decides validation
-is not needed, and installs <code>.[dev,pyomo]</code> without IPOPT only for Pyomo model,
+can require its jobs in branch protection. The import-and-construction job
+reports success quickly when the Pyomo scope check decides validation is not
+needed, and installs <code>.[dev,pyomo]</code> without a solver only for Pyomo model,
 Pyomo test, maintained Pyomo example, Pyomo dependency, or Pyomo workflow
-changes. The solver comparison job is job-level non-blocking; inspect its logs
-when it runs because install failures and comparison failures leave the PR
-status green. Solver-backed lanes add IDAES's solver directory to <code>PATH</code> and
-install its LAPACK runtime dependency, then verify that IPOPT is both discoverable
-and executable before pytest starts. This prevents a green run in which every
-solver-backed test was silently skipped.</p>
+changes. For non-draft changes in that scope, separate solver jobs exercise
+IPOPT and the pinned POUNCE release. Both report a clean skip outside the scope
+instead of disappearing from the PR. The IPOPT job adds IDAES's solver
+directory to <code>PATH</code>, installs its LAPACK runtime dependency, and verifies that
+IPOPT is both discoverable and executable before pytest starts. The POUNCE job
+installs its pinned extra and GLPK, then runs the complete application suite
+serially through the same AMPL/ASL interface.</p>
 <p>The solver comparison job also executes reduced one-case versions of the
 current-main SciPy/Pyomo shelf-temperature, chamber-pressure, and joint-control
 comparison notebooks. Their default 3x3 sweeps and repeated timings remain
@@ -983,7 +997,7 @@ before solving, which surfaces as <code>Solver (ipopt) did not exit normally</co
 IPOPT builds accept options that one does not, so keep solver options to the
 common subset. To reproduce the lane locally, put IDAES's solver directory first
 on <code>PATH</code>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/.idaes/bin:</span><span class="nv">$PATH</span><span class="s2">&quot;</span><span class="w"> </span>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span><span class="m">0</span><span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;pyomo&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/.idaes/bin:</span><span class="nv">$PATH</span><span class="s2">&quot;</span><span class="w"> </span>pytest<span class="w"> </span>tests/<span class="w"> </span>-n<span class="w"> </span><span class="m">0</span><span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;pyomo&quot;</span>
 </span></code></pre></div>
 <p>For the same reason, avoid asserting constraint violations tighter than the
 relaxation IPOPT is entitled to. With <code>bound_relax_factor</code> at 1e-8, a 243 K
@@ -991,61 +1005,71 @@ bound admits about 2.4e-6 K of reported violation by construction; derive such
 tolerances from the factor instead of hard-coding a number that happens to hold
 for one build.</p>
 <p><code>.github/workflows/slow-tests.yml</code> is manual dispatch for focused slow
-non-Pyomo, full non-Pyomo, or optional Pyomo validation.</p>
+non-Pyomo, full non-Pyomo, optional IPOPT-backed Pyomo validation, or the
+release-pinned POUNCE comparison. The POUNCE lane runs serially because it also
+executes notebook kernels, substitutes only the AMPL solver executable, and
+marks the known Problem 2 GDP premature-success result as a strict expected
+failure (<a href="https://github.com/jkitchin/pounce/issues/592">POUNCE #592</a>). The
+pseudosteady continuation is a separate tracked benchmark because its lowest
+rung can take several minutes.</p>
 <h2 id="pyomo-test-policy">Pyomo Test Policy</h2>
-<p>Default installs and the <code>dev</code> extra intentionally exclude Pyomo, IDAES, and
-IPOPT. Pyomo-marked tests that need IPOPT should call
+<p>Default installs and the <code>dev</code> extra intentionally exclude Pyomo, IDAES,
+IPOPT, and POUNCE. Pyomo-marked tests that need IPOPT should call
 <code>tests.pyomo_solver.require_pyomo_solver("ipopt")</code> before solving models. That
 helper skips with installation hints when Pyomo or IPOPT is missing.</p>
 <p>Keep automatic Pyomo validation isolated behind the Pyomo scope check so
 default non-Pyomo PRs do not install optional dependencies while the required
 branch-protection check still reports on every PR.</p>
 <p><code>Pyomo import and construction lane</code> runs without a solver, so solver-backed
-tests skip there. <code>Pyomo solver lane</code> installs IPOPT and GLPK and is the only
-lane that executes a real solve. Keep that second lane able to fail: it was
+tests skip there. The automatic <code>Pyomo solver lane</code> installs IPOPT and GLPK;
+the automatic <code>POUNCE solver lane</code> installs POUNCE and GLPK. Keep both solver
+lanes able to fail: the IPOPT job was
 previously <code>continue-on-error: true</code>, and a red solver test reported the job as
 success, so a solver regression could reach <code>main</code> with every check green.</p>
-<p>The first is a required check today. <strong>The solver lane is not yet</strong> -- it is
-able to gate but is not in branch protection, so a solver regression can still
-reach <code>main</code>. Two steps close that, in order:</p>
+<p>The import-and-construction job is a required check today. <strong>Neither solver
+lane is required yet</strong> -- both are able to gate but are not in branch
+protection, so a solver regression can still reach <code>main</code>. Two steps close
+that for either lane, in order:</p>
 <ol>
 <li>Confirm the skipped path on a PR that touches no Pyomo-sensitive file: the
    lane must report success rather than stay pending. Nothing verifies this from
    inside a PR that changes <code>pyomo-tests.yml</code>, because such a PR is itself
    Pyomo-sensitive and always takes the running path.</li>
-<li>Then add the context:</li>
+<li>Then add the desired context:</li>
 </ol>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>gh<span class="w"> </span>api<span class="w"> </span>repos/SECQUOIA/LyoPRONTO/branches/main/protection/required_status_checks/contexts<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span>--method<span class="w"> </span>POST<span class="w"> </span>-f<span class="w"> </span><span class="s1">&#39;contexts[]=Pyomo solver lane&#39;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>gh<span class="w"> </span>api<span class="w"> </span>repos/SECQUOIA/LyoPRONTO/branches/main/protection/required_status_checks/contexts<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span>--method<span class="w"> </span>POST<span class="w"> </span>-f<span class="w"> </span><span class="s1">&#39;contexts[]=Pyomo solver lane&#39;</span>
 </span></code></pre></div>
+<p>Use <code>POUNCE solver lane</code> as the context after its installation and skipped
+   paths have demonstrated reliable reporting.</p>
 <p>Update this paragraph once that lands, so it stops describing an intention.</p>
-<p>Because it gates, it must report on every PR. A required check that never
-reports leaves the PR pending forever, so the run/skip decision lives in the
-steps via <code>RUN_SOLVER</code> rather than a job-level <code>if:</code>. Adding a new scope-gated
-required lane should follow that pattern.</p>
+<p>Because either job may become a gate, both report on every PR. A required check
+that never reports leaves the PR pending forever, so each run/skip decision
+lives in the steps via <code>RUN_SOLVER</code> or <code>RUN_POUNCE</code> rather than a job-level
+<code>if:</code>.</p>
 <p>The lane's IPOPT is whatever <code>idaes get-extensions</code> ships (3.13.2), which is
 usually not the build contributors run locally. That is the practical reason
 for the tolerance rule above: an assertion pinned to a number one build
 produces can pass in CI and fail on a developer machine, or the reverse.</p>
 <h2 id="documentation">Documentation</h2>
 <p>Install documentation dependencies:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[docs]&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[docs]&quot;</span>
 </span></code></pre></div>
 <p>Build and preview locally:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>mkdocs<span class="w"> </span>build
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>mkdocs<span class="w"> </span>serve
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>mkdocs<span class="w"> </span>build
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>mkdocs<span class="w"> </span>serve
 </span></code></pre></div>
 <p>Docs publishing uses <code>mike</code> in <code>.github/workflows/docs.yml</code>. Pull requests
 build a <code>pr-&lt;number&gt;</code> docs version, pushes to <code>main</code> deploy <code>dev</code>, and
 published releases deploy the release version plus <code>latest</code>.</p>
 <p>If a published documentation version needs to be replaced, update it from the
 branch with the desired docs:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>git<span class="w"> </span>fetch
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>git<span class="w"> </span>switch<span class="w"> </span><span class="o">[</span>branch<span class="w"> </span>with<span class="w"> </span>desired<span class="w"> </span>docs<span class="o">]</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>mike<span class="w"> </span>delete<span class="w"> </span><span class="o">[</span>broken<span class="w"> </span>docs<span class="w"> </span>version<span class="o">]</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>mike<span class="w"> </span>deploy<span class="w"> </span><span class="o">[</span>new<span class="w"> </span>docs<span class="w"> </span>version<span class="o">]</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>git<span class="w"> </span>switch<span class="w"> </span>gh-pages
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>gh-pages
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>git<span class="w"> </span>fetch
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>git<span class="w"> </span>switch<span class="w"> </span><span class="o">[</span>branch<span class="w"> </span>with<span class="w"> </span>desired<span class="w"> </span>docs<span class="o">]</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>mike<span class="w"> </span>delete<span class="w"> </span><span class="o">[</span>broken<span class="w"> </span>docs<span class="w"> </span>version<span class="o">]</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>mike<span class="w"> </span>deploy<span class="w"> </span><span class="o">[</span>new<span class="w"> </span>docs<span class="w"> </span>version<span class="o">]</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>git<span class="w"> </span>switch<span class="w"> </span>gh-pages
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>gh-pages
 </span></code></pre></div>
 <h2 id="maintenance-notes">Maintenance Notes</h2>
 <ul>
