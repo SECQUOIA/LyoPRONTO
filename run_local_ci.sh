@@ -10,12 +10,13 @@ FULL_EXPR="not notebook and not pyomo"
 SLOW_EXPR="slow and not pyomo"
 NOTEBOOK_EXPR="notebook"
 PYOMO_EXPR="pyomo"
+POUNCE_EXPR="pyomo"
 PYOMO_LIGHT_TARGETS="tests/test_pyomo_models tests/test_pyomo_solver.py"
 NON_PYOMO_COV_CONFIG=".coveragerc.non-pyomo"
 
 usage() {
     cat <<'USAGE'
-Usage: ./run_local_ci.sh [fast|full|slow|notebook|pyomo-light|pyomo]
+Usage: ./run_local_ci.sh [fast|full|slow|notebook|pyomo-light|pyomo|pounce]
 
 Lanes:
   fast      PR feedback lane: excludes slow, notebook, and Pyomo tests.
@@ -24,6 +25,7 @@ Lanes:
   notebook  Explicit notebook validation with coverage.
   pyomo-light  Automatic Pyomo lane equivalent; installs .[dev,pyomo] without IPOPT.
   pyomo     Optional solver-backed Pyomo lane; installs .[dev,pyomo] and IPOPT.
+  pounce    POUNCE 0.10.0 comparison lane over the full Pyomo application suite.
 
 Set SKIP_INSTALL=1 to skip dependency installation.
 USAGE
@@ -51,6 +53,41 @@ verify_ipopt_available() {
     ipopt -v
 }
 
+cleanup_pounce_shim() {
+    if [[ -n "${POUNCE_SHIM_DIR:-}" ]]; then
+        unlink "$POUNCE_SHIM_DIR/ipopt"
+        rmdir "$POUNCE_SHIM_DIR"
+    fi
+}
+
+configure_pounce_comparison() {
+    if ! command -v pounce >/dev/null 2>&1; then
+        echo "Error: pounce is unavailable after installing the POUNCE extra."
+        echo 'Install the comparison stack with: python -m pip install -e ".[dev,pyomo,pounce]"'
+        return 1
+    fi
+    if [[ "$(pounce --version)" != "pounce 0.10.0" ]]; then
+        echo "Error: this recorded comparison requires POUNCE 0.10.0."
+        pounce --version
+        return 1
+    fi
+    if ! command -v glpsol >/dev/null 2>&1; then
+        echo "Error: glpsol is required for the GDP application checks."
+        echo "Install GLPK with: sudo apt-get install glpk-utils"
+        return 1
+    fi
+
+    POUNCE_SHIM_DIR=$(mktemp -d)
+    ln -s "$(command -v pounce)" "$POUNCE_SHIM_DIR/ipopt"
+    export PATH="$POUNCE_SHIM_DIR:$PATH"
+    export LYOPRONTO_NLP_SOLVER_UNDER_TEST="pounce"
+    trap cleanup_pounce_shim EXIT
+
+    python -c "from pyomo.environ import SolverFactory; assert SolverFactory('ipopt').available(exception_flag=False), 'POUNCE ASL shim not available'"
+    ipopt --version
+    glpsol --version
+}
+
 run_pytest_allow_empty() {
     "$@" || {
         rc=$?
@@ -68,7 +105,7 @@ if [[ "$LANE" == "-h" || "$LANE" == "--help" ]]; then
 fi
 
 case "$LANE" in
-    fast|full|slow|notebook|pyomo-light|pyomo)
+    fast|full|slow|notebook|pyomo-light|pyomo|pounce)
         ;;
     *)
         echo "Unknown lane: $LANE"
@@ -101,8 +138,12 @@ echo ""
 if [[ "${SKIP_INSTALL:-0}" != "1" ]]; then
     echo "3. Installing dependencies..."
     python -m pip install --upgrade pip setuptools wheel -q
-    if [[ "$LANE" == "pyomo" || "$LANE" == "pyomo-light" ]]; then
-        pip install -e ".[dev,pyomo]" -q
+    if [[ "$LANE" == "pyomo" || "$LANE" == "pyomo-light" || "$LANE" == "pounce" ]]; then
+        if [[ "$LANE" == "pounce" ]]; then
+            pip install -e ".[dev,pyomo,pounce]" -q
+        else
+            pip install -e ".[dev,pyomo]" -q
+        fi
         if [[ "$LANE" == "pyomo" ]]; then
             install_idaes_extensions
         fi
@@ -112,8 +153,12 @@ if [[ "${SKIP_INSTALL:-0}" != "1" ]]; then
     echo "   Dependencies installed"
 else
     echo "3. Skipping dependency installation because SKIP_INSTALL=1"
-    if [[ "$LANE" == "pyomo" || "$LANE" == "pyomo-light" ]]; then
-        echo '   Pyomo lane expects: python -m pip install -e ".[dev,pyomo]"'
+    if [[ "$LANE" == "pyomo" || "$LANE" == "pyomo-light" || "$LANE" == "pounce" ]]; then
+        if [[ "$LANE" == "pounce" ]]; then
+            echo '   POUNCE lane expects: python -m pip install -e ".[dev,pyomo,pounce]"'
+        else
+            echo '   Pyomo lane expects: python -m pip install -e ".[dev,pyomo]"'
+        fi
         if [[ "$LANE" == "pyomo" ]]; then
             echo "   IPOPT solver setup: idaes get-extensions --extra petsc"
         fi
@@ -123,6 +168,8 @@ echo ""
 
 if [[ "$LANE" == "pyomo" ]]; then
     verify_ipopt_available
+elif [[ "$LANE" == "pounce" ]]; then
+    configure_pounce_comparison
 fi
 
 echo "4. Running $LANE lane..."
@@ -150,6 +197,10 @@ case "$LANE" in
     pyomo)
         echo "   Command: pytest tests/ -n auto -v -m \"$PYOMO_EXPR\" --cov=lyopronto --cov-report=term-missing"
         run_pytest_allow_empty pytest tests/ -n auto -v -m "$PYOMO_EXPR" --cov=lyopronto --cov-report=term-missing
+        ;;
+    pounce)
+        echo "   Command: pytest tests/ -n 0 -v -m \"$POUNCE_EXPR\" --cov=lyopronto --cov-report=term-missing"
+        run_pytest_allow_empty pytest tests/ -n 0 -v -m "$POUNCE_EXPR" --cov=lyopronto --cov-report=term-missing
         ;;
 esac
 

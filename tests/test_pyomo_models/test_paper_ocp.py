@@ -547,7 +547,8 @@ def test_problem1_nz10_solve_matches_reference_policy_sequence():
     metrics = result["metrics"]
     policies = result["policies"]
 
-    assert result["metadata"]["status"] == "ok"
+    assert result["metadata"]["termination_condition"] == "optimal"
+    assert result["metadata"]["convergence_quality"] == ACCEPTED_AT_ACCEPTABLE_TOL
     assert metrics["terminal_gap_m"] <= 1.0e-7
     assert metrics["max_temperature_violation_K"] <= _bound_relaxation_tolerance_K(
         243.0
@@ -582,7 +583,8 @@ def test_problem1_nz20_solve_matches_reference_policy_sequence():
     metrics = result["metrics"]
     policies = result["policies"]
 
-    assert result["metadata"]["status"] == "ok"
+    assert result["metadata"]["termination_condition"] == "optimal"
+    assert result["metadata"]["convergence_quality"] == ACCEPTED_AT_ACCEPTABLE_TOL
     assert metrics["terminal_gap_m"] <= 1.0e-7
     assert metrics["max_temperature_violation_K"] <= _bound_relaxation_tolerance_K(
         243.0
@@ -662,7 +664,8 @@ def test_problem2_nz20_solve_keeps_velocity_feasible_and_classifies_policy():
     policies = result["policies"]
     segments = policies["segments"]
 
-    assert result["metadata"]["status"] == "ok"
+    assert result["metadata"]["termination_condition"] == "optimal"
+    assert result["metadata"]["convergence_quality"] == ACCEPTED_AT_ACCEPTABLE_TOL
     assert metrics["terminal_gap_m"] <= 1.0e-7
     assert metrics["max_temperature_violation_K"] <= 1.0e-3
     assert metrics["max_interface_velocity_violation_m_per_s"] <= 5.0e-10

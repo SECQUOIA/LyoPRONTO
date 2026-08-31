@@ -227,6 +227,18 @@ def test_pyomo_extra_defines_optional_solver_stack_only() -> None:
     assert _requirements(ROOT / "requirements-dev.txt") == ["-e .[dev]"]
 
 
+def test_pounce_extra_pins_the_recorded_comparison_release() -> None:
+    project = _pyproject()["project"]
+    optional = project["optional-dependencies"]
+
+    assert optional["pounce"] == [
+        "pounce-solver==0.10.0",
+        "pyomo-pounce==0.10.0",
+    ]
+    assert "pounce-solver" not in project["dependencies"]
+    assert "pyomo-pounce" not in project["dependencies"]
+
+
 def test_dev_extra_includes_test_diagnostics_plugins() -> None:
     project = _pyproject()["project"]
     dev_dependencies = project["optional-dependencies"]["dev"]
@@ -393,8 +405,11 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert "manual-validation" not in manual_tests
     assert 'rc" -eq 5' in manual_tests
     assert 'pip install -e ".[dev,pyomo]"' in manual_tests
+    assert 'pip install -e ".[dev,pyomo,pounce]"' in manual_tests
     assert "idaes get-extensions --extra petsc" in manual_tests
     assert "sudo apt-get install --yes liblapack3" in manual_tests
+    assert "sudo apt-get install --yes glpk-utils" in manual_tests
+    assert "SKIP_INSTALL=1 ./run_local_ci.sh pounce" in manual_tests
     assert 'echo "$HOME/.idaes/bin" >> "$GITHUB_PATH"' in manual_tests
     assert "SolverFactory('ipopt').available(exception_flag=False)" in manual_tests
     assert "ipopt -v" in manual_tests
@@ -430,11 +445,16 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert "tests/test_paper_gdp_validation.py" in pyomo_tests
     assert "tests/test_pyomo_models/test_original_workflow_parity.py" in pyomo_tests
     assert "tests/test_original_workflow_notebooks.py" in pyomo_tests
+    assert "tests/test_pounce_solver_comparison.py" in pyomo_tests
+    assert "tests/test_pseudosteady_limit_study.py" in pyomo_tests
     assert "tests/test_pyomo_solver.py" in pyomo_tests
     assert "tests/pyomo_solver.py" in pyomo_tests
+    assert "benchmarks/results/pseudosteady_limit/**" in pyomo_tests
+    assert "run_local_ci.sh" in pyomo_tests
     assert ".github/workflows/pyomo-tests.yml" in pyomo_tests
     assert "pyproject.toml" in pyomo_tests
     assert 'pip install -e ".[dev,pyomo]"' in pyomo_tests
+    assert 'pip install -e ".[dev,pyomo,pounce]"' in pyomo_tests
     assert "pytest -n 0 -v" in pyomo_tests
     assert "idaes get-extensions --extra petsc" in pyomo_tests
     assert "sudo apt-get install --yes glpk-utils liblapack3" in pyomo_tests
@@ -467,6 +487,17 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
         "pyomo-solver-comparison must not carry a job-level `if:`; gate the "
         "individual steps on env.RUN_SOLVER instead so the lane still reports"
     )
+    pounce_lane = _workflow_job(pyomo_tests, "pounce-solver-comparison")
+    assert "continue-on-error: true" not in pounce_lane
+    assert "name: POUNCE solver lane" in pounce_lane
+    assert "RUN_POUNCE:" in pounce_lane
+    assert "env.RUN_POUNCE == 'true'" in pounce_lane
+    assert "env.RUN_POUNCE != 'true'" in pounce_lane
+    assert re.search(r"^ {4}if:", pounce_lane, re.MULTILINE) is None, (
+        "pounce-solver-comparison must not carry a job-level `if:`; gate the "
+        "individual steps on env.RUN_POUNCE instead so the lane still reports"
+    )
+    assert "SKIP_INSTALL=1 ./run_local_ci.sh pounce" in pounce_lane
     assert (
         "tests/test_pyomo_models/test_single_step.py::test_single_step_solves_and_matches_scipy_reference"
         in pyomo_tests
@@ -548,16 +579,25 @@ def test_local_ci_script_matches_documented_lane_expressions() -> None:
     _assert_marker_mentions(lane_expressions["pyomo"], "pyomo")
     _assert_pyomo_coverage(pyomo_command)
 
+    pounce_command = _single_command_with_marker(script, "$POUNCE_EXPR")
+    assert assignments["POUNCE_EXPR"] == "pyomo"
+    _assert_pyomo_coverage(pounce_command)
+    _assert_xdist_workers(pounce_command, "0")
+
     assert assignments["NON_PYOMO_COV_CONFIG"] == ".coveragerc.non-pyomo"
     assert "--cov-report=xml:coverage.xml" not in script
     assert "coverage.xml" not in script
     assert "--durations=25" not in script
     assert "pyomo-light" in script
     assert 'pip install -e ".[dev,pyomo]"' in script
+    assert 'pip install -e ".[dev,pyomo,pounce]"' in script
     assert "idaes get-extensions --extra petsc" in script
     assert 'export PATH="$HOME/.idaes/bin:$PATH"' in script
     assert "SolverFactory('ipopt').available(exception_flag=False)" in script
     assert "ipopt -v" in script
+    assert "LYOPRONTO_NLP_SOLVER_UNDER_TEST" in script
+    assert "pounce 0.10.0" in script
+    assert "glpsol --version" in script
     assert "pip install pyomo idaes-pse" not in script
     assert "run_pytest_allow_empty" in script
     assert "SKIP_INSTALL=1" in script
@@ -630,7 +670,10 @@ def test_contributor_docs_include_ci_and_static_analysis_commands() -> None:
     assert "branch protection" in docs
     assert "reports on every PR" in docs
     assert "Pyomo scope check" in docs
-    assert "job-level non-blocking" in docs
+    assert "Neither solver\nlane is required yet" in docs
+    assert "POUNCE solver lane" in docs
+    assert "RUN_POUNCE" in docs
+    assert "job-level non-blocking" not in docs
 
 
 def test_docs_inventory_classifies_retained_markdown_files() -> None:

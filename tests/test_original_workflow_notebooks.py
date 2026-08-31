@@ -8,7 +8,10 @@ import papermill as pm
 import pytest
 
 
-pytestmark = [pytest.mark.serial, pytest.mark.notebook]
+# The notebooks run in the ordinary notebook lane without the optional stack,
+# but the Pyomo marker also routes them into both solver-backed comparison
+# lanes, where their optional IPOPT/POUNCE cells must execute rather than skip.
+pytestmark = [pytest.mark.serial, pytest.mark.notebook, pytest.mark.pyomo]
 
 
 def _stream_text(notebook: Any) -> str:

@@ -76,6 +76,11 @@ convention works:
 python -m examples.pseudosteady_limit_study --solver-executable /path/to/pounce
 ```
 
+Install the recorded comparison release with
+`python -m pip install -e ".[dev,pyomo,pounce]"`; the `pounce` extra pins
+POUNCE 0.10.0. The tracked `pounce.json` baseline records the remaining
+Problem 1 `f=0.02` convergence boundary alongside the shared IPOPT results.
+
 Recorded baselines live in `benchmarks/results/pseudosteady_limit/`; see
 `benchmarks/README.md` for what they are and when to regenerate them.
 
