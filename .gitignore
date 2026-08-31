@@ -88,8 +88,6 @@ benchmarks/results/archive/*
 !benchmarks/results/test/**
 !benchmarks/results/test_validation/
 !benchmarks/results/test_validation/**
-!benchmarks/results/pseudosteady_limit/
-!benchmarks/results/pseudosteady_limit/**
 
 # for local settings
 .vscode/

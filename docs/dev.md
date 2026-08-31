@@ -134,18 +134,12 @@ seven-column endpoint against the shared
 backward-Euler tolerance and checks the unknown-Rp parameters/objective against
 SciPy after shared legacy preprocessing.
 
-The same job executes the Srisuma and Braatz optimal-control replication
-notebook on a coarse spatial mesh. That notebook reports wall times against
-the timings published with the upstream paper, but those comparisons are
-narrative only: they are measured on whatever runner the job lands on and are
-never asserted. The job also executes the pseudosteady frozen-layer tutorial
-notebook with a coarse three-rung continuation ladder.
-
-The solver lane also runs the coarse multiphase GDP paper benchmark. GDPopt
-RIC uses GLPK for the discrete master and the lane's IPOPT 3.13.2 build for
-local nonlinear subproblems. Structural tests remain skip-safe in the
-no-solver lane; solver tests require both executables and provide separate
-installation hints when either is absent.
+The Srisuma and Braatz paper OCP/GDP benchmarks, their notebooks, and the
+pseudosteady continuation baselines migrated to
+[SECQUOIA/LyoGDP-Benchmarks](https://github.com/SECQUOIA/LyoGDP-Benchmarks)
+(issue #150) and are no longer part of these lanes. Structural tests remain
+skip-safe in the no-solver lane; solver tests require the IPOPT and GLPK
+executables and provide separate installation hints when either is absent.
 
 Validate solver-backed changes against the IPOPT that `idaes get-extensions`
 installs, not only against a conda or system build. That lane runs IPOPT 3.13.2
@@ -169,11 +163,7 @@ for one build.
 `.github/workflows/slow-tests.yml` is manual dispatch for focused slow
 non-Pyomo, full non-Pyomo, optional IPOPT-backed Pyomo validation, or the
 release-pinned POUNCE comparison. The POUNCE lane runs serially because it also
-executes notebook kernels, substitutes only the AMPL solver executable, and
-marks the known Problem 2 GDP premature-success result as a strict expected
-failure ([POUNCE #592](https://github.com/jkitchin/pounce/issues/592)). The
-pseudosteady continuation is a separate tracked benchmark because its lowest
-rung can take several minutes.
+executes notebook kernels and substitutes only the AMPL solver executable.
 
 ## Pyomo Test Policy
 

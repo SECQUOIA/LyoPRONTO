@@ -430,7 +430,6 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert "examples/current_main_joint_optimizer_comparison.py" in pyomo_tests
     assert "examples/current_main_pressure_optimizer_comparison.py" in pyomo_tests
     assert "examples/original_workflow_parity.py" in pyomo_tests
-    assert "examples/paper_gdp_validation.py" in pyomo_tests
     assert "docs/examples/current_main_joint_optimizer_comparison.ipynb" in pyomo_tests
     assert "docs/examples/knownRp_PD.ipynb" in pyomo_tests
     assert "docs/examples/unknownRp_PD.ipynb" in pyomo_tests
@@ -442,15 +441,25 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     assert "tests/test_current_main_joint_optimizer_comparison.py" in pyomo_tests
     assert "tests/test_dae_optimizer_walkthrough.py" in pyomo_tests
     assert "tests/test_current_main_pressure_optimizer_comparison.py" in pyomo_tests
-    assert "tests/test_paper_gdp_validation.py" in pyomo_tests
     assert "tests/test_pyomo_models/test_original_workflow_parity.py" in pyomo_tests
     assert "tests/test_original_workflow_notebooks.py" in pyomo_tests
-    assert "tests/test_pounce_solver_comparison.py" in pyomo_tests
-    assert "tests/test_pseudosteady_limit_study.py" in pyomo_tests
     assert "tests/test_pyomo_solver.py" in pyomo_tests
     assert "tests/pyomo_solver.py" in pyomo_tests
-    assert "benchmarks/results/pseudosteady_limit/**" in pyomo_tests
     assert "run_local_ci.sh" in pyomo_tests
+    # The paper OCP/GDP benchmark surface migrated to SECQUOIA/LyoGDP-Benchmarks
+    # (issue #150); nothing in this workflow may quietly resurrect it here.
+    for migrated in (
+        "paper_ocp",
+        "paper_gdp",
+        "pseudosteady_limit",
+        "pseudosteady_frozen_layer",
+        "test_pounce_solver_comparison.py",
+        "paper_optimal_control_replication",
+    ):
+        assert migrated not in pyomo_tests, (
+            f"{migrated!r} belongs to LyoGDP-Benchmarks now; do not re-add it "
+            "to the Pyomo workflow"
+        )
     assert ".github/workflows/pyomo-tests.yml" in pyomo_tests
     assert "pyproject.toml" in pyomo_tests
     assert 'pip install -e ".[dev,pyomo]"' in pyomo_tests
@@ -529,7 +538,6 @@ def test_ci_workflows_use_documented_test_lane_expressions() -> None:
     # walkthrough notebook test is solver-backed and must not be able to grow
     # sibling tests the lane silently skips.
     assert "tests/test_dae_optimizer_walkthrough.py" in pyomo_tests
-    assert "tests/test_pyomo_models/test_paper_gdp.py" in pyomo_tests
     assert (
         "tests/test_current_main_joint_optimizer_comparison.py::test_current_main_joint_comparison_notebook_execution"
         in pyomo_tests

@@ -136,87 +136,23 @@ Implemented modules:
 - `lyopronto.pyomo_models.advanced` composes the trajectory and optimization
   builders into optional parameter-estimation, design-space feasibility,
   sensitivity-analysis, robust-optimization, and multi-vial capacity workflows.
-- `lyopronto.pyomo_models.paper_ocp` transcribes the external primary-drying
-  optimal-control benchmark of Srisuma and Braatz, arXiv:2509.10826v1, as a
-  free-final-time collocation problem, and classifies which of that paper's
-  three control policies is active along a solved trajectory. It is a
-  validation benchmark rather than a production optimizer, and it is the one
-  module that uses the paper's SI convention (K, Pa, m, s) instead of the
-  legacy LyoPRONTO cm/Torr/degC units. Do not mix its parameters with the
-  vial-scale APIs without an explicit adapter. Its solves stop at
-  `PaperDiscretization.terminal_drying_fraction` of the product height rather
-  than at the paper's `S = H`, because the Landau-transformed frozen-region
-  equations are singular there; drying times from this module are therefore
-  short of a complete cycle by the remaining sliver and should be reported with
-  the cutoff that produced them.
-- `lyopronto.pyomo_models.paper_gdp` reuses that SI-unit benchmark in a
-  validation-only multiphase GDP formulation. Free phase durations and
-  uninitialized policy indicators select Policy `1 -> 2` for Paper Problem 1
-  and Policy `3 -> 1 -> 2` for Paper Problem 2; no production cycle-design API
-  is added. The phase count is fixed per problem (two for Problem 1 and three
-  for Problem 2) to match the published number of policy segments; only the
-  policy identity, phase durations, and switch times are free. GDPopt RIC uses
-  GLPK for the discrete master and IPOPT for local nonlinear subproblems. Its
-  result is a locally solved nonconvex GDP, not a globally certified optimum.
-  Agreement with `paper_ocp` independently checks the switching representation,
-  but not the physical equations shared by the two models. The discrete search
-  is the scaling limit, not the transcription: Problem 2 has been run at
-  `n_z=5, nfe_per_phase=6`, but at `n_z=20, nfe_per_phase=12` GDPopt returns
-  `infeasible` under both `set_covering` and `no_init` initialization. That
-  boundary is a measurement, not a property of the formulation; it was taken
-  with Pyomo 6.9.5, IPOPT 3.14.16, and GLPK 5.0, and can move with those
-  versions. `solve_paper_gdp_model` reports such a termination as a solver
-  failure rather than extracting an unassigned policy sequence, and states
-  whether an incumbent was loaded, since GDPopt does load one for every
-  termination except `infeasible` and `unbounded`.
-
-### Convergence quality on the paper benchmarks
-
-IPOPT reports two different outcomes as the same Pyomo termination. A solve
-that reaches `tol` and one accepted at the looser `acceptable_tol` both arrive
-as `termination_condition: optimal, status: ok`, so those two fields alone
-cannot tell a well-converged solve from a marginal one. `paper_ocp` therefore
-records `metadata["convergence_quality"]` next to the raw solver message, with
-the values `converged_to_tolerance`, `accepted_at_acceptable_tol`, and
-`unknown`. Callers that care — solver comparisons, or a check that must notice
-a solve degrading — branch on that field instead of matching solver text.
-
-The success gate itself is unchanged and still accepts both. On this
-transcription an acceptable-level exit is the expected outcome rather than a
-degraded one: the Landau conduction term carries `1/(H - S)^2`, so an absolute
-residual IPOPT cannot certify is a relative residual near 1e-13. Rejecting
-those solves would discard correct answers, including the paper's own model at
-the paper's own mesh. `paper_ocp._is_successful_termination` documents the
-mechanism and the remedies that were measured and rejected.
-
-The label is matched against IPOPT's `ApplicationReturnStatus` vocabulary
-rather than against one binary's wording, because a solver comparison needs the
-two sides to classify through the same path. IPOPT writes those statuses as
-prose (`Solved To Acceptable Level.`); POUNCE, an IPOPT port driven through the
-same `ipopt` ASL interface, writes the enum names (`SolvedToAcceptableLevel`,
-`SolveSucceeded`). Matching IPOPT's prose alone therefore labelled *every*
-POUNCE solve `unknown`, fully converged ones included, which is why the match
-ignores punctuation instead of keying on a per-solver table. A solver outside
-that vocabulary still reads `unknown`, which is the honest answer rather than a
-mapping guessed from unseen text. `examples/pseudosteady_limit_study.py`
-reports the label per rung, so its ladder states which tolerance each rung met.
-
-The scope is deliberate. `paper_gdp` imports the same predicate, so it shares
-the gate, but it does not record `convergence_quality`: GDPopt leaves
-`solver.message` undefined, so the field would read `unknown` on every solve.
-The production models — `advanced`, `dae_optimization`, `single_step`, and
-`trajectory` — share neither. Each carries its own termination handling on a
-frozen result dataclass whose public shape the project preserves, none calls
-that predicate, and none solves on a Landau coordinate, so acceptable-level is
-not an expected outcome there. Extending the field to any of them should be
-motivated by an actual conflated solve rather than done for symmetry.
+- The Srisuma and Braatz paper OCP/GDP validation benchmarks
+  (`paper_ocp`, `paper_gdp`), their pseudosteady-limit continuation study,
+  recorded IPOPT/POUNCE baselines, and the frozen-layer tutorial migrated to
+  [SECQUOIA/LyoGDP-Benchmarks](https://github.com/SECQUOIA/LyoGDP-Benchmarks)
+  (issue #150). That repository also documents the `convergence_quality`
+  vocabulary those benchmarks record. The production models above deliberately
+  do not record that field: each carries its own termination handling on a
+  frozen result dataclass whose public shape the project preserves, and none
+  solves on a Landau coordinate, so acceptable-level termination is not an
+  expected outcome here. Extending the field to a production model should be
+  motivated by an actual conflated solve rather than done for symmetry.
 
 Pyomo tests are marked `pyomo` and are skip-safe when Pyomo or a required
 solver such as IPOPT or GLPK is not installed. See `dev.md` for optional solver
 setup and CI lane policy.
 The maintained construction example lives in
-`examples/example_pyomo_optimization.py`. The paper switching comparison lives
-in `examples/paper_gdp_validation.py`. Both are covered by the optional Pyomo
+`examples/example_pyomo_optimization.py` and is covered by the optional Pyomo
 test lane.
 
 `examples/original_workflow_parity.py` provides the original-case tutorial
